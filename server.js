@@ -6,12 +6,19 @@ const Tx = require('./Tx');
 
 const fptMiner = new Miner(new Blockchain());
 
-app.get('/tx',function(req, res)
-{
-    const tx = new Tx(req.query.from, req.query.to, req.query.value, req.query.fee);
+app.get('/tx',function(req, res) {
+    //console.log(req.query.extra);
+    //console.log(JSON.parse(decodeURIComponent(req.query.extra)));
+    const tx = new Tx(req.query.from, req.query.to, req.query.value, req.query.fee,
+        JSON.parse(req.query.extra));
     fptMiner.txPool.push(tx);
 
     res.send("Added");
+});
+
+app.get('/balance',function(req, res) {
+    const who = req.query.who;
+    res.send(`Balance of ${who} is ${fptMiner.balanceOf(who)}`);
 });
 
 app.get('/', (req, res) => {

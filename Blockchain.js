@@ -6,4 +6,9 @@ module.exports = class Blockchain {
     addBlock(block) {
         this.blocks.push(block);
     }
+
+    getLatestBlockHash() {
+        if (!this.blocks.length) return "0";
+        return this.blocks[this.blocks.length - 1].hash;
+    }
 }
