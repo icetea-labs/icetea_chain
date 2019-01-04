@@ -1,15 +1,16 @@
 {
-  "name": "fptchain",
+  "name": "ichain",
   "version": "1.0.0",
-  "description": "",
+  "description": "A simple chain for testing ideas",
   "main": "server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
-  "author": "Trada Academy",
-  "license": "ISC",
+  "author": "Trada Tech",
+  "license": "MIT",
   "dependencies": {
-    "express": "^4.16.4"
+    "express": "^4.16.4",
+    "lodash": "^4.17.11"
   }
 }

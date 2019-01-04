@@ -1,26 +1,31 @@
 module.exports = class Tx {
 
-    // extra is null or empty: normal tx
+    // data is null or empty: normal tx
     // create contract
-    // extra = {
+    // data = {
     //    op: 0,
     //    src: "console.log('hello worl')"";   
     // }
     // call contract function
-    // extra = {
+    // data = {
     //    op: 1,
-    //    contract: {
-    //        address: "thi_1546522456514",
-    //        function: "Bye"
-    //    }
+    //    name: "functionName"
     //}
 
-    constructor(from, to, value, fee, extra) {
+    constructor(from, to, value, fee, data) {
         this.from = from;
         this.to = to;
         this.value = value;
         this.fee = fee;
-        this.extra = extra;
+        this.data = data;
+    }
+
+    isContractCreation() {
+        return this.data && this.data.op === 0;
+    }
+
+    isContractCall() {
+        return this.data && this.data.op === 1;
     }
 
     toString() {

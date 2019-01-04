@@ -1,7 +1,8 @@
+const _ = require('lodash');
 const params = require("./Params");
 const Block = require('./Block');
 
-module.exports = class Miner {
+module.exports = class Node {
 
     constructor (chain, txPool) {
         this.chain = chain;
@@ -13,46 +14,77 @@ module.exports = class Miner {
         }
     }
 
-    execTx(tx) {
+    incBalance(addr, delta) {
         const t = this.stateTable;
-        t[tx.from] = t[tx.from] || {balance: 0};
-        t[tx.from].balance -= parseFloat(tx.value || 0) + parseFloat(tx.fee || 0);
+        t[addr] = t[addr] || {balance: 0};
+        t[addr] += parseFloat(delta) || 0;
+    }
 
-        t[tx.to] = t[tx.to] || {balance: 0};
-        t[tx.to].balance += parseFloat(tx.value || 0);
+    decBalance(addr, delta) {
+        this.incBalance(addr, -delta);
+    }
 
-        t.miner.balance += parseFloat(tx.fee || 0);
+    scEnv(tx, block) {
+        const msg = _.cloneDeep(tx);
+        msg.sender = msg.from; // alias
 
-        //console.log(tx);
+        const addr = msg.to;
 
-        if (!tx.extra || typeof tx.extra.op === "undefined") return;
+        const theBlock = _.cloneDeep(block);
 
-        if (tx.extra.op == 0) {
+        const state = _.cloneDeep(this.stateTable[addr].state || {});
+
+        const that = {
+            address: addr,
+            state, 
+            transfer: (to, value) => {
+                this.decBalance(addr, value);
+                this.incBalance(to, value);
+            }
+        }
+
+        return [that, msg, theBlock];
+    }
+
+    execTx(tx, block) {
+        const t = this.stateTable;
+
+        this.decBalance(tx.from, parseFloat(tx.value || 0) + parseFloat(tx.fee || 0))
+        this.incBalance(tx.to, tx.value);
+        this.incBalance("miner", tx.fee);
+
+        if (!tx.data || typeof tx.data.op === "undefined") return;
+
+        if (tx.data.op == 0) {
             // make a address for smart contract
             let scAddr = tx.from + "_" + Date.now();
             this.stateTable[scAddr] = {
                 balance: 0,
-                src: Buffer.from(tx.extra.src, 'base64').toString("ascii")
+                src: Buffer.from(tx.data.src, 'base64').toString("ascii")
             }
 
             return;
         }
 
-        if (tx.extra.op == 1) {
-            let scAddr = tx.extra.contract.address;
+        if (tx.data.op == 1) {
+            let scAddr = tx.to;
             const t = this.stateTable;
             if (!t[scAddr] || !t[scAddr].src) {
-                console.log("clgt");
+                console.log("Invalid contract call");
             } else {
-                const f = new Function("arg", "tx", t[scAddr].src);
-                f(tx.extra.contract.function, tx);
+                const [that, msg, theBlock] = this.scEnv(tx, block)
+                const f = new Function("msg", "block", "now", t[scAddr].src);
+                f.call(that, msg, theBlock, theBlock.timestamp);
+
+                // save back the state
+                t[scAddr].state = _.extend(t[scAddr].state || {}, that.state);
             }
         }
     }
 
     execBlock(block) {
         block.txs.forEach(tx => {
-            this.execTx(tx);
+            this.execTx(tx, block);
         });
 
         this.stateTable.miner.balance += params.MINER_REWARD;

@@ -1,6 +1,6 @@
 const express = require('express');
 const app = express();
-const Miner = require('./Miner');
+const Miner = require('./Node');
 const Blockchain = require('./Blockchain');
 const Tx = require('./Tx');
 
