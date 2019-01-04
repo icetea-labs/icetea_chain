@@ -22,3 +22,5 @@
 
 ## Homework bài 2
 1. Smart contract của chúng ta chưa có cơ chế lưu lại state sau mỗi lần gọi. Hãy tìm cách giải quyết vấn đề đó
+2. Hãy cài một số extension: Postman, JSON Formatter, MetaMask lên Chrome để chuẩn bị cho các bài sau
+3. Hãy cài thử web3 xem có ok ko, nếu ko ok thì search Google rồi fix :D `npm install web3`
