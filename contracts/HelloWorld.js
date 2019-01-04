@@ -1,13 +1,9 @@
-if (msg.name === "Hello") {
-    Hello();
-} else if  (msg.name === "Bye") {
-    Bye();
-} else {
-    _default();
+function _constructor() {
+    console.log("_constructor");
 }
 
 function _default() {
-    console.log("Hmmmmm");
+    console.log("_default");
 }
 
 function Hello() {
@@ -16,4 +12,14 @@ function Hello() {
 
 function Bye() {
     console.log("Bye");
+}
+
+if (msg.name === "_constructor") {
+    _constructor && _constructor();
+} else if (msg.name === "Hello") {
+    Hello && Hello();
+} else if  (msg.name === "Bye") {
+    Bye && Bye();
+} else {
+    _default && _default();
 }

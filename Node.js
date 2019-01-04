@@ -36,7 +36,7 @@ module.exports = class Node {
 
         const that = {
             address: addr,
-            state, 
+            state: state,
             transfer: (to, value) => {
                 this.decBalance(addr, value);
                 this.incBalance(to, value);
@@ -47,7 +47,6 @@ module.exports = class Node {
     }
 
     execTx(tx, block) {
-        const t = this.stateTable;
 
         this.decBalance(tx.from, parseFloat(tx.value || 0) + parseFloat(tx.fee || 0))
         this.incBalance(tx.to, tx.value);
