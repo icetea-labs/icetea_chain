@@ -35,9 +35,26 @@ module.exports = {
 
 ## Call contract
 1. http://localhost:3000/ (may need F5 to refresh)
-2. See contract address (it is under state table, example `contract_thi_1546852296655`)
+2. See contract address (it is under stateTable, example `contract_thi_1546852296655`)
 3. http://localhost:3000/contract.html
 4. Fill the contract address and method params
 5. See terminal console for log of contract execute
 6. Refresh http://localhost:3000/ to see updated state
 7. Repeat from #3 to test more...
+
+## TODO
+1. Generate address & private key for account
+2. Check tx signature
+3. Check tx balance when transfer
+4. Support READ contract (no need to create TX)
+5. Support revert transaction (all or nothing)
+6. Support using ES6 class for contract
+7. Support Wasm contract
+8. VM should be in-process or spawn a new process?
+9. Properly sandbox smart contract execution environment
+10. Persist blockchain & state to disk
+11. Use merkle trie for storing state
+12. Remove non-deterministic from JS contracts
+13. Remove non-deterministic stuff from Wasm contracts
+14. Gas calculation for JS contracts
+15. Gas calculation (metering layer) for Wasm contracts
