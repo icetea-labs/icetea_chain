@@ -4,7 +4,7 @@ module.exports = class Block {
     constructor(txs, prevHash, difficulty) {
         this.difficulty = difficulty;
         this.txs = txs || [];
-        this.nonce = 0;
+        this.nonce = -1;
         this.prevHash = prevHash;
         this.makeNewHash();
     }
@@ -15,9 +15,9 @@ module.exports = class Block {
 
     makeNewHash() {
         this.timestamp = Math.floor(Date.now()/1000);
+        this.nonce++;
         this.hash = crypto.createHash('sha256').update(this.toString()).digest("hex");
         //console.log(this.hash);
-        this.nonce++;
     }
 
     isHashValid() {

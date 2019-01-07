@@ -86,7 +86,7 @@ module.exports = class Node {
             this.execTx(tx, block);
         });
 
-        this.stateTable.miner.balance += params.MINER_REWARD;
+        this.incBalance("miner", params.MINER_REWARD);
     }
 
     balanceOf(who) {
