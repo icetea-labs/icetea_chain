@@ -9,7 +9,6 @@ const fptMiner = new Miner(new Blockchain());
 app.use(express.static('dist'));
 
 app.get('/api/send_tx',function(req, res) {
-    //console.log(req.query.extra);
     //console.log(JSON.parse(decodeURIComponent(req.query.extra)));
     const tx = new Tx(req.query.from, req.query.to, req.query.value, req.query.fee,
         JSON.parse(req.query.data));
