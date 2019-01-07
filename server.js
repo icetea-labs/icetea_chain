@@ -1,18 +1,24 @@
 const express = require('express');
+const bodyParser = require('body-parser');
 const app = express();
+
 const Miner = require('./Node');
 const Blockchain = require('./Blockchain');
 const Tx = require('./Tx');
 
 const fptMiner = new Miner(new Blockchain());
 
+app.use(bodyParser.urlencoded({ extended: false }));
 app.use(express.static('dist'));
 
-app.get('/api/send_tx',function(req, res) {
-    //console.log(req.query.extra);
-    //console.log(JSON.parse(decodeURIComponent(req.query.extra)));
-    const tx = new Tx(req.query.from, req.query.to, req.query.value, req.query.fee,
-        JSON.parse(req.query.data));
+app.post('/api/send_tx',function(req, res) {
+    const tx = new Tx(
+        req.body.from, 
+        req.body.to, 
+        parseFloat(req.body.value) || 0, 
+        parseFloat(req.body.fee) || 0,
+        JSON.parse(req.body.data || "{}"));
+
     fptMiner.txPool.push(tx);
 
     res.send("Added");

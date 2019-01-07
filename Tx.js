@@ -9,7 +9,8 @@ module.exports = class Tx {
     // call contract function
     // data = {
     //    op: 1,
-    //    name: "functionName"
+    //    name: "functionName",
+    //    params: [1, "hello"]
     //}
 
     constructor(from, to, value, fee, data) {
