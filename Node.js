@@ -17,7 +17,7 @@ module.exports = class Node {
     incBalance(addr, delta) {
         const t = this.stateTable;
         t[addr] = t[addr] || {balance: 0};
-        t[addr] += parseFloat(delta) || 0;
+        t[addr].balance += parseFloat(delta) || 0;
     }
 
     decBalance(addr, delta) {
