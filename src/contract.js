@@ -19,8 +19,6 @@ function buildData() {
         return e.trim().length;
     })
 
-    console.log(params);
-
     var data = {
         op: 1,
         name: document.getElementById("name").value,
@@ -30,6 +28,47 @@ function buildData() {
     document.getElementById("data").value = JSON.stringify(data); 
 }
 
+async function fillContracts() {
+    const contracts = await fetch("/api/contracts")
+    .then((resp) => {
+        return resp.json();
+    })
+    if (!contracts.length) return;
+
+    var select = document.getElementById("to");
+    contracts.forEach(item => {
+        let option = document.createElement("option");
+        option.value = item;
+        option.textContent = item;
+        select.appendChild(option);
+    });
+
+    fillFuncs();
+    select.addEventListener("change", fillFuncs);
+}
+
+async function fillFuncs() {
+    var contract = document.getElementById("to").value;
+    if (!contract) return;
+
+    const funcs = await fetch("/api/funcs?contract=" + contract)
+    .then((resp) => {
+        return resp.json();
+    })
+    var select = document.getElementById("name");
+    select.innerHTML = "";
+    funcs.forEach(item => {
+        if (item.indexOf("$") !== 0) {
+            let option = document.createElement("option");
+            option.value = item;
+            option.textContent = item;
+            select.appendChild(option);
+        }
+    });
+    buildData();
+}
+
 buildData();
 document.getElementById("name").addEventListener("change", buildData);
 document.getElementById("params").addEventListener("input", buildData);
+fillContracts();

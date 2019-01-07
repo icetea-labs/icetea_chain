@@ -16,22 +16,27 @@
 2. Use the following code
 ```js
 module.exports = {
+    $onDeploy: () => {
+        console.log(`${msg.sender} has just deployed this contract, the address is ${this.address}`);
+        this.state.a = "onDeploy";
+    },
+
     hello: (a, b, c) => {
-        console.log(`Hello ${msg.sender}`);
+        
+        console.log(`Hello ${msg.sender} from ${this.address}`);
         console.log(`This block is mined at ${now}`);
+        console.log(`The block hash is ${block.hash}`);
         console.log(`You pass the params ${a}, ${b}, ${c}`);
         console.log(`Current state is ${this.state.a}, ${this.state.b}, ${this.state.c}`);
         
         this.state.a = a;
         this.state.b = b;
         this.state.c = c;
-    },
-
-    _default: () => {
-        console.log("fallback function!")
     }
 }
 ```
+
+More sample contracts are available in _contracts_ folder.
 
 ## Call contract
 1. http://localhost:3000/ (may need F5 to refresh)
