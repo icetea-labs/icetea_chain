@@ -54,7 +54,7 @@ module.exports = class Node {
         // deploy contract
         if (tx.data && tx.data.op == 0) {
             // make new address for smart contract
-            let scAddr = tx.from + "_" + Date.now();
+            let scAddr = "contract_" + tx.from + "_" + Date.now();
             tx.to = scAddr;
 
             let src = Buffer.from(tx.data.src, 'base64').toString("ascii");
@@ -63,8 +63,6 @@ module.exports = class Node {
                 balance: 0,
                 src: src
             }
-
-            return;
         }
 
         // call contract

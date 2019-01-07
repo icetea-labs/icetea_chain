@@ -30,5 +30,6 @@ function buildData() {
     document.getElementById("data").value = JSON.stringify(data); 
 }
 
+buildData();
 document.getElementById("name").addEventListener("change", buildData);
 document.getElementById("params").addEventListener("input", buildData);
