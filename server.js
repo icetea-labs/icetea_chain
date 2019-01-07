@@ -17,7 +17,7 @@ app.post('/api/send_tx',function(req, res) {
         req.body.to, 
         parseFloat(req.body.value) || 0, 
         parseFloat(req.body.fee) || 0,
-        JSON.parse(req.body.data));
+        JSON.parse(req.body.data || "{}"));
 
     fptMiner.txPool.push(tx);
 

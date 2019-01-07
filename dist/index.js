@@ -105,7 +105,7 @@ eval("module.exports = function(modules) {\n    function __webpack_require__(mod
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-eval("__webpack_require__.r(__webpack_exports__);\n/* harmony import */ var json_formatter_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! json-formatter-js */ \"./node_modules/json-formatter-js/dist/json-formatter.js\");\n/* harmony import */ var json_formatter_js__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(json_formatter_js__WEBPACK_IMPORTED_MODULE_0__);\n\n\n(async () => {\n    const myJSON = await fetch(\"/api/node\")\n    .then((resp) => {\n        return resp.json();\n    })\n\n    const formatter = new json_formatter_js__WEBPACK_IMPORTED_MODULE_0___default.a(myJSON);\n\n    document.getElementById(\"content\").appendChild(formatter.render());\n})();\n\n//# sourceURL=webpack:///./src/index.js?");
+eval("__webpack_require__.r(__webpack_exports__);\n/* harmony import */ var json_formatter_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! json-formatter-js */ \"./node_modules/json-formatter-js/dist/json-formatter.js\");\n/* harmony import */ var json_formatter_js__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(json_formatter_js__WEBPACK_IMPORTED_MODULE_0__);\n\n\n(async () => {\n    const myJSON = await fetch(\"/api/node\")\n    .then((resp) => {\n        return resp.json();\n    })\n\n    const formatter = new json_formatter_js__WEBPACK_IMPORTED_MODULE_0___default.a(myJSON, Infinity);\n\n    document.getElementById(\"content\").appendChild(formatter.render());\n})();\n\n//# sourceURL=webpack:///./src/index.js?");
 
 /***/ })
 

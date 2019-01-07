@@ -93,7 +93,7 @@
 /*! no static exports found */
 /***/ (function(module, exports) {
 
-eval("document.getElementById(\"form\").addEventListener(\"submit\", (e) => {\n    if (!document.getElementById(\"data\").value.trim().length) {\n        alert(\"Please input some source!\")\n        e.preventDefault();\n    }\n\n    // TODO: more input validation\n})\n\ndocument.getElementById(\"src\").addEventListener(\"keyup\", () => {\n    // Build data JSON\n    var data = {\n        op: 0,\n        src: btoa(document.getElementById(\"src\").value)\n    }\n\n    document.getElementById(\"data\").value = JSON.stringify(data); \n})\n\n//# sourceURL=webpack:///./src/deploy.js?");
+eval("document.getElementById(\"form\").addEventListener(\"submit\", (e) => {\n    if (!document.getElementById(\"data\").value.trim().length) {\n        alert(\"Please input contract source!\")\n        e.preventDefault();\n    }\n\n    // TODO: more input validation\n})\n\ndocument.getElementById(\"src\").addEventListener(\"input\", () => {\n    // Build data JSON\n    var data = {\n        op: 0,\n        src: btoa(document.getElementById(\"src\").value)\n    }\n\n    document.getElementById(\"data\").value = JSON.stringify(data); \n})\n\n//# sourceURL=webpack:///./src/deploy.js?");
 
 /***/ })
 

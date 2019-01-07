@@ -26,6 +26,9 @@ module.exports = class Node {
 
     scEnv(tx, block) {
         const msg = _.cloneDeep(tx);
+        if (msg.data.name) {
+            msg.name = msg.data.name;
+        }
         msg.sender = msg.from; // alias
 
         const addr = msg.to;
@@ -48,37 +51,42 @@ module.exports = class Node {
 
     execTx(tx, block) {
 
-        this.decBalance(tx.from, parseFloat(tx.value || 0) + parseFloat(tx.fee || 0))
-        this.incBalance(tx.to, tx.value);
-        this.incBalance("miner", tx.fee);
-
-        if (!tx.data || typeof tx.data.op === "undefined") return;
-
-        if (tx.data.op == 0) {
-            // make a address for smart contract
+        // deploy contract
+        if (tx.data && tx.data.op == 0) {
+            // make new address for smart contract
             let scAddr = tx.from + "_" + Date.now();
+            tx.to = scAddr;
+
+            let src = Buffer.from(tx.data.src, 'base64').toString("ascii");
+            src += '; \n module.exports[module.exports[msg.name]?msg.name:"_default"].apply(this, msg.data.params);';
             this.stateTable[scAddr] = {
                 balance: 0,
-                src: Buffer.from(tx.data.src, 'base64').toString("ascii")
+                src: src
             }
 
             return;
         }
 
-        if (tx.data.op == 1) {
+        // call contract
+        if (tx.data && tx.data.op == 1) {
             let scAddr = tx.to;
             const t = this.stateTable;
             if (!t[scAddr] || !t[scAddr].src) {
                 console.log("Invalid contract call");
             } else {
                 const [that, msg, theBlock] = this.scEnv(tx, block)
-                const f = new Function("msg", "block", "now", t[scAddr].src);
-                f.call(that, msg, theBlock, theBlock.timestamp);
+                const f = new Function("module", "msg", "block", "now", t[scAddr].src);
+                f.call(that, {}, msg, theBlock, theBlock.timestamp);
 
                 // save back the state
                 t[scAddr].state = _.extend(t[scAddr].state || {}, that.state);
             }
         }
+
+        // process value transfer
+        this.decBalance(tx.from, parseFloat(tx.value || 0) + parseFloat(tx.fee || 0))
+        this.incBalance(tx.to, tx.value);
+        this.incBalance("miner", tx.fee);
     }
 
     execBlock(block) {
