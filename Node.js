@@ -84,8 +84,8 @@ module.exports = class Node {
     execBlock(block) {
         block.txs.forEach(tx => {
             this.execTx(tx, block);
+            this.stateTable.miner.balance += params.MINER_REWARD;    
         });        
-        this.stateTable.miner.balance += params.MINER_REWARD;    
     }
 
     balanceOf(who) {
