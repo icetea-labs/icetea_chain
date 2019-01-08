@@ -1,5 +1,6 @@
 const express = require('express');
 const bodyParser = require('body-parser');
+const eosjs_ecc = require('eosjs-ecc')
 const _ = require('lodash');
 
 const app = express();
@@ -14,16 +15,30 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(express.static('dist'));
 
 app.post('/api/send_tx',function(req, res) {
+
+    var signature = req.body.signature
+    var pubkey = req.body.pubkey
+    var data = req.body.data
+    //verify signature
+    var verify = eosjs_ecc.verify(signature, data, pubkey)
+    
+    if(!verify){
+        res.json({success: false, error:"Wrong signature"});
+        return
+    }
+
+    data = JSON.parse(data)
+
     const tx = new Tx(
-        req.body.from, 
-        req.body.to, 
-        parseFloat(req.body.value) || 0, 
-        parseFloat(req.body.fee) || 0,
-        JSON.parse(req.body.data || "{}"));
+        data.from, 
+        data.to, 
+        parseFloat(data.value) || 0, 
+        parseFloat(data.fee) || 0,
+        JSON.parse(data.data || "{}"));
 
         poa.txPool.push(tx);
-
-    res.redirect('/?' + encodeURIComponent("Transaction broadcasted successfully."));
+    
+    res.json({success: true});
 });
 
 app.get('/api/balance',function(req, res) {

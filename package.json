@@ -12,6 +12,7 @@
   "license": "MIT",
   "dependencies": {
     "body-parser": "^1.18.3",
+    "eosjs-ecc": "^4.0.4",
     "express": "^4.16.4",
     "json-formatter-js": "^2.2.1",
     "lodash": "^4.17.11"
