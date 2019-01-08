@@ -93,7 +93,7 @@
 /*! no static exports found */
 /***/ (function(module, exports) {
 
-eval("document.getElementById(\"form\").addEventListener(\"submit\", (e) => {\n    if (!document.getElementById(\"data\").value.trim().length) {\n        alert(\"Please input contract source!\")\n        e.preventDefault();\n    }\n\n    // TODO: more input validation\n})\n\ndocument.getElementById(\"src\").addEventListener(\"input\", () => {\n    // Build data JSON\n    var data = {\n        op: 0,\n        src: btoa(document.getElementById(\"src\").value)\n    }\n\n    document.getElementById(\"data\").value = JSON.stringify(data); \n})\n\n//# sourceURL=webpack:///./src/deploy.js?");
+eval("document.getElementById(\"form\").addEventListener(\"submit\", (e) => {\n    if (!document.getElementById(\"data\").value.trim().length) {\n        alert(\"Please input contract source!\")\n        e.preventDefault();\n    }\n\n    // TODO: more input validation\n})\n\nfunction replaceAll(text, search, replacement) {\n    return text.split(search).join(replacement);\n}\n\nfunction buildData () {\n    let pText = document.getElementById(\"params\").value;\n    pText = replaceAll(pText, \"\\r\", \"\\n\");\n    pText = replaceAll(pText, \"\\n\\n\", \"\\n\");\n    let params = pText.split(\"\\n\").filter((e) => {\n        return e.trim().length;\n    })\n\n    // Build data JSON\n    var data = {\n        op: 0,\n        src: btoa(document.getElementById(\"src\").value),\n        params: params\n    }\n\n    document.getElementById(\"data\").value = JSON.stringify(data); \n}\n\ndocument.getElementById(\"src\").addEventListener(\"input\", buildData);\ndocument.getElementById(\"params\").addEventListener(\"input\", buildData);\n\n//# sourceURL=webpack:///./src/deploy.js?");
 
 /***/ })
 

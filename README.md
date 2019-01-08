@@ -5,6 +5,8 @@
 2. npm install
 3. npm start
 
+If you change the client HTML/JS/CSS, rebuild using `npx webpack --watch`.
+
 ## Transfer money
 1. http://localhost:3000/transfer.html
 2. view mining progress at terminal window
@@ -16,22 +18,28 @@
 2. Use the following code
 ```js
 module.exports = {
+    $onDeploy: (b) => {
+        console.log(`${msg.sender} has just deployed this contract, the address is ${this.address}`);
+        this.state.a = "onDeploy";
+        this.state.b = b;
+    },
+
     hello: (a, b, c) => {
-        console.log(`Hello ${msg.sender}`);
+        
+        console.log(`Hello ${msg.sender} from ${this.address}`);
         console.log(`This block is mined at ${now}`);
+        console.log(`The block hash is ${block.hash}`);
         console.log(`You pass the params ${a}, ${b}, ${c}`);
         console.log(`Current state is ${this.state.a}, ${this.state.b}, ${this.state.c}`);
         
         this.state.a = a;
         this.state.b = b;
         this.state.c = c;
-    },
-
-    _default: () => {
-        console.log("fallback function!")
     }
 }
 ```
+
+More sample contracts are available in _contracts_ folder.
 
 ## Call contract
 1. http://localhost:3000/ (may need F5 to refresh)
@@ -58,3 +66,4 @@ module.exports = {
 13. Remove non-deterministic stuff from Wasm contracts
 14. Gas calculation for JS contracts
 15. Gas calculation (metering layer) for Wasm contracts
+16. Use libp2p for p2p
