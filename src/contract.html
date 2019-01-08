@@ -1,5 +1,6 @@
 <html>
 <head>
+    <title>tchain - read/write contract</title>
     <link rel="stylesheet" type="text/css" href="style.css">
 </head>
 <body>
@@ -8,7 +9,7 @@
             <a href="/">Scan</a>
             <a href="/transfer.html">Transfer</a>
             <a href="/deploy.html">Deploy Contract</a>
-            <a href="/">Read/Write Contract</a>
+            <a href="/contract.html">Read/Write Contract</a>
         </nav>
         <h1>Read/write contract</h1>
         <form id="form" action="/api/send_tx" method="POST">
@@ -22,7 +23,7 @@
 value2
 value3</textarea></p>
             <p><label>Data (don't modify this directly)</label></p>
-            <p><textarea id="data" name="data" style="width: 600px;height: 60px;" required></textarea></p>
+            <p><textarea id="data" name="data"  class="disabled" style="width: 600px;height: 60px;" required></textarea></p>
             <p><button type="submit" style="padding: 8px 32px">Send</button>
         </form>
     </div>

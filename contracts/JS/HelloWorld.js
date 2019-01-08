@@ -1,8 +1,9 @@
 module.exports = {
 
-    $onDeploy: () => {
+    $onDeploy: (b) => {
         console.log(`${msg.sender} has just deployed this contract, the address is ${this.address}`);
         this.state.a = "onDeploy";
+        this.state.b = b;
     },
 
     hello: (a, b, c) => {

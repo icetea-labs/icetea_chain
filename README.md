@@ -18,9 +18,10 @@ If you change the client HTML/JS/CSS, rebuild using `npx webpack --watch`.
 2. Use the following code
 ```js
 module.exports = {
-    $onDeploy: () => {
+    $onDeploy: (b) => {
         console.log(`${msg.sender} has just deployed this contract, the address is ${this.address}`);
         this.state.a = "onDeploy";
+        this.state.b = b;
     },
 
     hello: (a, b, c) => {
