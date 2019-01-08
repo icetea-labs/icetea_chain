@@ -5,6 +5,8 @@
 2. npm install
 3. npm start
 
+If you change the client HTML/JS/CSS, rebuild using `npx webpack --watch`.
+
 ## Transfer money
 1. http://localhost:3000/transfer.html
 2. view mining progress at terminal window
@@ -63,3 +65,4 @@ More sample contracts are available in _contracts_ folder.
 13. Remove non-deterministic stuff from Wasm contracts
 14. Gas calculation for JS contracts
 15. Gas calculation (metering layer) for Wasm contracts
+16. Use libp2p for p2p

@@ -23,7 +23,7 @@ app.post('/api/send_tx',function(req, res) {
 
         poa.txPool.push(tx);
 
-    res.send("Broadcasted");
+    res.redirect('/?' + encodeURIComponent("Transaction broadcasted successfully."));
 });
 
 app.get('/api/balance',function(req, res) {

@@ -5,7 +5,7 @@ module.exports = {
 
         let x = "" + Math.round(Math.random());
         if (x === zz) {
-            // User wins, transfer money to he/she
+            // User wins, transfer money to him/her
             this.transfer(msg.sender, msg.value * 2);
         }  else {
             // Contract wins just keep the money (do nothing)

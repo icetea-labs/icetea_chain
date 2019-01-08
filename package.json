@@ -17,6 +17,7 @@
     "lodash": "^4.17.11"
   },
   "devDependencies": {
+    "copy-webpack-plugin": "^4.6.0",
     "nodemon": "^1.18.9",
     "webpack": "^4.28.3",
     "webpack-cli": "^3.2.0"
