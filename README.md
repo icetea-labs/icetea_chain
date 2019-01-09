@@ -51,19 +51,22 @@ More sample contracts are available in _contracts_ folder.
 7. Repeat from #3 to test more...
 
 ## TODO
-1. [x] Generate address & private key for account
-2. [ ] Check tx signature
-3. [ ] Check tx balance when transfer
-4. [ ] Support READ contract (no need to create TX) (**working**)
-5. [x] Support revert transaction (all or nothing)
-6. [ ] Support using ES6 class for contract (low priority)
-7. [ ] Support Wasm contract (**high priority**)
-8. [ ] VM should be in-process or spawn a new process? (**thinking**)
-9. [ ] Properly sandbox smart contract execution environment (**thinking**)
-10. [ ] Persist blockchain & state to disk
-11. [ ] Use merkle trie for storing state
-12. [ ] Remove non-deterministic from JS contracts
-13. [ ] Remove non-deterministic stuff from Wasm contracts
-14. [ ] Gas calculation for JS contracts
-15. [ ] Gas calculation (metering layer) for Wasm contracts
-16. [ ] Use libp2p for p2p
+- [x] Generate address & private key for account
+- [ ] Check tx signature
+- [ ] Check tx balance when transfer
+- [ ] Support READ contract (no need to create TX) (**working**)
+- [x] Support revert transaction (all or nothing)
+- [ ] Support using ES6 class for contract (low priority)
+- [ ] ABI extraction (low priority)
+- [ ] Support Wasm contract (**high priority**)
+- [ ] Persist blockchain & state to disk
+- [ ] Use merkle trie for storing state
+- [ ] Remove non-deterministic from JS contracts
+- [ ] Remove non-deterministic stuff from Wasm contracts
+- [ ] Gas calculation for JS contracts
+- [ ] Gas calculation (metering layer) for Wasm contracts
+- [ ] Use libp2p for p2p
+
+## Miscellanous
+- [ ] VM should be in-process or spawn a new process?
+- [ ] Properly sandbox smart contract execution environment
