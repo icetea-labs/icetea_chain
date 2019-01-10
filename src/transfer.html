@@ -33,8 +33,9 @@
     <script src="https://cdn.jsdelivr.net/npm/eosjs-ecc@4.0.4/lib/eosjs-ecc.min.js"
     integrity="sha512-dYFDmK/d9r3/NCp6toLtfkwOjSMRBaEzaGAx1tfRItC0nsI0hVLERk05iNBQR7uDNI7ludYhcBI4vUiFHdjsTQ=="
     crossorigin="anonymous"></script>
-    <script>
+    <script>        
         $('#form_tx').submit(false);
+        
         function signTx(){
             var data = $('#form_tx').serializeArray().reduce(function(obj, item) {
                     obj[item.name] = item.value;
