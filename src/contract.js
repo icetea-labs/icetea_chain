@@ -1,11 +1,11 @@
-document.getElementById("form").addEventListener("submit", (e) => {
-    if (!document.getElementById("name").value.trim().length) {
-        alert("Please input contract function name!")
-        e.preventDefault();
-    }
+// document.getElementById("form").addEventListener("submit", (e) => {
+//     if (!document.getElementById("name").value.trim().length) {
+//         alert("Please input contract function name!")
+//         e.preventDefault();
+//     }
 
-    // TODO: more input validation
-})
+//     // TODO: more input validation
+// })
 
 function replaceAll(text, search, replacement) {
     return text.split(search).join(replacement);
@@ -72,3 +72,35 @@ buildData();
 document.getElementById("name").addEventListener("change", buildData);
 document.getElementById("params").addEventListener("input", buildData);
 fillContracts();
+
+
+$(document).ready(function () {
+    $('#form_contract').submit(false);
+    $("#submit_btn").click(function () {
+        buildData()
+        var data = $('#form_contract').serializeArray().reduce(function (obj, item) {
+            obj[item.name] = item.value;
+            return obj;
+        }, {});
+        var privateKey = $("#private_key").val()
+        var pubkey = data.from
+        var signature = eosjs_ecc.sign(JSON.stringify(data), privateKey)
+
+        //submit tx
+        $.ajax({
+            url: "/api/send_tx",
+            method: "POST",
+            data: {
+                signature, pubkey, data: JSON.stringify(data)
+            },
+            success: function (result) {
+                if (result.success) {
+                   window.location.href = '/?' + encodeURIComponent("Transaction broadcasted successfully.")
+                } else {
+                    alert(result.error)
+                }
+                console.log(result)
+            }
+        });
+    })
+});
