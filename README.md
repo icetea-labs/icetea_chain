@@ -52,13 +52,14 @@ More sample contracts are available in _contracts_ folder.
 
 ## TODO
 - [x] Generate address & private key for account
-- [ ] Check tx signature
+- [x] Check tx signature
 - [ ] Check tx balance when transfer
 - [ ] Support READ contract (no need to create TX) (**working**)
 - [x] Support revert transaction (all or nothing)
 - [ ] Support using ES6 class for contract (low priority)
 - [ ] ABI extraction (low priority)
 - [ ] Support Wasm contract (**high priority**)
+- [ ] Create web3-like client lib
 - [ ] Persist blockchain & state to disk
 - [ ] Use merkle trie for storing state
 - [ ] Remove non-deterministic from JS contracts
