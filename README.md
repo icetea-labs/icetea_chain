@@ -67,6 +67,8 @@ More sample contracts are available in _contracts_ folder.
 - [ ] Gas calculation for JS contracts
 - [ ] Gas calculation (metering layer) for Wasm contracts
 - [ ] Use libp2p for p2p
+- [ ] Split VM into its own project
+- [ ] Make VM layer Tendermint/substrate compatible
 
 ## Miscellanous
 - [ ] VM should be in-process or spawn a new process?
