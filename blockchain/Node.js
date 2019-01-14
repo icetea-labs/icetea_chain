@@ -1,6 +1,13 @@
 const _ = require('lodash');
 const params = require("./Params");
 const Block = require('./Block');
+const babel = require("@babel/core");
+const babelPlugins = {
+    "plugins": [
+        ["@babel/plugin-proposal-decorators", { "legacy": true }],
+        ["@babel/plugin-proposal-class-properties", { "loose" : true }]
+      ]
+};
 
 module.exports = class Node {
 
@@ -45,9 +52,6 @@ module.exports = class Node {
             transfer: (to, value) => {
                 this.decBalance(addr, value, stateTable);
                 this.incBalance(to, value, stateTable);
-            },
-            $$: (obj) => {
-                return _.extend(that, obj);
             }
         }
 
@@ -55,17 +59,17 @@ module.exports = class Node {
     }
 
     verifyContractSrc(src) {
-        const f = new Function("module", src);
-        const module = {};
-        f(module);
+        const f = new Function("__c", src);
+        const contract = {};
+        f(contract);
 
-        if (!module.exports) {
-            throw new Error("The contract does not set module.exports.")
+        if (!contract.i) {
+            throw new Error("There must be one valid contract class marked with @contract.")
         }
 
         return {
-            onDeploy: !!module.exports.$onDeploy,
-            onReceive: !!module.exports.$onReceive
+            onDeploy: !!contract.i.__on_deployed,
+            onReceive: !!contract.i.__on_received
         }
     }
 
@@ -81,7 +85,7 @@ module.exports = class Node {
             throw new Error("Invalid contract call");
         } else {
             const [that, msg, theBlock] = this.makeContractCallEnv(tx, block, t, options)
-            const f = new Function("module", "msg", "block", "now", t[scAddr].src);
+            const f = new Function("__c", "msg", "block", "now", t[scAddr].src);
             f.call(that, {}, msg, theBlock, theBlock.timestamp);
 
             // save back the state
@@ -97,16 +101,20 @@ module.exports = class Node {
             let scAddr = "contract_" + tx.from + "_" + Date.now();
             tx.to = scAddr;
 
-            let src = Buffer.from(tx.data.src, 'base64').toString("ascii");
+            const originSrc = Buffer.from(tx.data.src, 'base64').toString("ascii");
+            const srcPrefix = "";
+            const srcSuffix = 'function contract(t){__c.i=Object.assign(new t(),__c.__ev);}function on(ev){return function(e, n){__c.__ev=__c.__ev||{};__c.__ev["__on_"+ev]=e[n];};}typeof msg !== "undefined" && msg.name && __c.i[msg.name].apply(Object.assign(__c.i,this), msg.params);';
+            let src = [srcPrefix, originSrc, srcSuffix].join(";\n");
+            src = babel.transform(src, babelPlugins).code;
             const state = this.verifyContractSrc(src);
             state.balance = 0;
-            state.src = src + ';typeof msg !== "undefined" && msg.name && module.exports[msg.name].apply(this.$$(module.exports), msg.params);';
+            state.src = src;
             stateTable[scAddr] = state;
 
             // call constructor
             if (state.onDeploy) {
                 this.callContractFunc(tx, block, stateTable, {
-                    fname: "$onDeploy"
+                    fname: "__on_deployed"
                 })
             }
         }
@@ -124,7 +132,7 @@ module.exports = class Node {
         if (tx.value && stateTable[tx.to].onReceive) {
             this.callContractFunc(tx, block, stateTable, {
                 address: tx.to,
-                fname: "$onReceive",
+                fname: "__on_received",
                 fparams: [tx.value]
             })
         }
@@ -168,16 +176,13 @@ module.exports = class Node {
     }
 
     getFuncNames(addr) {
-        const arr = [];
         if (this.stateTable[addr] && this.stateTable[addr].src) {
-            const f = new Function("module", this.stateTable[addr].src);
+            const f = new Function("__c", this.stateTable[addr].src);
             const module = {};
             f(module);
 
-            _.each(module.exports, (value, key) => {
-                if (typeof value === "function") {
-                    arr.push(key);
-                }
+            return Object.getOwnPropertyNames(Object.getPrototypeOf(module.i)).filter((name) => {
+                return (name !== "constructor");
             });
 
         }

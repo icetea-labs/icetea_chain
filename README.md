@@ -56,7 +56,7 @@ More sample contracts are available in _contracts_ folder.
 - [ ] Check tx balance when transfer
 - [ ] Support READ contract (no need to create TX) (**working**)
 - [x] Support revert transaction (all or nothing)
-- [ ] Support using ES6 class for contract (low priority)
+- [x] Support using ES6 class for contract
 - [ ] ABI extraction (low priority)
 - [ ] Support Wasm contract (**high priority**)
 - [ ] Persist blockchain & state to disk

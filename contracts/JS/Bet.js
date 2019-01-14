@@ -1,5 +1,5 @@
-module.exports = {
-    bet: (z1) => {
+@contract class Bet  {
+    bet (z1) {
         let zz = "" + z1;
         if (zz !== "1") zz = "0";
 
