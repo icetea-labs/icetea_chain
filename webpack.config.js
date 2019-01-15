@@ -15,5 +15,14 @@ module.exports = {
     },
     plugins: [
         new CopyWebpackPlugin([{from: 'src', ignore: [ '*.js' ]}])
-    ]
+    ],
+    devServer: {
+        proxy: {
+          '/api/**': {
+            target: 'http://localhost:3000',
+            secure: false,
+            changeOrigin: true,
+          }
+        },
+      },
 };

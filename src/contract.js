@@ -1,11 +1,4 @@
-// document.getElementById("form").addEventListener("submit", (e) => {
-//     if (!document.getElementById("name").value.trim().length) {
-//         alert("Please input contract function name!")
-//         e.preventDefault();
-//     }
-
-//     // TODO: more input validation
-// })
+import Tx from '../blockchain/Tx';
 
 function replaceAll(text, search, replacement) {
     return text.split(search).join(replacement);
@@ -25,7 +18,7 @@ function buildData() {
         params: params
     }
 
-    document.getElementById("data").value = JSON.stringify(data); 
+    return data;
 }
 
 async function fillContracts() {
@@ -65,35 +58,31 @@ async function fillFuncs() {
             select.appendChild(option);
         }
     });
-    buildData();
 }
 
-buildData();
-document.getElementById("name").addEventListener("change", buildData);
-document.getElementById("params").addEventListener("input", buildData);
-fillContracts();
-
-
 $(document).ready(function () {
-    $('#form_contract').submit(false);
-    $("#submit_btn").click(function () {
-        buildData()
-        var data = $('#form_contract').serializeArray().reduce(function (obj, item) {
+    fillContracts();
+    $('#form').submit(function (e) {
+        e.preventDefault();
+
+        var formData = $(this).serializeArray().reduce(function (obj, item) {
             obj[item.name] = item.value;
             return obj;
         }, {});
-        var privateKey = $("#private_key").val()
-        var pubkey = data.from
-        var signature = eosjs_ecc.sign(JSON.stringify(data), privateKey)
+        var txData = buildData();
+        formData.data = JSON.stringify(txData);
+        var privateKey = $("#private_key").val();
+        formData.from = eosjs_ecc.privateToPublic(privateKey);
+        var tx = new Tx(formData.from, formData.to, formData.value, formData.fee, txData);
+        formData.signature = eosjs_ecc.sign(tx.hash, privateKey)
 
         //submit tx
         $.ajax({
             url: "/api/send_tx",
             method: "POST",
-            data: {
-                signature, pubkey, data: JSON.stringify(data)
-            },
+            data: formData,
             success: function (result) {
+                console.log(result)
                 if (result.success) {
                    window.location.href = '/?' + encodeURIComponent("Transaction broadcasted successfully.")
                 } else {

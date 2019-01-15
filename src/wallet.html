@@ -1,13 +1,15 @@
 <html>
+
 <head>
     <title>tchain - deploy contract</title>
     <link rel="stylesheet" type="text/css" href="style.css">
     <style>
-        textarea{
+        textarea {
             width: 400px;
         }
     </style>
 </head>
+
 <body>
     <div id="content">
         <nav id="menu">
@@ -15,11 +17,11 @@
             <a href="/transfer.html">Transfer</a>
             <a href="/deploy.html">Deploy Contract</a>
             <a href="/contract.html">Read/Write Contract</a>
-            <a href="/private_key.html">Private key</a>
+            <a href="/wallet.html">Wallet</a>
         </nav>
         <h1>Private key</h1>
         <h2>
-            Generate private key
+            Generate account
         </h2>
         <div>
             <button onClick="generatePrivateKey()">Generate</button>
@@ -30,27 +32,26 @@
         </div>
 
         <h2>
-                Check public key
-            </h2>
-            <div>
-                <button onClick="seePublicKey()">Check</button>
-                <h3>Enter your private key</h3>
-                <textarea id="your_private_key"></textarea>
-                <h3>Your public key (your account address)</h3>
-                <textarea disabled id="your_public_key"></textarea>
-            </div>
+            Check public key
+        </h2>
+        <div>
+            <button onClick="seePublicKey()">Check</button>
+            <h3>Enter your private key</h3>
+            <textarea id="your_private_key"></textarea>
+            <h3>Your public key (your account address)</h3>
+            <textarea disabled id="your_public_key"></textarea>
+        </div>
     </div>
-    <script src="https://cdn.jsdelivr.net/npm/eosjs-ecc@4.0.4/lib/eosjs-ecc.min.js"
-    integrity="sha512-dYFDmK/d9r3/NCp6toLtfkwOjSMRBaEzaGAx1tfRItC0nsI0hVLERk05iNBQR7uDNI7ludYhcBI4vUiFHdjsTQ=="
-    crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/eosjs-ecc@4.0.4/lib/eosjs-ecc.min.js" integrity="sha512-dYFDmK/d9r3/NCp6toLtfkwOjSMRBaEzaGAx1tfRItC0nsI0hVLERk05iNBQR7uDNI7ludYhcBI4vUiFHdjsTQ=="
+        crossorigin="anonymous"></script>
     <script>
-        function generatePrivateKey(){
+        function generatePrivateKey() {
             eosjs_ecc.randomKey().then(privateKey => {
-                    document.getElementById("generated_private_key").value = privateKey
-                    document.getElementById("generated_public_key").value = eosjs_ecc.privateToPublic(privateKey)
-                    })
+                document.getElementById("generated_private_key").value = privateKey
+                document.getElementById("generated_public_key").value = eosjs_ecc.privateToPublic(privateKey)
+            })
         }
-        function seePublicKey(){
+        function seePublicKey() {
             var privateKey = document.getElementById("your_private_key").value
             document.getElementById("your_public_key").value = eosjs_ecc.privateToPublic(privateKey)
         }

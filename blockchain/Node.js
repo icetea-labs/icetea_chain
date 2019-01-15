@@ -1,6 +1,7 @@
 const _ = require('lodash');
 const params = require("./Params");
 const Block = require('./Block');
+const eosjs_ecc = require('eosjs-ecc')
 const babel = require("@babel/core");
 const babelPlugins = {
     "plugins": [
@@ -19,6 +20,18 @@ module.exports = class Node {
                 balance: 0,
             }
         }
+    }
+
+    isSignatureValid(tx) {
+        return eosjs_ecc.verify(tx.signature, tx.hash, tx.from);
+    }
+
+    addTxToPool(tx) {
+        if (!this.isSignatureValid(tx)) {
+            throw new Error("Invalid signature");
+        }
+
+        this.txPool.push(tx);
     }
 
     incBalance(addr, delta, stateTable) {

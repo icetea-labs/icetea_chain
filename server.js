@@ -1,6 +1,5 @@
 const express = require('express');
 const bodyParser = require('body-parser');
-const eosjs_ecc = require('eosjs-ecc')
 const _ = require('lodash');
 
 const app = express();
@@ -12,33 +11,40 @@ const Tx = require('./blockchain/Tx');
 const poa = new Miner(new Blockchain());
 
 app.use(bodyParser.urlencoded({ extended: false }));
-app.use(express.static('dist'));
+
+if (process.env.NODE_ENV === "production") {
+    app.use(express.static('dist'));
+}
 
 app.post('/api/send_tx',function(req, res) {
+    try {
+        var body = req.body;
 
-    var signature = req.body.signature
-    var pubkey = req.body.pubkey
-    var data = req.body.data
-    //verify signature
-    var verify = eosjs_ecc.verify(signature, data, pubkey)
-    
-    if(!verify){
-        res.json({success: false, error:"Wrong signature"});
-        return
+        console.log(body);
+
+        const tx = new Tx(
+            body.from, 
+            body.to, 
+            parseFloat(body.value) || 0, 
+            parseFloat(body.fee) || 0,
+            JSON.parse(body.data || "{}"));
+        tx.setSignature(body.signature);
+
+        poa.addTxToPool(tx);
+        
+        res.json({
+            success: true,
+            data: {
+                tx_hash: tx.hash
+            }
+        });
+    } catch (error) {
+        console.log(error)
+        res.json({
+            success: false,
+            error: error
+        })
     }
-
-    data = JSON.parse(data)
-
-    const tx = new Tx(
-        data.from, 
-        data.to, 
-        parseFloat(data.value) || 0, 
-        parseFloat(data.fee) || 0,
-        JSON.parse(data.data || "{}"));
-
-        poa.txPool.push(tx);
-    
-    res.json({success: true});
 });
 
 app.get('/api/balance',function(req, res) {

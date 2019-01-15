@@ -1,3 +1,5 @@
+const crypto = require('crypto');
+
 module.exports = class Tx {
 
     // data is null or empty: normal tx
@@ -19,6 +21,13 @@ module.exports = class Tx {
         this.value = value;
         this.fee = fee;
         this.data = data;
+
+        const content = [this.from, this.to, this.value, this.fee, JSON.stringify(this.data)].join(";");
+        this.hash = crypto.createHash('sha256').update(content).digest("hex");
+    }
+
+    setSignature(signature) {
+        this.signature = signature;
     }
 
     isContractCreation() {
@@ -30,6 +39,6 @@ module.exports = class Tx {
     }
 
     toString() {
-        return [this.from, this.to, this.value, this.fee, JSON.stringify(this.extra)].join(";");
+        return this.hash;
     }
 }

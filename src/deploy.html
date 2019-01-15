@@ -24,17 +24,14 @@
         <h2>Your private key used to sign tx</h2>
         <input type="text" id="private_key" value="5K4kMyGz839wEsG7a9xvPNXCmtgFE5He2Q8y9eurEQ4uNgpSRq7">
 
-        <form id="form_deploy">
-            <p><label>From: <input type="text" value="EOS617BFqg1QhNtsJiNiWz9jGpsm5iAJKqWQBhhk36KjvUFqNkh47" name="from" required autofocus></label></p>
+        <form id="form">
             <p><label>Value: <input type="number" value="0" name="value"></label></p>
             <p><label>Fee: <input type="number" value="1" name="fee"></label></p>
             <p><label>Contract source (<b>don't use Unicode characters, not supported)</b>:</label></p>
             <p><textarea id="src" style="width: 600px;height: 280px;" required></textarea></p>
             <p><label>Constructor params (each param one row)</label></p>
             <p><textarea id="params" style="width: 600px;height: 60px;"></textarea></p>
-            <p><label>Data (don't modify this directly)</label></p>
-            <p><textarea id="data" name="data" class="disabled" style="width: 600px;height: 120px;" required></textarea></p>
-            <p><button style="padding: 8px 32px" id="submit_btn">Send</button>
+            <p><button type="submit" style="padding: 8px 32px" id="submit_btn">Send</button>
         </form>
     </div>
     <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
