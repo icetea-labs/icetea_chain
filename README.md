@@ -25,7 +25,6 @@ If you change the client HTML/JS/CSS, rebuild using `npx webpack --watch`.
     }
 
     hello (a, b, c) {
-        
         console.log(`Hello ${msg.sender} from ${this.address}`);
         console.log(`This block is mined at ${now}`);
         console.log(`The block hash is ${block.hash}`);
@@ -63,6 +62,7 @@ More sample contracts are available in _contracts_ folder.
 - [ ] Support READ contract (no need to create TX) (**working**)
 - [x] Support revert transaction (all or nothing)
 - [x] Support using ES6 class for contract
+- [ ] Use receipts for TX results
 - [ ] ABI extraction (low priority)
 - [ ] Support Wasm contract (**high priority**)
 - [ ] Create web3-like client lib
