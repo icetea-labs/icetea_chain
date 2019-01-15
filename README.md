@@ -17,14 +17,14 @@ If you change the client HTML/JS/CSS, rebuild using `npx webpack --watch`.
 1. http://localhost:3000/deploy.html
 2. Use the following code
 ```js
-module.exports = {
-    $onDeploy: (b) => {
+@contract class HelloWorld {
+    @on("deployed") deploy(b) {
         console.log(`${msg.sender} has just deployed this contract, the address is ${this.address}`);
         this.state.a = "onDeploy";
         this.state.b = b;
-    },
+    }
 
-    hello: (a, b, c) => {
+    hello (a, b, c) {
         
         console.log(`Hello ${msg.sender} from ${this.address}`);
         console.log(`This block is mined at ${now}`);
@@ -35,6 +35,12 @@ module.exports = {
         this.state.a = a;
         this.state.b = b;
         this.state.c = c;
+    }
+
+    callHello() {
+        console.log("Set new state");
+        this.hello("x", "y", "z");
+        console.log(`Current state is ${this.state.a}, ${this.state.b}, ${this.state.c}`);
     }
 }
 ```
