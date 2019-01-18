@@ -43,6 +43,7 @@
 - [ ] Check tx balance when transfer
 - [ ] View and payable markers
 - [ ] Wrap state accesses in set/get methods
+- [ ] Add nonce (transaction counter)
 - [ ] Support READ contract (no need to create TX) (**working**)
 - [x] Support revert transaction (all or nothing)
 - [x] Support using ES6 class for contract

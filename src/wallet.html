@@ -48,12 +48,12 @@
         function generatePrivateKey() {
             eosjs_ecc.randomKey().then(privateKey => {
                 document.getElementById("generated_private_key").value = privateKey
-                document.getElementById("generated_public_key").value = eosjs_ecc.privateToPublic(privateKey)
+                document.getElementById("generated_public_key").value = eosjs_ecc.privateToPublic(privateKey).slice(3);
             })
         }
         function seePublicKey() {
             var privateKey = document.getElementById("your_private_key").value
-            document.getElementById("your_public_key").value = eosjs_ecc.privateToPublic(privateKey)
+            document.getElementById("your_public_key").value = eosjs_ecc.privateToPublic(privateKey).slice(3)
         }
     </script>
 </body>

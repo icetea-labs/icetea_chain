@@ -23,7 +23,7 @@ module.exports = class Node {
     }
 
     isSignatureValid(tx) {
-        return eosjs_ecc.verify(tx.signature, tx.hash, tx.from);
+        return eosjs_ecc.verify("EOS" + tx.signature, tx.hash, tx.from);
     }
 
     addTxToPool(tx) {
