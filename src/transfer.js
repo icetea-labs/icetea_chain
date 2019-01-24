@@ -1,4 +1,5 @@
 import Tx from '../blockchain/Tx';
+import ecc from '../blockchain/helper/ecc';
 
 function buildData () {
     return {};
@@ -17,7 +18,7 @@ $(document).ready(function () {
         var privateKey = $("#private_key").val();
         formData.from = eosjs_ecc.privateToPublic(privateKey);
         var tx = new Tx(formData.from, formData.to, formData.value, formData.fee, txData);
-        formData.signature = eosjs_ecc.sign(tx.hash, privateKey)
+        formData.signature = ecc.sign(tx.hash, privateKey)
 
         //submit tx
         $.ajax({

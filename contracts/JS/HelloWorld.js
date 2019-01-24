@@ -1,28 +1,18 @@
 @contract class HelloWorld {
 
+    @useState bye = 1;
+    
     @on("deployed") deploy(b) {
         console.log(`${msg.sender} has just deployed this contract, the address is ${this.address}`);
-        this.state.a = "onDeploy";
-        this.state.b = b;
+        console.log(`Current value ${bye.get()}`)
+        this.bye.set(200);
+        console.log(`After value ${bye.get()}`)
     }
 
-    hello (a, b, c) {
-        
+    hello () {
         console.log(`Hello ${msg.sender} from ${this.address}`);
         console.log(`This block is mined at ${now}`);
         console.log(`The block hash is ${block.hash}`);
-        console.log(`You pass the params ${a}, ${b}, ${c}`);
-        console.log(`Current state is ${this.state.a}, ${this.state.b}, ${this.state.c}`);
-        
-        this.state.a = a;
-        this.state.b = b;
-        this.state.c = c;
-    }
-
-    callHello() {
-        console.log("Set new state");
-        this.hello("x", "y", "z");
-        console.log(`Current state is ${this.state.a}, ${this.state.b}, ${this.state.c}`);
     }
 }
 

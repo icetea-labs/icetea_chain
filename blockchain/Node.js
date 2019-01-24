@@ -1,14 +1,8 @@
 const _ = require('lodash');
 const params = require("./Params");
 const Block = require('./Block');
-const eosjs_ecc = require('eosjs-ecc')
-const babel = require("@babel/core");
-const babelPlugins = {
-    "plugins": [
-        ["@babel/plugin-proposal-decorators", { "legacy": true }],
-        ["@babel/plugin-proposal-class-properties", { "loose" : true }]
-      ]
-};
+const ecc = require('./helper/ecc')
+const {Runner, Context} = require('./vm')
 
 module.exports = class Node {
 
@@ -22,13 +16,9 @@ module.exports = class Node {
         }
     }
 
-    isSignatureValid(tx) {
-        return eosjs_ecc.verify("EOS" + tx.signature, tx.hash, tx.from);
-    }
-
     addTxToPool(tx) {
-        if (!this.isSignatureValid(tx)) {
-            throw new Error("Invalid signature");
+        if (!ecc.verifyTx(tx)) {
+            throw "Invalid signature";
         }
 
         this.txPool.push(tx);
@@ -44,65 +34,24 @@ module.exports = class Node {
         this.incBalance(addr, -delta, stateTable);
     }
 
-    makeContractCallEnv(tx, block, stateTable, options) {
-        const msg = _.cloneDeep(tx);
-        msg.name = options.fname;
-        msg.params = options.fparams;
-        msg.sender = msg.from; // alias
-
-        const addr = options.address;
-
-        const theBlock = _.cloneDeep(block);
-
-        const state = _.cloneDeep(stateTable[addr].state || {});
-
-        const balance = this.balanceOf(addr, stateTable);
-
-        const that = {
-            address: addr,
-            state: state,
-            balance: balance,
-            transfer: (to, value) => {
-                this.decBalance(addr, value, stateTable);
-                this.incBalance(to, value, stateTable);
-            }
-        }
-
-        return [that, msg, theBlock];
-    }
-
-    verifyContractSrc(src) {
-        const f = new Function("__c", src);
-        const contract = {};
-        f(contract);
-
-        if (!contract.i) {
-            throw new Error("There must be one valid contract class marked with @contract.")
-        }
-
-        return {
-            onDeploy: !!contract.i.__on_deployed,
-            onReceive: !!contract.i.__on_received
-        }
-    }
-
-    callContractFunc(tx, block, stateTable, options) {
-        options = _.extend({
+    callContract(tx, block, stateTable, overrides) {
+        const options = Object.assign({
             address: tx.to,
             fname: tx.data.name,
             fparams: tx.data.params
-        }, options || {});
+        }, overrides || {});
+
         let scAddr = options.address;
         const t = stateTable;
         if (!t[scAddr] || !t[scAddr].src) {
-            throw new Error("Invalid contract call");
+            throw "Invalid contract call";
         } else {
-            const [that, msg, theBlock] = this.makeContractCallEnv(tx, block, t, options)
-            const f = new Function("__c", "msg", "block", "now", t[scAddr].src);
-            f.call(that, {}, msg, theBlock, theBlock.timestamp);
+            const ctx = Context(tx, block, t, options);
+            const vm = new Runner();
+            vm.run(t[scAddr].src, ctx)
 
             // save back the state
-            t[scAddr].state = _.extend(t[scAddr].state || {}, that.state);
+            t[scAddr].state = Object.assign(t[scAddr].state || {}, ctx._state);
         }
     }
 
@@ -110,31 +59,30 @@ module.exports = class Node {
 
         // deploy contract
         if (tx.isContractCreation()) {
+
             // make new address for smart contract
             let scAddr = "contract_" + tx.from + "_" + Date.now();
             tx.to = scAddr;
 
-            const originSrc = Buffer.from(tx.data.src, 'base64').toString("ascii");
-            const srcPrefix = "";
-            const srcSuffix = 'function contract(t){__c.i=Object.assign(new t(),__c.__ev);}function on(ev){return function(e, n){__c.__ev=__c.__ev||{};__c.__ev["__on_"+ev]=e[n];};}typeof msg !== "undefined" && msg.name && __c.i[msg.name].apply(Object.assign(__c.i,this), msg.params);';
-            let src = [srcPrefix, originSrc, srcSuffix].join(";\n");
-            src = babel.transform(src, babelPlugins).code;
-            const state = this.verifyContractSrc(src);
-            state.balance = 0;
-            state.src = src;
-            stateTable[scAddr] = state;
+            const src = Buffer.from(tx.data.src, 'base64').toString("ascii");
+            const vm = new Runner();
+            const compileSrc = vm.compile(src);
+            vm.verify(compileSrc);
+
+            stateTable[scAddr] = {
+                balance: 0,
+                src: compileSrc
+            };
 
             // call constructor
-            if (state.onDeploy) {
-                this.callContractFunc(tx, block, stateTable, {
-                    fname: "__on_deployed"
-                })
-            }
+            this.callContract(tx, block, stateTable, {
+                fname: "__on_deployed"
+            })
         }
 
         // call contract
         if (tx.isContractCall()) {
-            this.callContractFunc(tx, block, stateTable);
+            this.callContract(tx, block, stateTable);
         }
 
         // process value transfer
@@ -142,8 +90,8 @@ module.exports = class Node {
         this.incBalance(tx.to, tx.value, stateTable);
         this.incBalance("miner", tx.fee, stateTable);
 
-        if (tx.value && stateTable[tx.to].onReceive) {
-            this.callContractFunc(tx, block, stateTable, {
+        if (tx.value) {
+            this.callContract(tx, block, stateTable, {
                 address: tx.to,
                 fname: "__on_received",
                 fparams: [tx.value]

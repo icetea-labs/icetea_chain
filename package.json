@@ -4,7 +4,8 @@
   "description": "A simple chain for testing ideas",
   "main": "server.js",
   "scripts": {
-    "dev": "npm start & webpack-dev-server --content-base src --inline --hot --port 3001 --open"
+    "dev": "npm start & webpack-dev-server --content-base src --inline --hot --port 3001 --open",
+    "dev2": "npm start & webpack-dev-server --content-base src --inline --hot --port 3001"
   },
   "keywords": [],
   "author": "Trada Tech",

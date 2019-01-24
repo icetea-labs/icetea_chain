@@ -1,5 +1,6 @@
 module.exports = {
     DIFFICULTY: 0,
     BLOCK_SIZE: 2,
-    MINER_REWARD: 5
+    MINER_ADDRESS: "",
+    MINER_REWARD: 0
 }
