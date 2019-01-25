@@ -1,3 +1,4 @@
+var halts = require('halting-problem');
 const Runner = require("../Runner");
 
 //
@@ -41,6 +42,10 @@ const babelPlugins = {
 const Patch = require('./patch/');
 
 module.exports = class JsRunner extends Runner {
+    lint(src) {
+        super.lint(src);
+        halts(src);
+    }
     compile(src) {
         return babel.transform(src, babelPlugins).code;
     }
@@ -49,10 +54,10 @@ module.exports = class JsRunner extends Runner {
         return Patch.patch(compiledSrc);
     }
     
-    doRun(compiledSrc, ctx) {
-        console.log(compiledSrc)
-        const f = new Function(compiledSrc);
-        f.call(ctx);
+    doRun(compiledSrc, ctx, info) {
+        //console.log(compiledSrc)
+        const f = new Function("__info", compiledSrc);
+        f.call(ctx, info);
     }
 }
 

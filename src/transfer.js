@@ -16,7 +16,7 @@ $(document).ready(function () {
         var txData = buildData();
         formData.data = JSON.stringify(txData);
         var privateKey = $("#private_key").val();
-        formData.from = eosjs_ecc.privateToPublic(privateKey);
+        formData.from = ecc.toPublicKey(privateKey);
         var tx = new Tx(formData.from, formData.to, formData.value, formData.fee, txData);
         formData.signature = ecc.sign(tx.hash, privateKey)
 
@@ -28,11 +28,10 @@ $(document).ready(function () {
             success: function (result) {
                 console.log(result)
                 if (result.success) {
-                   window.location.href = '/?' + encodeURIComponent("Transaction broadcasted successfully.")
+                   window.location.href = '/tx.html?hash=' + encodeURIComponent(result.data.tx_hash)
                 } else {
                     alert(result.error)
                 }
-                console.log(result)
             }
         });
     })

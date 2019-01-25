@@ -20,7 +20,7 @@ app.post('/api/send_tx',function(req, res) {
     try {
         var body = req.body;
 
-        console.log(body);
+        //console.log(body);
 
         const tx = new Tx(
             body.from, 
@@ -46,6 +46,21 @@ app.post('/api/send_tx',function(req, res) {
         })
     }
 });
+
+app.get('/api/tx', function(req, res){
+    const receipt = poa.getReceipt(req.query.hash);
+    if (!receipt) {
+        return res.json({
+            success: false,
+            error: "Invalid transaction hash. Transaction not found."
+        })
+    } else {
+        res.json({
+            success: true,
+            data: receipt
+        })
+    }
+})
 
 app.get('/api/balance',function(req, res) {
     const who = req.query.who;

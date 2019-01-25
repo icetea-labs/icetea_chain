@@ -3,7 +3,7 @@
         let zz = "" + z1;
         if (zz !== "1") zz = "0";
 
-        let x = "" + Math.round(Math.random());
+        let x = "" + parseInt(block.hash, 16) % 2;
         if (x === zz) {
             // User wins, transfer money to him/her
             this.transfer(msg.sender, msg.value * 2);

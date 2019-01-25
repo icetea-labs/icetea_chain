@@ -28,3 +28,19 @@ body {
 .disabled {
     background-color: lightgray;
 }
+.tx-details {
+    width: 100%;
+}
+.tx-details td {
+    border-bottom: 1px solid #ddd;
+    padding: 8px;
+}
+.break-all {
+    word-break: break-word;
+}
+td.Success {
+    color: green;
+}
+td.Error {
+    color: red;
+}

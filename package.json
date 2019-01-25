@@ -17,6 +17,8 @@
     "body-parser": "^1.18.3",
     "eosjs-ecc": "^4.0.4",
     "express": "^4.16.4",
+    "halting-problem": "^1.0.3",
+    "handlebars": "^4.0.12",
     "json-formatter-js": "^2.2.1",
     "lodash": "^4.17.11",
     "npx": "^10.2.0",

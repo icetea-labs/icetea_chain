@@ -1,0 +1,67 @@
+<html>
+
+<head>
+    <title>tchain - transaction detail</title>
+    <link rel="stylesheet" type="text/css" href="style.css">
+</head>
+
+<body>
+    <div id="content">
+        <nav id="menu">
+            <a href="/">Scan</a>
+            <a href="/transfer.html">Transfer</a>
+            <a href="/deploy.html">Deploy Contract</a>
+            <a href="/contract.html">Read/Write Contract</a>
+            <a href="/wallet.html">Wallet</a>
+        </nav>
+        <h1>Transaction Details</h1>
+        <div id="tableContent">Please specify a transation hash on query string.</div>
+        <script id="tableTemplate" type="text/x-handlebars-template">
+            <table class="tx-details">
+                <tr>
+                    <td>TX Hash</td>
+                    <td>{{hash}}</td>
+                </tr>
+                <tr>
+                    <td>Status</td>
+                    <td class={{status}}><b>{{status}}</b></td>
+                </tr>
+                <tr>
+                    <td>Error</td>
+                    <td class={{status}}>{{error}}</td>
+                </tr>
+                <tr>
+                    <td>Block Hash</td>
+                    <td class="break-all">{{blockHash}}</td>
+                </tr>
+                <tr>
+                    <td>Block Timestamp</td>
+                    <td>{{blockTimestamp}}</td>
+                </tr>
+                <tr>
+                    <td>From</td>
+                    <td class="break-all">{{from}}</td>
+                </tr>
+                <tr>
+                    <td>To</td>
+                    <td class="break-all">{{to}}</td>
+                </tr>
+                <tr>
+                    <td>Value</td>
+                    <td>{{value}}</td>
+                </tr>
+                <tr>
+                    <td>Tip (Fee)</td>
+                    <td>{{fee}}</td>
+                </tr>
+                <tr>
+                    <td>Extra Data</td>
+                    <td class="break-all">{{data}}</td>
+                </tr>
+            </table>
+        </script>
+    </div>
+    <script src="tx.js"></script>
+</body>
+
+</html>

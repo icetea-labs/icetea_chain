@@ -1,4 +1,5 @@
 const _ = require('lodash');
+const utils = require('../helper/utils');
 
 module.exports = (tx, block, stateTable, {address, fname, fparams}) => {
     const msg = _.cloneDeep(tx);
@@ -16,12 +17,12 @@ module.exports = (tx, block, stateTable, {address, fname, fparams}) => {
         balance,
         getEnv: () => ({msg, block: theBlock}),
         transfer: (to, value) => {
-            this.decBalance(address, value, stateTable);
-            this.incBalance(to, value, stateTable);
+            utils.decBalance(address, value, stateTable);
+            utils.incBalance(to, value, stateTable);
         },
         _state: {},
         hasState: (key) => {
-            return ctx._state.hasOwnProperty(key);
+            return ctx._state.hasOwnProperty(key) || state.hasOwnProperty(key);
         },
         getState: (key) => {
             return ctx._state.hasOwnProperty(key) ? ctx._state[key] : state[key];

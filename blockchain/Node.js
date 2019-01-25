@@ -1,4 +1,5 @@
 const _ = require('lodash');
+const utils = require('./helper/utils');
 const params = require("./Params");
 const Block = require('./Block');
 const ecc = require('./helper/ecc')
@@ -14,24 +15,37 @@ module.exports = class Node {
                 balance: 0,
             }
         }
+        this.receipts = {};
+    }
+
+    addReceipt(tx, block, error, status) {
+        let r = this.receipts[tx.hash] || {};
+        r = {
+            ...r,
+            ...tx,
+            status,
+            error: String(error),
+        }
+        if (block) {
+            r.blockHash = block.hash;
+            r.blockTimestamp = block.timestamp;
+        }
+        this.receipts[tx.hash] = r;
+        return r;
+    }
+
+    getReceipt(txHash) {
+        if (!txHash) return null;
+        return this.receipts[txHash];
     }
 
     addTxToPool(tx) {
         if (!ecc.verifyTx(tx)) {
-            throw "Invalid signature";
+            throw new Error("Invalid signature");
         }
 
         this.txPool.push(tx);
-    }
-
-    incBalance(addr, delta, stateTable) {
-        const t = stateTable;
-        t[addr] = t[addr] || {balance: 0};
-        t[addr].balance += parseFloat(delta) || 0;
-    }
-
-    decBalance(addr, delta, stateTable) {
-        this.incBalance(addr, -delta, stateTable);
+        this.addReceipt(tx, null, null, "Pending");
     }
 
     callContract(tx, block, stateTable, overrides) {
@@ -44,7 +58,7 @@ module.exports = class Node {
         let scAddr = options.address;
         const t = stateTable;
         if (!t[scAddr] || !t[scAddr].src) {
-            throw "Invalid contract call";
+            throw new Error(`Address ${scAddr} is not a valid contract`);
         } else {
             const ctx = Context(tx, block, t, options);
             const vm = new Runner();
@@ -61,7 +75,7 @@ module.exports = class Node {
         if (tx.isContractCreation()) {
 
             // make new address for smart contract
-            let scAddr = "contract_" + tx.from + "_" + Date.now();
+            let scAddr = "contract_" + tx.from.substr(22) + Date.now();
             tx.to = scAddr;
 
             const src = Buffer.from(tx.data.src, 'base64').toString("ascii");
@@ -86,11 +100,11 @@ module.exports = class Node {
         }
 
         // process value transfer
-        this.decBalance(tx.from, parseFloat(tx.value || 0) + parseFloat(tx.fee || 0), stateTable)
-        this.incBalance(tx.to, tx.value, stateTable);
-        this.incBalance("miner", tx.fee, stateTable);
+        utils.decBalance(tx.from, parseFloat(tx.value || 0) + parseFloat(tx.fee || 0), stateTable)
+        utils.incBalance(tx.to, tx.value, stateTable);
+        utils.incBalance("miner", tx.fee, stateTable);
 
-        if (tx.value) {
+        if (tx.value && stateTable[tx.to].src) {
             this.callContract(tx, block, stateTable, {
                 address: tx.to,
                 fname: "__on_received",
@@ -104,9 +118,11 @@ module.exports = class Node {
         var tmpStateTable = _.cloneDeep(this.stateTable);
         try {
             this.doExecTx(tx, block, tmpStateTable);
-            _.extend(this.stateTable, tmpStateTable);
+            Object.assign(this.stateTable, tmpStateTable);
+            this.addReceipt(tx, block, null, "Success");
         } catch (error) {
-            console.log(error);
+            this.addReceipt(tx, block, error, "Error")
+            //console.log(error);
         }
     }
 
@@ -115,7 +131,7 @@ module.exports = class Node {
             this.execTx(tx, block);
         });
 
-        this.incBalance("miner", params.MINER_REWARD, this.stateTable);
+        utils.incBalance("miner", params.MINER_REWARD, this.stateTable);
     }
 
     balanceOf(who, t) {
@@ -138,12 +154,26 @@ module.exports = class Node {
 
     getFuncNames(addr) {
         if (this.stateTable[addr] && this.stateTable[addr].src) {
-            const f = new Function("__c", this.stateTable[addr].src);
-            const module = {};
-            f(module);
+            const vm = new Runner();
+            const info = {};
+            vm.run(this.stateTable[addr].src, {
+                getEnv: () => ({msg: {}, block:{}}),
+                getState: () => null,
+                setState: value => {}
+            }, info);
 
-            return Object.getOwnPropertyNames(Object.getPrototypeOf(module.i)).filter((name) => {
-                return (name !== "constructor");
+            //console.log(info);
+
+            if (!info || !info._i) return [];
+
+            function isEvent(name) {
+                if (!info._mk) return false;
+                return (info._mk['deployed'] || []).includes(name) ||
+                    (info._mk['received'] || []).includes(name);
+            }
+
+            return Object.getOwnPropertyNames(Object.getPrototypeOf(info._i)).filter((name) => {
+                return name !== "constructor" && !isEvent(name);
             });
 
         }

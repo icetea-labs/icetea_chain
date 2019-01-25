@@ -45,13 +45,11 @@ $(document).ready(function () {
             method: "POST",
             data: formData,
             success: function (result) {
-                console.log(result)
                 if (result.success) {
-                   window.location.href = '/?' + encodeURIComponent("Transaction broadcasted successfully.")
+                   window.location.href = '/tx.html?hash=' + encodeURIComponent(result.data.tx_hash)
                 } else {
                     alert(result.error)
                 }
-                console.log(result)
             }
         });
     })
