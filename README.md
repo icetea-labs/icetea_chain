@@ -41,13 +41,13 @@
 - [x] Generate address & private key for account
 - [x] Check tx signature
 - [ ] Check tx balance when transfer
-- [ ] View and payable markers
-- [ ] Wrap state accesses in set/get methods
+- [x] View and payable markers
+- [x] Wrap state accesses in set/get methods
 - [ ] Add nonce (transaction counter)
-- [ ] Support READ contract (no need to create TX) (**working**)
+- [x] Support READ contract (no need to create TX)
 - [x] Support revert transaction (all or nothing)
 - [x] Support using ES6 class for contract
-- [ ] Use receipts for TX results
+- [x] Use receipts for TX results
 - [ ] ABI extraction (low priority)
 - [ ] Support Wasm contract (**high priority**)
 - [ ] Create web3-like client lib
