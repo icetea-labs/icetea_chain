@@ -21,12 +21,15 @@
             <p><label>Fee: <input type="number" value="1" name="fee"></label></p>
             <p><label>Contract address:</label> <select id="to" name="to" autofocus required></select></p>
             <p><label>Function name:</label> <select id="name" name="name" required></select></p>
-            <p><label>Function params (each param one row)</label></p>
-            <p><textarea id="params" style="width: 600px;height: 100px;">value1
-value2
-value3</textarea></p>
-            <p><button type="submit" style="padding: 8px 32px" id="submit_btn">Send</button>
+            <p><label>Function params (each param one row, use " to denote string)</label></p>
+            <p><textarea id="params" style="width: 600px;height: 100px;"></textarea></p>
+            <p><button type="submit" style="padding: 8px 32px" id="submit_btn">Send (Write)</button>
         </form>
+        <p><button id="read" style="padding: 8px 32px" >Call (Read)</button></p>
+        <section id="result">
+            <div><b id="funcName"></b></div>
+            <div id="resultJson"></div>
+        </section>
     </div>
     <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
     <script src="contract.js"></script>

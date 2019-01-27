@@ -20,8 +20,6 @@ app.post('/api/send_tx',function(req, res) {
     try {
         var body = req.body;
 
-        //console.log(body);
-
         const tx = new Tx(
             body.from, 
             body.to, 
@@ -43,6 +41,27 @@ app.post('/api/send_tx',function(req, res) {
         res.json({
             success: false,
             error: error
+        })
+    }
+});
+
+app.get('/api/call',function(req, res) {
+    try {
+        var query = req.query;
+        var params = query.params;
+        if (params) {
+            params = decodeURIComponent(params);
+        }
+        var result = poa.callViewFunc(query.address, query.name, params);       
+        res.json({
+            success: true,
+            data: result
+        });
+    } catch (error) {
+        //console.log(error)
+        res.json({
+            success: false,
+            error: String(error)
         })
     }
 });

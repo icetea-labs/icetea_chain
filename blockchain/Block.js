@@ -1,7 +1,8 @@
 const crypto = require('crypto');
 
 module.exports = class Block {
-    constructor(txs, prevHash, difficulty) {
+    constructor(number, txs, prevHash, difficulty) {
+        this.number = number;
         this.difficulty = difficulty;
         this.txs = txs || [];
         this.nonce = -1;
@@ -10,7 +11,7 @@ module.exports = class Block {
     }
 
     toString() {
-        return [this.txs.join(";"), this.nonce, this.prevHash, this.difficulty, this.timestamp].join(";");
+        return [this.txs.join(";"), this.number, this.nonce, this.prevHash, this.difficulty, this.timestamp].join(";");
     }
 
     makeNewHash() {

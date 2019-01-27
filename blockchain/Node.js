@@ -18,16 +18,17 @@ module.exports = class Node {
         this.receipts = {};
     }
 
-    addReceipt(tx, block, error, status) {
+    addReceipt(tx, block, error, status, result) {
         let r = this.receipts[tx.hash] || {};
         r = {
             ...r,
             ...tx,
             status,
             error: String(error),
+            result
         }
         if (block) {
-            r.blockHash = block.hash;
+            r.blockNumber = block.number;
             r.blockTimestamp = block.timestamp;
         }
         this.receipts[tx.hash] = r;
@@ -60,12 +61,14 @@ module.exports = class Node {
         if (!t[scAddr] || !t[scAddr].src) {
             throw new Error(`Address ${scAddr} is not a valid contract`);
         } else {
-            const ctx = Context(tx, block, t, options);
+            const ctx = Context.contextForWrite(tx, block, t, options);
             const vm = new Runner();
-            vm.run(t[scAddr].src, ctx)
+            const result = vm.run(t[scAddr].src, ctx)
 
             // save back the state
             t[scAddr].state = Object.assign(t[scAddr].state || {}, ctx._state);
+
+            return result;
         }
     }
 
@@ -75,10 +78,10 @@ module.exports = class Node {
         if (tx.isContractCreation()) {
 
             // make new address for smart contract
-            let scAddr = "contract_" + tx.from.substr(22) + Date.now();
+            let scAddr = "contract_" + Date.now() + "_" + tx.from.substr(21);
             tx.to = scAddr;
 
-            const src = Buffer.from(tx.data.src, 'base64').toString("ascii");
+            const src = decodeURIComponent(Buffer.from(tx.data.src, 'base64').toString("ascii"));
             const vm = new Runner();
             const compileSrc = vm.compile(src);
             vm.verify(compileSrc);
@@ -96,7 +99,10 @@ module.exports = class Node {
 
         // call contract
         if (tx.isContractCall()) {
-            this.callContract(tx, block, stateTable);
+            if (['constructor', '__on_received', '__on_deployed', 'getState', 'setState', 'getEnv'].includes(tx.data.name)) {
+                throw new Error('Calling this method directly is not allowed');
+            }
+            return this.callContract(tx, block, stateTable);
         }
 
         // process value transfer
@@ -104,11 +110,10 @@ module.exports = class Node {
         utils.incBalance(tx.to, tx.value, stateTable);
         utils.incBalance("miner", tx.fee, stateTable);
 
-        if (tx.value && stateTable[tx.to].src) {
+        if (tx.value && stateTable[tx.to].src && !tx.isContractCreation() && !tx.isContractCall()) {
             this.callContract(tx, block, stateTable, {
                 address: tx.to,
-                fname: "__on_received",
-                fparams: [tx.value]
+                fname: "__on_received"
             })
         }
     }
@@ -117,9 +122,9 @@ module.exports = class Node {
         // clone the state so that we could revert on exception
         var tmpStateTable = _.cloneDeep(this.stateTable);
         try {
-            this.doExecTx(tx, block, tmpStateTable);
+            const result = this.doExecTx(tx, block, tmpStateTable);
             Object.assign(this.stateTable, tmpStateTable);
-            this.addReceipt(tx, block, null, "Success");
+            this.addReceipt(tx, block, null, "Success", result);
         } catch (error) {
             this.addReceipt(tx, block, error, "Error")
             //console.log(error);
@@ -152,15 +157,44 @@ module.exports = class Node {
         return arr;
     }
 
+    getAllPropertyNames(obj, filter) {
+        var props = [];
+    
+        do {
+            Object.getOwnPropertyNames(obj).forEach(prop => {
+                if (!props.includes(prop)) {
+                    props.push(prop);
+                }
+            });
+        } while ((obj = Object.getPrototypeOf(obj)) && obj != Object.prototype);
+    
+        //console.log(props);
+        return props;
+    }
+
+    callViewFunc(addr, name, params) {
+        if (this.stateTable[addr] && this.stateTable[addr].src) {
+            const vm = new Runner();
+            return vm.run(this.stateTable[addr].src, Context.contextForView(this.stateTable, addr, name, params));
+        }
+
+        throw new Error("The address supplied is not a deployed contract")
+    }
+
+    callPureFunc(addr, name, params) {
+        if (this.stateTable[addr] && this.stateTable[addr].src) {
+            const vm = new Runner();
+            return vm.run(this.stateTable[addr].src, Context.contextForPure(addr, name, params));
+        }
+
+        throw new Error("The address supplied is not a deployed contract")
+    }
+
     getFuncNames(addr) {
         if (this.stateTable[addr] && this.stateTable[addr].src) {
             const vm = new Runner();
             const info = {};
-            vm.run(this.stateTable[addr].src, {
-                getEnv: () => ({msg: {}, block:{}}),
-                getState: () => null,
-                setState: value => {}
-            }, info);
+            vm.run(this.stateTable[addr].src, Context.dummyContext, info);
 
             //console.log(info);
 
@@ -172,13 +206,15 @@ module.exports = class Node {
                     (info._mk['received'] || []).includes(name);
             }
 
-            return Object.getOwnPropertyNames(Object.getPrototypeOf(info._i)).filter((name) => {
-                return name !== "constructor" && !isEvent(name);
+            const props = this.getAllPropertyNames(info._i);
+            const excepts = ['constructor', '__on_deployed', '__on_received', 'getEnv', 'getState', 'setState'];
+            return props.filter((name) => {
+                return !excepts.includes(name) && !isEvent(name);
             });
 
         }
 
-        return arr;
+        return [];
     }
 
     startMine() {
@@ -189,7 +225,7 @@ module.exports = class Node {
             let txs = this.txPool.slice(0, params.BLOCK_SIZE)
 
             // Create new block
-            let block = new Block(txs, this.chain.getLatestBlockHash(), params.DIFFICULTY);
+            let block = new Block(this.chain.getLatestBlockNumber() + 1, txs, this.chain.getLatestBlockHash(), params.DIFFICULTY);
 
             while (!block.isHashValid()) {
                 block.makeNewHash();

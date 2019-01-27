@@ -11,4 +11,8 @@ module.exports = class Blockchain {
         if (!this.blocks.length) return "0";
         return this.blocks[this.blocks.length - 1].hash;
     }
+    getLatestBlockNumber() {
+        if (!this.blocks.length) return -1;
+        return this.blocks[this.blocks.length - 1].number;
+    }
 }

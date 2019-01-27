@@ -1,25 +1,11 @@
-import Tx from '../blockchain/Tx';
-import ecc from '../blockchain/helper/ecc';
-
-function replaceAll(text, search, replacement) {
-    return text.split(search).join(replacement);
-}
+import utils from './utils';
 
 function buildData() {
-    let pText = document.getElementById("params").value;
-    pText = replaceAll(pText, "\r", "\n");
-    pText = replaceAll(pText, "\n\n", "\n");
-    let params = pText.split("\n").filter((e) => {
-        return e.trim().length;
-    })
-
-    var data = {
+    return {
         op: 1,
         name: document.getElementById("name").value,
-        params: params
+        params: utils.parseParamsFromField("#params")
     }
-
-    return data;
 }
 
 async function fillContracts() {
@@ -45,10 +31,7 @@ async function fillFuncs() {
     var contract = document.getElementById("to").value;
     if (!contract) return;
 
-    const funcs = await fetch("/api/funcs?contract=" + contract)
-    .then((resp) => {
-        return resp.json();
-    })
+    const funcs = await fetch("/api/funcs?contract=" + contract).then(resp => resp.json());
     var select = document.getElementById("name");
     select.innerHTML = "";
     funcs.forEach(item => {
@@ -63,32 +46,26 @@ async function fillFuncs() {
 
 $(document).ready(function () {
     fillContracts();
-    $('#form').submit(function (e) {
-        e.preventDefault();
+    utils.registerTxForm($('#form'), buildData, $("#private_key").val().trim());
 
-        var formData = $(this).serializeArray().reduce(function (obj, item) {
-            obj[item.name] = item.value;
-            return obj;
-        }, {});
-        var txData = buildData();
-        formData.data = JSON.stringify(txData);
-        var privateKey = $("#private_key").val();
-        formData.from = ecc.toPublicKey(privateKey);
-        var tx = new Tx(formData.from, formData.to, formData.value, formData.fee, txData);
-        formData.signature = ecc.sign(tx.hash, privateKey)
+    $('#read').on('click', async function(e){
+        var form = document.getElementById('form');
+        var address = form.to.value.trim();
+        var name = form.name.value.trim();
+        if (!name) {
+            alert("Please select a contract which has function.");
+            return;
+        }
+        document.getElementById("funcName").textContent = name;
+        
+        var params = utils.parseParamsFromField("#params");
 
-        //submit tx
-        $.ajax({
-            url: "/api/send_tx",
-            method: "POST",
-            data: formData,
-            success: function (result) {
-                if (result.success) {
-                   window.location.href = '/tx.html?hash=' + encodeURIComponent(result.data.tx_hash)
-                } else {
-                    alert(result.error)
-                }
-            }
-        });
+        const result = await fetch("/api/call?" + $.param({address, name, params})).then(resp => resp.json());
+        if (result.success) {
+            document.getElementById("resultJson").textContent = utils.tryParseJson(result.data);
+        } else {
+            console.log(result)
+            document.getElementById("resultJson").textContent = utils.tryParseJson(result.error);
+        }
     })
 });

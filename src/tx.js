@@ -1,4 +1,6 @@
 import handlebars from 'handlebars/dist/handlebars.min.js';
+var AU = require('ansi_up');
+var ansi_up = new AU.default;
 
 (async () => {
     const hash = new URLSearchParams(window.location.search).get('hash');
@@ -17,10 +19,16 @@ import handlebars from 'handlebars/dist/handlebars.min.js';
                     res.data.blockHash = "N/A (not mined)"
                 }
                 if (res.data.error === "null") res.data.error = "";
+                res.data.message = res.data.result
+
                 res.data.data = JSON.stringify(res.data.data);
 
                 var html = template(res.data);
                 document.getElementById("tableContent").innerHTML = html;
+
+                if (res.data.error) {
+                    document.getElementById("result").innerHTML = ansi_up.ansi_to_html(res.data.error);
+                }
 
                 return res.data.status !== "Pending";
             } catch (err) {

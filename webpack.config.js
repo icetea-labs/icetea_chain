@@ -8,6 +8,7 @@ module.exports = {
         transfer: './src/transfer.js',
         deploy: './src/deploy.js',
         contract: './src/contract.js',
+        wallet: './src/wallet.js',
         tx: './src/tx.js'
     },
     output: {

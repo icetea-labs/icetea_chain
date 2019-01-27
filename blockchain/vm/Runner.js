@@ -13,10 +13,10 @@ module.exports = class Runner {
 
     run(compiledSrc, context, info) {
         const patchedSrc = this.patch(compiledSrc);
-        this.doRun(patchedSrc, context, info);
+        return this.doRun(patchedSrc, context, info);
     }
 
-    doRun(compiledSrc, context, info) {
+    doRun(patchedSrc, context, info) {
         throw new Error("Not implemented");
     }
 

@@ -1,0 +1,73 @@
+import ecc from '../blockchain/helper/ecc';
+import Tx from "../blockchain/Tx";
+
+export function replaceAll(text, search, replacement) {
+    return text.split(search).join(replacement);
+}
+
+export function tryParseJson(p) {
+    try {
+        return JSON.parse(p);
+    } catch (e) {
+        //console.log("WARN: ", e);
+        return p;
+    }
+}
+
+export function toBase64(text) {
+    return btoa(encodeURIComponent(text));
+}
+
+export function fieldToBase64(selector) {
+    return toBase64(document.querySelector(selector).value.trim());
+}
+
+export function parseParamList(pText) {
+    pText = replaceAll(pText, "\r", "\n");
+    pText = replaceAll(pText, "\n\n", "\n");
+    let params = pText.split("\n").filter(e => e.trim()).map(tryParseJson);
+
+    return params;
+}
+
+export function parseParamsFromField(selector) {
+    return parseParamList(document.querySelector(selector).value.trim())
+}
+
+export function registerTxForm($form, txData, privateKey) {
+    $form.submit(function(e) {
+        e.preventDefault();
+
+        var formData = $form.serializeArray().reduce(function (obj, item) {
+            obj[item.name] = item.value;
+            return obj;
+        }, {});
+
+        if (typeof txData === 'function') {
+            txData = txData();
+        }
+        //console.log(txData)
+        formData.data = JSON.stringify(txData);
+        formData.from = ecc.toPublicKey(privateKey);
+        var tx = new Tx(formData.from, formData.to, formData.value, formData.fee, txData);
+        formData.signature = ecc.sign(tx.hash, privateKey)
+
+        //submit tx
+        $.ajax({
+            url: "/api/send_tx",
+            method: "POST",
+            data: formData,
+            success: function (result) {
+                if (result.success) {
+                   window.location.href = '/tx.html?hash=' + encodeURIComponent(result.data.tx_hash)
+                } else {
+                    alert(result.error)
+                }
+            }
+        });
+    })
+}
+
+export default {
+    tryParseJson, fieldToBase64, parseParamsFromField, registerTxForm
+}

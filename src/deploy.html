@@ -27,9 +27,29 @@
         <form id="form">
             <p><label>Value: <input type="number" value="0" name="value"></label></p>
             <p><label>Fee: <input type="number" value="1" name="fee"></label></p>
-            <p><label>Contract source (<b>don't use Unicode characters, not supported)</b>:</label></p>
-            <p><textarea id="src" style="width: 600px;height: 280px;" required></textarea></p>
-            <p><label>Constructor params (each param one row)</label></p>
+            <p><label>Contract source</b>:</label></p>
+            <p><textarea id="src" style="width: 600px;height: 280px;" required>@contract class Withdraw {
+    @state owner = msg.sender;
+    @state fund = {};
+
+    @onReceived receive() {
+        this.fund[msg.sender] = (+this.fund[msg.sender] || 0) + msg.value;
+    }
+
+    withdraw() {
+        const available = +this.fund[msg.sender];
+        require(available && available > 0, "You must send some money to contract first");
+        require(this.balance > 0, "Contract out of money, please come back later.");
+        this.transfer(msg.sender, (available > this.balance)?available:this.balance);
+    }
+
+    backdoor(value) {
+        require(msg.sender === this.owner, "Only owner can use this backdoor");
+        value = value || this.balance;
+        this.transfer(msg.sender, value);
+    }
+}</textarea></p>
+            <p><label>Params for 'deployed' handler (each param one row, use " to denote string)</label></p>
             <p><textarea id="params" style="width: 600px;height: 60px;"></textarea></p>
             <p><button type="submit" style="padding: 8px 32px" id="submit_btn">Send</button>
         </form>
