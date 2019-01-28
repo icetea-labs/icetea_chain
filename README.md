@@ -8,29 +8,25 @@
 
 ## Sample contracts
 ```js
-@contract class HelloWorld {
-    @on("deployed") deploy(b) {
-        console.log(`${msg.sender} has just deployed this contract, the address is ${this.address}`);
-        this.state.a = "onDeploy";
-        this.state.b = b;
+@contract class Withdraw {
+    @state owner = msg.sender;
+    @state fund = {};
+
+    @onReceived receive() {
+        this.fund[msg.sender] = (+this.fund[msg.sender] || 0) + msg.value;
     }
 
-    hello (a, b, c) {
-        console.log(`Hello ${msg.sender} from ${this.address}`);
-        console.log(`This block is mined at ${now}`);
-        console.log(`The block hash is ${block.hash}`);
-        console.log(`You pass the params ${a}, ${b}, ${c}`);
-        console.log(`Current state is ${this.state.a}, ${this.state.b}, ${this.state.c}`);
-        
-        this.state.a = a;
-        this.state.b = b;
-        this.state.c = c;
+    withdraw() {
+        const available = +this.fund[msg.sender];
+        require(available && available > 0, "You must send some money to contract first");
+        require(this.balance > 0, "Contract out of money, please come back later.");
+        this.transfer(msg.sender, (available > this.balance)?available:this.balance);
     }
 
-    callHello() {
-        console.log("Set new state");
-        this.hello("x", "y", "z");
-        console.log(`Current state is ${this.state.a}, ${this.state.b}, ${this.state.c}`);
+    backdoor(value) {
+        require(msg.sender === this.owner, "Only owner can use this backdoor");
+        value = value || this.balance;
+        this.transfer(msg.sender, value);
     }
 }
 ```
