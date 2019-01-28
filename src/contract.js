@@ -1,4 +1,4 @@
-import utils from './utils';
+import * as utils from './utils';
 
 function buildData() {
     return {
@@ -62,10 +62,11 @@ $(document).ready(function () {
 
         const result = await fetch("/api/call?" + $.param({address, name, params})).then(resp => resp.json());
         if (result.success) {
-            document.getElementById("resultJson").textContent = utils.tryParseJson(result.data);
+            console.log(typeof result.data)
+            document.getElementById("resultJson").textContent = utils.tryStringifyJson(result.data);
         } else {
             console.log(result)
-            document.getElementById("resultJson").textContent = utils.tryParseJson(result.error);
+            document.getElementById("resultJson").textContent = utils.tryStringifyJson(result.error);
         }
     })
 });

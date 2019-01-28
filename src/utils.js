@@ -14,6 +14,15 @@ export function tryParseJson(p) {
     }
 }
 
+export function tryStringifyJson(p) {
+    try {
+        return JSON.stringify(p);
+    } catch (e) {
+        //console.log("WARN: ", e);
+        return p;
+    }
+}
+
 export function toBase64(text) {
     return btoa(encodeURIComponent(text));
 }
@@ -66,8 +75,4 @@ export function registerTxForm($form, txData, privateKey) {
             }
         });
     })
-}
-
-export default {
-    tryParseJson, fieldToBase64, parseParamsFromField, registerTxForm
 }
