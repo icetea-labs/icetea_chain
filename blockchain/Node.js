@@ -217,6 +217,14 @@ module.exports = class Node {
         return [];
     }
 
+    getReceipts() {
+        return _.cloneDeep(this.receipts || {});
+    }
+
+    getBlocks() {
+        return _.cloneDeep(this.chain.blocks || [])
+    }
+
     startMine() {
         setInterval(() => {
 

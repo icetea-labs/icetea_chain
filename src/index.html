@@ -13,7 +13,52 @@
             <a href="/contract.html">Read/Write Contract</a>
             <a href="/wallet.html">Wallet</a>
         </nav>
-        <h1>tchain scan</h1>
+        <h1>Blocks</h1>
+        <section id="blocks">No blocks.</section>
+        <script id="blockTemplate" type="text/x-handlebars-template">
+            <table>
+                <tr>
+                    <th>Hash</th>
+                    <th>Number</th>
+                    <th>Time</th>
+                    <th>#TX</th>
+                </tr>
+                {{#each this}}
+                <tr>
+                    <td>{{shash}}</td>
+                    <td>{{number}}</td>
+                    <td>{{timestamp}}</td>
+                    <td>{{txCount}}</td>
+                </tr>
+                {{/each}}
+            </table>
+        </script>
+        <h2>Transactions</h2>
+        <section id="transactions">No transactions.</section>
+        <script id="txTemplate" type="text/x-handlebars-template">
+            <table>
+                <tr>
+                    <th>Type</th>
+                    <th>Time</th>
+                    <th>Status</th>
+                    <th>From</th>
+                    <th>To</th>
+                    <th>Value</th>
+                </tr>
+                {{#each this}}
+                <tr>
+                    <td><a href="/tx.html?hash={{hash}}">{{txType}}</a></td>
+                    <td>{{blockTimestamp}}</td>
+                    <td class={{status}}>{{status}}</td>
+                    <td>{{from}}</td>
+                    <td>{{to}}</td>
+                    <td>{{value}}</td>
+                </tr>
+                {{/each}}
+            </table>
+        </script>
+        <h2>Debug inspect</h2>
+        <section id="debug">Nothing.</section>
     </div>
     <script src="index.js"></script>
 </body>

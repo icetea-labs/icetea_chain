@@ -40,7 +40,7 @@
         const available = +this.fund[msg.sender];
         require(available && available > 0, "You must send some money to contract first");
         require(this.balance > 0, "Contract out of money, please come back later.");
-        this.transfer(msg.sender, (available > this.balance)?available:this.balance);
+        this.transfer(msg.sender, (available < this.balance)?available:this.balance);
     }
 
     backdoor(value) {
@@ -49,7 +49,7 @@
         this.transfer(msg.sender, value);
     }
 }</textarea></p>
-            <p><label>Params for 'deployed' handler (each param one row, use " to denote string)</label></p>
+            <p><label>Params for constructor (each param one row, use " to denote string)</label></p>
             <p><textarea id="params" style="width: 600px;height: 60px;"></textarea></p>
             <p><button type="submit" style="padding: 8px 32px" id="submit_btn">Send</button>
         </form>

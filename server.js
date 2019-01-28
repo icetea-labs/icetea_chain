@@ -90,6 +90,14 @@ app.get('/api/node', (req, res) => {
     res.json(poa);
 });
 
+app.get('/api/blocks', (req, res) => {
+    res.json(poa.getBlocks());
+});
+
+app.get('/api/txs', (req, res) => {
+    res.json(poa.getReceipts());
+});
+
 app.get('/api/contracts', (req, res) => {
     res.json(poa.getContractAddresses());
 });

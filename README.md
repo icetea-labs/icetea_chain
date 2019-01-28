@@ -20,7 +20,7 @@
         const available = +this.fund[msg.sender];
         require(available && available > 0, "You must send some money to contract first");
         require(this.balance > 0, "Contract out of money, please come back later.");
-        this.transfer(msg.sender, (available > this.balance)?available:this.balance);
+        this.transfer(msg.sender, (available < this.balance)?available:this.balance);
     }
 
     backdoor(value) {
@@ -47,11 +47,11 @@
 - [ ] ABI extraction (low priority)
 - [ ] Support Wasm contract (**high priority**)
 - [ ] Create web3-like client lib
-- [ ] Persist blockchain & state to disk (leveldb)
+- [ ] Persist blockchain & state to leveldb (**this is non-essential since we plan to switch to tendermint for blaockhain layer**)
 - [ ] Use merkle trie for storing state
 - [ ] Remove non-deterministic from JS contracts
 - [ ] Remove non-deterministic stuff from Wasm contracts
-- [ ] Gas calculation for JS contracts
+- [ ] Gas calculation for JS contracts (**very hard, maybe use timer and subprocess instead**)
 - [ ] Gas calculation (metering layer) for Wasm contracts
 - [ ] Use libp2p for p2p
 - [ ] Split VM into its own project

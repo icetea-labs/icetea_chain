@@ -11,6 +11,13 @@ var ansi_up = new AU.default;
             try {
                 const res = await fetch("/api/tx?hash=" + hash).then(resp => resp.json());
                 
+                res.data.txType = "transfer";
+                if (res.data.data.op === 0) {
+                    res.data.txType = "create contract";
+                } else if (res.data.data.op === 1) {
+                    res.data.txType = "call contract";
+                }
+                
                 // Do some formating
                 if (res.data.blockTimestamp) {
                     res.data.blockTimestamp = new Date(res.data.blockTimestamp * 1000).toString();

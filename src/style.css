@@ -28,10 +28,10 @@ body {
 .disabled {
     background-color: lightgray;
 }
-.tx-details {
+table {
     width: 100%;
 }
-.tx-details td {
+td {
     border-bottom: 1px solid #ddd;
     padding: 8px;
 }
@@ -46,4 +46,10 @@ td.Error {
 }
 td pre {
     white-space: pre-line;
+}
+th {
+    text-transform: uppercase;
+    text-align: left;
+    background-color: #ddd;
+    padding: 8px;
 }
