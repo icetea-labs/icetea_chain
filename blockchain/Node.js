@@ -3,7 +3,7 @@ const utils = require('./helper/utils');
 const params = require("./Params");
 const Block = require('./Block');
 const ecc = require('./helper/ecc')
-const {Runner, Context} = require('./vm')
+const {getRunner, Context} = require('./vm')
 
 module.exports = class Node {
 
@@ -62,7 +62,7 @@ module.exports = class Node {
             throw new Error(`Address ${scAddr} is not a valid contract`);
         } else {
             const ctx = Context.contextForWrite(tx, block, t, options);
-            const vm = new Runner();
+            const vm = getRunner(t[scAddr].mode)
             const result = vm.run(t[scAddr].src, ctx)
 
             // save back the state
@@ -82,12 +82,16 @@ module.exports = class Node {
             tx.to = scAddr;
 
             const src = decodeURIComponent(Buffer.from(tx.data.src, 'base64').toString("ascii"));
-            const vm = new Runner();
+            const mode = tx.data.mode;
+            const deployedBy = tx.from;
+            const vm = getRunner(mode);
             const compileSrc = vm.compile(src);
             vm.verify(compileSrc);
 
             stateTable[scAddr] = {
                 balance: 0,
+                mode,
+                deployedBy,
                 src: compileSrc
             };
 
@@ -127,7 +131,7 @@ module.exports = class Node {
             this.addReceipt(tx, block, null, "Success", result);
         } catch (error) {
             this.addReceipt(tx, block, error, "Error")
-            //console.log(error);
+            console.log(error);
         }
     }
 
@@ -174,7 +178,7 @@ module.exports = class Node {
 
     callViewFunc(addr, name, params) {
         if (this.stateTable[addr] && this.stateTable[addr].src) {
-            const vm = new Runner();
+            const vm = getRunner(this.stateTable[addr].mode)
             return vm.run(this.stateTable[addr].src, Context.contextForView(this.stateTable, addr, name, params));
         }
 
@@ -183,7 +187,7 @@ module.exports = class Node {
 
     callPureFunc(addr, name, params) {
         if (this.stateTable[addr] && this.stateTable[addr].src) {
-            const vm = new Runner();
+            const vm = getRunner(this.stateTable[addr].mode);
             return vm.run(this.stateTable[addr].src, Context.contextForPure(addr, name, params));
         }
 
@@ -192,7 +196,7 @@ module.exports = class Node {
 
     getFuncNames(addr) {
         if (this.stateTable[addr] && this.stateTable[addr].src) {
-            const vm = new Runner();
+            const vm = getRunner(this.stateTable[addr].mode)
             const info = {};
             vm.run(this.stateTable[addr].src, Context.dummyContext, info);
 
@@ -248,7 +252,7 @@ module.exports = class Node {
             // remove mined txs from pool
             this.txPool.splice(0, block.txs.length);
 
-            console.log("MINED~~ YEAH");//, block);
+            // console.log("MINED~~ YEAH");//, block);
 
             // Broadcast to neighbor nodes
             // TODO: later

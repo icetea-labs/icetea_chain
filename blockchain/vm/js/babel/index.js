@@ -1,5 +1,7 @@
-const check = require('./check');
-const decorator = require('./decorator');
-const meta = require('./meta');
+module.exports = mode => {
+    if (mode === 1) {
+        return require('./decorated');
+    }
 
-module.exports = (babel) => [check(babel), decorator(babel), meta(babel)];
+    return require('./raw');
+}

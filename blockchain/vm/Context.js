@@ -96,7 +96,7 @@ exports.contextForPure = (address, name, params) => {
 }
 
 exports.dummyContext = {
-    getEnv: () => ({msg: {callType: "dummy"}, block:{}}),
+    getEnv: () => ({msg: {callType: "dummy", name: "__info"}, block:{}}),
     getState: () => undefined,
     setState: () => undefined
 }

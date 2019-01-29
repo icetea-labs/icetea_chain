@@ -27,7 +27,14 @@
         <form id="form">
             <p><label>Value: <input type="number" value="0" name="value"></label></p>
             <p><label>Fee: <input type="number" value="1" name="fee"></label></p>
-            <p><label>Contract source</b>:</label></p>
+            <p><label>Contract source mode:
+                <select id="srcMode">
+                    <option value="0">Raw JS</option>
+                    <option value="1" selected>Decorated JS</option>
+                    <option value="2">Wasm</option>
+                </select>
+            </label></p>
+            <p><label>Contract source:</label></p>
             <p><textarea id="src" style="width: 600px;height: 280px;" required>@contract class Withdraw {
     @state owner = msg.sender;
     @state fund = {};

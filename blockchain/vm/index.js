@@ -1,2 +1,2 @@
-exports.Runner = require('./js/JsRunner');
+exports.getRunner = require('./js');
 exports.Context = require('./Context');
