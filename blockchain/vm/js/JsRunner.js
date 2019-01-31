@@ -37,6 +37,7 @@ module.exports = mode => {
     const patch = require('./patch')(mode);
     return class extends Runner {
         verify(src) {
+            console.log("hhhhhhhheeeeeeeee");
             src = super.verify(src);
             src = babel.transformSync(src, {
                 plugins: [

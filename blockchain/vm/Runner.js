@@ -1,4 +1,4 @@
-module.exports = class Runner {
+module.exports = class {
     lint(src) {
         return src;
     }
@@ -21,6 +21,6 @@ module.exports = class Runner {
     }
 
     verify(src) {
-        this.lint(src);
+        return this.lint(src);
     }
 }

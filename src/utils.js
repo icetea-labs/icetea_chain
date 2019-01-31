@@ -24,6 +24,7 @@ export function tryStringifyJson(p) {
 }
 
 export function toBase64(text) {
+    if (!text.length) return null;
     return btoa(encodeURIComponent(text));
 }
 
@@ -47,14 +48,17 @@ export function registerTxForm($form, txData, privateKey) {
     $form.submit(function(e) {
         e.preventDefault();
 
+        if (typeof txData === 'function') {
+            txData = txData();
+            if (!txData) return;
+        }
+        txData = txData || {};
+
         var formData = $form.serializeArray().reduce(function (obj, item) {
             obj[item.name] = item.value;
             return obj;
         }, {});
 
-        if (typeof txData === 'function') {
-            txData = txData();
-        }
         //console.log(txData)
         formData.data = JSON.stringify(txData);
         formData.from = ecc.toPublicKey(privateKey);

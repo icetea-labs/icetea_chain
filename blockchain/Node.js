@@ -3,7 +3,7 @@ const utils = require('./helper/utils');
 const params = require("./Params");
 const Block = require('./Block');
 const ecc = require('./helper/ecc')
-const {getRunner, Context} = require('./vm')
+const {getRunner, getContext} = require('./vm')
 
 module.exports = class Node {
 
@@ -49,7 +49,7 @@ module.exports = class Node {
         this.addReceipt(tx, null, null, "Pending");
     }
 
-    callContract(tx, block, stateTable, overrides) {
+    async callContract(tx, block, stateTable, overrides) {
         const options = Object.assign({
             address: tx.to,
             fname: tx.data.name,
@@ -61,9 +61,10 @@ module.exports = class Node {
         if (!t[scAddr] || !t[scAddr].src) {
             throw new Error(`Address ${scAddr} is not a valid contract`);
         } else {
-            const ctx = Context.contextForWrite(tx, block, t, options);
-            const vm = getRunner(t[scAddr].mode)
-            const result = vm.run(t[scAddr].src, ctx)
+            const mode = t[scAddr].mode;
+            const ctx = getContext(mode).contextForWrite(tx, block, t, options);
+            const vm = getRunner(mode)
+            const result = await vm.run(t[scAddr].src, ctx)
 
             // save back the state
             t[scAddr].state = Object.assign(t[scAddr].state || {}, ctx._state);
@@ -72,7 +73,7 @@ module.exports = class Node {
         }
     }
 
-    doExecTx(tx, block, stateTable) {
+    async doExecTx(tx, block, stateTable) {
 
         // deploy contract
         if (tx.isContractCreation()) {
@@ -81,8 +82,9 @@ module.exports = class Node {
             let scAddr = "contract_" + Date.now() + "_" + tx.from.substr(21);
             tx.to = scAddr;
 
-            const src = decodeURIComponent(Buffer.from(tx.data.src, 'base64').toString("ascii"));
             const mode = tx.data.mode;
+            const src = (mode === 2) ? Buffer.from(tx.data.src, 'base64') 
+                : decodeURIComponent(Buffer.from(tx.data.src, 'base64').toString("ascii"));
             const deployedBy = tx.from;
             const vm = getRunner(mode);
             const compileSrc = vm.compile(src);
@@ -96,7 +98,7 @@ module.exports = class Node {
             };
 
             // call constructor
-            this.callContract(tx, block, stateTable, {
+            return this.callContract(tx, block, stateTable, {
                 fname: "__on_deployed"
             })
         }
@@ -115,18 +117,18 @@ module.exports = class Node {
         utils.incBalance("miner", tx.fee, stateTable);
 
         if (tx.value && stateTable[tx.to].src && !tx.isContractCreation() && !tx.isContractCall()) {
-            this.callContract(tx, block, stateTable, {
+            return this.callContract(tx, block, stateTable, {
                 address: tx.to,
                 fname: "__on_received"
             })
         }
     }
 
-    execTx(tx, block) {
+    async execTx(tx, block) {
         // clone the state so that we could revert on exception
         var tmpStateTable = _.cloneDeep(this.stateTable);
         try {
-            const result = this.doExecTx(tx, block, tmpStateTable);
+            const result = await this.doExecTx(tx, block, tmpStateTable);
             Object.assign(this.stateTable, tmpStateTable);
             this.addReceipt(tx, block, null, "Success", result);
         } catch (error) {
@@ -178,8 +180,10 @@ module.exports = class Node {
 
     callViewFunc(addr, name, params) {
         if (this.stateTable[addr] && this.stateTable[addr].src) {
-            const vm = getRunner(this.stateTable[addr].mode)
-            return vm.run(this.stateTable[addr].src, Context.contextForView(this.stateTable, addr, name, params));
+            const mode = this.stateTable[addr].mode;
+            const vm = getRunner(mode)
+            return vm.run(this.stateTable[addr].src, 
+                getContext(mode).contextForView(this.stateTable, addr, name, params));
         }
 
         throw new Error("The address supplied is not a deployed contract")
@@ -187,8 +191,10 @@ module.exports = class Node {
 
     callPureFunc(addr, name, params) {
         if (this.stateTable[addr] && this.stateTable[addr].src) {
-            const vm = getRunner(this.stateTable[addr].mode);
-            return vm.run(this.stateTable[addr].src, Context.contextForPure(addr, name, params));
+            const mode = this.stateTable[addr].mode;
+            const vm = getRunner(mode);
+            return vm.run(this.stateTable[addr].src, 
+                getContext(mode).contextForPure(addr, name, params));
         }
 
         throw new Error("The address supplied is not a deployed contract")
@@ -196,9 +202,10 @@ module.exports = class Node {
 
     getFuncNames(addr) {
         if (this.stateTable[addr] && this.stateTable[addr].src) {
-            const vm = getRunner(this.stateTable[addr].mode)
+            const mode = this.stateTable[addr].mode;
+            const vm = getRunner(mode)
             const info = {};
-            vm.run(this.stateTable[addr].src, Context.dummyContext, info);
+            vm.run(this.stateTable[addr].src, getContext(mode).dummyContext, info);
 
             //console.log(info);
 

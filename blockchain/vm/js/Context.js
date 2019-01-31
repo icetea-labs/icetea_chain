@@ -1,5 +1,5 @@
 const _ = require('lodash');
-const utils = require('../helper/utils');
+const utils = require('../../helper/utils');
 
 exports.contextForWrite = (tx, block, stateTable, {address, fname, fparams}) => {
     const msg = _.cloneDeep(tx);

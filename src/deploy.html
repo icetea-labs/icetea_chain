@@ -31,11 +31,13 @@
                 <select id="srcMode">
                     <option value="0">Raw JS</option>
                     <option value="1" selected>Decorated JS</option>
-                    <option value="2">Wasm</option>
+                    <option value="2">Wasm (Rust wasm_bindgen)</option>
                 </select>
             </label></p>
-            <p><label>Contract source:</label></p>
-            <p><textarea id="src" style="width: 600px;height: 280px;" required>@contract class Withdraw {
+            <p data-modes="2" class="hide"><label>Wasm file: <input type="file" id="wasmFile" accept=".wasm"></label></p>
+            <section data-modes="0;1">
+            <p><label>JS source:</label></p>
+            <p><textarea id="src" style="width: 600px;height: 280px;">@contract class Withdraw {
     @state owner = msg.sender;
     @state fund = {};
 
@@ -56,6 +58,7 @@
         this.transfer(msg.sender, value);
     }
 }</textarea></p>
+</section>
             <p><label>Params for constructor (each param one row, use " to denote string)</label></p>
             <p><textarea id="params" style="width: 600px;height: 60px;"></textarea></p>
             <p><button type="submit" style="padding: 8px 32px" id="submit_btn">Send</button>

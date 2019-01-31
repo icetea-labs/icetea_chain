@@ -53,3 +53,6 @@ th {
     background-color: #ddd;
     padding: 8px;
 }
+.hide {
+    display: none;
+}

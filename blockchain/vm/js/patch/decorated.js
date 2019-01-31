@@ -14,7 +14,7 @@ require(msg.name, "Method name not specified");
 ${src}
 
 require(msg.name == "__info" || msg.name in __contract, "Method " + msg.name + " does not exist");
-
+__metadata.payable.push("__on_received");
 const __this = this;
 const __c = {
     _i: Object.assign(__contract, __this),
@@ -25,10 +25,10 @@ msg.name === "__info" && typeof __info !== "undefined" && Object.assign(__info, 
 
 if (typeof __c._i[msg.name] === "function") {
     if (msg.callType === "payable" && !__metadata.payable.includes(msg.name)) {
-        revert("Function is not payable and cannot receive");
+        revert("Function " + msg.name + " is not payable and cannot receive");
     }
     if (msg.callType === "view" && !__metadata.view.includes(msg.name)) {
-        revert("Function not marked as view and must be invoked by sending a transaction");
+        revert("Function " + msg.name + " not marked as view and must be invoked by sending a transaction");
     }
     return __c._i[msg.name].apply(__c._i, msg.params || []);
 }

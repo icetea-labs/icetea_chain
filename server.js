@@ -45,14 +45,14 @@ app.post('/api/send_tx',function(req, res) {
     }
 });
 
-app.get('/api/call',function(req, res) {
+app.get('/api/call', async function(req, res) {
     try {
         var query = req.query;
         var params = query.params;
         if (params) {
             params = decodeURIComponent(params);
         }
-        var result = poa.callViewFunc(query.address, query.name, params);       
+        var result = await poa.callViewFunc(query.address, query.name, params);       
         res.json({
             success: true,
             data: result
