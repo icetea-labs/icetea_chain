@@ -75,6 +75,8 @@ module.exports = class Node {
 
     async doExecTx(tx, block, stateTable) {
 
+        let result;
+
         // deploy contract
         if (tx.isContractCreation()) {
 
@@ -98,7 +100,7 @@ module.exports = class Node {
             };
 
             // call constructor
-            return this.callContract(tx, block, stateTable, {
+            result = this.callContract(tx, block, stateTable, {
                 fname: "__on_deployed"
             })
         }
@@ -108,7 +110,7 @@ module.exports = class Node {
             if (['constructor', '__on_received', '__on_deployed', 'getState', 'setState', 'getEnv'].includes(tx.data.name)) {
                 throw new Error('Calling this method directly is not allowed');
             }
-            return this.callContract(tx, block, stateTable);
+            result = this.callContract(tx, block, stateTable);
         }
 
         // process value transfer
@@ -117,11 +119,13 @@ module.exports = class Node {
         utils.incBalance("miner", tx.fee, stateTable);
 
         if (tx.value && stateTable[tx.to].src && !tx.isContractCreation() && !tx.isContractCall()) {
-            return this.callContract(tx, block, stateTable, {
+            result = this.callContract(tx, block, stateTable, {
                 address: tx.to,
                 fname: "__on_received"
             })
         }
+
+        return result;
     }
 
     async execTx(tx, block) {

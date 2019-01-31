@@ -2,21 +2,22 @@ const _ = require('lodash');
 const utils = require('../../helper/utils');
 
 exports.contextForWrite = (tx, block, stateTable, {address, fname, fparams}) => {
-    const msg = _.cloneDeep(tx);
+    let msg = _.cloneDeep(tx);
     msg.name = fname;
     msg.params = fparams;
     msg.sender = msg.from; // alias
     msg.callType = (msg.value > 0)?"payable":"update";
+    msg = Object.freeze(msg);
 
 
-    const theBlock = _.cloneDeep(block);
-    const state = stateTable[address].state || {};
-    const balance = state.balance || 0;
+    const theBlock = Object.freeze(_.cloneDeep(block));
+    const state = Object.freeze(stateTable[address].state || {});
+    const balance = stateTable[address].balance || 0;
 
     const ctx = {
         address,
         balance,
-        getEnv: () => ({msg, block: theBlock}),
+        getEnv: () => Object.freeze({msg, block: theBlock}),
         transfer: (to, value) => {
             ctx.balance -= value;
             utils.decBalance(address, value, stateTable);
@@ -36,7 +37,7 @@ exports.contextForWrite = (tx, block, stateTable, {address, fname, fparams}) => 
         }
     }
 
-    return ctx;
+    return Object.freeze(ctx);
 }
 
 exports.contextForView = (stateTable, address, name, params) => {
@@ -46,7 +47,7 @@ exports.contextForView = (stateTable, address, name, params) => {
     msg.callType = "view";
 
     const state = _.cloneDeep(stateTable[address].state || {});
-    const balance = state.balance || 0;
+    const balance = stateTable[address].balance || 0;
 
     const ctx = {
         address,
@@ -66,7 +67,7 @@ exports.contextForView = (stateTable, address, name, params) => {
         }
     }
 
-    return ctx;
+    return Object.freeze(ctx);
 }
 
 exports.contextForPure = (address, name, params) => {
@@ -92,11 +93,11 @@ exports.contextForPure = (address, name, params) => {
         }
     }
 
-    return ctx;
+    return Object.freeze(ctx);
 }
 
-exports.dummyContext = {
+exports.dummyContext = Object.freeze({
     getEnv: () => ({msg: {callType: "dummy", name: "__info"}, block:{}}),
     getState: () => undefined,
     setState: () => undefined
-}
+});

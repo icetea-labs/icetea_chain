@@ -1,4 +1,5 @@
 module.exports = src => `
+'use strict';
 const global = void 0, process = void 0, Date = void 0, Math = void 0,
     setInterval = void 0, setTimeout = void 0;
 const revert = (text) => {throw new Error(text || "Transaction reverted")};
@@ -14,7 +15,8 @@ require(msg.name, "Method name not specified");
 ${src}
 
 require(msg.name == "__info" || msg.name in __contract, "Method " + msg.name + " does not exist");
-__metadata.payable.push("__on_received");
+__metadata.payable.push("__on_deployed"); // FIXME
+__metadata.payable.push("__on_received"); // FIXME
 const __this = this;
 const __c = {
     _i: Object.assign(__contract, __this),
