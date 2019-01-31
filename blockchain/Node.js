@@ -63,8 +63,8 @@ module.exports = class Node {
         } else {
             const mode = t[scAddr].mode;
             const ctx = getContext(mode).contextForWrite(tx, block, t, options);
-            const vm = getRunner(mode)
-            const result = await vm.run(t[scAddr].src, ctx)
+            const vm = getRunner(mode);
+            const result = await vm.run(t[scAddr].src, ctx);
 
             // save back the state
             t[scAddr].state = Object.assign(t[scAddr].state || {}, ctx._state);
@@ -87,14 +87,14 @@ module.exports = class Node {
                 : decodeURIComponent(Buffer.from(tx.data.src, 'base64').toString("ascii"));
             const deployedBy = tx.from;
             const vm = getRunner(mode);
-            const compileSrc = vm.compile(src);
-            vm.verify(compileSrc);
+            const compiledSrc = vm.compile(src);
+            vm.verify(compiledSrc); // linter & halt-problem checking
 
             stateTable[scAddr] = {
                 balance: 0,
                 mode,
                 deployedBy,
-                src: compileSrc
+                src: compiledSrc
             };
 
             // call constructor
@@ -163,7 +163,7 @@ module.exports = class Node {
         return arr;
     }
 
-    getAllPropertyNames(obj, filter) {
+    getAllPropertyNames(obj) {
         var props = [];
     
         do {
