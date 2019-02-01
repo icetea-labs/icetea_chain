@@ -11,12 +11,12 @@ module.exports = class {
         return compiledSrc;
     }
 
-    run(compiledSrc, context, info) {
+    run(compiledSrc, ...args) {
         const patchedSrc = this.patch(compiledSrc);
-        return this.doRun(patchedSrc, context, info);
+        return this.doRun(patchedSrc, ...args);
     }
 
-    doRun(patchedSrc, context, info) {
+    doRun(patchedSrc, ...args) {
         throw new Error("Not implemented");
     }
 

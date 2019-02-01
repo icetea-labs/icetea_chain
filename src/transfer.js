@@ -1,3 +1,5 @@
+import $ from 'jquery';
+window.$ = $;
 import {parseParamsFromField, registerTxForm} from './utils';
 
 function buildData() {

@@ -6,7 +6,7 @@ module.exports = class extends Runner {
         return patch(wasmBuffer);
     }
 
-    doRun(patcher, ctx, info) {
-        return patcher(ctx, info);
+    doRun(patcher, {context}) {
+        return patcher(context);
     }
 }

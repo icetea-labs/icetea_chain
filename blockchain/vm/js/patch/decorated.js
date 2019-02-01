@@ -12,8 +12,10 @@ const now = block.timestamp;
 assert(typeof msg !== "undefined" && msg, "Invalid or corrupt transaction data");
 require(msg.name, "Method name not specified");
 
-${src}
+const __guard = __g;
 
+${src}
+if (["__on_deployed", "__on_received"].includes(msg.name) && !(msg.name in __contract)) return;
 require(msg.name == "__info" || msg.name in __contract, "Method " + msg.name + " does not exist");
 __metadata.payable.push("__on_deployed"); // FIXME
 __metadata.payable.push("__on_received"); // FIXME

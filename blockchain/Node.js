@@ -3,7 +3,7 @@ const utils = require('./helper/utils');
 const params = require("./Params");
 const Block = require('./Block');
 const ecc = require('./helper/ecc')
-const {getRunner, getContext} = require('./vm')
+const {getRunner, getContext, getGuard} = require('./vm')
 
 module.exports = class Node {
 
@@ -61,13 +61,14 @@ module.exports = class Node {
         if (!t[scAddr] || !t[scAddr].src) {
             throw new Error(`Address ${scAddr} is not a valid contract`);
         } else {
-            const mode = t[scAddr].mode;
-            const ctx = getContext(mode).contextForWrite(tx, block, t, options);
+            const {mode, src} = t[scAddr];
+            const context = getContext(mode).contextForWrite(tx, block, t, options);
+            const guard = getGuard(mode)(src);
             const vm = getRunner(mode);
-            const result = await vm.run(t[scAddr].src, ctx);
+            const result = await vm.run(src, {context, guard});
 
             // save back the state
-            t[scAddr].state = Object.assign(t[scAddr].state || {}, ctx._state);
+            t[scAddr].state = Object.assign(t[scAddr].state || {}, context._state);
 
             return result;
         }
@@ -81,7 +82,7 @@ module.exports = class Node {
         if (tx.isContractCreation()) {
 
             // make new address for smart contract
-            let scAddr = "contract_" + Date.now() + "_" + tx.from.substr(21);
+            let scAddr = "contract_" + Date.now() + "_" + tx.from.substr(30);
             tx.to = scAddr;
 
             const mode = tx.data.mode;
@@ -184,10 +185,11 @@ module.exports = class Node {
 
     callViewFunc(addr, name, params) {
         if (this.stateTable[addr] && this.stateTable[addr].src) {
-            const mode = this.stateTable[addr].mode;
+            const {mode, src} = this.stateTable[addr];
             const vm = getRunner(mode)
-            return vm.run(this.stateTable[addr].src, 
-                getContext(mode).contextForView(this.stateTable, addr, name, params));
+            const context = getContext(mode).contextForView(this.stateTable, addr, name, params);
+            const guard = getGuard(mode)(src);
+            return vm.run(src, {context, guard});
         }
 
         throw new Error("The address supplied is not a deployed contract")
@@ -195,10 +197,11 @@ module.exports = class Node {
 
     callPureFunc(addr, name, params) {
         if (this.stateTable[addr] && this.stateTable[addr].src) {
-            const mode = this.stateTable[addr].mode;
+            const {mode, src} = this.stateTable[addr];
             const vm = getRunner(mode);
-            return vm.run(this.stateTable[addr].src, 
-                getContext(mode).contextForPure(addr, name, params));
+            const context = getContext(mode).contextForPure(addr, name, params);
+            const guard = getGuard(mode)(src);
+            return vm.run(src, {context, guard});
         }
 
         throw new Error("The address supplied is not a deployed contract")
@@ -208,8 +211,9 @@ module.exports = class Node {
         if (this.stateTable[addr] && this.stateTable[addr].src) {
             const mode = this.stateTable[addr].mode;
             const vm = getRunner(mode)
+            const context = getContext(mode).dummyContext;
             const info = {};
-            vm.run(this.stateTable[addr].src, getContext(mode).dummyContext, info);
+            vm.run(this.stateTable[addr].src, {context, info});
 
             //console.log(info);
 

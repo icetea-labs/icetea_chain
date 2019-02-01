@@ -6,3 +6,16 @@
         }
     }
 }
+
+@contract class InfinityLoop2 {
+    constructor() {
+        while(true);
+    }
+}
+
+@contract class InfinityLoop3 {
+    constructor() {
+        for(let i = 0;;i++);
+    }
+}
+

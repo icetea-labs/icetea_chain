@@ -66,6 +66,7 @@ async function loadData() {
         // load debug info
         const myJSON = await fetch("/api/node").then(resp => resp.json());
         const formatter = new JSONFormatter(myJSON, 1);
+        document.getElementById("debug").innerHTML = "";
         document.getElementById("debug").appendChild(formatter.render());
     }
 }

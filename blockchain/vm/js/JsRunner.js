@@ -65,10 +65,10 @@ module.exports = mode => {
             return patch(compiledSrc);
         }
 
-        doRun(patchedSrc, ctx, info) {
+        doRun(patchedSrc, {context, guard, info}) {
             //console.log(patchedSrc);
-            const f = new Function("__info", patchedSrc);
-            return f.call(ctx, info);
+            const f = new Function("__g", "__info", patchedSrc);
+            return f.call(context, guard, info);
         }
     }
 }

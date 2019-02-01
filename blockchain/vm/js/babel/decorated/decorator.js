@@ -44,21 +44,25 @@ module.exports = function ({ types: t }) {
                     const memExp = t.memberExpression(thisExp, getState);
                     const callExpParams = [t.stringLiteral(name)];
                     //if (initVal) callExpParams.push(initVal);
-                    const callExp = t.CallExpression(memExp, callExpParams)
+                    const callExp = t.callExpression(memExp, callExpParams)
                     const getter = t.classMethod("get", t.identifier(name), [],
                         t.blockStatement([t.returnStatement(callExp)]))
 
                     const setMemExp = t.memberExpression(thisExp, t.identifier("setState"));
-                    const setCallExp = t.CallExpression(setMemExp, [t.stringLiteral(name), t.identifier("value")])
+                    const setCallExp = t.callExpression(setMemExp, [t.stringLiteral(name), t.identifier("value")])
                     const setter = t.classMethod("set", t.identifier(name), [t.identifier("value")],
                         t.blockStatement([t.expressionStatement(setCallExp)]))
+
+                    // replace @state instance variable with a pair of getter and setter
                     item.replaceWithMultiple([getter, setter]);
 
+                    // if there's initializer, move it into constructor
                     if (initVal) {
                         if (!deployer) {
                             deployer = item.parent.body.find(p => p.kind == "constructor")
                         }
 
+                        // if no constructor, create one
                         if (!deployer) {
                             deployer = t.classMethod("method", t.identifier("__on_deployed"), [], t.blockStatement([]));
                             item.parent.body.unshift(deployer);
