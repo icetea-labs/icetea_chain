@@ -1,7 +1,5 @@
-const check = require('./check');
+const all = require('./all');
 const loop = require('./loopEntryGuard');
 const func = require('./functionEntryGuard');
-const decorator = require('./decorator');
-const meta = require('./meta');
 
-module.exports = babel => [check(babel), loop(babel), func(babel), decorator(babel), meta(babel)];
+module.exports = babel => [loop(babel), func(babel), all(babel)];

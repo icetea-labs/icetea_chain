@@ -10,7 +10,7 @@ module.exports = function ({ types: t }) {
                 const decoratorName = path.node.expression.name;
                 if (["view", "payable"].includes(decoratorName)) {
                     if (isPublic(path.parent.type)) {
-                      const name = path.parent.key.name || path.parent.key.id.name;
+                        const name = path.parent.key.name || path.parent.key.id.name;
                         (markers[decoratorName] || (markers[decoratorName] = [])).push(name);
                         path.remove();
                     }
@@ -30,16 +30,16 @@ module.exports = function ({ types: t }) {
                     program.traverse({
                         ClassBody(path) {
                             path.node.body.forEach(e => {
-                                if (isPublic(e.type) && !members.includes(e.key.name) && 
-                                !["constructor", "__on_deployed", "__on_received"].includes(e.key.name)) {
+                                if (isPublic(e.type) && !members.includes(e.key.name) &&
+                                    !["constructor", "__on_deployed", "__on_received"].includes(e.key.name)) {
                                     members.push(e.key.name);
                                 }
                             });
                         }
                     })
                     members.forEach(mem => {
-                      const node = props.find(n => n.key.name = "members");
-                      node.value.elements.push(t.stringLiteral(mem))
+                        const node = props.find(n => n.key.name = "members");
+                        node.value.elements.push(t.stringLiteral(mem))
                     });
                 }
             },

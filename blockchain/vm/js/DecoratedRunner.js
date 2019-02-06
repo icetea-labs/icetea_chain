@@ -9,11 +9,7 @@ module.exports = mode => {
         compile(src) {
             src += `;
 const __contract = new __contract_name();
-const __metadata = {
-    members: [],
-    view: [],
-    payable: []
-}`;
+const __metadata = {}`;
             var result = babel.transformSync(src, {
                 parserOpts: {
                     plugins: [
@@ -27,12 +23,12 @@ const __metadata = {
                         //'dynamicImport',
                         //'exportDefaultFrom',
                         //'exportNamespaceFrom',
-                        //'flow',
-                        //'flowComments',
-                        //'functionBind',
-                        //'functionSent',
+                        'flow',
+                        'flowComments',
+                        'functionBind',
+                        'functionSent',
                         //'importMeta',
-                        //'jsx',
+                        'jsx',
                         'logicalAssignment',
                         'nullishCoalescingOperator',
                         'numericSeparator',
@@ -43,7 +39,7 @@ const __metadata = {
                         'throwExpressions',
                     ],
                 },
-                retainLines: true,
+                retainLines: false,
                 minified: false,
                 plugins: contractPlugins,
                 sourceMaps: true,

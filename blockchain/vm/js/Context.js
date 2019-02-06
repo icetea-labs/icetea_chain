@@ -6,7 +6,7 @@ exports.contextForWrite = (tx, block, stateTable, {address, fname, fparams}) => 
     msg.name = fname;
     msg.params = fparams;
     msg.sender = msg.from; // alias
-    msg.callType = (msg.value > 0)?"payable":"update";
+    msg.callType = (msg.value > 0)?"payable":"transaction";
     msg = Object.freeze(msg);
 
 
@@ -41,10 +41,14 @@ exports.contextForWrite = (tx, block, stateTable, {address, fname, fparams}) => 
 }
 
 exports.contextForView = (stateTable, address, name, params) => {
-    const msg = {};
-    msg.name = name;
-    msg.params = params;
-    msg.callType = "view";
+    const msg = new Proxy({name, params, callType: "view"}, {
+        get(target, prop) {
+            if (!["name", "params", "callType"].includes(prop)) {
+                throw new Error ("Cannot access msg." + prop + " when calling a @view function")
+            }
+            return Reflect.get(target, prop);
+        }
+    })
 
     const state = _.cloneDeep(stateTable[address].state || {});
     const balance = stateTable[address].balance || 0;
@@ -78,6 +82,9 @@ exports.contextForPure = (address, name, params) => {
 
     const ctx = {
         address,
+        get balance() {
+            throw new Error("Cannot view balance a pure function");
+        },
         getEnv: () => ({msg, block: {}}),
         transfer: () => {
             throw new Error("Cannot transfer inside a pure function");

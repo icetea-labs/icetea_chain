@@ -46,7 +46,6 @@ const protect = t => path => {
     if (body.isLiteral()) return;
 
     // if we have an expression statement, convert it to a block
-    console.log(body, body.isLiteral());
     if (!t.isBlockStatement(body)) {
         try {
             body.replaceWith(t.blockStatement([body.node]));

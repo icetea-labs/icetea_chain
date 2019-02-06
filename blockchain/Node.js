@@ -219,18 +219,9 @@ module.exports = class Node {
 
             if (!info || !info._i) return [];
 
-            function isEvent(name) {
-                if (!info._mk) return false;
-                return (info._mk['deployed'] || []).includes(name) ||
-                    (info._mk['received'] || []).includes(name);
-            }
-
             const props = this.getAllPropertyNames(info._i);
             const excepts = ['constructor', '__on_deployed', '__on_received', 'getEnv', 'getState', 'setState'];
-            return props.filter((name) => {
-                return !excepts.includes(name) && !isEvent(name);
-            });
-
+            return ["address", "balance"].concat(props.filter((name) => !excepts.includes(name)));
         }
 
         return [];
