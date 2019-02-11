@@ -1,14 +1,16 @@
-exports.prepareState = (addr, stateTable, initialValues) {
+exports.prepareState = (addr, stateTable, initialValues) => {
     if (!stateTable[addr]) {
         stateTable[addr] = {};
     }
 
-    if (!stateTable[addr].balance) {
+    if (typeof stateTable[addr].balance === "undefined") {
         let balance = 0;
 
         Object.defineProperty(stateTable[addr], "balance", {
-            get = () => balance,
-            set = (value) => {
+            get() {
+                return balance;
+            },
+            set(value) {
                 if (value < 0) {
                     throw new Error("Balance cannot be negative")
                 }

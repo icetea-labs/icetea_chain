@@ -93,7 +93,7 @@ module.exports = class Node {
             const compiledSrc = vm.compile(src);
             vm.verify(compiledSrc); // linter & halt-problem checking
 
-            utils.prepareState(scAddr, stateTable[scAddr], {
+            utils.prepareState(scAddr, stateTable, {
                 balance: 0,
                 mode,
                 deployedBy,
