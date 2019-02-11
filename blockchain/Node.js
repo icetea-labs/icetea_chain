@@ -93,12 +93,12 @@ module.exports = class Node {
             const compiledSrc = vm.compile(src);
             vm.verify(compiledSrc); // linter & halt-problem checking
 
-            stateTable[scAddr] = {
+            utils.prepareState(scAddr, stateTable[scAddr], {
                 balance: 0,
                 mode,
                 deployedBy,
                 src: compiledSrc
-            };
+            });
 
             // call constructor
             result = this.callContract(tx, block, stateTable, {
