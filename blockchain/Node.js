@@ -134,7 +134,8 @@ module.exports = class Node {
         var tmpStateTable = _.cloneDeep(this.stateTable);
         try {
             const result = await this.doExecTx(tx, block, tmpStateTable);
-            Object.assign(this.stateTable, tmpStateTable);
+            // This should make sure 'balance' setter is maintained
+            _.merge(this.stateTable, tmpStateTable);
             this.addReceipt(tx, block, null, "Success", result);
         } catch (error) {
             this.addReceipt(tx, block, error, "Error")
