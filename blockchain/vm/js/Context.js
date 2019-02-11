@@ -56,7 +56,7 @@ exports.contextForView = (stateTable, address, name, params) => {
     const ctx = {
         address,
         balance,
-        getEnv: () => ({msg, block: {}}),
+        getEnv: () => ({msg}),
         transfer: () => {
             throw new Error("Cannot transfer inside a view function");
         },
@@ -85,7 +85,7 @@ exports.contextForPure = (address, name, params) => {
         get balance() {
             throw new Error("Cannot view balance a pure function");
         },
-        getEnv: () => ({msg, block: {}}),
+        getEnv: () => ({msg}),
         transfer: () => {
             throw new Error("Cannot transfer inside a pure function");
         },
@@ -104,7 +104,7 @@ exports.contextForPure = (address, name, params) => {
 }
 
 exports.dummyContext = Object.freeze({
-    getEnv: () => ({msg: {callType: "dummy", name: "__info"}, block:{}}),
+    getEnv: () => ({msg: {callType: "dummy", name: "__info"}}),
     getState: () => undefined,
     setState: () => undefined
 });

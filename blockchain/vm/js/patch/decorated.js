@@ -1,13 +1,14 @@
 module.exports = src => `
 'use strict';
-const global = void 0, globalThis = void 0, process = void 0, Date = void 0, Math = void 0,
+const global = void 0, globalThis = void 0, process = void 0, Math = void 0,
     setInterval = void 0, setTimeout = void 0, setImmediate = void 0;
 const revert = (text) => {throw new Error(text || "Transaction reverted")};
 const require = (condition, text) => {if (!condition) revert(text)}
 const assert = require;
 
 const {msg, block} = this.getEnv();
-const now = block.timestamp;
+const now = ["view", "pure"].includes(msg.callType)?Date.now()/1000|0:block.timestamp;
+Date = void 0;
 
 assert(typeof msg !== "undefined" && msg, "Invalid or corrupt transaction data");
 require(msg.name, "Method name not specified");

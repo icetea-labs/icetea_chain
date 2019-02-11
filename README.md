@@ -1,10 +1,11 @@
 # Simple chain
 
 ## Setup
-1. clone repo
-2. npm install
-3. npm run dev
-4. http://localhost:3001
+1. Require NodeJS 11.9
+2. clone repo
+3. npm install
+4. npm run dev
+5. http://localhost:3001
 
 ## Sample contracts
 ```js
