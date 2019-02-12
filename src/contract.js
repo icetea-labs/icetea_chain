@@ -48,7 +48,7 @@ async function fillFuncs() {
 
 $(document).ready(function () {
     fillContracts();
-    utils.registerTxForm($('#form'), buildData, $("#private_key").val().trim());
+    utils.registerTxForm($('#form'), buildData);
 
     $('#read').on('click', async function(e){
         var form = document.getElementById('form');

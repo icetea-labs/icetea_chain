@@ -44,7 +44,7 @@ export function parseParamsFromField(selector) {
     return parseParamList(document.querySelector(selector).value.trim())
 }
 
-export function registerTxForm($form, txData, privateKey) {
+export function registerTxForm($form, txData) {
     $form.submit(function(e) {
         e.preventDefault();
 
@@ -61,6 +61,7 @@ export function registerTxForm($form, txData, privateKey) {
 
         //console.log(txData)
         formData.data = JSON.stringify(txData);
+        const privateKey = $("#private_key").val().trim();
         formData.from = ecc.toPublicKey(privateKey);
         var tx = new Tx(formData.from, formData.to, formData.value, formData.fee, txData);
         formData.signature = ecc.sign(tx.hash, privateKey)

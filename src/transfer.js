@@ -7,4 +7,4 @@ function buildData() {
         params: parseParamsFromField("#params")
     }
 }
-registerTxForm($('#form'), buildData, $("#private_key").val().trim());
+registerTxForm($('#form'), buildData);

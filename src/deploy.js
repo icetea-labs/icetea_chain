@@ -29,7 +29,7 @@ function buildData() {
     }
 }
 
-utils.registerTxForm($('#form'), buildData, $("#private_key").val().trim());
+utils.registerTxForm($('#form'), buildData);
 
 document.getElementById("srcMode").addEventListener("change", function (e) {
     var s = this.value;
