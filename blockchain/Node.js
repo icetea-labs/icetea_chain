@@ -1,4 +1,5 @@
 const _ = require('lodash');
+const config = require('./config');
 const utils = require('./helper/utils');
 const params = require("./Params");
 const Block = require('./Block');
@@ -10,12 +11,23 @@ module.exports = class Node {
     constructor (chain, txPool) {
         this.chain = chain;
         this.txPool = txPool || [];
-        this.stateTable = {
-            miner: {
-                balance: 0,
-            }
-        }
+        // this.stateTable = {
+        //     miner: {
+        //         balance: 0,
+        //     }
+        // }
+        this.stateTable = {};
         this.receipts = {};
+        this.init();
+    }
+
+    init(){
+        _.each(config.initialStateTable, item => {
+            utils.prepareState(item.address, this.stateTable, {
+                balance: item.balance
+            });
+        });
+        console.log("init_stateTable",this.stateTable);
     }
 
     addReceipt(tx, block, error, status, result) {
@@ -141,6 +153,7 @@ module.exports = class Node {
             this.addReceipt(tx, block, error, "Error")
             console.log(error);
         }
+        console.log("stateTable:",this.stateTable);
     }
 
     execBlock(block) {

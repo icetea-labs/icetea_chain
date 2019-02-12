@@ -7,6 +7,7 @@ exports.prepareState = (addr, stateTable, initialValues) => {
         let balance = 0;
 
         Object.defineProperty(stateTable[addr], "balance", {
+            enumerable: true,
             get() {
                 return balance;
             },
@@ -28,6 +29,9 @@ exports.prepareState = (addr, stateTable, initialValues) => {
 
 exports.incBalance = (addr, delta, stateTable) => {
     const state = exports.prepareState(addr, stateTable);
+    if(state.balance + (parseFloat(delta) || 0 ) < 0){
+        throw new Error("Balance cannot be negative.");
+    }
     state.balance += parseFloat(delta) || 0;
 }
 
