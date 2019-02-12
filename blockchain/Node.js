@@ -27,7 +27,7 @@ module.exports = class Node {
                 balance: item.balance
             });
         });
-        console.log("init_stateTable",this.stateTable);
+        // console.log("init_stateTable",this.stateTable);
     }
 
     addReceipt(tx, block, error, status, result) {
@@ -153,7 +153,7 @@ module.exports = class Node {
             this.addReceipt(tx, block, error, "Error")
             console.log(error);
         }
-        console.log("stateTable:",this.stateTable);
+        //console.log("stateTable:",this.stateTable);
     }
 
     execBlock(block) {

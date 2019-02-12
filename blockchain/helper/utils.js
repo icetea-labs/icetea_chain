@@ -28,11 +28,12 @@ exports.prepareState = (addr, stateTable, initialValues) => {
 }
 
 exports.incBalance = (addr, delta, stateTable) => {
+    delta = parseFloat(delta) || 0 ;
     const state = exports.prepareState(addr, stateTable);
-    if(state.balance + (parseFloat(delta) || 0 ) < 0){
-        throw new Error("Balance cannot be negative.");
+    if (state.balance + delta < 0){
+        throw new Error("Not enough balance");
     }
-    state.balance += parseFloat(delta) || 0;
+    state.balance += delta;
 }
 
 exports.decBalance = (addr, delta, stateTable) => {
