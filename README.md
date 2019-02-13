@@ -3,7 +3,7 @@
 ## Presequisite
 1. NodeJS 11.9 or later
 2. [Tendermint](https://tendermint.com/docs/introduction/install.html)
-3. tendermint init
+3. `tendermint init`
 
 Set this in `~/.tendermint/config/config.toml`:
 ```
@@ -13,9 +13,9 @@ create_empty_blocks = false
 
 ## Setup
 1. clone repo
-2. npm install
-3. tendermint node
-4. npm run dev
+2. `npm install`
+3. `npm run dev`
+4. `tendermint node`
 
 To reset tendermint (delete all blocks), use `tendermint unsafe_reset_all`.
 
