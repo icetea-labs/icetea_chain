@@ -1,23 +1,15 @@
 const _ = require('lodash');
 const config = require('./config');
 const utils = require('./helper/utils');
-const params = require("./Params");
-const Block = require('./Block');
 const ecc = require('./helper/ecc')
 const {getRunner, getContext, getGuard} = require('./vm')
 
-module.exports = class Node {
+module.exports = class Worker {
 
-    constructor (chain, txPool) {
-        this.chain = chain;
-        this.txPool = txPool || [];
-        // this.stateTable = {
-        //     miner: {
-        //         balance: 0,
-        //     }
-        // }
+    constructor () {
         this.stateTable = {};
         this.receipts = {};
+        this.blocks = [];
         this.init();
     }
 
@@ -27,7 +19,6 @@ module.exports = class Node {
                 balance: item.balance
             });
         });
-        // console.log("init_stateTable",this.stateTable);
     }
 
     addReceipt(tx, block, error, status, result) {
@@ -43,7 +34,8 @@ module.exports = class Node {
             r.blockNumber = block.number;
             r.blockTimestamp = block.timestamp;
         }
-        this.receipts[tx.hash] = r;
+
+        this.receipts[tx.tHash] = r;
         return r;
     }
 
@@ -52,12 +44,26 @@ module.exports = class Node {
         return this.receipts[txHash];
     }
 
-    addTxToPool(tx) {
+    beginBlock(block) {
+        this.blocks.push(block);
+    }
+
+    endBlock() {
+        utils.incBalance("miner", 5, this.stateTable);
+    }
+
+    commit() {
+
+    }
+
+    verifyTx(tx) {
         if (!ecc.verifyTx(tx)) {
             throw new Error("Invalid signature");
         }
+    }
 
-        this.txPool.push(tx);
+    checkTx(tx) {
+        this.verifyTx(tx);
         this.addReceipt(tx, null, null, "Pending");
     }
 
@@ -94,7 +100,10 @@ module.exports = class Node {
         if (tx.isContractCreation()) {
 
             // make new address for smart contract
-            let scAddr = "contract_" + Date.now() + "_" + tx.from.substr(30);
+            // should be deterministic
+            const count = Object.keys(stateTable).reduce((t, k) => (
+                (k.startsWith("contract_") && k.endsWith(tx.from)) ? (t + 1) : t), 0);
+            let scAddr = "contract_" + count + "_" + tx.from;
             tx.to = scAddr;
 
             const mode = tx.data.mode;
@@ -141,7 +150,10 @@ module.exports = class Node {
         return result;
     }
 
-    async execTx(tx, block) {
+    async execTx(tx) {
+        const block = this.blocks[this.blocks.length - 1];
+        block.txs.push(tx);
+
         // clone the state so that we could revert on exception
         var tmpStateTable = _.cloneDeep(this.stateTable);
         try {
@@ -151,17 +163,10 @@ module.exports = class Node {
             this.addReceipt(tx, block, null, "Success", result);
         } catch (error) {
             this.addReceipt(tx, block, error, "Error")
-            console.log(error);
+            //console.log(error);
+            throw error;
         }
         //console.log("stateTable:",this.stateTable);
-    }
-
-    execBlock(block) {
-        block.txs.forEach(tx => {
-            this.execTx(tx, block);
-        });
-
-        utils.incBalance("miner", params.MINER_REWARD, this.stateTable);
     }
 
     balanceOf(who, t) {
@@ -234,6 +239,7 @@ module.exports = class Node {
             if (!info || !info._i) return [];
 
             const props = this.getAllPropertyNames(info._i);
+            
             const excepts = ['constructor', '__on_deployed', '__on_received', 'getEnv', 'getState', 'setState'];
             return ["address", "balance"].concat(props.filter((name) => !excepts.includes(name)));
         }
@@ -246,37 +252,6 @@ module.exports = class Node {
     }
 
     getBlocks() {
-        return _.cloneDeep(this.chain.blocks || [])
-    }
-
-    startMine() {
-        setInterval(() => {
-
-            // Choose txs from txPool
-            if (this.txPool.length === 0) return;
-            let txs = this.txPool.slice(0, params.BLOCK_SIZE)
-
-            // Create new block
-            let block = new Block(this.chain.getLatestBlockNumber() + 1, txs, this.chain.getLatestBlockHash(), params.DIFFICULTY);
-
-            while (!block.isHashValid()) {
-                block.makeNewHash();
-            }
-
-            // Insert new valid block to blockchain
-            this.chain.addBlock(block);
-
-            // Execute to fill cache table
-            this.execBlock(block);
-
-            // remove mined txs from pool
-            this.txPool.splice(0, block.txs.length);
-
-            // console.log("MINED~~ YEAH");//, block);
-
-            // Broadcast to neighbor nodes
-            // TODO: later
-
-        }, 1000);
+        return _.cloneDeep(this.blocks || [])
     }
 }

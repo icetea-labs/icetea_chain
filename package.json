@@ -4,7 +4,7 @@
   "description": "A simple chain for testing ideas",
   "main": "server.js",
   "scripts": {
-    "start": "node --harmony server.js",
+    "start": "node --harmony icetea.js",
     "dev": "npm start & webpack-dev-server --content-base src --inline --hot --port 3001 --open",
     "dev2": "npm start & webpack-dev-server --content-base src --inline --hot --port 3001"
   },
@@ -15,6 +15,7 @@
     "@babel/core": "^7.2.2",
     "@babel/plugin-proposal-class-properties": "^7.2.3",
     "@babel/plugin-proposal-decorators": "^7.2.3",
+    "abci": "^5.0.1",
     "ansi_up": "^3.0.0",
     "body-parser": "^1.18.3",
     "eosjs-ecc": "^4.0.4",
@@ -24,6 +25,7 @@
     "jquery": "^3.3.1",
     "json-formatter-js": "^2.2.1",
     "lodash": "^4.17.11",
+    "msgpack5": "^4.2.1",
     "npx": "^10.2.0",
     "recast": "^0.16.2",
     "webpack-dev-server": "^3.1.14"

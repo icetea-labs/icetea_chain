@@ -1,11 +1,24 @@
-# Simple chain
+# Tendermint-based icetea
+
+## Presequisite
+1. NodeJS 11.9 or later
+2. [Tendermint](https://tendermint.com/docs/introduction/install.html)
 
 ## Setup
-1. Require NodeJS 11.9
-2. clone repo
-3. npm install
-4. npm run dev
-5. http://localhost:3001
+1. clone repo
+2. npm install
+3. npm run dev
+4. tendermint init (only need for first time)
+5. tendermint node
+6. http://localhost:3001
+
+To reset tenderment (delete all blocks), use `tendermint unsafe_reset_all`.
+
+To tell tendermint not to produce empty block, use `tendermint node --consensus.create_empty_blocks=false` instead of `tendermint node`. Or set this in `~/.tendermint/config/config.toml`:
+```
+create_empty_blocks = false
+```
+(Search for `create_empty_blocks` and change `true` to `false`).
 
 ## Sample contracts
 ```js
@@ -36,31 +49,7 @@
 
 > More sample contracts are available in _contracts_ folder.
 
-## TODO
-- [x] Generate address & private key for account
-- [x] Check tx signature
-- [ ] Check tx balance when transfer
-- [x] View and payable markers
-- [x] Wrap state accesses in set/get methods
-- [ ] Add nonce (transaction counter)
-- [x] Support READ contract (no need to create TX)
-- [x] Support revert transaction (all or nothing)
-- [x] Support using ES6 class for contract
-- [x] Use receipts for TX results
-- [ ] ABI extraction (low priority)
-- [ ] Support Wasm contract (**high priority**)
-- [ ] Create web3-like client lib
-- [ ] Persist blockchain & state to leveldb (**this is non-essential since we plan to switch to tendermint for blaockhain layer**)
-- [ ] Use merkle trie for storing state
-- [ ] Remove non-deterministic from JS contracts
-- [ ] Remove non-deterministic stuff from Wasm contracts
-- [ ] Gas calculation for JS contracts (**very hard, maybe use timer and subprocess instead**)
-- [ ] Gas calculation (metering layer) for Wasm contracts
-- [ ] Use libp2p for p2p
-- [ ] Split VM into its own project
-- [ ] Make VM layer Tendermint/substrate compatible
-
-## Miscellanous
-- [ ] VM should be in-process or spawn a new process?
-- [ ] Properly sandbox smart contract execution environment
-- [ ] How to terminiate long-running tx (gas vs timer vs holders...)
+## Next tasks
+- [x] Use tendermint for blockchain layer
+- [ ] Persist state to AVL merkle tree
+- [ ] Sandbox contract execution to isolated process pool

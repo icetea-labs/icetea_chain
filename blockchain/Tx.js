@@ -15,15 +15,16 @@ module.exports = class Tx {
     //    params: [1, "hello"]
     //}
 
-    constructor(from, to, value, fee, data) {
+    constructor(from, to, value, fee, data, nonce) {
         this.from = from;
         this.to = to;
         this.value = value;
         this.fee = fee;
         this.data = data;
+        this.nonce = nonce || Date.now();
 
-        const content = [this.from, this.to, this.value, this.fee, JSON.stringify(this.data)].join(";");
-        this.hash = crypto.createHash('sha256').update(content).digest("hex");
+        const content = [this.from, this.to, this.value, this.fee, this.nonce, JSON.stringify(this.data)].join(";");
+        this.tHash = crypto.createHash('sha256').update(content).digest("hex");
     }
 
     setSignature(signature) {
@@ -39,6 +40,6 @@ module.exports = class Tx {
     }
 
     toString() {
-        return this.hash;
+        return this.tHash;
     }
 }

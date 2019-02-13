@@ -1,5 +1,6 @@
 import $ from 'jquery';
 window.$ = $;
+const msgpack = require('msgpack5')();
 import * as utils from './utils';
 
 function buildData() {
@@ -11,10 +12,11 @@ function buildData() {
 }
 
 async function fillContracts() {
-    const contracts = await fetch("/api/contracts")
-    .then((resp) => {
-        return resp.json();
-    })
+    const [contracts, err] = await utils.query('contracts');
+    if (err) {
+        console.log("Error fetching contract list", err);
+        return;
+    }
     if (!contracts.length) return;
 
     var select = document.getElementById("to");
@@ -31,9 +33,14 @@ async function fillContracts() {
 
 async function fillFuncs() {
     var contract = document.getElementById("to").value;
+    console.log(contract)
     if (!contract) return;
 
-    const funcs = await fetch("/api/funcs?contract=" + contract).then(resp => resp.json());
+    const [funcs, err] = await utils.query('funcs', contract);
+    if (err) {
+        console.log("Error fetching contract list", err);
+        return;
+    }
     var select = document.getElementById("funcs");
     select.innerHTML = "";
     funcs.forEach(item => {
@@ -62,11 +69,12 @@ $(document).ready(function () {
         
         var params = utils.parseParamsFromField("#params");
 
-        const result = await fetch("/api/call?" + $.param({address, name, params})).then(resp => resp.json());
-        if (result.success) {
-            document.getElementById("resultJson").textContent = utils.tryStringifyJson(result.data);
+        var callOptions = msgpack.encode({address, name, params}).toString("hex")
+        const [result, error] = await utils.query('call', callOptions);
+        if (!error && result.success) {
+            document.getElementById("resultJson").textContent = result.data.info;
         } else {
-            document.getElementById("resultJson").textContent = utils.tryStringifyJson(result.error);
+            document.getElementById("resultJson").textContent = utils.tryStringifyJson(error || result.error);
         }
     })
 });

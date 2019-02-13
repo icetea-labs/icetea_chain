@@ -1,6 +1,8 @@
 import ecc from '../blockchain/helper/ecc';
 import Tx from "../blockchain/Tx";
 
+const msgpack = require('msgpack5')();
+
 export function replaceAll(text, search, replacement) {
     return text.split(search).join(replacement);
 }
@@ -44,6 +46,21 @@ export function parseParamsFromField(selector) {
     return parseParamList(document.querySelector(selector).value.trim())
 }
 
+export function query(path, data) {
+    let url = '/api/abci_query?path="' + path + '"';
+    if (data) {
+        url += '&data="' + data + '"';
+    }
+    return fetch(url).then(resp => resp.json()).then(json => {
+        console.log(json)
+        if (!json.error && !json.result.response.code) {
+            return [JSON.parse(json.result.response.info), null];
+        } else {
+            return [null, json.error || json.result.response.info];
+        }
+    });
+}
+
 export function registerTxForm($form, txData) {
     $form.submit(function(e) {
         e.preventDefault();
@@ -64,18 +81,24 @@ export function registerTxForm($form, txData) {
         const privateKey = $("#private_key").val().trim();
         formData.from = ecc.toPublicKey(privateKey);
         var tx = new Tx(formData.from, formData.to, formData.value, formData.fee, txData);
-        formData.signature = ecc.sign(tx.hash, privateKey)
+        formData.nonce = tx.nonce;
+        formData.signature = ecc.sign(tx.tHash, privateKey);
 
         //submit tx
         $.ajax({
-            url: "/api/send_tx",
-            method: "POST",
-            data: formData,
+            url: "/api/broadcast_tx_sync?tx=0x" + msgpack.encode(formData).toString("hex"),
+            method: "GET",
             success: function (result) {
-                if (result.success) {
-                   window.location.href = '/tx.html?hash=' + encodeURIComponent(result.data.tx_hash)
+                console.log(result);
+                if (!result.error && result.result && result.result.code === 0) {
+                   window.location.href = '/tx.html?hash=' + encodeURIComponent(result.result.data).toLowerCase();
                 } else {
-                    alert(result.error)
+                    console.log(result)
+                    if (result.error) {
+                        alert(result.error.data)
+                    } else {
+                        alert(result.result.log);
+                    }
                 }
             }
         });

@@ -49,8 +49,8 @@ app.get('/api/call', async function(req, res) {
     try {
         var query = req.query;
         var params = query.params;
-        if (params) {
-            params = decodeURIComponent(params);
+        if (params && params.length) {
+            params = params.map(p => decodeURIComponent(p));
         }
         var result = await poa.callViewFunc(query.address, query.name, params);       
         res.json({

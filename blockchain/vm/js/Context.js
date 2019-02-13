@@ -43,7 +43,7 @@ exports.contextForWrite = (tx, block, stateTable, {address, fname, fparams}) => 
 exports.contextForView = (stateTable, address, name, params) => {
     const msg = new Proxy({name, params, callType: "view"}, {
         get(target, prop) {
-            if (!["name", "params", "callType"].includes(prop)) {
+            if (Object.keys(msg).includes(prop) && !["name", "params", "callType"].includes(prop)) {
                 throw new Error ("Cannot access msg." + prop + " when calling a @view function")
             }
             return Reflect.get(target, prop);

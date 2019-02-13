@@ -7,6 +7,6 @@ config.initialStateTable = [
     },
     {
         address: '617BFqg1QhNtsJiNiWz9jGpsm5iAJKqWQBhhk36KjvUFqNkh47',
-        balance: 300,
+        balance: 100000000000,
     },
 ]
