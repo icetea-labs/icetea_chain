@@ -3,22 +3,21 @@
 ## Presequisite
 1. NodeJS 11.9 or later
 2. [Tendermint](https://tendermint.com/docs/introduction/install.html)
+3. tendermint init
 
-## Setup
-1. clone repo
-2. npm install
-3. npm run dev
-4. tendermint init (only need for first time)
-5. tendermint node
-6. http://localhost:3001
-
-To reset tenderment (delete all blocks), use `tendermint unsafe_reset_all`.
-
-To tell tendermint not to produce empty block, use `tendermint node --consensus.create_empty_blocks=false` instead of `tendermint node`. Or set this in `~/.tendermint/config/config.toml`:
+Set this in `~/.tendermint/config/config.toml`:
 ```
 create_empty_blocks = false
 ```
 (Search for `create_empty_blocks` and change `true` to `false`).
+
+## Setup
+1. clone repo
+2. npm install
+3. tendermint node
+4. npm run dev
+
+To reset tendermint (delete all blocks), use `tendermint unsafe_reset_all`.
 
 ## Sample contracts
 ```js
