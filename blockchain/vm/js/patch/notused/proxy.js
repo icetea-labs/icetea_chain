@@ -15,7 +15,7 @@ const __this = this;
 const __c = {};
 __c._i = new Proxy(Object.assign(__contract, __this), {
     get: (obj, prop) => {
-        console.log(prop)
+        //console.log(prop)
         if (!__this[prop] && typeof obj[prop] !== "function" && __this.hasState(prop)) {
             return __this.getState(prop);
         }

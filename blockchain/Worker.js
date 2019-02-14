@@ -96,7 +96,6 @@ module.exports = class Worker {
             throw new Error(`Address ${scAddr} is not a valid contract`);
         } else {
             const {mode, src} = t[scAddr];
-            console.log(src);
             const context = getContext(mode).contextForWrite(tx, block, t, options);
             const guard = getGuard(mode)(src);
             const vm = getRunner(mode);
@@ -131,16 +130,12 @@ module.exports = class Worker {
             const compiledSrc = vm.compile(src);
             vm.verify(compiledSrc); // linter & halt-problem checking
 
-            console.log("after verify")
-
             utils.prepareState(scAddr, stateTable, {
                 balance: 0,
                 mode,
                 deployedBy,
                 src: compiledSrc
             });
-
-            console.log(src)
 
             // call constructor
             result = this.callContract(tx, block, stateTable, {
@@ -177,20 +172,14 @@ module.exports = class Worker {
 
         // clone the state so that we could revert on exception
         var tmpStateTable = _.cloneDeep(this.stateTable);
-        console.log(1)
         try {
             const result = await this.doExecTx(tx, block, tmpStateTable);
-            console.log(2)
             // This should make sure 'balance' setter is maintained
             _.merge(this.stateTable, tmpStateTable);
-            console.log(3)
             this.addReceipt(tx, block, null, "Success", result);
         } catch (error) {
-            console.log(4)
             this.addReceipt(tx, block, error, "Error")
-            console.log(5)
-            console.log(error, typeof error, error.name, error.linenumber, error.lineNumber, error instanceof EvalError, JSON.stringify(error));
-            throw error;
+           throw error;
         }
         //console.log("stateTable:",this.stateTable);
     }

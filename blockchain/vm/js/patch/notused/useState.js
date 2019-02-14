@@ -17,7 +17,7 @@ const __c = {
 };
 
 function useState(e, name, d) {
-    console.log("useState")
+    //console.log("useState")
     const initialValue = d.initializer?d.initializer():(void 0);
     delete d.initializer;
     delete d.writable;
