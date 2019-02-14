@@ -1,12 +1,13 @@
 import JSONFormatter from 'json-formatter-js';
 import handlebars from 'handlebars/dist/handlebars.min.js';
-import {query} from './utils';
+import {queryState, queryChain} from './utils';
 
 const blockTemplate = handlebars.compile(document.getElementById("blockTemplate").innerHTML);
 const txTemplate = handlebars.compile(document.getElementById("txTemplate").innerHTML);
 
 function fmtTime(tm) {
-    return new Date(tm * 1000).toLocaleTimeString();
+    var d = (typeof tm === "number") ? tm*1000 : Date.parse(tm);
+    return new Date(d).toLocaleTimeString();
 }
 
 function fmtHex(hex, c) {
@@ -16,12 +17,12 @@ function fmtHex(hex, c) {
 }
 
 function fmtBlocks(blocks) {
-    blocks.forEach(b => {
-        b.shash = fmtHex(b.hash, 6);
-        b.timestamp = fmtTime(b.timestamp);
-        b.txCount = b.txs.length;
-    });
-    return blocks;
+    return blocks.map(b => ({
+        height: b.header.height,
+        shash: fmtHex(b.block_id.hash, 6),
+        timestamp: fmtTime(b.header.time),
+        txCount: b.header.num_txs,
+    }));
 }
 
 function fmtTxs(txs) {
@@ -56,24 +57,29 @@ function showMessage() {
 let blockCount = 0;
 async function loadData() {
     // load block info
-    const [myBlocks,] = await query("blocks");
+    const [blockchain, err0] = await queryChain("blockchain");
+    if (err0 || !blockchain) {
+        console.error(err0);
+        return;
+    }
+    var myBlocks = blockchain.block_metas;
     if (myBlocks && myBlocks.length && myBlocks.length > blockCount) {
         blockCount = myBlocks.length;
 
         document.getElementById("blocks").innerHTML = blockTemplate(fmtBlocks(myBlocks));
 
         // load txs info
-        const [myTxs, err] = await query("txs");
+        const [myTxs, err] = await queryState("txs");
         if (err) {
-            console.log("Error fetching TX list", err);
+            console.error("Error fetching TX list", err);
             return;
         }
         document.getElementById("transactions").innerHTML = txTemplate(fmtTxs(myTxs));
 
         // load debug info
-        const [myJSON, err2] = await query("node");
+        const [myJSON, err2] = await queryState("node");
         if (err2) {
-            console.log("Error fetching debug info", err2);
+            console.error("Error fetching debug info", err2);
             return;
         }
         const formatter = new JSONFormatter(myJSON, 1);

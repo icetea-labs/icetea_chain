@@ -12,7 +12,7 @@ function buildData() {
 }
 
 async function fillContracts() {
-    const [contracts, err] = await utils.query('contracts');
+    const [contracts, err] = await utils.queryState('contracts');
     if (err) {
         console.log("Error fetching contract list", err);
         return;
@@ -36,7 +36,7 @@ async function fillFuncs() {
     console.log(contract)
     if (!contract) return;
 
-    const [funcs, err] = await utils.query('funcs', contract);
+    const [funcs, err] = await utils.queryState('funcs', contract);
     if (err) {
         console.log("Error fetching contract list", err);
         return;
@@ -70,7 +70,7 @@ $(document).ready(function () {
         var params = utils.parseParamsFromField("#params");
 
         var callOptions = msgpack.encode({address, name, params}).toString("hex")
-        const [result, error] = await utils.query('call', callOptions);
+        const [result, error] = await utils.queryState('call', callOptions);
         if (!error && result.success) {
             document.getElementById("resultJson").textContent = result.data.info;
         } else {

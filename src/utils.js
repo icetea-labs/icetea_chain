@@ -46,7 +46,7 @@ export function parseParamsFromField(selector) {
     return parseParamList(document.querySelector(selector).value.trim())
 }
 
-export function query(path, data) {
+export function queryState(path, data) {
     let url = '/api/abci_query?path="' + path + '"';
     if (data) {
         url += '&data="' + data + '"';
@@ -57,6 +57,21 @@ export function query(path, data) {
             return [JSON.parse(json.result.response.info), null];
         } else {
             return [null, json.error || json.result.response.info];
+        }
+    });
+}
+
+export function queryChain(path, data) {
+    let url = '/api/' + path;
+    if (data) {
+        url += '?data="' + data + '"';
+    }
+    return fetch(url).then(resp => resp.json()).then(json => {
+        console.log(json)
+        if (!json.error) {
+            return [json.result, null];
+        } else {
+            return [null, json.error];
         }
     });
 }

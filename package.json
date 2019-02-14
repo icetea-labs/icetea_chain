@@ -5,8 +5,8 @@
   "main": "server.js",
   "scripts": {
     "start": "node icetea.js",
-    "dev": "npm start & webpack-dev-server --content-base src --inline --hot --port 3001 --open",
-    "dev2": "npm start & webpack-dev-server --content-base src --inline --hot --port 3001",
+    "dev": "tendermint node & npm start & webpack-dev-server --content-base src --inline --hot --port 3001 --open",
+    "dev2": "tendermint node & npm start & webpack-dev-server --content-base src --inline --hot --port 3001",
     "reset": "tendermint unsafe_reset_all"
   },
   "keywords": [],

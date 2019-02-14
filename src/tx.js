@@ -1,5 +1,5 @@
 import handlebars from 'handlebars/dist/handlebars.min.js';
-import {query} from "./utils";
+import {queryState} from "./utils";
 var AU = require('ansi_up');
 var ansi_up = new AU.default;
 
@@ -10,7 +10,7 @@ var ansi_up = new AU.default;
         const template = handlebars.compile(source);
         async function fetchTxDetails() {
             try {
-                const [tx, error] = await query('tx', hash);
+                const [tx, error] = await queryState('tx', hash);
                 if (error) throw error;
 
                 tx.txType = "transfer";
