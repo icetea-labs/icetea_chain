@@ -11,7 +11,7 @@ exports.contextForWrite = (tx, block, stateTable, {address, fname, fparams}) => 
 
 
     const theBlock = Object.freeze(_.cloneDeep(block));
-    const state = Object.freeze(stateTable[address].state || {});
+    const state = stateTable[address].state || {};
     const balance = stateTable[address].balance || 0;
 
     const ctx = {

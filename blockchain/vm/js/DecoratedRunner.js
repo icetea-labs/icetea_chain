@@ -46,7 +46,7 @@ const __metadata = {}`;
             });
 
             //console.log(result.code);
-            return result.code;
+            return this.ensureES5(result.code);
         }
 
     }

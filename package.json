@@ -4,17 +4,18 @@
   "description": "A simple chain for testing ideas",
   "main": "server.js",
   "scripts": {
-    "start": "node --harmony icetea.js",
+    "start": "node icetea.js",
     "dev": "npm start & webpack-dev-server --content-base src --inline --hot --port 3001 --open",
-    "dev2": "npm start & webpack-dev-server --content-base src --inline --hot --port 3001"
+    "dev2": "npm start & webpack-dev-server --content-base src --inline --hot --port 3001",
+    "reset": "tendermint unsafe_reset_all"
   },
   "keywords": [],
   "author": "Trada Tech",
   "license": "MIT",
   "dependencies": {
     "@babel/core": "^7.2.2",
-    "@babel/plugin-proposal-class-properties": "^7.2.3",
-    "@babel/plugin-proposal-decorators": "^7.2.3",
+    "@babel/plugin-proposal-class-properties": "^7.3.0",
+    "@babel/plugin-proposal-private-methods": "^7.3.2",
     "abci": "^5.0.1",
     "ansi_up": "^3.0.0",
     "body-parser": "^1.18.3",

@@ -131,7 +131,7 @@ module.exports = function ({ types: t }) {
 
                         Object.keys(memberMeta).forEach(key => {
                             const stateDeco = memberMeta[key].decorators.filter(e => STATE_CHANGE_DECORATORS.includes(e));
-                            const isState = memberMeta[key].decorators.includes("state");
+                            //const isState = memberMeta[key].decorators.includes("state");
                             const mp = memberMeta[key].mp;
                             if (!isMethod(mp)) {
                                 if (stateDeco.length)
@@ -157,7 +157,7 @@ module.exports = function ({ types: t }) {
                         if (metaDeclare) {
                             const props = metaDeclare.node.declarations[0].init.properties;
                             Object.keys(memberMeta).forEach(prop => {
-                                if (!SPECIAL_MEMBERS.includes(prop)) {
+                                if (!SPECIAL_MEMBERS.includes(prop) && !prop.startsWith("#")) {
                                     const value = memberMeta[prop];
                                     const ds = [];
                                     value.decorators.forEach(d => ds.push(t.stringLiteral(d)))

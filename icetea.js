@@ -79,7 +79,7 @@ let handlers = {
 
   commit(...args) {
     console.log("commit", ...args);
-    return {data: Buffer.alloc(0)}
+    return {data: Buffer.alloc(0)}; // return the block stateRoot
   },
 
   query(req) {

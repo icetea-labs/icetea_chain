@@ -57,13 +57,29 @@ module.exports = class Worker {
     }
 
     verifyTx(tx) {
+
+        // To verify signature, we need the hash (or some representation of content)
+        // But at the time client broad_tx, she does not know the tendermint's hash
+        // which is not available until check_tx
+        // Because it is unreliable to reproduce the way tendermint calculates hash
+        // we use a separate content hash for signature checking
+
+        // It is important that we wrap the way this content hash is generated
+        // inside a web3-like lib's "sign" function
+
         if (!ecc.verifyTx(tx)) {
             throw new Error("Invalid signature");
         }
     }
 
     checkTx(tx) {
+
+        // Check TX should not modify state
+        // This way, we could avoid make a copy of state
+
         this.verifyTx(tx);
+
+        // This will removed later, since we do not manage receipts at application state level
         this.addReceipt(tx, null, null, "Pending");
     }
 
@@ -80,6 +96,7 @@ module.exports = class Worker {
             throw new Error(`Address ${scAddr} is not a valid contract`);
         } else {
             const {mode, src} = t[scAddr];
+            console.log(src);
             const context = getContext(mode).contextForWrite(tx, block, t, options);
             const guard = getGuard(mode)(src);
             const vm = getRunner(mode);
@@ -114,12 +131,16 @@ module.exports = class Worker {
             const compiledSrc = vm.compile(src);
             vm.verify(compiledSrc); // linter & halt-problem checking
 
+            console.log("after verify")
+
             utils.prepareState(scAddr, stateTable, {
                 balance: 0,
                 mode,
                 deployedBy,
                 src: compiledSrc
             });
+
+            console.log(src)
 
             // call constructor
             result = this.callContract(tx, block, stateTable, {
@@ -156,14 +177,19 @@ module.exports = class Worker {
 
         // clone the state so that we could revert on exception
         var tmpStateTable = _.cloneDeep(this.stateTable);
+        console.log(1)
         try {
             const result = await this.doExecTx(tx, block, tmpStateTable);
+            console.log(2)
             // This should make sure 'balance' setter is maintained
             _.merge(this.stateTable, tmpStateTable);
+            console.log(3)
             this.addReceipt(tx, block, null, "Success", result);
         } catch (error) {
+            console.log(4)
             this.addReceipt(tx, block, error, "Error")
-            //console.log(error);
+            console.log(5)
+            console.log(error, typeof error, error.name, error.linenumber, error.lineNumber, error instanceof EvalError, JSON.stringify(error));
             throw error;
         }
         //console.log("stateTable:",this.stateTable);
