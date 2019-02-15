@@ -15,9 +15,8 @@ create_empty_blocks = false
 1. clone repo
 2. `npm install`
 3. `npm run dev`
-4. `tendermint node`
 
-To reset tendermint (delete all blocks), use `tendermint unsafe_reset_all`.
+To reset tendermint (delete all blocks), use `npm run reset`.
 
 ## Sample contracts
 ```js
