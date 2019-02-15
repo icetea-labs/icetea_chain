@@ -6,10 +6,20 @@
 3. `tendermint init`
 
 Set this in `~/.tendermint/config/config.toml`:
+
+```
+index_tags = "tx.hash,tx.height"
+```
+
+(Search for `index_tags` and set value to `"tx.hash,tx.height"`).
+
+It is better to set this also, or you'll get ton of blocks.
+
 ```
 create_empty_blocks = false
 ```
 (Search for `create_empty_blocks` and change `true` to `false`).
+
 
 ## Setup
 1. clone repo
