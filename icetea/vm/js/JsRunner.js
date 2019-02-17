@@ -41,7 +41,7 @@ module.exports = mode => {
             // (it supports private fields only).
 
             // Would remove this method when such things are supported natively by Node
-            
+            src = src.toString();
             return babel.transformSync(src, {
                 plugins: [
                     "@babel/plugin-proposal-private-methods",

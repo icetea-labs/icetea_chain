@@ -1,19 +1,18 @@
 {
-  "name": "tchain",
+  "name": "icetea",
   "version": "1.0.0",
-  "description": "A simple chain for testing ideas",
+  "description": "Tendermint-based icetea",
   "main": "server.js",
   "scripts": {
-    "start": "node icetea.js",
-    "dev": "tendermint node & npm start & webpack-dev-server --content-base src --inline --hot --port 3001 --open",
-    "dev2": "tendermint node & npm start & webpack-dev-server --content-base src --inline --hot --port 3001",
+    "start": "node icetea",
+    "dev": "tendermint node & npm start & webpack-dev-server --content-base web --inline --hot --port 3001 --open",
+    "dev2": "tendermint node & npm start & webpack-dev-server --content-base web --inline --hot --port 3001",
     "reset": "tendermint unsafe_reset_all"
   },
   "keywords": [],
   "author": "Trada Tech",
   "license": "MIT",
   "dependencies": {
-    "@babel/core": "^7.2.2",
     "@babel/plugin-proposal-class-properties": "^7.3.0",
     "@babel/plugin-proposal-private-methods": "^7.3.2",
     "abci": "^5.0.1",
@@ -27,14 +26,18 @@
     "json-formatter-js": "^2.2.1",
     "lodash": "^4.17.11",
     "msgpack5": "^4.2.1",
+    "node-fetch": "^2.3.0",
     "npx": "^10.2.0",
     "recast": "^0.16.2",
     "webpack-dev-server": "^3.1.14"
   },
   "devDependencies": {
-    "nodemon": "^1.18.9",
+    "@babel/core": "^7.2.2",
+    "@babel/preset-env": "^7.3.1",
+    "babel-loader": "^8.0.5",
     "copy-webpack-plugin": "^4.6.0",
-    "webpack": "^4.28.3",
+    "nodemon": "^1.18.9",
+    "webpack": "^4.29.3",
     "webpack-cli": "^3.2.0"
   }
 }

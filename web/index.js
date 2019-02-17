@@ -1,6 +1,7 @@
 import JSONFormatter from 'json-formatter-js';
 import handlebars from 'handlebars/dist/handlebars.min.js';
-import {queryState, queryChain} from './utils';
+import {decodeTX} from './utils';
+import tweb3 from './tweb3';
 
 const blockTemplate = handlebars.compile(document.getElementById("blockTemplate").innerHTML);
 const txTemplate = handlebars.compile(document.getElementById("txTemplate").innerHTML);
@@ -28,19 +29,28 @@ function fmtBlocks(blocks) {
 function fmtTxs(txs) {
     Object.keys(txs).forEach(k => {
         const t = txs[k];
-        t.shash = fmtHex(t.tHash);
-        t.blockTimestamp = fmtTime(t.blockTimestamp);
-        t.from = fmtHex(t.from);
-        t.to = fmtHex(t.to);
+        t.shash = fmtHex(t.hash);
+        t.blockHeight = t.height;
+
+        const data = decodeTX(t.tx);
+
+        t.from = fmtHex(data.from);
+        t.to = fmtHex(data.to);
+        t.value = data.value;
+        t.fee = data.fee;
+
+        t.status = t.tx_result.code ? "Error" : "Success";
+
         t.txType = "transfer";
-        t.data = t.data || {};
-        if (t.data.op === 0) {
+        data.data = JSON.parse(data.data) || {};
+        if (data.data.op === 0) {
             t.txType = "create contract";
-        } else if (t.data.op === 1) {
+            //t.to = fmtHex(t.tx_result.data);
+        } else if (data.data.op === 1) {
             t.txType = "call contract";
         }
     });
-    return txs;
+    return txs.reverse();
 }
 
 function showMessage() {
@@ -57,7 +67,7 @@ function showMessage() {
 let blockCount = 0;
 async function loadData() {
     // load block info
-    const [blockchain, err0] = await queryChain("blockchain");
+    const [blockchain, err0] = await tweb3.getBlocks();
     if (err0 || !blockchain) {
         console.error(err0);
         return;
@@ -69,15 +79,18 @@ async function loadData() {
         document.getElementById("blocks").innerHTML = blockTemplate(fmtBlocks(myBlocks));
 
         // load txs info
-        const [myTxs, err] = await queryState("txs");
-        if (err) {
+        const [myTxs, err] = await tweb3.searchTransactions('tx.height>0');
+        if (!myTxs || err) {
             console.error("Error fetching TX list", err);
             return;
         }
-        document.getElementById("transactions").innerHTML = txTemplate(fmtTxs(myTxs));
+        if (myTxs.txs && myTxs.txs.length) {
+            //console.log(myTxs)
+            document.getElementById("transactions").innerHTML = txTemplate(fmtTxs(myTxs.txs));
+        }
 
         // load debug info
-        const [myJSON, err2] = await queryState("node");
+        const [myJSON, err2] = await tweb3.getDebugState();
         if (err2) {
             console.error("Error fetching debug info", err2);
             return;

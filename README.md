@@ -26,6 +26,8 @@ create_empty_blocks = false
 2. `npm install`
 3. `npm run dev`
 
+This will start a tendermint node, the icetea server, and open a sample web client to access blockchain features.
+
 To reset tendermint (delete all blocks), use `npm run reset`.
 
 ## Sample contracts

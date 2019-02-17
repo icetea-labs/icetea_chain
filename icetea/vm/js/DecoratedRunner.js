@@ -7,9 +7,7 @@ module.exports = mode => {
 
     return class extends JsRunner {
         compile(src) {
-            src += `;
-const __contract = new __contract_name();
-const __metadata = {}`;
+            src = src.toString() + ";const __contract = new __contract_name();const __metadata = {};";
             var result = babel.transformSync(src, {
                 parserOpts: {
                     plugins: [
@@ -42,7 +40,7 @@ const __metadata = {}`;
                 retainLines: false,
                 minified: false,
                 plugins: contractPlugins,
-                sourceMaps: true,
+                sourceMaps: false,
             });
 
             //console.log(result.code);

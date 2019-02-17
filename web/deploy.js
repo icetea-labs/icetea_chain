@@ -1,6 +1,6 @@
 import $ from 'jquery';
 window.$ = $;
-import * as utils from './utils';
+import * as utils from './domhelper';
 
 var wasmBuffer = null;
 

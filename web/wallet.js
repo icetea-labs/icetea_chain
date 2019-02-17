@@ -1,4 +1,4 @@
-import {generateKey, toPublicKey} from '../blockchain/helper/ecc';
+import {generateKey, toPublicKey} from '../icetea/helper/ecc';
 
 document.getElementById("generatePrivateKey").addEventListener('click', function() {
     generateKey().then(privateKey => {

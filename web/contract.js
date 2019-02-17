@@ -1,18 +1,20 @@
 import $ from 'jquery';
 window.$ = $;
 const msgpack = require('msgpack5')();
+import * as helper from './domhelper';
 import * as utils from './utils';
+import tweb3 from './tweb3'
 
 function buildData() {
     return {
         op: 1,
         name: document.getElementById("name").value,
-        params: utils.parseParamsFromField("#params")
+        params: helper.parseParamsFromField("#params")
     }
 }
 
 async function fillContracts() {
-    const [contracts, err] = await utils.queryState('contracts');
+    const [contracts, err] = await tweb3.getContracts();
     if (err) {
         console.log("Error fetching contract list", err);
         return;
@@ -20,7 +22,7 @@ async function fillContracts() {
     if (!contracts.length) return;
 
     var select = document.getElementById("to");
-    contracts.forEach(item => {
+    contracts.reverse().forEach(item => {
         let option = document.createElement("option");
         option.value = item;
         option.textContent = item;
@@ -33,14 +35,14 @@ async function fillContracts() {
 
 async function fillFuncs() {
     var contract = document.getElementById("to").value;
-    console.log(contract)
     if (!contract) return;
 
-    const [funcs, err] = await utils.queryState('funcs', contract);
+    const [funcs, err] = await tweb3.getFunctionList(contract);
     if (err) {
-        console.log("Error fetching contract list", err);
+        console.log("Error fetching function list", err);
         return;
     }
+
     var select = document.getElementById("funcs");
     select.innerHTML = "";
     funcs.forEach(item => {
@@ -55,7 +57,7 @@ async function fillFuncs() {
 
 $(document).ready(function () {
     fillContracts();
-    utils.registerTxForm($('#form'), buildData);
+    helper.registerTxForm($('#form'), buildData);
 
     $('#read').on('click', async function(e){
         var form = document.getElementById('form');
@@ -67,10 +69,10 @@ $(document).ready(function () {
         // }
         document.getElementById("funcName").textContent = name;
         
-        var params = utils.parseParamsFromField("#params");
+        var params = helper.parseParamsFromField("#params");
 
-        var callOptions = msgpack.encode({address, name, params}).toString("hex")
-        const [result, error] = await utils.queryState('call', callOptions);
+        const [result, error] = await tweb3.callReadonlyContractMethod(address, name, params);
+        console.log(result, error)
         if (!error && result.success) {
             document.getElementById("resultJson").textContent = result.data.info;
         } else {

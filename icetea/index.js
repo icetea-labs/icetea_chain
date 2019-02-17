@@ -1,13 +1,13 @@
 const createABCIServer = require('abci')
   , msgpack = require('msgpack5')();
 
-const Worker = require('./blockchain/Worker');
-const Tx = require('./blockchain/Tx');
+const Worker = require('./Worker');
+const Tx = require('./Tx');
 
 const worker = new Worker();
 
 // turn on debug logging
-require('debug').enable('abci*')
+// require('debug').enable('abci*')
 
 let handlers = {
   info(req) {
@@ -15,7 +15,7 @@ let handlers = {
       data: 'icetea',
       version: '0.0.1',
       appVerion: '0.0.1',
-      lastBlockHeight: worker.blocks.length?worker.blocks[worker.blocks.length - 1].number:0,
+      lastBlockHeight: worker.lastBlock?worker.lastBlock.number:0,
       lastBlockAppHash: Buffer.alloc(0)
     }
   },
@@ -23,7 +23,7 @@ let handlers = {
   checkTx(req) {
 
     let reqTx = decodeBytes(req.tx);
-    console.log("checkTx", reqTx);
+    //console.log("checkTx", reqTx);
 
     const tx = new Tx(
       reqTx.from, 
@@ -36,9 +36,9 @@ let handlers = {
 
     try {
       worker.checkTx(tx);
-      return { code: 0, data: Buffer.from(tx.tHash, "hex"), log: 'tx succeeded' }
+      return {}
     } catch (err) {
-      return { code: 1, log: String(err) }
+      return {code: 1, log: String(err)}
     }
   },
 
@@ -46,7 +46,7 @@ let handlers = {
     const hash = req.hash.toString("hex");
     const number = req.header.height.toNumber();
     const timestamp = req.header.time.seconds.toNumber();
-    worker.beginBlock({number, hash, timestamp, txs: []});
+    worker.beginBlock({number, hash, timestamp});
     return {}; // tags
   },
 
@@ -65,27 +65,30 @@ let handlers = {
 
     try {
       worker.verifyTx(tx);
-      await worker.execTx(tx);
-      return { code: 0, data: Buffer.from(tx.tHash, "hex"), log: 'tx succeeded' }
+      const result = await worker.execTx(tx);
+      if (typeof result !== "undefined") {
+        return {data: Buffer.from(JSON.stringify(result))}
+      }
+      return {};
     } catch (err) {
-      return { code: 1, log: String(err) }
+      return {code: 1, log: String(err)}
     }
   },
 
   endBlock(...args) {
-    console.log("endBlock", ...args);
+    //console.log("endBlock", ...args);
     return {};
   },
 
   commit(...args) {
-    console.log("commit", ...args);
+    //console.log("commit", ...args);
     return {data: Buffer.alloc(0)}; // return the block stateRoot
   },
 
   query(req) {
     //console.log(req.path, req.data.toString(), req.prove || false);
 
-    const prove = !!req.prove;
+    //const prove = !!req.prove;
     const path = req.path;
     const data = req.data.toString();
 
@@ -96,12 +99,6 @@ let handlers = {
         })
       case "node":
         return replyQuery(worker);
-      case "tx":
-        return replyQuery(worker.getReceipt(data));
-      case "txs":
-        return replyQuery(worker.getReceipts());
-      case "blocks":
-        return replyQuery(worker.getBlocks());
       case "contracts":
         return replyQuery(worker.getContractAddresses());
       case "funcs": {
@@ -113,7 +110,7 @@ let handlers = {
       }
       case "call": {
         try {
-          const options = msgpack.decode(Buffer.from(data, "hex"));
+          const options = JSON.parse(data);
           const result = replyQuery(worker.callViewFunc(options.address, options.name, options.params));
           return replyQuery({
             success: true,
@@ -123,7 +120,7 @@ let handlers = {
           console.log(error)
           return replyQuery({
             success: false,
-            data: error
+            error: String(error)
           })
         }
       }
