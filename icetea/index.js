@@ -111,7 +111,7 @@ let handlers = {
       case "call": {
         try {
           const options = JSON.parse(data);
-          const result = replyQuery(worker.callViewFunc(options.address, options.name, options.params));
+          const result = replyQuery(worker.callViewFunc(options.address, options.name, options.params, options.options));
           return replyQuery({
             success: true,
             data: result

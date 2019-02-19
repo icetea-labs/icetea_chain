@@ -71,7 +71,8 @@ $(document).ready(function () {
         
         var params = helper.parseParamsFromField("#params");
 
-        const [result, error] = await tweb3.callReadonlyContractMethod(address, name, params);
+        // TODO: modify frontend, add from address
+        const [result, error] = await tweb3.callReadonlyContractMethod(address, name, params, {from: '617BFqg1QhNtsJiNiWz9jGpsm5iAJKqWQBhhk36KjvUFqNkh47'});
         console.log(result, error)
         if (!error && result.success) {
             document.getElementById("resultJson").textContent = result.data.info;
