@@ -4,7 +4,7 @@
     }
 }
 
-@contract class Recursive1 {
+@contract class Recursive2 {
     hello() {
         this.hello2();
     }
