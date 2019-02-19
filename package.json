@@ -7,6 +7,7 @@
     "start": "node icetea",
     "dev": "tendermint node & npm start & webpack-dev-server --content-base web --inline --hot --port 3001 --open",
     "dev2": "tendermint node & npm start & webpack-dev-server --content-base web --inline --hot --port 3001",
+    "app": "webpack-dev-server --content-base web --inline --hot --port 3001 --open",
     "reset": "tendermint unsafe_reset_all"
   },
   "keywords": [],

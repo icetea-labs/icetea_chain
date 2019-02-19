@@ -74,8 +74,8 @@ export default class IceTeaWeb3 {
         return this.rpc.send("broadcast_tx_commit", tx);
     }
 
-    callReadonlyContractMethod(contract, method, params = []) {
-        return this.rpc.query("call", {address: contract, name: method, params});
+    callReadonlyContractMethod(contract, method, params = [], options={}) {
+        return this.rpc.query("call", {address: contract, name: method, params, options});
     }
 
     // shorthand for transfer, deploy, write, read contract goes here
