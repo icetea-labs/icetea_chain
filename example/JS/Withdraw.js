@@ -3,6 +3,10 @@
     @state fund = {};
 
     // a private helper
+    // we use property syntax, but method syntax should also work, like this
+    // #changeFund(delta) {
+    //     this.fund[msg.sender] = (this.fund[msg.sender] || 0) + delta;
+    // }
     #changeFund = delta => {
         this.fund[msg.sender] = (this.fund[msg.sender] || 0) + delta;
     }
