@@ -2,28 +2,45 @@
 //const fetch = require('node-fetch');
 
 import {switchEncoding, encodeTX} from './utils';
-import { debug } from 'util';
+// import { debug } from 'util';
 
+/**
+ * The IceTea web client.
+ */
 export default class IceTeaWeb3 {
+
+    /**
+     * Initialize the IceTeaWeb3 instance.
+     * @param {string} endpoint tendermint endpoint, e.g. http://localhost:26657 
+     */
     constructor(endpoint) {
         this.rpc = new HttpProvider(endpoint);
     }
 
-    // get a single block
-    // options example: {height: 10}
-    // ignore options to get latest block
+    /**
+     * Get a single block.
+     * @param {*} options example {height: 10}, skip to get latest block.
+     * @returns the tendermint block.
+     */
     getBlock(options) {
         return this.rpc.call("block", options);
     }
 
-    // get a list of blocks
-    // options example: {minHeight: 0, maxHeight: 10}
+    /**
+     * Get a list of blocks.
+     * @param {*} options optional, e.g. {minHeight: 0, maxHeight: 10}
+     * @returns {Array} an array of tendermint blocks
+     */
     getBlocks(options) {
         return this.rpc.call("blockchain", options);
     }
 
-    // get a single TX
-    // options example {prove: true}
+    /**
+     * Get a single transaction.
+     * @param {string} hash required, hex string without '0x'.
+     * @param {*} options optional, e.g. {prove: true} to request proof.
+     * @return {*} the tendermint transaction.
+     */
     getTransaction(hash, options) {
         if (!hash) {
             throw new Error("hash is required");
@@ -38,8 +55,12 @@ export default class IceTeaWeb3 {
         })
     }
 
-    // search, return a list of transaction
-    // example query: "tx.height>0"
+    /**
+     * Search for transactions met the query specified.
+     * @param {string} query required, query based on tendermint indexed tags, e.g. "tx.height>0".
+     * @param {*} options additional options.
+     * @returns {Array} Array of tendermint transactions.
+     */
     searchTransactions(query, options) {
         if (!query) {
             throw new Error('query is required, example "tx.height>0"');
@@ -47,33 +68,59 @@ export default class IceTeaWeb3 {
         return this.rpc.call("tx_search", {query, ...options});
     }
 
+    /**
+     * @return {string[]} Get all deployed smart contracts.
+     */
     getContracts() {
         return this.rpc.query("contracts");
     }
 
+    /**
+     * Get all public methods and fields of a contract.
+     * @param {string} contractAddr the contract address.
+     * @returns {string[]} methods and fields array.
+     */
     getFunctionList(contractAddr) {
         return this.rpc.query("funcs", contractAddr);
     }
 
+    /**
+     * @private
+     */
     getDebugState() {
         return this.rpc.query("node");
     }
 
-    // send a transaction and return immediately
+    /**
+     * Send a transaction and return immediately.
+     * @param {*} tx the transaction object.
+     */
     sendTransactionAsync(tx) {
         return this.rpc.send("broadcast_tx_async", tx);
     }
 
-    // send a transaction and wait until it reach mempool
+    /**
+     * Send a transaction and wait until it reach mempool.
+     * @param {*} tx the transaction object.
+     */
     sendTransactionSync(tx) {
         return this.rpc.send("broadcast_tx_sync", tx);
     }
 
-    // send a transaction and wait until it is included in a block
+    /**
+     * Send a transaction and wait until it is included in a block.
+     * @param {*} tx the transaction object.
+     */
     sendTransactionCommit(tx) {
         return this.rpc.send("broadcast_tx_commit", tx);
     }
 
+    /**
+     * Call a readonly (@view) contract method or field.
+     * @param {string} contract required, the contract address.
+     * @param {string} method required, method or field name. 
+     * @param {Array} params method params, if any.
+     */
     callReadonlyContractMethod(contract, method, params = []) {
         return this.rpc.query("call", {address: contract, name: method, params});
     }
