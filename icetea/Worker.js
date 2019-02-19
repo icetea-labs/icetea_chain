@@ -220,11 +220,14 @@ module.exports = class Worker {
         return props;
     }
 
-    callViewFunc(addr, name, params) {
+    callViewFunc(addr, name, params, options) {
+        const block = this.lastBlock;
+        Object.assign(options, {block})
+
         if (this.stateTable[addr] && this.stateTable[addr].src) {
             const {mode, src} = this.stateTable[addr];
             const vm = getRunner(mode)
-            const context = getContext(mode).contextForView(this.stateTable, addr, name, params);
+            const context = getContext(mode).contextForView(this.stateTable, addr, name, params, options);
             const guard = getGuard(mode)(src);
             return vm.run(src, {context, guard});
         }
