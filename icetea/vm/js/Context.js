@@ -41,7 +41,8 @@ exports.contextForWrite = (tx, block, stateTable, {address, fname, fparams}) => 
 }
 
 exports.contextForView = (stateTable, address, name, params, options) => {
-    const msg = new Proxy({name, params, callType: "view"}, {
+    const {from, block} = options;
+    const msg = new Proxy({name, params, sender: from, callType: "view"}, {
         get(target, prop) {
             if (Object.keys(msg).includes(prop) && !["name", "params", "callType", "sender"].includes(prop)) {
                 throw new Error ("Cannot access msg." + prop + " when calling a @view function")
@@ -50,15 +51,13 @@ exports.contextForView = (stateTable, address, name, params, options) => {
         }
     })
 
-    msg.sender = options.from;
-
     const state = _.cloneDeep(stateTable[address].state || {});
     const balance = stateTable[address].balance || 0;
 
     const ctx = {
         address,
         balance,
-        getEnv: () => ({msg, block: options.block, now: options.block.timestamp}),
+        getEnv: () => ({msg, block, now: block.timestamp}),
         transfer: () => {
             throw new Error("Cannot transfer inside a view function");
         },
