@@ -222,7 +222,7 @@ module.exports = class Worker {
 
     callViewFunc(addr, name, params, options) {
         const block = this.lastBlock;
-        Object.assign(options, {block})
+        options = Object.assign(options || {}, {block})
 
         if (this.stateTable[addr] && this.stateTable[addr].src) {
             const {mode, src} = this.stateTable[addr];

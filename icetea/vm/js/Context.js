@@ -57,7 +57,7 @@ exports.contextForView = (stateTable, address, name, params, options) => {
     const ctx = {
         address,
         balance,
-        getEnv: () => ({msg, block, now: block.timestamp}),
+        getEnv: () => ({msg, block}),
         transfer: () => {
             throw new Error("Cannot transfer inside a view function");
         },
