@@ -41,11 +41,12 @@
     @state #value
 
     @transaction setValue(value) {
+        emitEvent("ValueChanged", {oldValue: this.#value, newValue: value})
         this.#value = value
     }
 
     getValue() {
-        return this.#value;
+        return this.#value
     }
 }</textarea></p>
 </section>

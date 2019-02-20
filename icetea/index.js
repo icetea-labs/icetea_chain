@@ -65,11 +65,19 @@ let handlers = {
 
     try {
       worker.verifyTx(tx);
-      const result = await worker.execTx(tx);
-      if (typeof result !== "undefined") {
-        return {data: Buffer.from(JSON.stringify(result))}
+      const [data, tags] = await worker.execTx(tx);
+      const result = {};
+      if (typeof data !== "undefined") {
+        result.data = Buffer.from(JSON.stringify(result));
       }
-      return {};
+      if (typeof tags !== undefined && Object.keys(tags).length) {
+        result.tags = [];
+        Object.keys(tags).forEach((key) => {
+          result.tags.push({key: Buffer.from(key), value: Buffer.from(tags[key])});
+        });
+      }
+      console.log(result);
+      return result;
     } catch (err) {
       return {code: 1, log: String(err)}
     }

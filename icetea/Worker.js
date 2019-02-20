@@ -105,7 +105,7 @@ module.exports = class Worker {
             // save back the state
             t[scAddr].state = Object.assign(t[scAddr].state || {}, context._state);
 
-            return result;
+            return [result, context.getEnv().tags];
         }
     }
 
@@ -176,9 +176,9 @@ module.exports = class Worker {
             const result = await this.doExecTx(tx, block, tmpStateTable);
             // This should make sure 'balance' setter is maintained
             _.merge(this.stateTable, tmpStateTable);
-            console.log(result)
+            //console.log(result)
             //this.addReceipt(tx, block, null, "Success", result);
-            return result;
+            return result || [];
         } catch (error) {
             //this.addReceipt(tx, block, error, "Error")
             console.log(error)

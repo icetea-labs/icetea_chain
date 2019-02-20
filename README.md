@@ -5,20 +5,24 @@
 2. [Tendermint](https://tendermint.com/docs/introduction/install.html)
 3. `tendermint init`
 
-Set this in `~/.tendermint/config/config.toml`:
+Open `~/.tendermint/config/config.toml`.
+
+Search for `index_tags` and comment out that line.
 
 ```
-index_tags = "tx.hash,tx.height"
+# index_tags = ...
 ```
 
-(Search for `index_tags` and set value to `"tx.hash,tx.height"`).
+Then search for and set `index_all_tags` to `true`.
+```
+index_all_tags = true
+```
 
-It is better to set this also, or you'll get ton of blocks.
+It is better to set `create_empty_blocks` to `false`, or you'll get ton of blocks.
 
 ```
 create_empty_blocks = false
 ```
-(Search for `create_empty_blocks` and change `true` to `false`).
 
 
 ## Setup
@@ -47,6 +51,8 @@ To reset tendermint (delete all blocks), use `npm run reset`.
         const amount = (available > this.balance)?available:this.balance;
         this.fund[msg.sender] = (+this.fund[msg.sender] || 0) - amount;
         this.transfer(msg.sender, amount);
+
+        emitEvent("Withdrawn", {withdrawer: msg.sender, amount});
     }
 
     @transaction backdoor(value) {

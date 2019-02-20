@@ -13,11 +13,12 @@ exports.contextForWrite = (tx, block, stateTable, {address, fname, fparams}) => 
     const theBlock = Object.freeze(_.cloneDeep(block));
     const state = stateTable[address].state || {};
     const balance = stateTable[address].balance || 0;
+    const tags = {}
 
     const ctx = {
         address,
         balance,
-        getEnv: () => Object.freeze({msg, block: theBlock}),
+        getEnv: () => Object.freeze({msg, block: theBlock, tags}),
         transfer: (to, value) => {
             ctx.balance -= value;
             utils.decBalance(address, value, stateTable);
