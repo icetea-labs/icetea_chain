@@ -57,7 +57,7 @@ exports.contextForView = (stateTable, address, name, params, options) => {
     const ctx = {
         address,
         balance,
-        getEnv: () => ({msg, block}),
+        getEnv: () => ({msg, block: Object.freeze(_.cloneDeep(block))}),
         transfer: () => {
             throw new Error("Cannot transfer inside a view function");
         },
@@ -105,7 +105,7 @@ exports.contextForPure = (address, name, params) => {
 }
 
 exports.dummyContext = Object.freeze({
-    getEnv: () => ({msg: {callType: "dummy", name: "__info"}}),
+    getEnv: () => ({msg: {callType: "dummy", name: "__info"}, block: {}}),
     getState: () => undefined,
     setState: () => undefined
 });

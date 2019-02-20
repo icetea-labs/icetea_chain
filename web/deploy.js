@@ -19,6 +19,10 @@ function buildData() {
             alert("You must provide contract source.");
             return null;
         }
+        if (mode === 1 && !src.includes("@contract")) {
+            alert("There is no @contract decorator. You should select 'Raw JS' contract source mode.");
+            return null;
+        }
     }
 
     return {
