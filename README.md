@@ -59,6 +59,8 @@ To reset tendermint (delete all blocks), use `npm run reset`.
 
 > More sample contracts are available in _contracts_ folder.
 
+> Check out our guide here https://github.com/TradaTech/icetea/wiki/Javascript-smart-contract
+
 ## Next tasks
 - [x] Use tendermint for blockchain layer
 - [ ] Persist state to AVL merkle tree
