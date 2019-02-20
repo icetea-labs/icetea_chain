@@ -6,7 +6,7 @@ const revert = (text) => {throw new Error(text || "Transaction reverted")};
 const require = (condition, text) => {if (!condition) revert(text)}
 const assert = require;
 
-const {msg, block} = this.getEnv();
+const {msg, block, loadContract} = this.getEnv();
 const now = block?block.timestamp:0;
 //const now = ["view", "pure", "dummy"].includes(msg.callType)?Date.now()/1000|0:block.timestamp;
 const Date = void 0;
