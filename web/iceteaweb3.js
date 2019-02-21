@@ -58,7 +58,7 @@ export default class IceTeaWeb3 {
     /**
      * Search for transactions met the query specified.
      * @param {string} query required, query based on tendermint indexed tags, e.g. "tx.height>0".
-     * @param {*} options additional options.
+     * @param {*} options additional options, e.g. {prove: true, page: 2, per_page: 20}
      * @returns {Array} Array of tendermint transactions.
      */
     searchTransactions(query, options) {
@@ -66,6 +66,38 @@ export default class IceTeaWeb3 {
             throw new Error('query is required, example "tx.height>0"');
         }
         return this.rpc.call("tx_search", {query, ...options});
+    }
+
+    /**
+     * Search for events emit by contracts.
+     * @param {string} eventName the event name, e.g. "Transfered" 
+     * @param {*} conditions required, string or object literal.
+     * string example: "tx.height>0 AND someIndexedField CONTAINS 'kkk'".
+     * Object example: {fromBlock: 0, toBlock: 100, someIndexedField: "xxx"}.
+     * Note that conditions are combined using AND, no support for OR.
+     * @param {*} options additional options, e.g. {prove: true, page: 2, per_page: 20}
+     * @returns {Array} Array of tendermint transactions containing the event.
+     */
+    searchEvents(eventName, conditions, options) {
+        let query = "";
+        if (typeof options === "string") {
+            query = options;
+        } else {
+            const arr = [`EventNames CONTAINS |${eventName}|`];
+            Object.keys(conditions).forEach(key => {
+                const value = conditions[key];
+                if (key === "fromBlock") {
+                    arr.push(`tx.height>${value-1}`)
+                } else if (key === "toBlock") {
+                    arr.push(`tx.height<${value+1}`)
+                } else {
+                    arr.push(`${key}=${value}`)
+                }
+            });
+            query = arr.join(" AND ");
+        }
+
+        return this.searchTransactions(query, options);
     }
 
     /**
@@ -144,9 +176,6 @@ export class HttpProvider {
             id: Date.now(),
             method,
             params
-        }
-        if (typeof params !== 'undefined') {
-            json.params = params;
         }
 
         return fetch(this.endpoint, {
