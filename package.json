@@ -29,6 +29,7 @@
     "msgpack5": "4.2.1",
     "node-fetch": "2.3.0",
     "npx": "10.2.0",
+    "prismjs": "^1.15.0",
     "recast": "0.16.2",
     "webpack-dev-server": "3.1.14"
   },
@@ -39,6 +40,6 @@
     "copy-webpack-plugin": "4.6.0",
     "nodemon": "1.18.9",
     "webpack": "4.29.3",
-    "webpack-cli": "3.2.0"
+    "webpack-cli": "^3.2.0"
   }
 }
