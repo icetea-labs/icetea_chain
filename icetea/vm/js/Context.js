@@ -1,5 +1,6 @@
 const _ = require('lodash');
 const utils = require('../../helper/utils');
+const Worker = require('../../Worker');
 
 exports.contextForWrite = (tx, block, stateTable, {address, fname, fparams}) => {
     let msg = _.cloneDeep(tx);
@@ -58,7 +59,16 @@ exports.contextForView = (stateTable, address, name, params, options) => {
     const ctx = {
         address,
         balance,
-        getEnv: () => ({msg, block: Object.freeze(_.cloneDeep(block))}),
+        getEnv: () => ({msg, block: Object.freeze(_.cloneDeep(block)), loadContract: (addr) => {
+            const worker = new Worker(stateTable);
+            
+            const funcs = worker.getFuncNames(addr);
+            const result = {};
+            funcs.map(func => {
+                result[func] = (params) => worker.callViewFunc(addr, func, params, {})
+            });
+            return result;
+        }}),
         transfer: () => {
             throw new Error("Cannot transfer inside a view function");
         },
