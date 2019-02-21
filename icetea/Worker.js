@@ -138,10 +138,12 @@ module.exports = class Worker {
             });
 
             // call constructor
-            this.callContract(tx, block, stateTable, {
+            result = this.callContract(tx, block, stateTable, {
                 fname: "__on_deployed"
-            });
-            result = scAddr;
+            }).then(r => {
+                r[0] = scAddr;
+                return r;
+            })
         }
 
         // call contract

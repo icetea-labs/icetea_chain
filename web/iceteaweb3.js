@@ -1,8 +1,62 @@
 // for testing with NodeJS
 //const fetch = require('node-fetch');
 
-import {switchEncoding, encodeTX} from './utils';
+import {switchEncoding, encodeTX, tryParseJson} from './utils';
 // import { debug } from 'util';
+
+function decodeEventData(tx) {
+    if (!tx.tx_result || !tx.tx_result.tags|| !tx.tx_result.tags.length) {
+        return {};
+    }
+
+    const b64Tags = tx.tx_result.tags;
+    const tags = {};
+    // decode tags
+    b64Tags.forEach(t => {
+        const key = switchEncoding(t.key, "base64", "utf8");
+        const value = switchEncoding(t.value, "base64", "utf8");
+        tags[key] = tryParseJson(value);
+    });
+
+    if (!tags.EventNames) {
+        return {};
+    }
+
+    const events = tags.EventNames.split("|");
+    if (!events.length) {
+        return {};
+    }
+
+    const result = events.reduce((r, e) => {
+        if (e) {
+            r[e] = Object.keys(tags).reduce((data, key) => {
+                if (key.startsWith(e + ".")) {
+                    const parts = key.split(".", 2);
+                    if (parts.length === 2) {
+                        const name = parts[1];
+                        const value = tags[key];
+                        data[name] = value;
+                    }
+                } else if (key === e) {
+                    Object.assign(data, tags[key])
+                }
+                return data;
+            }, {});
+        }
+        return r;
+    }, {});
+
+    // what we want to return:
+    // {
+    //     Transferred: {
+    //         from: "xxx",
+    //         to: "xxx",
+    //         amount: 100
+    //     }
+    // }
+
+    return result;
+}
 
 /**
  * The IceTea web client.
@@ -15,6 +69,10 @@ export default class IceTeaWeb3 {
      */
     constructor(endpoint) {
         this.rpc = new HttpProvider(endpoint);
+
+        this.utils = {
+            decodeEventData
+        }
     }
 
     /**
@@ -48,7 +106,7 @@ export default class IceTeaWeb3 {
         return this.rpc._call("tx", {hash: switchEncoding(hash, "hex", "base64"), ...options})
         .then(r => {
             if (r.result && r.result.tx_result && r.result.tx_result.data) {
-                r.result.tx_result.data = switchEncoding(r.result.tx_result.data, "base64", "utf8");
+                r.result.tx_result.data = tryParseJson(switchEncoding(r.result.tx_result.data, "base64", "utf8"));
             }
             
             return [r.result, r.error];
@@ -78,13 +136,12 @@ export default class IceTeaWeb3 {
      * @param {*} options additional options, e.g. {prove: true, page: 2, per_page: 20}
      * @returns {Array} Array of tendermint transactions containing the event.
      */
-    searchEvents(eventName, conditions, options) {
+    getPastEvents(eventName, conditions, options) {
         let query = "";
         if (typeof options === "string") {
             query = options;
         } else {
-            const arr = [`EventNames CONTAINS |${eventName}|`];
-            Object.keys(conditions).forEach(key => {
+            query = Object.keys(conditions).reduce((arr, key) => {
                 const value = conditions[key];
                 if (key === "fromBlock") {
                     arr.push(`tx.height>${value-1}`)
@@ -93,8 +150,8 @@ export default class IceTeaWeb3 {
                 } else {
                     arr.push(`${key}=${value}`)
                 }
-            });
-            query = arr.join(" AND ");
+                return arr;
+            }, [`EventNames CONTAINS '|${eventName}|'`]).join(" AND ");
         }
 
         return this.searchTransactions(query, options);
@@ -120,7 +177,7 @@ export default class IceTeaWeb3 {
      * @private
      */
     getDebugState() {
-        return this.rpc.query("node");
+        return this.rpc.query("state");
     }
 
     /**

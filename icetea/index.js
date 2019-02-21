@@ -68,15 +68,15 @@ let handlers = {
       const [data, tags] = await worker.execTx(tx);
       const result = {};
       if (typeof data !== "undefined") {
-        result.data = Buffer.from(JSON.stringify(result));
+        result.data = Buffer.from(JSON.stringify(data));
       }
-      if (typeof tags !== undefined && Object.keys(tags).length) {
+      if (typeof tags !== "undefined" && Object.keys(tags).length) {
         result.tags = [];
         Object.keys(tags).forEach((key) => {
           result.tags.push({key: Buffer.from(key), value: Buffer.from(tags[key])});
         });
       }
-      console.log(result);
+      //console.log(result);
       return result;
     } catch (err) {
       return {code: 1, log: String(err)}
@@ -105,7 +105,7 @@ let handlers = {
         return replyQuery({
           balance: worker.balanceOf(data)
         })
-      case "node":
+      case "state":
         return replyQuery(worker);
       case "contracts":
         return replyQuery(worker.getContractAddresses());
