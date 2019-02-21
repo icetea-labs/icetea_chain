@@ -59,13 +59,13 @@ exports.contextForView = (stateTable, address, name, params, options) => {
     const ctx = {
         address,
         balance,
-        getEnv: () => ({msg, block: Object.freeze(_.cloneDeep(block)), loadContract: (addr) => {
+        getEnv: () => ({msg, block: Object.freeze(_.cloneDeep(block)), loadContract: (sender, addr) => {
             const worker = new Worker(stateTable);
             
             const funcs = worker.getFuncNames(addr);
             const result = {};
             funcs.map(func => {
-                result[func] = (params) => worker.callViewFunc(addr, func, params, {})
+                result[func] = (params) => worker.callViewFunc(addr, func, params, {from: sender})
             });
             return result;
         }}),

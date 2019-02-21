@@ -4,8 +4,8 @@
     constructor(other) {this.otherContract = other}
 
     test() {
-        const contract = loadContract(this.otherContract);
-        console.log(`Hello ${msg.sender} from ${this.address}`);
-        console.log(`Contract value is ${contract.getValue()}`);
+        const contract = loadContract(this.address, this.otherContract);
+        console.log(`I am ${this.address}, calling ${this.otherContract}`);
+        contract.test()
     }
 }
