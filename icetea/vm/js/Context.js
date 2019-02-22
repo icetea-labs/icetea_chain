@@ -23,6 +23,7 @@ exports.contextForWrite = (tx, block, stateTable, {address, fname, fparams}) => 
             ctx.balance -= value;
             utils.decBalance(address, value, stateTable);
             utils.incBalance(to, value, stateTable);
+            utils.emitTransferred(address, tags, address, to, value);
         },
         _state: {},
         hasState: (key) => {

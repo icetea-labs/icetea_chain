@@ -139,7 +139,7 @@ module.exports = class Worker {
 
         if (tx.value > 0) {
             const emitTransferred = (tags) => {
-                return utils.emitEvent(null, tags, "Transferred", {from: tx.from, to: tx.to, value: tx.value}, ["from", "to"]);
+                return utils.emitTransferred(null, tags, tx.from, tx.to, tx.value);
             }
             if (result) {
                 result.then(r => {
