@@ -155,7 +155,7 @@ module.exports = class Worker {
         }
 
         // process value transfer
-        utils.decBalance(tx.from, parseFloat(tx.value || 0) + parseFloat(tx.fee || 0), stateTable)
+        utils.decBalance(tx.from, tx.value + tx.fee, stateTable);
         utils.incBalance(tx.to, tx.value, stateTable);
         //utils.incBalance("miner", tx.fee, stateTable);
 
@@ -164,6 +164,20 @@ module.exports = class Worker {
                 address: tx.to,
                 fname: "__on_received"
             })
+        }
+
+        if (tx.value > 0) {
+            const emitTransferred = (tags) => {
+                return utils.emitEvent(null, tags, "Transferred", {from: tx.from, to: tx.to, value: tx.value}, ["from", "to"]);
+            }
+            if (result) {
+                result.then(r => {
+                    emitTransferred(r[1])
+                    return r;
+                })
+            } else {
+                result = [undefined, emitTransferred()];
+            }
         }
 
         return result;
@@ -199,27 +213,12 @@ module.exports = class Worker {
     getContractAddresses() {
         const arr = [];
         _.each(this.stateTable, (value, key) => {
-            if (key.startsWith("contract_")) {
+            if (value.src) {
                 arr.push(key);
             }
         });
 
         return arr;
-    }
-
-    getAllPropertyNames(obj) {
-        var props = [];
-    
-        do {
-            Object.getOwnPropertyNames(obj).forEach(prop => {
-                if (!props.includes(prop)) {
-                    props.push(prop);
-                }
-            });
-        } while ((obj = Object.getPrototypeOf(obj)) && obj != Object.prototype);
-    
-        //console.log(props);
-        return props;
     }
 
     callViewFunc(addr, name, params, options) {
@@ -261,7 +260,7 @@ module.exports = class Worker {
 
             if (!info || !info._i) return [];
 
-            const props = this.getAllPropertyNames(info._i);
+            const props = utils.getAllPropertyNames(info._i);
             
             const excepts = ['constructor', '__on_deployed', '__on_received', 'getEnv', 'getState', 'setState'];
             return ["address", "balance"].concat(props.filter((name) => !excepts.includes(name)));
