@@ -6,8 +6,8 @@ const {getRunner, getContext, getGuard} = require('./vm')
 
 module.exports = class Worker {
 
-    constructor () {
-        this.stateTable = {};
+    constructor (stateTable) {
+        this.stateTable = stateTable || {};
         this.init();
     }
 
