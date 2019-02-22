@@ -20,7 +20,7 @@ exports.contextForWrite = (tx, block, stateTable, {address, fname, fparams}) => 
     const ctx = {
         address,
         balance,
-        getEnv: () => Object.freeze({msg, block: theBlock, tags, loadContract: (sender, addr) => {
+        getEnv: () => Object.freeze({msg, block: theBlock, tags, loadContract: (to) => {
             const worker = new Worker(stateTable);
             
             const funcs = worker.getFuncNames(addr);
@@ -28,8 +28,8 @@ exports.contextForWrite = (tx, block, stateTable, {address, fname, fparams}) => 
             funcs.map(func => {
                 result[func] = async (...params) => {
                     const tx = new Tx(
-                        sender, 
-                        addr, 
+                        address, 
+                        to, 
                         0, 
                         0,
                         {
@@ -82,13 +82,13 @@ exports.contextForView = (stateTable, address, name, params, options) => {
     const ctx = {
         address,
         balance,
-        getEnv: () => ({msg, block: Object.freeze(_.cloneDeep(block)), loadContract: (sender, addr) => {
+        getEnv: () => ({msg, block: Object.freeze(_.cloneDeep(block)), loadContract: (addr) => {
             const worker = new Worker(stateTable);
             
             const funcs = worker.getFuncNames(addr);
             const result = {};
             funcs.map(func => {
-                result[func] = (...params) => worker.callViewFunc(addr, func, params, {from: sender})
+                result[func] = (...params) => worker.callViewFunc(addr, func, params, {from: address})
             });
             return result;
         }}),

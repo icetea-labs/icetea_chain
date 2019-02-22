@@ -4,7 +4,7 @@
     constructor(other) {this.otherContract = other}
 
     test() {
-        const contract = loadContract(this.address, this.otherContract);
+        const contract = loadContract(this.otherContract);
         console.log(`I am ${this.address}, calling ${this.otherContract}`);
         contract.test()
     }

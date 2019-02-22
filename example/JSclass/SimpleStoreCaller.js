@@ -4,7 +4,7 @@
     constructor(other) {this.otherContract = other}
 
     @transaction setValue(value) {
-        const contract = loadContract(this.address, this.otherContract);
+        const contract = loadContract(this.otherContract);
         contract.setValue(value)
     }
 }
