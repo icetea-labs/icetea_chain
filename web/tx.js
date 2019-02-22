@@ -22,7 +22,7 @@ function formatContractData(data, contract) {
         return [comment, line].join("\n");
     }
 
-    return JSON.stringify(data, null, 2);
+    return "N/A"; // JSON.stringify(data, null, 2);
 }
 
 (async () => {
@@ -32,9 +32,8 @@ function formatContractData(data, contract) {
         const template = handlebars.compile(source);
         async function fetchTxDetails() {
             try {
-                const [tx, error] = await tweb3.getTransaction(hash);
-
-                if (error) throw error;
+                const tx = await tweb3.getTransaction(hash);
+                console.log(tx);
 
                 tx.status = tx.tx_result.code ? "Error" : "Success";
 
@@ -55,6 +54,7 @@ function formatContractData(data, contract) {
 
                 tx.data = formatContractData(data.data, tx.to);
                 tx.events = JSON.stringify(tweb3.utils.decodeEventData(tx), null, 2);
+                tx.tags = JSON.stringify(tweb3.utils.decodeTags(tx), null, 2);
                 
                 // Do some formating
                 

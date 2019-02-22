@@ -28,8 +28,8 @@ let handlers = {
     const tx = new Tx(
       reqTx.from, 
       reqTx.to, 
-      parseFloat(reqTx.value) || 0, 
-      parseFloat(reqTx.fee) || 0,
+      reqTx.value, 
+      reqTx.fee,
       JSON.parse(reqTx.data || "{}"),
       reqTx.nonce);
     tx.setSignature(reqTx.signature);
@@ -70,14 +70,21 @@ let handlers = {
       if (typeof data !== "undefined") {
         result.data = Buffer.from(JSON.stringify(data));
       }
+
+      result.tags = [];
       if (typeof tags !== "undefined" && Object.keys(tags).length) {
-        result.tags = [];
         Object.keys(tags).forEach((key) => {
           result.tags.push({key: Buffer.from(key), value: Buffer.from(tags[key])});
         });
       }
+      
+      // add system tags
+      result.tags.push({key: Buffer.from("tx.from"), value: Buffer.from(tx.from)});
+      result.tags.push({key: Buffer.from("tx.to"), value: Buffer.from(tx.isContractCreation()?data:tx.to)});
+
       //console.log(result);
       return result;
+      
     } catch (err) {
       return {code: 1, log: String(err)}
     }
