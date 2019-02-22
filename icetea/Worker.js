@@ -8,8 +8,6 @@ module.exports = class Worker {
 
     constructor (stateTable) {
         this.stateTable = stateTable || {};
-        //this.receipts = {};
-        //this.blocks = [];
         this.init();
     }
 
@@ -21,31 +19,7 @@ module.exports = class Worker {
         });
     }
 
-    // addReceipt(tx, block, error, status, result) {
-    //     let r = this.receipts[tx.hash] || {};
-    //     r = {
-    //         ...r,
-    //         ...tx,
-    //         status,
-    //         error: String(error),
-    //         result
-    //     }
-    //     if (block) {
-    //         r.blockNumber = block.number;
-    //         r.blockTimestamp = block.timestamp;
-    //     }
-
-    //     this.receipts[tx.tHash] = r;
-    //     return r;
-    // }
-
-    // getReceipt(txHash) {
-    //     if (!txHash) return null;
-    //     return this.receipts[txHash];
-    // }
-
     beginBlock(block) {
-        //this.blocks.push(block);
         this.lastBlock = block;
     }
 
@@ -79,9 +53,6 @@ module.exports = class Worker {
         // This way, we could avoid make a copy of state
 
         this.verifyTx(tx);
-
-        // This will removed later, since we do not manage receipts at application state level
-        //this.addReceipt(tx, null, null, "Pending");
     }
 
     async callContract(tx, block, stateTable, overrides) {
@@ -193,14 +164,11 @@ module.exports = class Worker {
             // This should make sure 'balance' setter is maintained
             _.merge(this.stateTable, tmpStateTable);
             //console.log(result)
-            //this.addReceipt(tx, block, null, "Success", result);
             return result || [];
         } catch (error) {
-            //this.addReceipt(tx, block, error, "Error")
             console.log(error)
-           throw error;
+            throw error;
         }
-        //console.log("stateTable:",this.stateTable);
     }
 
     balanceOf(who, t) {
@@ -268,12 +236,4 @@ module.exports = class Worker {
 
         return [];
     }
-
-    // getReceipts() {
-    //     return _.cloneDeep(this.receipts || {});
-    // }
-
-    // getBlocks() {
-    //     return _.cloneDeep(this.blocks || [])
-    // }
 }

@@ -59,23 +59,23 @@ exports.emitEvent = function(emitter, tags, eventName, eventData, indexes = []) 
     emitter = emitter || "system";
     tags = tags || {};
 
-    if (eventName === "EventNames") {
-        revert("Event name cannot be 'EventNames'");
+    if (eventName === "EventNames" || eventName === "tx") {
+        throw new Error("Event name cannot be 'EventNames' or 'tx'");
     }
     if (eventName.includes("|")) {
-        revert("Event name cannot contain '|' character")
+        throw new Error("Event name cannot contain '|' character")
     }
     if (!tags.EventNames) tags.EventNames = "|";
     if (tags.EventNames.includes("|" + eventName + "|")) {
-        revert("Event " + eventName + " was already emit");
+        throw new Error("Event " + eventName + " was already emit");
     }
     tags.EventNames += emitter + "." + eventName + "|";
     indexes.forEach(indexedKey => {
         if (typeof indexedKey !== "string") {
-            revert("Event's indexed key must be string");
+            throw new Error("Event's indexed key must be string");
         }
         //if (typeof eventData[indexedKey] === "undefined") {
-        //    revert("Event's indexed value is not provided");
+        //    throw new Error("Event's indexed value is not provided");
         //}
         tags[eventName + "." + indexedKey] = String(JSON.stringify(eventData[indexedKey]));
         delete eventData[indexedKey];

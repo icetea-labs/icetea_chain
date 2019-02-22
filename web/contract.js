@@ -1,6 +1,5 @@
 import $ from 'jquery';
 window.$ = $;
-const msgpack = require('msgpack5')();
 import * as helper from './domhelper';
 import * as utils from './utils';
 import tweb3 from './tweb3'
@@ -14,11 +13,8 @@ function buildData() {
 }
 
 async function fillContracts() {
-    const [contracts, err] = await tweb3.getContracts();
-    if (err) {
-        console.log("Error fetching contract list", err);
-        return;
-    }
+    const contracts = await tweb3.getContracts();
+
     if (!contracts.length) return;
 
     var select = document.getElementById("to");
@@ -37,11 +33,7 @@ async function fillFuncs() {
     var contract = document.getElementById("to").value;
     if (!contract) return;
 
-    const [funcs, err] = await tweb3.getFunctionList(contract);
-    if (err) {
-        console.log("Error fetching function list", err);
-        return;
-    }
+    const funcs = await tweb3.getFunctionList(contract);
 
     var select = document.getElementById("funcs");
     select.innerHTML = "";
@@ -72,12 +64,15 @@ $(document).ready(function () {
         var params = helper.parseParamsFromField("#params");
 
         // TODO: modify frontend, add from address
-        const [result, error] = await tweb3.callReadonlyContractMethod(address, name, params, {from: '617BFqg1QhNtsJiNiWz9jGpsm5iAJKqWQBhhk36KjvUFqNkh47'});
-        console.log(result, error)
-        if (!error && result.success) {
-            document.getElementById("resultJson").textContent = result.data.info;
-        } else {
-            document.getElementById("resultJson").textContent = utils.tryStringifyJson(error || result.error);
+        try {
+            const result = await tweb3.callReadonlyContractMethod(address, name, params, {from: '617BFqg1QhNtsJiNiWz9jGpsm5iAJKqWQBhhk36KjvUFqNkh47'});
+            if (result.success) {
+                document.getElementById("resultJson").textContent = result.data.info;
+            } else {
+                document.getElementById("resultJson").textContent = utils.tryStringifyJson(result.error);
+            }
+        } catch (error) {
+            document.getElementById("resultJson").textContent = utils.tryStringifyJson(error);
         }
     })
 });

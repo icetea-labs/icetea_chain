@@ -4,9 +4,8 @@
 import {switchEncoding, encodeTX, tryParseJson} from './utils';
 // import { debug } from 'util';
 
-function decodeEventData(tx) {
-    const EMPTY_RESULT = [];
-
+function decodeTags(tx, keepEvents) {
+    const EMPTY_RESULT = {};
     if (!tx.tx_result || !tx.tx_result.tags|| !tx.tx_result.tags.length) {
         return EMPTY_RESULT;
     }
@@ -19,6 +18,31 @@ function decodeEventData(tx) {
         const value = switchEncoding(t.value, "base64", "utf8");
         tags[key] = tryParseJson(value);
     });
+
+    if (!keepEvents && tags.EventNames) {
+        // remove event-related tags
+        const events = tags.EventNames.split("|");
+        events.forEach(e => {
+            if (e) {
+                const eventName = e.split(".")[1];
+                Object.keys(tags).forEach(key => {
+                    if (key.indexOf(eventName) === 0) {
+                        delete tags[key];
+                    }
+                });
+                delete tags[e];
+            }
+        })
+        delete tags.EventNames;
+    }
+
+    return tags;
+}
+
+function decodeEventData(tx) {
+    const EMPTY_RESULT = [];
+
+    const tags = decodeTags(tx, true);
 
     if (!tags.EventNames) {
         return EMPTY_RESULT;
@@ -66,7 +90,8 @@ export default class IceTeaWeb3 {
         this.rpc = new HttpProvider(endpoint);
 
         this.utils = {
-            decodeEventData
+            decodeEventData,
+            decodeTags
         }
     }
 
@@ -98,13 +123,13 @@ export default class IceTeaWeb3 {
         if (!hash) {
             throw new Error("hash is required");
         }
-        return this.rpc._call("tx", {hash: switchEncoding(hash, "hex", "base64"), ...options})
-        .then(r => {
-            if (r.result && r.result.tx_result && r.result.tx_result.data) {
-                r.result.tx_result.data = tryParseJson(switchEncoding(r.result.tx_result.data, "base64", "utf8"));
+        return this.rpc.call("tx", {hash: switchEncoding(hash, "hex", "base64"), ...options})
+        .then(result => {
+            if (result && result.tx_result && result.tx_result.data) {
+                result.tx_result.data = tryParseJson(switchEncoding(result.tx_result.data, "base64", "utf8"));
             }
             
-            return [r.result, r.error];
+            return result;
         })
     }
 
@@ -249,7 +274,15 @@ export class HttpProvider {
 
     // call a jsonrpc, normally to query blockchain (block, tx, validator, consensus, etc.) data
     call(method, params) {
-        return this._call(method, params).then(resp => ([resp.result, resp.error]))
+        return this._call(method, params).then(resp => {
+            if (resp.error) {
+                const err = new Error(resp.error.message);
+                Object.assign(err, resp.error);
+                throw err;
+            }
+            
+            return resp.result;
+        })
     }
 
     // query application state (read)
@@ -263,11 +296,18 @@ export class HttpProvider {
         }
 
         return this._call("abci_query", params).then(resp => {
+            if (resp.error) {
+                const err = new Error(resp.error.message);
+                Object.assign(err, resp.error);
+                throw err;
+            }
+
+            // decode query data embeded in info
             let r = resp.result;
             if (r && r.response && r.response.info) {
                 r = JSON.parse(r.response.info);
             }
-            return [r, resp.error];
+            return r;
         })
     }
 
@@ -277,6 +317,15 @@ export class HttpProvider {
             // for jsonrpc, encode in 'base64'
             // for query string (REST), encode in 'hex' (or 'utf8' inside quotes)
             tx: encodeTX(tx, 'base64')
+        }).then(result => {
+            if (result.code) {
+                const err = new Error(result.log);
+                Object.assign(err, result);
+                throw err;
+            }
+
+            return result;
         })
     }
 }
+

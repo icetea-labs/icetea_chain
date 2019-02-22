@@ -35,12 +35,12 @@ export function registerTxForm($form, txData) {
         formData.signature = ecc.sign(tx.tHash, privateKey);
 
         //submit tx
-        var [result, err] = await tweb3.sendTransactionAsync(formData);
-        if (!err && !result.code) {
+        try {
+            var result = await tweb3.sendTransactionAsync(formData);
             window.location.href = '/tx.html?hash=' + result.hash;
-        } else {
-            console.log(result, err)
-            alert(String(err) || result.log);
+        } catch (error) {
+            console.log(error);
+            alert(String(error))
         }
     })
 }

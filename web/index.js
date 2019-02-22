@@ -67,11 +67,7 @@ function showMessage() {
 let blockCount = 0;
 async function loadData() {
     // load block info
-    const [blockchain, err0] = await tweb3.getBlocks();
-    if (err0 || !blockchain) {
-        console.error(err0);
-        return;
-    }
+    const blockchain = await tweb3.getBlocks();
     var myBlocks = blockchain.block_metas;
     if (myBlocks && myBlocks.length && myBlocks.length > blockCount) {
         blockCount = myBlocks.length;
@@ -79,22 +75,15 @@ async function loadData() {
         document.getElementById("blocks").innerHTML = blockTemplate(fmtBlocks(myBlocks));
 
         // load txs info
-        const [myTxs, err] = await tweb3.searchTransactions('tx.height>0');
-        if (!myTxs || err) {
-            console.error("Error fetching TX list", err);
-            return;
-        }
+        const myTxs = await tweb3.searchTransactions('tx.height>0');
         if (myTxs.txs && myTxs.txs.length) {
             //console.log(myTxs)
             document.getElementById("transactions").innerHTML = txTemplate(fmtTxs(myTxs.txs));
         }
 
         // load debug info
-        const [myJSON, err2] = await tweb3.getDebugState();
-        if (err2) {
-            console.error("Error fetching debug info", err2);
-            return;
-        }
+        const myJSON = await tweb3.getDebugState();
+
         const formatter = new JSONFormatter(myJSON, 1);
         document.getElementById("debug").innerHTML = "";
         document.getElementById("debug").appendChild(formatter.render());
