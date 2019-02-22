@@ -31,6 +31,13 @@ module.exports = {
             secure: false,
             changeOrigin: true,
           }
+          ,
+          '/ws': {
+            target: 'ws://localhost:26657/websocket',
+            pathRewrite: {'^/ws' : ''},
+            secure: false,
+            changeOrigin: true,
+          }
         },
       },
 };
