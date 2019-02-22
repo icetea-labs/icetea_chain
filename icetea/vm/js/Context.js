@@ -13,7 +13,7 @@ exports.contextForWrite = (tx, block, stateTable, {address, fname, fparams}) => 
     const theBlock = Object.freeze(_.cloneDeep(block));
     const state = stateTable[address].state || {};
     const balance = stateTable[address].balance || 0;
-    const tags = {}
+    const tags = {};
 
     const ctx = {
         address,
@@ -35,6 +35,9 @@ exports.contextForWrite = (tx, block, stateTable, {address, fname, fparams}) => 
             const old = ctx.getState(key);
             ctx._state[key] = value;
             return old;
+        },
+        emitEvent: (eventName, eventData, indexes = []) => {
+            utils.emitEvent(address, tags, eventName, eventData, indexes);
         }
     }
 

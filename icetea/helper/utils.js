@@ -39,3 +39,48 @@ exports.incBalance = (addr, delta, stateTable) => {
 exports.decBalance = (addr, delta, stateTable) => {
     exports.incBalance(addr, -delta, stateTable);
 }
+
+exports.getAllPropertyNames = function(obj) {
+    var props = [];
+
+    do {
+        Object.getOwnPropertyNames(obj).forEach(prop => {
+            if (!props.includes(prop)) {
+                props.push(prop);
+            }
+        });
+    } while ((obj = Object.getPrototypeOf(obj)) && obj != Object.prototype);
+
+    //console.log(props);
+    return props;
+}
+
+exports.emitEvent = function(emitter, tags, eventName, eventData, indexes = []) {
+    emitter = emitter || "system";
+    tags = tags || {};
+
+    if (eventName === "EventNames") {
+        revert("Event name cannot be 'EventNames'");
+    }
+    if (eventName.includes("|")) {
+        revert("Event name cannot contain '|' character")
+    }
+    if (!tags.EventNames) tags.EventNames = "|";
+    if (tags.EventNames.includes("|" + eventName + "|")) {
+        revert("Event " + eventName + " was already emit");
+    }
+    tags.EventNames += emitter + "." + eventName + "|";
+    indexes.forEach(indexedKey => {
+        if (typeof indexedKey !== "string") {
+            revert("Event's indexed key must be string");
+        }
+        //if (typeof eventData[indexedKey] === "undefined") {
+        //    revert("Event's indexed value is not provided");
+        //}
+        tags[eventName + "." + indexedKey] = String(JSON.stringify(eventData[indexedKey]));
+        delete eventData[indexedKey];
+    });
+    tags[eventName] = String(JSON.stringify(eventData));
+
+    return tags;
+}

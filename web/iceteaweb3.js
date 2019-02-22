@@ -5,8 +5,10 @@ import {switchEncoding, encodeTX, tryParseJson} from './utils';
 // import { debug } from 'util';
 
 function decodeEventData(tx) {
+    const EMPTY_RESULT = [];
+
     if (!tx.tx_result || !tx.tx_result.tags|| !tx.tx_result.tags.length) {
-        return {};
+        return EMPTY_RESULT;
     }
 
     const b64Tags = tx.tx_result.tags;
@@ -19,41 +21,34 @@ function decodeEventData(tx) {
     });
 
     if (!tags.EventNames) {
-        return {};
+        return EMPTY_RESULT;
     }
 
     const events = tags.EventNames.split("|");
     if (!events.length) {
-        return {};
+        return EMPTY_RESULT;
     }
 
     const result = events.reduce((r, e) => {
         if (e) {
-            r[e] = Object.keys(tags).reduce((data, key) => {
-                if (key.startsWith(e + ".")) {
-                    const parts = key.split(".", 2);
-                    if (parts.length === 2) {
-                        const name = parts[1];
-                        const value = tags[key];
-                        data[name] = value;
-                    }
-                } else if (key === e) {
+            const parts = e.split(".");
+            const emitter = parts[0];
+            const eventName = parts[1];
+            const eventData = Object.keys(tags).reduce((data, key) => {
+                const prefix = eventName + ".";
+                if (key.startsWith(prefix)) {
+                    const name = key.substr(prefix.length);
+                    const value = tags[key];
+                    data[name] = value;
+                } else if (key === eventName) {
                     Object.assign(data, tags[key])
                 }
                 return data;
             }, {});
+            r.push({emitter, eventName, eventData});
         }
         return r;
-    }, {});
-
-    // what we want to return:
-    // {
-    //     Transferred: {
-    //         from: "xxx",
-    //         to: "xxx",
-    //         amount: 100
-    //     }
-    // }
+    }, []);
 
     return result;
 }
@@ -128,7 +123,8 @@ export default class IceTeaWeb3 {
 
     /**
      * Search for events emit by contracts.
-     * @param {string} eventName the event name, e.g. "Transfered" 
+     * @param {string} eventName the event name, e.g. "Transferred" 
+     * @param {string} emitter optional, the contract address, or "system"
      * @param {*} conditions required, string or object literal.
      * string example: "tx.height>0 AND someIndexedField CONTAINS 'kkk'".
      * Object example: {fromBlock: 0, toBlock: 100, someIndexedField: "xxx"}.
@@ -136,11 +132,16 @@ export default class IceTeaWeb3 {
      * @param {*} options additional options, e.g. {prove: true, page: 2, per_page: 20}
      * @returns {Array} Array of tendermint transactions containing the event.
      */
-    getPastEvents(eventName, conditions, options) {
+    getPastEvents(eventName, emitter, conditions = {}, options) {
         let query = "";
-        if (typeof options === "string") {
-            query = options;
+        if (typeof conditions === "string") {
+            query = conditions;
         } else {
+            if (!emitter) {
+                emitter = ".";
+            } else {
+                emitter = "|" + emitter + ".";
+            }
             query = Object.keys(conditions).reduce((arr, key) => {
                 const value = conditions[key];
                 if (key === "fromBlock") {
@@ -151,7 +152,7 @@ export default class IceTeaWeb3 {
                     arr.push(`${key}=${value}`)
                 }
                 return arr;
-            }, [`EventNames CONTAINS '|${eventName}|'`]).join(" AND ");
+            }, [`EventNames CONTAINS '${emitter}${eventName}|'`]).join(" AND ");
         }
 
         return this.searchTransactions(query, options);

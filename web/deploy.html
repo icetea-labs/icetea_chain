@@ -41,7 +41,7 @@
     @state #value
 
     @transaction setValue(value) {
-        emitEvent("ValueChanged", {oldValue: this.#value, newValue: value})
+        this.emitEvent("ValueChanged", {oldValue: this.#value, newValue: value})
         this.#value = value
     }
 
