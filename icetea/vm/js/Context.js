@@ -22,26 +22,28 @@ exports.contextForWrite = (tx, block, stateTable, {address, fname, fparams}) => 
         balance,
         getEnv: () => Object.freeze({msg, block: theBlock, tags, loadContract: (to) => {
             const worker = new Worker(stateTable);
-            
-            const funcs = worker.getFuncNames(addr);
-            const result = {};
-            funcs.map(func => {
-                result[func] = async (...params) => {
-                    const tx = new Tx(
-                        address, 
-                        to, 
-                        0, 
-                        0,
-                        {
-                            name: func,
-                            params
-                        },
-                        0
-                    );
-                    return worker.callContract(tx, theBlock, stateTable)
+            return new Proxy({}, {
+                get(obj, method) {
+                    const real = obj[method]
+                    if(!real) {
+                        return (...params) => {
+                            const tx = new Tx(
+                                address, 
+                                to, 
+                                0, 
+                                0,
+                                {
+                                    name: method,
+                                    params
+                                },
+                                0
+                            );
+                            return worker.callContract(tx, theBlock, stateTable)
+                        }
+                    }
+                    return real
                 }
-            });
-            return result;
+            })
         }}),
         transfer: (to, value) => {
             ctx.balance -= value;
@@ -84,13 +86,15 @@ exports.contextForView = (stateTable, address, name, params, options) => {
         balance,
         getEnv: () => ({msg, block: Object.freeze(_.cloneDeep(block)), loadContract: (addr) => {
             const worker = new Worker(stateTable);
-            
-            const funcs = worker.getFuncNames(addr);
-            const result = {};
-            funcs.map(func => {
-                result[func] = (...params) => worker.callViewFunc(addr, func, params, {from: address})
-            });
-            return result;
+            return new Proxy({}, {
+                get(obj, method) {
+                    const real = obj[method]
+                    if(!real) {
+                        return (...params) => worker.callViewFunc(addr, method, params, {from: address})
+                    }
+                    return real
+                }
+            })
         }}),
         transfer: () => {
             throw new Error("Cannot transfer inside a view function");
