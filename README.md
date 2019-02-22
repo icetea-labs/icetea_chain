@@ -52,7 +52,7 @@ To reset tendermint (delete all blocks), use `npm run reset`.
         this.fund[msg.sender] = (+this.fund[msg.sender] || 0) - amount;
         this.transfer(msg.sender, amount);
 
-        emitEvent("Withdrawn", {withdrawer: msg.sender, amount});
+        this.emitEvent("Withdrawn", {withdrawer: msg.sender, amount});
     }
 
     @transaction backdoor(value) {
