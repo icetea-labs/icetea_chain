@@ -125,7 +125,7 @@ export default class IceTeaWeb3 {
     }
 
     onClose(callback) {
-        if(!this.isWebSocket) throw new Error('onError for WebSocket only');
+        if(!this.isWebSocket) throw new Error('onClose for WebSocket only');
         return this.rpc.registerEventListeners('onClose',callback);
     }
 }
@@ -164,7 +164,7 @@ export class WebSocketProvider {
                 break;
             case 'onError':
                 this.wsp.onError.addListener(callback);
-                break;    
+                break;
         }
     }
 
