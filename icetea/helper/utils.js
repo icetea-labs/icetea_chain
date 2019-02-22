@@ -84,3 +84,7 @@ exports.emitEvent = function(emitter, tags, eventName, eventData, indexes = []) 
 
     return tags;
 }
+
+exports.emitTransferred = (emitter, tags, from, to, value) => {
+    return exports.emitEvent(emitter, tags, "Transferred", {from, to, value}, ["from", "to"]);
+}
