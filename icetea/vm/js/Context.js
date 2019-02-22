@@ -1,6 +1,7 @@
 const _ = require('lodash');
 const utils = require('../../helper/utils');
 const Worker = require('../../Worker');
+const Tx = require('../../Tx');
 
 exports.contextForWrite = (tx, block, stateTable, {address, fname, fparams}) => {
     let msg = _.cloneDeep(tx);
@@ -19,7 +20,29 @@ exports.contextForWrite = (tx, block, stateTable, {address, fname, fparams}) => 
     const ctx = {
         address,
         balance,
-        getEnv: () => Object.freeze({msg, block: theBlock, tags}),
+        getEnv: () => Object.freeze({msg, block: theBlock, tags, loadContract: (sender, addr) => {
+            const worker = new Worker(stateTable);
+            
+            const funcs = worker.getFuncNames(addr);
+            const result = {};
+            funcs.map(func => {
+                result[func] = async (...params) => {
+                    const tx = new Tx(
+                        sender, 
+                        addr, 
+                        0, 
+                        0,
+                        {
+                            name: func,
+                            params
+                        },
+                        0
+                    );
+                    return worker.callContract(tx, theBlock, stateTable)
+                }
+            });
+            return result;
+        }}),
         transfer: (to, value) => {
             ctx.balance -= value;
             utils.decBalance(address, value, stateTable);
@@ -65,7 +88,7 @@ exports.contextForView = (stateTable, address, name, params, options) => {
             const funcs = worker.getFuncNames(addr);
             const result = {};
             funcs.map(func => {
-                result[func] = (params) => worker.callViewFunc(addr, func, params, {from: sender})
+                result[func] = (...params) => worker.callViewFunc(addr, func, params, {from: sender})
             });
             return result;
         }}),
