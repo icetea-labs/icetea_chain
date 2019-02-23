@@ -11,7 +11,8 @@ function formatContractData(data, contract) {
         const modes = ["JS Raw", "JS Decorated", "WASM"];
         const comment = `// Deploy ${contract}\n// Params: ${(data.params || []).join(', ') || 'none'}
 // Source mode: '${modes[data.mode]}'\n// Source code:\n`;
-        const source = switchEncoding(data.src, "base64", "utf8");
+        const source = (data.mode === 2) ? "/* WASM Binary */"
+            : switchEncoding(data.src, "base64", "utf8");
         return comment + source;
     } else if (data.op === 1) {
         const method = data.name;
