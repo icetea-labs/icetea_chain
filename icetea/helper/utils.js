@@ -44,6 +44,7 @@ exports.decBalance = (addr, delta, stateTable) => {
 
 exports.getAllPropertyNames = function (obj) {
   var props = []
+  if (!obj) return props
 
   do {
     Object.getOwnPropertyNames(obj).forEach(prop => {
@@ -120,4 +121,45 @@ exports.mergeStateTables = (t1, t2) => {
     }
   })
   return t1
+}
+
+exports.unifyMetadata = meta => {
+  const DEF_PROPS = {
+    address: {
+      type: 'ClassProperty',
+      decorators: ['view'],
+      returnType: 'string'
+    },
+    balance: {
+      type: 'ClassProperty',
+      decorators: ['view'],
+      returnType: 'number'
+    }
+  }
+
+  if (!meta) {
+    return DEF_PROPS
+  }
+
+  if (typeof meta === 'string') {
+    meta = meta.split(';')
+  }
+
+  if (Array.isArray(meta)) {
+    meta = meta.reduce((prev, current) => {
+      prev[current] = {
+        type: 'unknown'
+      }
+      return prev
+    }, {})
+  }
+
+  const excepts = ['constructor', '__on_deployed', '__on_received', 'getEnv', 'getState', 'setState']
+  Object.keys(meta).forEach(k => {
+    if (excepts.includes(k)) {
+      delete meta[k]
+    }
+  })
+
+  return Object.assign(meta, DEF_PROPS)
 }

@@ -221,30 +221,25 @@ module.exports = class Worker {
     throw new Error('The address supplied is not a deployed contract')
   }
 
-  getFuncNames (addr) {
+  getMetadata (addr) {
     if (this.stateTable[addr] && this.stateTable[addr].src) {
       const { mode, src, meta } = this.stateTable[addr]
-      const DEF_PROPS = ['address', 'balance']
 
       if (meta && meta.operations) {
-        return DEF_PROPS.concat(meta.operations)
+        return utils.unifyMetadata(meta.operations)
       }
 
       const vm = getRunner(mode)
       const context = getContext(mode).dummyContext
-      const info = {}
-      vm.run(src, { context, info })
+      const info = vm.run(src, { context })
+      if (!info) return utils.unifyMetadata()
 
-      // console.log(info);
+      const props = info.meta ||
+        (info.instance ? utils.getAllPropertyNames(info.instance) : info)
 
-      if (!info || !info._i) return []
-
-      const props = utils.getAllPropertyNames(info._i)
-
-      const excepts = ['constructor', '__on_deployed', '__on_received', 'getEnv', 'getState', 'setState']
-      return DEF_PROPS.concat(props.filter((name) => !excepts.includes(name)))
+      return utils.unifyMetadata(props)
     }
 
-    return []
+    throw new Error('Address is not a valid contract.')
   }
 }

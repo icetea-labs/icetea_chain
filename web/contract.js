@@ -33,15 +33,15 @@ async function fillFuncs () {
   var contract = document.getElementById('to').value
   if (!contract) return
 
-  const funcs = await tweb3.getFunctionList(contract)
+  const funcs = await tweb3.getMetadata(contract)
 
   var select = document.getElementById('funcs')
   select.innerHTML = ''
-  funcs.forEach(item => {
+  Object.keys(funcs).forEach(item => {
     if (item.indexOf('$') !== 0) {
       let option = document.createElement('option')
       option.value = item
-      option.textContent = item
+      option.textContent = funcs[item].decorators.join(", ")
       select.appendChild(option)
     }
   })

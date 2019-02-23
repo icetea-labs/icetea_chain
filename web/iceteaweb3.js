@@ -190,12 +190,12 @@ export default class IceTeaWeb3 {
   }
 
   /**
-     * Get all public methods and fields of a contract.
+     * Get contract metadata.
      * @param {string} contractAddr the contract address.
      * @returns {string[]} methods and fields array.
      */
-  getFunctionList (contractAddr) {
-    return this.rpc.query('funcs', contractAddr)
+  getMetadata (contractAddr) {
+    return this.rpc.query('metadata', contractAddr)
   }
 
   /**

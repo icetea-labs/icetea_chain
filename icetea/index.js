@@ -100,47 +100,47 @@ let handlers = {
   },
 
   async query (req) {
-    // console.log(req.path, req.data.toString(), req.prove || false);
+    try {
+      // console.log(req.path, req.data.toString(), req.prove || false);
 
-    // const prove = !!req.prove;
-    const path = req.path
-    const data = req.data.toString()
+      // const prove = !!req.prove;
+      const path = req.path
+      const data = req.data.toString()
 
-    switch (path) {
-      case 'balance':
-        return replyQuery({
-          balance: worker.balanceOf(data)
-        })
-      case 'state':
-        return replyQuery(worker)
-      case 'contracts':
-        return replyQuery(worker.getContractAddresses())
-      case 'funcs': {
-        let arr = []
-        if (data) {
-          arr = worker.getFuncNames(data)
+      switch (path) {
+        case 'balance':
+          return replyQuery({
+            balance: worker.balanceOf(data)
+          })
+        case 'state':
+          return replyQuery(worker)
+        case 'contracts':
+          return replyQuery(worker.getContractAddresses())
+        case 'metadata': {
+          return replyQuery(worker.getMetadata(data))
         }
-        return replyQuery(arr)
-      }
-      case 'call': {
-        try {
-          const options = JSON.parse(data)
-          const result = await worker.callViewFunc(options.address, options.name, options.params, options.options)
-          return replyQuery({
-            success: true,
-            data: result
-          })
-        } catch (error) {
-          console.log(error)
-          return replyQuery({
-            success: false,
-            error: String(error)
-          })
+        case 'call': {
+          try {
+            const options = JSON.parse(data)
+            const result = await worker.callViewFunc(options.address, options.name, options.params, options.options)
+            return replyQuery({
+              success: true,
+              data: result
+            })
+          } catch (error) {
+            console.log(error)
+            return replyQuery({
+              success: false,
+              error: String(error)
+            })
+          }
         }
       }
+
+      return { code: 1, info: 'Path not supported' }
+    } catch (error) {
+      return { code: 1, info: String(error) }
     }
-
-    return { code: 1, info: 'Path not supported' }
   }
 }
 

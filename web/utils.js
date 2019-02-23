@@ -80,3 +80,16 @@ export function switchEncoding (str, from, to) {
 export function decodeTX (data, enc = 'base64') {
   return msgpack.decode(toBuffer(data, enc))
 }
+
+export function detectCallType (decorators) {
+  if (!decorators) {
+    return 'unknown'
+  }
+  if (decorators.includes('payable')) {
+    return 'transaction'
+  } else if (decorators.includes('transaction')) {
+    return 'transaction'
+  }
+
+  return 'view'
+}
