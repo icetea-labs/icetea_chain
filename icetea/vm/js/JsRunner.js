@@ -59,7 +59,7 @@ module.exports = mode => {
         }
 
         verify(src) {
-            src = super.verify(src);
+            super.verify(src);
             try {
                 halts(src);
             } catch (err) {
