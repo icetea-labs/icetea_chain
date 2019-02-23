@@ -8,7 +8,7 @@ var wasmBuffer = null
 function buildData () {
   var mode = +document.getElementById('srcMode').value
   var src
-  if (mode === 2) {
+  if (mode === 100) {
     src = wasmBuffer
     if (!src) {
       window.alert('You must upload a wasm file.')
