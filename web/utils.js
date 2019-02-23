@@ -1,5 +1,5 @@
 import SafeBuffer from 'safe-buffer'
-const msgpack = require('msgpack5')()
+const codec = require('../icetea/helper/codec')
 
 export function replaceAll (text, search, replacement) {
   return text.split(search).join(replacement)
@@ -31,42 +31,8 @@ export function parseParamList (pText) {
   return params
 }
 
-/*
-// @deprecated Use IceTeaWeb3 instead
-export function queryState(path, data) {
-    let url = '/api/abci_query?path="' + path + '"';
-    if (data) {
-        url += '&data="' + data + '"';
-    }
-    return fetch(url).then(resp => resp.json()).then(json => {
-        console.log(json)
-        if (!json.error && !json.result.response.code) {
-            return [JSON.parse(json.result.response.info), null];
-        } else {
-            return [null, json.error || json.result.response.info];
-        }
-    });
-}
-
-// @deprecated Use IceTeaWeb3 instead
-export function queryChain(path, queryString) {
-    let url = '/api/' + path;
-    if (queryString) {
-        url += '?' + queryString;
-    }
-    return fetch(url).then(resp => resp.json()).then(json => {
-        console.log(json)
-        if (!json.error) {
-            return [json.result, null];
-        } else {
-            return [null, json.error];
-        }
-    });
-}
-*/
-
 export function encodeTX (data, enc = 'base64') {
-  return msgpack.encode(data).toString(enc)
+  return codec.encode(data).toString(enc)
 }
 
 export function toBuffer (text, enc) {
@@ -78,7 +44,7 @@ export function switchEncoding (str, from, to) {
 }
 
 export function decodeTX (data, enc = 'base64') {
-  return msgpack.decode(toBuffer(data, enc))
+  return codec.decode(toBuffer(data, enc))
 }
 
 export function detectCallType (decorators) {

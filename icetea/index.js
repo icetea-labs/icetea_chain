@@ -1,6 +1,6 @@
 const createABCIServer = require('abci')
 
-const msgpack = require('msgpack5')()
+const codec = require('./helper/codec')
 
 const Worker = require('./Worker')
 const Tx = require('./Tx')
@@ -10,19 +10,18 @@ const worker = new Worker()
 // turn on debug logging
 // require('debug').enable('abci*')
 
-let handlers = {
+const handlers = {
+
   info (req) {
-    return {
+    return Object.assign({
       data: 'icetea',
       version: '0.0.1',
-      appVerion: '0.0.1',
-      lastBlockHeight: worker.lastBlock ? worker.lastBlock.number : 0,
-      lastBlockAppHash: Buffer.alloc(0)
-    }
+      appVerion: '0.0.1'
+    }, worker.info())
   },
 
   checkTx (req) {
-    let reqTx = decodeBytes(req.tx)
+    let reqTx = codec.decode(req.tx)
     // console.log("checkTx", reqTx);
 
     const tx = new Tx(
@@ -45,13 +44,14 @@ let handlers = {
   beginBlock (req) {
     const hash = req.hash.toString('hex')
     const number = req.header.height.toNumber()
+    console.log('beginblock', number)
     const timestamp = req.header.time.seconds.toNumber()
     worker.beginBlock({ number, hash, timestamp })
     return {} // tags
   },
 
   async deliverTx (req) {
-    let reqTx = decodeBytes(req.tx)
+    let reqTx = codec.decode(req.tx)
     // console.log("deliverTx", reqTx);
 
     const tx = new Tx(
@@ -94,9 +94,9 @@ let handlers = {
     return {}
   },
 
-  commit (...args) {
-    // console.log("commit", ...args);
-    return { data: Buffer.alloc(0) } // return the block stateRoot
+  async commit (req) {
+    console.log('commit', req)
+    return { data: await worker.commit() } // return the block stateRoot
   },
 
   async query (req) {
@@ -144,16 +144,15 @@ let handlers = {
   }
 }
 
-// make sure the transaction data is 4 bytes long
-function decodeBytes (bytes) {
-  return msgpack.decode(bytes)
-}
-
 function replyQuery (data) {
   return { code: 0, info: JSON.stringify(data) }
 }
 
-let port = 26658
-createABCIServer(handlers).listen(port, () => {
-  console.log(`listening on port ${port}`)
+const port = 26658
+worker.loadState().then(() => {
+  createABCIServer(handlers).listen(port, () => {
+    console.log(`listening on port ${port}`)
+  })
+}).catch(error => {
+  console.error(error)
 })

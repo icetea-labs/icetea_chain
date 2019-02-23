@@ -10,7 +10,9 @@
     "dev": "tendermint node & npm start & webpack-dev-server --content-base web --inline --hot --port 3001 --open",
     "dev2": "tendermint node & npm start & webpack-dev-server --content-base web --inline --hot --port 3001",
     "app": "webpack-dev-server --content-base web --inline --hot --port 3001 --open",
-    "reset": "tendermint unsafe_reset_all"
+    "reset": "tendermint unsafe_reset_all & node ./scripts/destroy.js",
+    "dump": "node ./scripts/dump.js",
+    "show": "sudo lsof -i tcp:26657"
   },
   "keywords": [],
   "author": "Trada Tech",
@@ -29,8 +31,10 @@
     "handlebars": "4.0.12",
     "jquery": "3.3.1",
     "json-formatter-js": "2.2.1",
+    "level": "^4.0.0",
     "lodash": "4.17.11",
-    "msgpack5": "4.2.1",
+    "merk": "^1.3.4",
+    "msgpack-lite": "^0.1.26",
     "node-fetch": "2.3.0",
     "npx": "10.2.0",
     "prismjs": "^1.15.0",

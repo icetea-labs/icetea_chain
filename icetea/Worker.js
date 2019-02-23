@@ -2,6 +2,7 @@ const _ = require('lodash')
 const config = require('./config')
 const utils = require('./helper/utils')
 const ecc = require('./helper/ecc')
+const merkle = require('./helper/merkle')
 const { getRunner, getContext, getGuard } = require('./vm')
 
 module.exports = class Worker {
@@ -11,11 +12,36 @@ module.exports = class Worker {
   }
 
   init () {
-    _.each(config.initialStateTable, item => {
+    config.initialBalances.forEach(item => {
       utils.prepareState(item.address, this.stateTable, {
         balance: item.balance
       })
     })
+  }
+
+  async loadState () {
+    const storedData = await merkle.load()
+    this.stateTable = storedData.state
+    this.lastBlockHeight = storedData.height
+
+    if (!Object.keys(this.stateTable).length) {
+      console.log('Empty state after load => set init value')
+      this.init()
+    }
+  }
+
+  info () {
+    if (this.lastBlockHeight) {
+      return {
+        lastBlockHeight: this.lastBlockHeight,
+        lastBlockAppHash: merkle.getHash(this.stateTable)
+      }
+    } else {
+      return {
+        lastBlockHeight: 0,
+        lastBlockAppHash: Buffer.alloc(0)
+      }
+    }
   }
 
   beginBlock (block) {
@@ -27,7 +53,12 @@ module.exports = class Worker {
   }
 
   commit () {
-
+    this.lastBlockHeight = (this.lastBlockHeight || 0) + 1
+    if (this.lastBlockHeight === 1) return Buffer.alloc(0)
+    return merkle.save({
+      height: this.lastBlockHeight,
+      state: this.stateTable
+    })
   }
 
   verifyTx (tx) {
@@ -49,7 +80,13 @@ module.exports = class Worker {
     // Check TX should not modify state
     // This way, we could avoid make a copy of state
 
+    // Verify signature
     this.verifyTx(tx)
+
+    // Check balance
+    if (tx.value + tx.fee > this.balanceOf(tx.from)) {
+      throw new Error('Not enough balance')
+    }
   }
 
   async callContract (tx, block, stateTable, overrides) {
