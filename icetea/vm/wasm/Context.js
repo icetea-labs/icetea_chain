@@ -75,7 +75,7 @@ exports.dummyContext = {
   address: '',
   balance: 0,
   log: console.log,
-  get_msg_name: () => '__info',
+  get_msg_name: () => '__metadata',
   get_msg_param: () => 0,
   get_sender: () => '',
   load_int: () => 0,

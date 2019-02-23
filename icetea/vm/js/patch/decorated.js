@@ -22,7 +22,7 @@ if (["__on_deployed", "__on_received"].includes(msg.name) && !(msg.name in __con
     // call event methods but contract does not have one
     return;
 }
-require(["__info", "address", "balance"].includes(msg.name) || msg.name in __contract, "Method " + msg.name + " does not exist");
+require(["__metadata", "address", "balance"].includes(msg.name) || msg.name in __contract, "Method " + msg.name + " does not exist");
 
 const __this = this;
 const __c = {
@@ -30,8 +30,7 @@ const __c = {
     meta: __metadata
 };
 
-//msg.name === "__info" && typeof __info !== "undefined" && Object.assign(__info, __c);
-if (msg.name === "__info") {
+if (msg.name === "__metadata") {
     return __c;
 }
 

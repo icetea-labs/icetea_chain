@@ -1,5 +1,5 @@
 const msg = this.getEnv().msg;
-switch(msg.name) {
+switch (msg.name) {
   case '__on_deployed':
     this.setState('owner', msg.sender);
     break;
@@ -14,4 +14,10 @@ switch(msg.name) {
     }
     this.setState('value', msg.params[0]);
     break;
+  default:
+    // call unsupported function -> inform caller our function list
+    return {
+      'getValue': { decorators: ['view'] },
+      'setValue': { decorators: ['transaction'] }
+    }
 }

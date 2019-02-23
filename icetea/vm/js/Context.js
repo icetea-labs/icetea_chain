@@ -151,7 +151,7 @@ exports.contextForPure = (address, name, params) => {
 }
 
 exports.dummyContext = Object.freeze({
-  getEnv: () => ({ msg: { callType: 'dummy', name: '__info' }, block: {} }),
+  getEnv: () => ({ msg: { callType: 'dummy', name: '__metadata' }, block: {} }),
   getState: () => undefined,
   setState: () => undefined
 })
