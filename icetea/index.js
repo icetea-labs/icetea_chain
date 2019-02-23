@@ -16,7 +16,7 @@ const handlers = {
     return Object.assign({
       data: 'icetea',
       version: '0.0.1',
-      appVerion: '0.0.1',
+      appVerion: '0.0.1'
     }, worker.info())
   },
 
@@ -44,7 +44,7 @@ const handlers = {
   beginBlock (req) {
     const hash = req.hash.toString('hex')
     const number = req.header.height.toNumber()
-    console.log("beginblock", number)
+    console.log('beginblock', number)
     const timestamp = req.header.time.seconds.toNumber()
     worker.beginBlock({ number, hash, timestamp })
     return {} // tags
@@ -95,7 +95,7 @@ const handlers = {
   },
 
   async commit (req) {
-    console.log("commit", req);
+    console.log('commit', req)
     return { data: await worker.commit() } // return the block stateRoot
   },
 

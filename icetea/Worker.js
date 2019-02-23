@@ -19,13 +19,13 @@ module.exports = class Worker {
     })
   }
 
-  async loadState() {
+  async loadState () {
     const storedData = await merkle.load()
     this.stateTable = storedData.state
     this.lastBlockHeight = storedData.height
 
     if (!Object.keys(this.stateTable).length) {
-      console.log("Empty state after load => set init value")
+      console.log('Empty state after load => set init value')
       this.init()
     }
   }
@@ -41,7 +41,7 @@ module.exports = class Worker {
         lastBlockHeight: 0,
         lastBlockAppHash: Buffer.alloc(0)
       }
-    }  
+    }
   }
 
   beginBlock (block) {
@@ -85,7 +85,7 @@ module.exports = class Worker {
 
     // Check balance
     if (tx.value + tx.fee > this.balanceOf(tx.from)) {
-      throw new Error("Not enough balance")
+      throw new Error('Not enough balance')
     }
   }
 

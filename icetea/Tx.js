@@ -1,5 +1,5 @@
 const { TxOp } = require('./enum')
-const {sha256} = require('../icetea/helper/codec')
+const { sha256 } = require('../icetea/helper/codec')
 
 module.exports = class Tx {
   // data is null or empty: normal tx
@@ -30,7 +30,7 @@ module.exports = class Tx {
       fee: this.fee,
       data: this.data,
       nonce: this.nonce
-    };
+    }
     this.signatureMessage = sha256(content, 'hex')
   }
 
