@@ -21,6 +21,6 @@ module.exports = class {
     }
 
     verify(src) {
-        return this.lint(src);
+        this.lint(src);
     }
 }

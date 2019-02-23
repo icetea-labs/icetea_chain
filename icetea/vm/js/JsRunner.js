@@ -73,8 +73,6 @@ module.exports = mode => {
                 }
                 throw err;
             }
-
-            return src;
         }
 
         patch(compiledSrc) {

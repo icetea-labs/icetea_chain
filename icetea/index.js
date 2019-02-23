@@ -100,7 +100,7 @@ let handlers = {
     return {data: Buffer.alloc(0)}; // return the block stateRoot
   },
 
-  query(req) {
+  async query(req) {
     //console.log(req.path, req.data.toString(), req.prove || false);
 
     //const prove = !!req.prove;
@@ -126,7 +126,7 @@ let handlers = {
       case "call": {
         try {
           const options = JSON.parse(data);
-          const result = replyQuery(worker.callViewFunc(options.address, options.name, options.params, options.options));
+          const result = await worker.callViewFunc(options.address, options.name, options.params, options.options);
           return replyQuery({
             success: true,
             data: result

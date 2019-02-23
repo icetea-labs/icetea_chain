@@ -2,41 +2,47 @@ const _ = require('lodash');
 
 exports.contextForWrite = (tx, block, stateTable, {address, fname, fparams}) => {
     const state = stateTable[address].state || {};
-    const balance = state.balance || 0;
+    const balance = stateTable[address].balance || 0;
+    const importTableName = stateTable[address].meta.importTableName;
 
     const ctx = {
-        getMsgName: () => fname || tx.data.name,
-        getAddress: () => address || tx.to,
-        getBalance: () => balance,
-        getSender: () => tx.sender,
-        getTimestamp: () => block.timestamp,
-        getState: (key, defVal) => {
-            return ctx._state.hasOwnProperty(key) ? ctx._state[key] : (state.hasOwnProperty(key)?state[key]:defVal);
+        address,
+        balance,
+        getEnv: () => ({tags: []}),
+        importTableName,
+        log: console.log,
+        get_msg_name: () => fname,
+        get_msg_param: () => (fparams && fparams.length) ? parseInt(fparams[0]) : 0,
+        get_sender: () => tx.from,
+        _state: {},
+        load_int: (key) => {
+            return ctx._state.hasOwnProperty(key) ? ctx._state[key] : (state.hasOwnProperty(key) ? state[key] : 0);
         },
-        setState: (key, value) => {
-            const old = ctx.getState(key);
+        save_int: (key, value) => {
             ctx._state[key] = value;
-            return old;
         }
     }
 
     return ctx;
 }
 
-exports.contextForView = exports.contextForView = (stateTable, address, name, params) => {
+exports.contextForView = exports.contextForView = (stateTable, address, name, params, options) => {
     const state = _.cloneDeep(stateTable[address].state || {});
     const balance = state.balance || 0;
+    const importTableName = stateTable[address].meta.importTableName;
 
     const ctx = {
-        getMsgName: () => name,
-        getAddress: () => address,
-        getBalance: () => balance,
-        getSender: () => "",
-        getTimestamp: () => 0,
-        getState: (key) => {
-            return state[key];
+        address,
+        balance,
+        log: console.log,
+        importTableName,
+        get_msg_name: () => name,
+        get_msg_param: () => (params && params.length) ? parseInt(params[0]) : 0,
+        get_sender: () => options.from,
+        load_int: (key) => {
+            return state[key] || 0;
         },
-        setState: () => {
+        save_int: () => {
             throw new Error("Cannot change state inside a view function");
         }
     }
@@ -44,18 +50,21 @@ exports.contextForView = exports.contextForView = (stateTable, address, name, pa
     return ctx;
 }
 
-exports.contextForPure = (address, name, params) => {
+exports.contextForPure = (address, name, params, options) => {
     const ctx = {
-        getMsgName: () => name,
-        getAddress: () => address,
-        getBalance: () => 0,
-        getSender: () => "",
-        getTimestamp: () => 0,
-        getState: () => {
-            throw new Error("Cannot access state inside a pure function");
+        address,
+        log: console.log,
+        get balance() {
+            throw new Error("Cannot view balance a pure function");
         },
-        setState: () => {
-            throw new Error("Cannot access state inside a pure function");
+        get_msg_name: () => name,
+        get_msg_param: () => (params && params.length) ? parseInt(params[0]) : 0,
+        get_sender: () => options.from,
+        load_int: () => {
+            throw new Error("Cannot read state inside a pure function");
+        },
+        save_int: () => {
+            throw new Error("Cannot change state inside a pure function");
         }
     }
 
@@ -63,11 +72,12 @@ exports.contextForPure = (address, name, params) => {
 };
 
 exports.dummyContext = {
-    getMsgName: () => "__info",
-    getAddress: () => "",
-    getBalance: () => 0,
-    getSender: () => "",
-    getTimestamp: () => 0,
-    getState: () => "",
-    setState: () => undefined
+    address: "",
+    balance: 0,
+    log: console.log,
+    get_msg_name: () => "__info",
+    get_msg_param: () => 0,
+    get_sender: () => "",
+    load_int: () => 0,
+    save_int: () => undefined
 };

@@ -99,14 +99,18 @@ module.exports = class Worker {
             const deployedBy = tx.from;
             const vm = getRunner(mode);
             const compiledSrc = vm.compile(src);
-            vm.verify(compiledSrc); // linter & halt-problem checking
+            const meta = vm.verify(compiledSrc); // linter & halt-problem checking
 
-            utils.prepareState(scAddr, stateTable, {
+            const state = {
                 balance: 0,
                 mode,
                 deployedBy,
-                src: compiledSrc
-            });
+                src: compiledSrc,
+            };
+            if (meta) {
+                state.meta = meta;
+            }
+            utils.prepareState(scAddr, stateTable, state);
 
             // call constructor
             result = this.callContract(tx, block, stateTable, {
@@ -162,7 +166,7 @@ module.exports = class Worker {
         try {
             const result = await this.doExecTx(tx, block, tmpStateTable);
             // This should make sure 'balance' setter is maintained
-            _.merge(this.stateTable, tmpStateTable);
+            utils.mergeStateTables(this.stateTable, tmpStateTable);
             //console.log(result)
             return result || [];
         } catch (error) {
@@ -190,6 +194,13 @@ module.exports = class Worker {
     }
 
     callViewFunc(addr, name, params, options) {
+
+        if (name === "address") {
+            return addr;
+        } else if (name === "balance") {
+            return this.balanceOf(addr);
+        }
+
         const block = this.lastBlock;
         options = Object.assign(options || {}, {block})
 
@@ -218,11 +229,17 @@ module.exports = class Worker {
 
     getFuncNames(addr) {
         if (this.stateTable[addr] && this.stateTable[addr].src) {
-            const mode = this.stateTable[addr].mode;
+            const {mode, src, meta} = this.stateTable[addr];
+            const DEF_PROPS = ["address", "balance"];
+            console.log(meta)
+            if (meta && meta.operations) {
+                return DEF_PROPS.concat(meta.operations);
+            }
+
             const vm = getRunner(mode)
             const context = getContext(mode).dummyContext;
             const info = {};
-            vm.run(this.stateTable[addr].src, {context, info});
+            vm.run(src, {context, info});
 
             //console.log(info);
 
@@ -231,7 +248,7 @@ module.exports = class Worker {
             const props = utils.getAllPropertyNames(info._i);
             
             const excepts = ['constructor', '__on_deployed', '__on_received', 'getEnv', 'getState', 'setState'];
-            return ["address", "balance"].concat(props.filter((name) => !excepts.includes(name)));
+            return DEF_PROPS.concat(props.filter((name) => !excepts.includes(name)));
         }
 
         return [];

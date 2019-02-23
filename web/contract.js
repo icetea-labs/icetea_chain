@@ -67,7 +67,7 @@ $(document).ready(function () {
         try {
             const result = await tweb3.callReadonlyContractMethod(address, name, params, {from: '617BFqg1QhNtsJiNiWz9jGpsm5iAJKqWQBhhk36KjvUFqNkh47'});
             if (result.success) {
-                document.getElementById("resultJson").textContent = result.data.info;
+                document.getElementById("resultJson").textContent = result.data;
             } else {
                 document.getElementById("resultJson").textContent = utils.tryStringifyJson(result.error);
             }

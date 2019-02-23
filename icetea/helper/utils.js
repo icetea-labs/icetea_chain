@@ -1,3 +1,5 @@
+const _ = require('lodash');
+
 exports.prepareState = (addr, stateTable, initialValues) => {
     if (!stateTable[addr]) {
         stateTable[addr] = {};
@@ -87,4 +89,35 @@ exports.emitEvent = function(emitter, tags, eventName, eventData, indexes = []) 
 
 exports.emitTransferred = (emitter, tags, from, to, value) => {
     return exports.emitEvent(emitter, tags, "Transferred", {from, to, value}, ["from", "to"]);
+}
+
+exports.mergeStateTables = (t1, t2) => {
+    Object.keys(t2).forEach(addr => {
+        let account1 = t1[addr];
+        const account2 = t2[addr];
+
+        if (account2) {
+            if (!account1) {
+                account1 = t1[addr] = {};
+            }
+
+            if (typeof account2.balance !== "undefined") {
+                account1.balance = account2.balance;
+            }
+
+            if (account2.state) {
+                if (!account1.state) {
+                    account1.state = {};
+                }
+                _.merge(account1.state, account2.state);
+            }
+
+            Object.keys(account2).forEach(key => {
+                if (typeof account1[key] === 'undefined') {
+                    account1[key] = account2[key];
+                }
+            })
+        }
+    })
+    return t1;
 }
