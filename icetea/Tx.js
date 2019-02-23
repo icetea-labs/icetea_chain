@@ -1,5 +1,5 @@
-const crypto = require('crypto')
 const { TxOp } = require('./enum')
+const {sha256} = require('../icetea/helper/codec')
 
 module.exports = class Tx {
   // data is null or empty: normal tx
@@ -23,8 +23,15 @@ module.exports = class Tx {
     this.data = data
     this.nonce = nonce || Date.now()
 
-    const content = [this.from, this.to, this.value, this.fee, this.nonce, JSON.stringify(this.data)].join(';')
-    this.signatureMessage = crypto.createHash('sha256').update(content).digest('hex')
+    const content = {
+      from: this.from,
+      to: this.to,
+      value: this.value,
+      fee: this.fee,
+      data: this.data,
+      nonce: this.nonce
+    };
+    this.signatureMessage = sha256(content, 'hex')
   }
 
   setSignature (signature) {
@@ -37,9 +44,5 @@ module.exports = class Tx {
 
   isContractCall () {
     return this.data && this.data.op === TxOp.CALL_CONTRACT
-  }
-
-  toString () {
-    return this.signatureMessage
   }
 }

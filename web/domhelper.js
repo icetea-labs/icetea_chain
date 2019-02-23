@@ -36,7 +36,8 @@ export function registerTxForm ($form, txData) {
 
     // submit tx
     try {
-      var result = await tweb3.sendTransactionAsync(formData)
+      // Should send sync to catch check_tx error
+      var result = await tweb3.sendTransactionSync(formData)
       window.location.href = '/tx.html?hash=' + result.hash
     } catch (error) {
       console.log(error)

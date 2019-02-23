@@ -1,6 +1,6 @@
 const config = module.exports = {}
 
-config.initialStateTable = [
+config.initialBalances = [
   // {
   //     address: 'miner',
   //     balance: 0,

@@ -64,3 +64,4 @@ package-lock.json
 # editor
 .vscode
 .DS_Store
+/state
