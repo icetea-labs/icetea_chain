@@ -1,26 +1,26 @@
 module.exports = class {
-    lint(src) {
-        return src;
-    }
+  lint (src) {
+    return src
+  }
 
-    compile(src) {
-        return src;
-    }
+  compile (src) {
+    return src
+  }
 
-    patch(compiledSrc) {
-        return compiledSrc;
-    }
+  patch (compiledSrc) {
+    return compiledSrc
+  }
 
-    run(compiledSrc, ...args) {
-        const patchedSrc = this.patch(compiledSrc);
-        return this.doRun(patchedSrc, ...args);
-    }
+  run (compiledSrc, ...args) {
+    const patchedSrc = this.patch(compiledSrc)
+    return this.doRun(patchedSrc, ...args)
+  }
 
-    doRun(patchedSrc, ...args) {
-        throw new Error("Not implemented");
-    }
+  doRun (patchedSrc, ...args) {
+    throw new Error('Not implemented')
+  }
 
-    verify(src) {
-        this.lint(src);
-    }
+  verify (src) {
+    this.lint(src)
+  }
 }

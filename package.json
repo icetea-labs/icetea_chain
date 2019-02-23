@@ -4,6 +4,7 @@
   "description": "Tendermint-based icetea",
   "main": "server.js",
   "scripts": {
+    "test": "standard \"web/**/*.js\" \"icetea/**/*.js\"",
     "start": "node icetea",
     "dev": "tendermint node & npm start & webpack-dev-server --content-base web --inline --hot --port 3001 --open",
     "dev2": "tendermint node & npm start & webpack-dev-server --content-base web --inline --hot --port 3001",
@@ -41,6 +42,7 @@
     "babel-loader": "8.0.5",
     "copy-webpack-plugin": "4.6.0",
     "nodemon": "1.18.9",
+    "standard": "^12.0.1",
     "webpack": "4.29.3",
     "webpack-cli": "^3.2.0"
   }

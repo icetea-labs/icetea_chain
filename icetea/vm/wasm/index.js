@@ -1,1 +1,1 @@
-module.exports = new (require('./WasmRunner'))();
+module.exports = new (require('./WasmRunner'))()
