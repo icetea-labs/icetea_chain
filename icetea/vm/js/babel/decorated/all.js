@@ -131,8 +131,11 @@ module.exports = function ({ types: t }) {
               const mp = memberMeta[key].mp
               if (!isMethod(mp)) {
                 if (stateDeco.length) { throw mp.buildCodeFrameError('State mutability decorators cannot be attached to variables') } else {
-                  // default to view
-                  memberMeta[key].decorators.push('pure')
+                  if (memberMeta[key].decorators.includes('state')) {
+                    memberMeta[key].decorators.push('view')
+                  } else {
+                    memberMeta[key].decorators.push('pure')
+                  }
                 }
               } else if (key.startsWith('#') && stateDeco.includes('payable')) {
                 throw mp.buildCodeFrameError('Private function cannot be payable')

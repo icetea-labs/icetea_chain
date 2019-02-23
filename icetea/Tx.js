@@ -1,5 +1,5 @@
 const crypto = require('crypto')
-const {TxOp} = require('./enum')
+const { TxOp } = require('./enum')
 
 module.exports = class Tx {
   // data is null or empty: normal tx
