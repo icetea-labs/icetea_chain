@@ -1,4 +1,5 @@
 const crypto = require('crypto')
+const {TxOp} = require('./enum')
 
 module.exports = class Tx {
   // data is null or empty: normal tx
@@ -23,7 +24,7 @@ module.exports = class Tx {
     this.nonce = nonce || Date.now()
 
     const content = [this.from, this.to, this.value, this.fee, this.nonce, JSON.stringify(this.data)].join(';')
-    this.tHash = crypto.createHash('sha256').update(content).digest('hex')
+    this.signatureMessage = crypto.createHash('sha256').update(content).digest('hex')
   }
 
   setSignature (signature) {
@@ -31,14 +32,14 @@ module.exports = class Tx {
   }
 
   isContractCreation () {
-    return this.data && this.data.op === 0
+    return this.data && this.data.op === TxOp.DEPLOY_CONTRACT
   }
 
   isContractCall () {
-    return this.data && this.data.op === 1
+    return this.data && this.data.op === TxOp.CALL_CONTRACT
   }
 
   toString () {
-    return this.tHash
+    return this.signatureMessage
   }
 }

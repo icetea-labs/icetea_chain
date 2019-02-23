@@ -32,7 +32,7 @@ export function registerTxForm ($form, txData) {
     formData.from = ecc.toPublicKey(privateKey)
     var tx = new Tx(formData.from, formData.to, formData.value, formData.fee, txData)
     formData.nonce = tx.nonce
-    formData.signature = ecc.sign(tx.tHash, privateKey)
+    formData.signature = ecc.sign(tx.signatureMessage, privateKey)
 
     // submit tx
     try {

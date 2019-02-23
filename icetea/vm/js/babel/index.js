@@ -1,5 +1,7 @@
+const {ContractMode} = require('../../../enum')
+
 module.exports = mode => {
-  if (mode === 1) {
+  if (mode === ContractMode.JS_DECORATED) {
     return require('./decorated')
   }
 

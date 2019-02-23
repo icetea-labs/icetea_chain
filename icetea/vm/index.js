@@ -1,3 +1,5 @@
-exports.getRunner = mode => (mode === 2 ? require('./wasm') : require('./js')(mode))
-exports.getContext = mode => require(mode === 2 ? './wasm/Context' : './js/Context')
-exports.getGuard = mode => (mode === 2 ? () => undefined : (require('./js/guard')(mode)))
+const {ContractMode} = require('../enum')
+
+exports.getRunner = mode => (mode === ContractMode.WASM ? require('./wasm') : require('./js')(mode))
+exports.getContext = mode => require(mode === ContractMode.WASM ? './wasm/Context' : './js/Context')
+exports.getGuard = mode => (mode === ContractMode.WASM ? () => undefined : (require('./js/guard')(mode)))

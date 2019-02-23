@@ -7,7 +7,7 @@ const t = {
   },
 
   verifyTx: function (tx) {
-    return t.verify(tx.signature, tx.tHash, tx.from)
+    return t.verify(tx.signature, tx.signatureMessage, tx.from)
   },
 
   generateKey: ecc.randomKey,
