@@ -41,7 +41,7 @@ async function fillFuncs () {
     if (item.indexOf('$') !== 0) {
       let option = document.createElement('option')
       option.value = item
-      option.textContent = funcs[item].decorators.join(", ")
+      option.textContent = (funcs[item].decorators || []).join(", ")
       select.appendChild(option)
     }
   })
