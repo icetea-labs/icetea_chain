@@ -1,5 +1,4 @@
 import ecc from '../icetea/helper/ecc'
-import Tx from '../icetea/Tx'
 import { switchEncoding, replaceAll, tryParseJson } from '../tweb3/utils'
 import tweb3 from './tweb3'
 
