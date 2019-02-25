@@ -27,8 +27,8 @@ module.exports = mode => {
       return this.ensureES5(src, true)
     }
 
-    verify (src) {
-      super.verify(src)
+    analyze (src) {
+      super.analyze(src)
       try {
         halts(src)
       } catch (err) {

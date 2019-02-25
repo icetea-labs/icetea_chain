@@ -1,12 +1,9 @@
-const config = module.exports = {}
-
-config.initialBalances = [
-  // {
-  //     address: 'miner',
-  //     balance: 0,
-  // },
-  {
-    address: '617BFqg1QhNtsJiNiWz9jGpsm5iAJKqWQBhhk36KjvUFqNkh47',
-    balance: 100000000000
-  }
-]
+module.exports = {
+  feeCollector: "617BFqg1QhNtsJiNiWz9jGpsm5iAJKqWQBhhk36KjvUFqNkh47",
+  initialBalances: [
+    {
+      address: '617BFqg1QhNtsJiNiWz9jGpsm5iAJKqWQBhhk36KjvUFqNkh47',
+      balance: 100000000000
+    }
+  ]
+}

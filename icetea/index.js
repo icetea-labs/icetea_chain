@@ -2,10 +2,10 @@ const createABCIServer = require('abci')
 
 const codec = require('./helper/codec')
 
-const Worker = require('./Worker')
+const StateManager = require('./StateManager')
 const Tx = require('./Tx')
 
-const worker = new Worker()
+const stateManager = new StateManager()
 
 // turn on debug logging
 // require('debug').enable('abci*')
@@ -17,7 +17,7 @@ const handlers = {
       data: 'icetea',
       version: '0.0.1',
       appVerion: '0.0.1'
-    }, worker.info())
+    }, stateManager.getLastState())
   },
 
   checkTx (req) {
@@ -34,7 +34,7 @@ const handlers = {
     tx.setSignature(reqTx.signature)
 
     try {
-      worker.checkTx(tx)
+      stateManager.checkTx(tx)
       return {}
     } catch (err) {
       return { code: 1, log: String(err) }
@@ -44,28 +44,17 @@ const handlers = {
   beginBlock (req) {
     const hash = req.hash.toString('hex')
     const number = req.header.height.toNumber()
-    console.log('beginblock', number)
     const timestamp = req.header.time.seconds.toNumber()
-    worker.beginBlock({ number, hash, timestamp })
+    stateManager.beginBlock({ number, hash, timestamp })
     return {} // tags
   },
 
   async deliverTx (req) {
-    let reqTx = codec.decode(req.tx)
-    // console.log("deliverTx", reqTx);
-
-    const tx = new Tx(
-      reqTx.from,
-      reqTx.to,
-      parseFloat(reqTx.value) || 0,
-      parseFloat(reqTx.fee) || 0,
-      JSON.parse(reqTx.data || '{}'),
-      reqTx.nonce)
-    tx.setSignature(reqTx.signature)
-
     try {
-      worker.verifyTx(tx)
-      const [data, tags] = await worker.execTx(tx)
+      const tx = getTx(req)
+
+      stateManager.deliverTx(tx)
+      const [data, tags] = await stateManager.execTx(tx)
       const result = {}
       if (typeof data !== 'undefined') {
         result.data = Buffer.from(JSON.stringify(data))
@@ -89,40 +78,42 @@ const handlers = {
     }
   },
 
-  endBlock (...args) {
-    // console.log("endBlock", ...args);
+  endBlock (req) {
+    stateManager.endBlock()
     return {}
   },
 
   async commit (req) {
-    console.log('commit', req)
-    return { data: await worker.commit() } // return the block stateRoot
+    return { data: await stateManager.commit() } // return the block stateRoot
   },
 
   async query (req) {
     try {
       // console.log(req.path, req.data.toString(), req.prove || false);
 
+      // TODO: handle replying merkle proof to client if requested
+
       // const prove = !!req.prove;
+
       const path = req.path
       const data = req.data.toString()
 
       switch (path) {
         case 'balance':
           return replyQuery({
-            balance: worker.balanceOf(data)
+            balance: stateManager.balanceOf(data)
           })
         case 'state':
-          return replyQuery(worker)
+          return replyQuery(stateManager)
         case 'contracts':
-          return replyQuery(worker.getContractAddresses())
+          return replyQuery(stateManager.getContractAddresses())
         case 'metadata': {
-          return replyQuery(worker.getMetadata(data))
+          return replyQuery(stateManager.getMetadata(data))
         }
         case 'call': {
           try {
             const options = JSON.parse(data)
-            const result = await worker.callViewFunc(options.address, options.name, options.params, options.options)
+            const result = await stateManager.callViewFunc(options.address, options.name, options.params, options.options)
             return replyQuery({
               success: true,
               data: result
@@ -144,12 +135,27 @@ const handlers = {
   }
 }
 
+function getTx(req) {
+  let reqTx = codec.decode(req.tx)
+
+  const tx = new Tx(
+    reqTx.from,
+    reqTx.to,
+    parseFloat(reqTx.value) || 0,
+    parseFloat(reqTx.fee) || 0,
+    JSON.parse(reqTx.data || '{}'),
+    reqTx.nonce)
+  tx.setSignature(reqTx.signature)
+
+  return tx
+}
+
 function replyQuery (data) {
   return { code: 0, info: JSON.stringify(data) }
 }
 
 const port = 26658
-worker.loadState().then(() => {
+stateManager.loadState().then(() => {
   createABCIServer(handlers).listen(port, () => {
     console.log(`listening on port ${port}`)
   })
