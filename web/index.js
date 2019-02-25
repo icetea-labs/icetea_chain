@@ -1,6 +1,6 @@
 import JSONFormatter from 'json-formatter-js'
 import handlebars from 'handlebars/dist/handlebars.min.js'
-import { decodeTX } from './utils'
+import { decodeTX } from '../tweb3/utils'
 import tweb3 from './tweb3'
 
 const blockTemplate = handlebars.compile(document.getElementById('blockTemplate').innerHTML)

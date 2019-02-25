@@ -1,6 +1,6 @@
 import $ from 'jquery'
-import * as helper from './domhelper'
-import * as utils from './utils'
+import * as helper from './helper'
+import utils from '../tweb3/utils'
 import tweb3 from './tweb3'
 window.$ = $
 

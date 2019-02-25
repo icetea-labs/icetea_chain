@@ -16,11 +16,11 @@ module.exports = class Tx {
   // }
 
   constructor (from, to, value, fee, data, nonce) {
-    this.from = from
-    this.to = to
+    this.from = from || ''
+    this.to = to || ''
     this.value = parseFloat(value) || 0
     this.fee = parseFloat(fee) || 0
-    this.data = data
+    this.data = data || {}
     this.nonce = nonce || Date.now()
 
     const content = {
