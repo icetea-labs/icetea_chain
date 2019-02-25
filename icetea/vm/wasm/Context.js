@@ -20,6 +20,10 @@ exports.contextForWrite = (tx, block, stateTable, { address, fname, fparams }) =
     get_msg_name: () => fname,
     get_msg_param: () => (fparams && fparams.length) ? parseInt(fparams[0]) : 0,
     get_sender: () => tx.from,
+    get_address: () => address,
+    now: () => block.timestamp,
+    get_block_hash: () => block.hash,
+    get_block_number: () => block.number,
     _state: {},
     load_int: (key) => {
       return ctx._state.hasOwnProperty(key) ? ctx._state[key] : (state.hasOwnProperty(key) ? state[key] : 0)
@@ -48,6 +52,8 @@ exports.contextForView = exports.contextForView = (stateTable, address, name, pa
     get_sender: () => options.from,
     get_address: () => address,
     now: () => block.timestamp,
+    get_block_hash: () => block.hash,
+    get_block_number: () => block.number,
     load_int: (key) => {
       return state[key] || 0
     },

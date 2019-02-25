@@ -9,9 +9,8 @@ extern {
   fn log(text: &str);
   fn get_sender() -> String;
   fn get_address() -> String;
-  fn load_int(key: &str) -> i32;
-  fn save_int(key: &str, value: i32);
   fn now() -> i32;
+  fn get_block_hash() -> String;
 }
 
 // Smart contract entry point
@@ -26,5 +25,5 @@ pub fn main(operation: &str) {
 pub fn hello() {
   log(&format!("[RUST] Hello {} from {}", get_sender(), get_address()));
   log(&format!("This block is mined at {}", now()));
-  // log(&format!("The block hash is {}", now()));
+  log(&format!("The block hash is {}", get_block_hash()));
 }
