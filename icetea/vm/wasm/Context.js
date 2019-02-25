@@ -30,6 +30,12 @@ exports.contextForWrite = (tx, block, stateTable, { address, fname, fparams }) =
     },
     save_int: (key, value) => {
       ctx._state[key] = value
+    },
+    load_string: (key) => {
+      return state[key] || ''
+    },
+    save_string: (key, value) => {
+      ctx._state[key] = value
     }
   }
 
@@ -58,6 +64,12 @@ exports.contextForView = exports.contextForView = (stateTable, address, name, pa
       return state[key] || 0
     },
     save_int: () => {
+      throw new Error('Cannot change state inside a view function')
+    },
+    load_string: (key) => {
+      return state[key] || ''
+    },
+    save_string: () => {
       throw new Error('Cannot change state inside a view function')
     }
   }
