@@ -1,4 +1,4 @@
-const wasm_bindgen = function ({ log, importTableName, save_int, load_int, get_sender }) { // eslint-disable-line
+const wasm_bindgen = function ({ log, importTableName, save_int, load_int, get_sender, get_address, now }) { // eslint-disable-line
   var wasm
   const __exports = {}
 
@@ -43,6 +43,13 @@ const wasm_bindgen = function ({ log, importTableName, save_int, load_int, get_s
     mem[ret / 4 + 1] = retlen
   }
 
+  __exports.__wbg_f_get_address_get_address_n = function (ret) {
+    const [retptr, retlen] = passStringToWasm(get_address())
+    const mem = getUint32Memory()
+    mem[ret / 4] = retptr
+    mem[ret / 4 + 1] = retlen
+  }
+
   __exports.__wbg_f_load_int_load_int_n = function (arg0, arg1) {
     let varg0 = getStringFromWasm(arg0, arg1)
     return load_int(varg0)
@@ -51,6 +58,10 @@ const wasm_bindgen = function ({ log, importTableName, save_int, load_int, get_s
   __exports.__wbg_f_save_int_save_int_n = function (arg0, arg1, arg2) {
     let varg0 = getStringFromWasm(arg0, arg1)
     save_int(varg0, arg2)
+  }
+
+  __exports.__wbg_f_now_now_n = function () {
+    return now()
   }
 
   __exports.main = function (arg0, arg1) {

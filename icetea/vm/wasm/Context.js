@@ -1,5 +1,11 @@
 const _ = require('lodash')
 
+const emptyBlock = {
+  timestamp: 0,
+  number: 0,
+  hash: ''
+}
+
 exports.contextForWrite = (tx, block, stateTable, { address, fname, fparams }) => {
   const state = stateTable[address].state || {}
   const balance = stateTable[address].balance || 0
@@ -27,6 +33,7 @@ exports.contextForWrite = (tx, block, stateTable, { address, fname, fparams }) =
 }
 
 exports.contextForView = exports.contextForView = (stateTable, address, name, params, options) => {
+  const block = options.block || emptyBlock
   const state = _.cloneDeep(stateTable[address].state || {})
   const balance = state.balance || 0
   const importTableName = stateTable[address].meta.importTableName
@@ -39,6 +46,8 @@ exports.contextForView = exports.contextForView = (stateTable, address, name, pa
     get_msg_name: () => name,
     get_msg_param: () => (params && params.length) ? parseInt(params[0]) : 0,
     get_sender: () => options.from,
+    get_address: () => address,
+    now: () => block.timestamp,
     load_int: (key) => {
       return state[key] || 0
     },

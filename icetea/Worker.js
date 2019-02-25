@@ -21,8 +21,9 @@ module.exports = class Worker {
 
   async loadState () {
     const storedData = await merkle.load()
-    this.stateTable = storedData.state
-    this.lastBlockHeight = storedData.height
+    const { height, hash, timestamp, state } = storedData
+    this.stateTable = state
+    this.beginBlock({ number: height, hash, timestamp })
 
     if (!Object.keys(this.stateTable).length) {
       console.log('Empty state after load => set init value')
@@ -31,9 +32,9 @@ module.exports = class Worker {
   }
 
   info () {
-    if (this.lastBlockHeight) {
+    if (this.lastBlock && this.lastBlock.number) {
       return {
-        lastBlockHeight: this.lastBlockHeight,
+        lastBlockHeight: this.lastBlock.number,
         lastBlockAppHash: merkle.getHash(this.stateTable)
       }
     } else {
@@ -53,11 +54,12 @@ module.exports = class Worker {
   }
 
   commit () {
-    this.lastBlockHeight = (this.lastBlockHeight || 0) + 1
-    if (this.lastBlockHeight === 1) return Buffer.alloc(0)
+    if (this.lastBlock.number === 1) return Buffer.alloc(0)
     return merkle.save({
-      height: this.lastBlockHeight,
-      state: this.stateTable
+      height: this.lastBlock.number,
+      state: this.stateTable,
+      timestamp: this.lastBlock.timestamp,
+      hash: this.lastBlock.hash
     })
   }
 
