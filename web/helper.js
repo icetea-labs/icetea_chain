@@ -54,7 +54,7 @@ export function registerTxForm ($form, txData) {
   })
 }
 
-export function detectCallType(decorators) {
+export function detectCallType (decorators) {
   if (!decorators) {
     return 'unknown'
   }

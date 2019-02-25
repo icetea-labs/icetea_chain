@@ -20,7 +20,7 @@ const t = {
 
   sign: ecc.sign,
 
-  signTxData(txData, privateKey) {
+  signTxData (txData, privateKey) {
     const tx = new Tx(txData.from, txData.to, txData.value, txData.fee, txData.data, txData.nonce)
     txData.signature = ecc.sign(tx.signatureMessage, privateKey)
     if (!txData.nonce) {
