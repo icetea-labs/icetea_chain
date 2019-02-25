@@ -3,7 +3,7 @@ const config = require('./config')
 const utils = require('./helper/utils')
 const ecc = require('./helper/ecc')
 const merkle = require('./helper/merkle')
-const { getRunner, getContext, getGuard } = require('./vm')
+const { getRunner, getContext } = require('./vm')
 
 module.exports = class StateManager {
   constructor (stateTable) {
