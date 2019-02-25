@@ -2,6 +2,7 @@
 
 <head>
     <title>tchain - transaction detail</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/prismjs@1.15.0/themes/prism.css">
     <link rel="stylesheet" type="text/css" href="style.css">
 </head>
 
@@ -55,8 +56,16 @@
                     <td>{{fee}}</td>
                 </tr>
                 <tr>
-                    <td>Extra Data</td>
-                    <td class="break-all">{{data}}</td>
+                    <td>Tags</td>
+                    <td><pre><code class="language-js">{{tags}}</code></pre></td>
+                </tr>
+                <tr>
+                    <td>Events</td>
+                    <td><pre><code class="language-js">{{events}}</code></pre></td>
+                </tr>
+                <tr>
+                    <td>Contract Info</td>
+                    <td><pre><code class="language-js">{{data}}</code></pre></td>
                 </tr>
             </table>
         </script>

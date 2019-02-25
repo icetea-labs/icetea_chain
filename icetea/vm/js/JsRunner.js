@@ -36,12 +36,15 @@ const {codeFrameColumns} = require("@babel/code-frame");
 module.exports = mode => {
     const patch = require('./patch')(mode);
     return class extends Runner {
-        ensureES5(src) {
+        ensureES5(src, wrap) {
             // Even current Node 11.9 --harmony does not support private method
             // (it supports private fields only).
 
             // Would remove this method when such things are supported natively by Node
             src = src.toString();
+            if (wrap) {
+                src = `(function(){${src}}).call(this);`;
+            }
             return babel.transformSync(src, {
                 plugins: [
                     "@babel/plugin-proposal-private-methods",
@@ -51,9 +54,12 @@ module.exports = mode => {
 
         }
 
+        compile(src) {
+            return this.ensureES5(src, true);
+        }
+
         verify(src) {
             src = super.verify(src);
-            src = this.ensureES5(src);
             try {
                 halts(src);
             } catch (err) {

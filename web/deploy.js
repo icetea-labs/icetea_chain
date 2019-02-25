@@ -1,6 +1,7 @@
 import $ from 'jquery';
 window.$ = $;
 import * as utils from './domhelper';
+import {switchEncoding} from './utils';
 
 var wasmBuffer = null;
 
@@ -14,11 +15,16 @@ function buildData() {
             return null;
         }
     } else {
-        src = utils.fieldToBase64("#src");
+        src = document.querySelector("#src").value.trim();
         if (!src) {
             alert("You must provide contract source.");
             return null;
         }
+        if (mode === 1 && src.indexOf("@contract") < 0) {
+            alert("There is no @contract decorator. You should select 'Raw JS' contract source mode.");
+            return null;
+        }
+        src = switchEncoding(src, 'utf8', 'base64');
     }
 
     return {

@@ -6,10 +6,8 @@ const {getRunner, getContext, getGuard} = require('./vm')
 
 module.exports = class Worker {
 
-    constructor () {
-        this.stateTable = {};
-        //this.receipts = {};
-        //this.blocks = [];
+    constructor (stateTable) {
+        this.stateTable = stateTable || {};
         this.init();
     }
 
@@ -21,31 +19,7 @@ module.exports = class Worker {
         });
     }
 
-    // addReceipt(tx, block, error, status, result) {
-    //     let r = this.receipts[tx.hash] || {};
-    //     r = {
-    //         ...r,
-    //         ...tx,
-    //         status,
-    //         error: String(error),
-    //         result
-    //     }
-    //     if (block) {
-    //         r.blockNumber = block.number;
-    //         r.blockTimestamp = block.timestamp;
-    //     }
-
-    //     this.receipts[tx.tHash] = r;
-    //     return r;
-    // }
-
-    // getReceipt(txHash) {
-    //     if (!txHash) return null;
-    //     return this.receipts[txHash];
-    // }
-
     beginBlock(block) {
-        //this.blocks.push(block);
         this.lastBlock = block;
     }
 
@@ -79,9 +53,6 @@ module.exports = class Worker {
         // This way, we could avoid make a copy of state
 
         this.verifyTx(tx);
-
-        // This will removed later, since we do not manage receipts at application state level
-        //this.addReceipt(tx, null, null, "Pending");
     }
 
     async callContract(tx, block, stateTable, overrides) {
@@ -105,7 +76,7 @@ module.exports = class Worker {
             // save back the state
             t[scAddr].state = Object.assign(t[scAddr].state || {}, context._state);
 
-            return result;
+            return [result, context.getEnv().tags];
         }
     }
 
@@ -138,10 +109,12 @@ module.exports = class Worker {
             });
 
             // call constructor
-            this.callContract(tx, block, stateTable, {
+            result = this.callContract(tx, block, stateTable, {
                 fname: "__on_deployed"
-            });
-            result = scAddr;
+            }).then(r => {
+                r[0] = scAddr;
+                return r;
+            })
         }
 
         // call contract
@@ -153,7 +126,7 @@ module.exports = class Worker {
         }
 
         // process value transfer
-        utils.decBalance(tx.from, parseFloat(tx.value || 0) + parseFloat(tx.fee || 0), stateTable)
+        utils.decBalance(tx.from, tx.value + tx.fee, stateTable);
         utils.incBalance(tx.to, tx.value, stateTable);
         //utils.incBalance("miner", tx.fee, stateTable);
 
@@ -162,6 +135,20 @@ module.exports = class Worker {
                 address: tx.to,
                 fname: "__on_received"
             })
+        }
+
+        if (tx.value > 0) {
+            const emitTransferred = (tags) => {
+                return utils.emitTransferred(null, tags, tx.from, tx.to, tx.value);
+            }
+            if (result) {
+                result.then(r => {
+                    emitTransferred(r[1])
+                    return r;
+                })
+            } else {
+                result = [undefined, emitTransferred()];
+            }
         }
 
         return result;
@@ -176,15 +163,12 @@ module.exports = class Worker {
             const result = await this.doExecTx(tx, block, tmpStateTable);
             // This should make sure 'balance' setter is maintained
             _.merge(this.stateTable, tmpStateTable);
-            console.log(result)
-            //this.addReceipt(tx, block, null, "Success", result);
-            return result;
+            //console.log(result)
+            return result || [];
         } catch (error) {
-            //this.addReceipt(tx, block, error, "Error")
             console.log(error)
-           throw error;
+            throw error;
         }
-        //console.log("stateTable:",this.stateTable);
     }
 
     balanceOf(who, t) {
@@ -197,7 +181,7 @@ module.exports = class Worker {
     getContractAddresses() {
         const arr = [];
         _.each(this.stateTable, (value, key) => {
-            if (key.startsWith("contract_")) {
+            if (value.src) {
                 arr.push(key);
             }
         });
@@ -205,26 +189,14 @@ module.exports = class Worker {
         return arr;
     }
 
-    getAllPropertyNames(obj) {
-        var props = [];
-    
-        do {
-            Object.getOwnPropertyNames(obj).forEach(prop => {
-                if (!props.includes(prop)) {
-                    props.push(prop);
-                }
-            });
-        } while ((obj = Object.getPrototypeOf(obj)) && obj != Object.prototype);
-    
-        //console.log(props);
-        return props;
-    }
+    callViewFunc(addr, name, params, options) {
+        const block = this.lastBlock;
+        options = Object.assign(options || {}, {block})
 
-    callViewFunc(addr, name, params) {
         if (this.stateTable[addr] && this.stateTable[addr].src) {
             const {mode, src} = this.stateTable[addr];
             const vm = getRunner(mode)
-            const context = getContext(mode).contextForView(this.stateTable, addr, name, params);
+            const context = getContext(mode).contextForView(this.stateTable, addr, name, params, options);
             const guard = getGuard(mode)(src);
             return vm.run(src, {context, guard});
         }
@@ -256,7 +228,7 @@ module.exports = class Worker {
 
             if (!info || !info._i) return [];
 
-            const props = this.getAllPropertyNames(info._i);
+            const props = utils.getAllPropertyNames(info._i);
             
             const excepts = ['constructor', '__on_deployed', '__on_received', 'getEnv', 'getState', 'setState'];
             return ["address", "balance"].concat(props.filter((name) => !excepts.includes(name)));
@@ -264,12 +236,4 @@ module.exports = class Worker {
 
         return [];
     }
-
-    // getReceipts() {
-    //     return _.cloneDeep(this.receipts || {});
-    // }
-
-    // getBlocks() {
-    //     return _.cloneDeep(this.blocks || [])
-    // }
 }
