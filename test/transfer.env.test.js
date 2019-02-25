@@ -17,15 +17,7 @@ describe('transfer', () => {
         const value = 100.5
         const fee = 0.1
 
-        const tx = ecc.signTxData({
-            from,
-            to,
-            value,
-            fee,
-            data: {}
-        }, privateKey)
-
-        const result = await tweb3.sendTransactionCommit(tx)
+        const result = await tweb3.sendTransactionCommit({ from, to, value, fee }, privateKey)
         expect(typeof result.hash).toBe('string')
 
         const newFromBalance = await tweb3.getBalance(from)

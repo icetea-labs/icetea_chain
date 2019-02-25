@@ -35,17 +35,14 @@ export function registerTxForm ($form, txData) {
     }, {})
 
     // console.log(txData)
-    formData.data = JSON.stringify(txData)
+    formData.data = txData
     const privateKey = window.$('#private_key').val().trim()
     formData.from = ecc.toPublicKey(privateKey)
-    var tx = new Tx(formData.from, formData.to, formData.value, formData.fee, txData)
-    formData.nonce = tx.nonce
-    formData.signature = ecc.sign(tx.signatureMessage, privateKey)
 
     // submit tx
     try {
       // Should send sync to catch check_tx error
-      var result = await tweb3.sendTransactionSync(formData)
+      var result = await tweb3.sendTransactionSync(formData, privateKey)
       window.location.href = '/tx.html?hash=' + result.hash
     } catch (error) {
       console.log(error)
