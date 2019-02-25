@@ -12,7 +12,7 @@ module.exports = {
     contract: './web/contract.js',
     wallet: './web/wallet.js',
     tx: './web/tx.js',
-    test: './web/test.js'
+    test: './web/playground.js'
   },
   output: {
     path: path.resolve(__dirname, 'web_dist'),

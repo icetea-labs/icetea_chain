@@ -1,8 +1,5 @@
-// for testing with NodeJS
-// const fetch = require('node-fetch');
-
-import { switchEncoding, encodeTX, tryParseJson } from './utils'
-// import { debug } from 'util';
+const fetch = require('node-fetch');
+const { switchEncoding, encodeTX, tryParseJson } = require('../tweb3/utils')
 
 function decodeTags (tx, keepEvents) {
   const EMPTY_RESULT = {}
@@ -80,7 +77,7 @@ function decodeEventData (tx) {
 /**
  * The IceTea web client.
  */
-export default class IceTeaWeb3 {
+exports.IceTeaWeb3 = class IceTeaWeb3 {
   /**
      * Initialize the IceTeaWeb3 instance.
      * @param {string} endpoint tendermint endpoint, e.g. http://localhost:26657
@@ -92,6 +89,15 @@ export default class IceTeaWeb3 {
       decodeEventData,
       decodeTags
     }
+  }
+
+  /**
+   * Get account balance.
+   * @param {string} address address of the account.
+   * @returns {number} account balance.
+   */
+  getBalance (address) {
+    return this.rpc.query('balance', address)
   }
 
   /**
@@ -246,7 +252,7 @@ export default class IceTeaWeb3 {
 
 // TODO: add WebSocketProvider
 
-export class HttpProvider {
+class HttpProvider {
   constructor (endpoint) {
     this.endpoint = endpoint
   }
@@ -259,7 +265,7 @@ export class HttpProvider {
       params
     }
 
-    return window.fetch(this.endpoint, {
+    return fetch(this.endpoint, {
       method: 'POST',
       headers: {
         'Accept': 'application/json',

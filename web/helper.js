@@ -1,10 +1,18 @@
 import ecc from '../icetea/helper/ecc'
 import Tx from '../icetea/Tx'
-import { switchEncoding, parseParamList } from './utils'
+import { switchEncoding, replaceAll, tryParseJson } from '../tweb3/utils'
 import tweb3 from './tweb3'
 
 export function fieldToBase64 (selector) {
   return switchEncoding(document.querySelector(selector).value.trim(), 'utf8', 'base64')
+}
+
+export function parseParamList (pText) {
+  pText = replaceAll(pText, '\r', '\n')
+  pText = replaceAll(pText, '\n\n', '\n')
+  let params = pText.split('\n').filter(e => e.trim()).map(tryParseJson)
+
+  return params
 }
 
 export function parseParamsFromField (selector) {
@@ -44,4 +52,17 @@ export function registerTxForm ($form, txData) {
       window.alert(String(error))
     }
   })
+}
+
+export function detectCallType(decorators) {
+  if (!decorators) {
+    return 'unknown'
+  }
+  if (decorators.includes('payable')) {
+    return 'transaction'
+  } else if (decorators.includes('transaction')) {
+    return 'transaction'
+  }
+
+  return 'view'
 }
