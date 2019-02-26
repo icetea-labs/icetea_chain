@@ -81,12 +81,12 @@ async function loadData () {
     // load txs info
     const MAX_SHOW_TX = 30 // only show last 30 txs
     let txCount = 0
-    let fromBlock = myBlocks[blockCount - 1].header.height
+    let fromBlock = myBlocks[0].header.height
     for (let i = 0; i < blockCount; i++) {
       const num = +myBlocks[i].header.num_txs
       if (txCount + num <= MAX_SHOW_TX) {
         txCount += num
-        fromBlock --
+        fromBlock--
       } else {
         break
       }
