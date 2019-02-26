@@ -79,7 +79,20 @@ async function loadData () {
     document.getElementById('blocks').innerHTML = blockTemplate(fmtBlocks(myBlocks))
 
     // load txs info
-    const myTxs = await tweb3.searchTransactions('tx.height>0')
+    const MAX_SHOW_TX = 30 // only show last 30 txs
+    let txCount = 0
+    let fromBlock = myBlocks[blockCount - 1].header.height
+    for (let i = 0; i < blockCount; i++) {
+      const num = +myBlocks[i].header.num_txs
+      if (txCount + num <= MAX_SHOW_TX) {
+        txCount += num
+        fromBlock --
+      } else {
+        break
+      }
+    }
+
+    const myTxs = await tweb3.searchTransactions('tx.height>' + fromBlock)
     if (myTxs.txs && myTxs.txs.length) {
       // console.log(myTxs)
       document.getElementById('transactions').innerHTML = txTemplate(fmtTxs(myTxs.txs))
