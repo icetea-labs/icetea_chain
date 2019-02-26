@@ -28,7 +28,7 @@ pub fn main(operation: &str, param: &JsValue) -> JsValue {
 #[wasm_bindgen]
 pub fn get_value() -> JsValue {
   let v = load("value");
-  log(&format!("[RUST] get_value: {}", json_stringify(v)));
+  log(&format!("[RUST] get_value: {}", json_stringify(&v)));
   return v;
 }
 
