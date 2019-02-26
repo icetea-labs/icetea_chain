@@ -6,7 +6,7 @@
   "scripts": {
     "test": "standard \"web/**/*.js\" \"icetea/**/*.js\" \"test/**/*.js\"",
     "fix": "standard \"web/**/*.js\" \"icetea/**/*.js\" \"test/**/*.js\" --fix",
-    "jest": "jest env --runInBand",
+    "jest": "jest",
     "start": "node icetea",
     "dev": "tendermint node & npm start & webpack-dev-server --content-base web --inline --hot --port 3001 --open",
     "dev2": "tendermint node & npm start & webpack-dev-server --content-base web --inline --hot --port 3001",

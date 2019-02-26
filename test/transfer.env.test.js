@@ -2,12 +2,15 @@
 
 const { IceTeaWeb3 } = require('../tweb3')
 const ecc = require('../icetea/helper/ecc')
+const { randomAccountWithBalance } = require('./helper')
 
 jest.setTimeout(30000)
 
 let tweb3
-beforeAll(() => {
+let account10k // this key should have 10k of coins before running test suite
+beforeAll(async () => {
   tweb3 = new IceTeaWeb3('http://localhost:3001/api')
+  account10k = await randomAccountWithBalance(tweb3, 10000)
 })
 
 afterAll(() => {
@@ -16,17 +19,16 @@ afterAll(() => {
 
 describe('transfer', () => {
   test('transfer with enough balance', async () => {
-    const privateKey = '5K4kMyGz839wEsG7a9xvPNXCmtgFE5He2Q8y9eurEQ4uNgpSRq7'
+    const { key: privateKey, address: from } = account10k
 
-    const from = ecc.toPublicKey(privateKey)
     const fromBalance = (await tweb3.getBalance(from)).balance
-    expect(fromBalance).toBeGreaterThan(1000)
+    expect(fromBalance).toBeGreaterThan(100)
 
-    const to = '7cn9sR51ve3npAFuHqCJHep3Jum7DtrtA2gaBYc9cKHJPp97Er'
+    const to = ecc.toPublicKey(await ecc.generateKey())
     const toBalance = (await tweb3.getBalance(to)).balance
     expect(toBalance).toBeGreaterThanOrEqual(0)
 
-    const value = 100.5
+    const value = 1.5
     const fee = 0.1
 
     const result = await tweb3.sendTransactionCommit({ from, to, value, fee }, privateKey)
@@ -68,7 +70,7 @@ describe('transfer', () => {
     const fromBalance = (await tweb3.getBalance(from)).balance
     expect(fromBalance).toBe(0)
 
-    const to = '7cn9sR51ve3npAFuHqCJHep3Jum7DtrtA2gaBYc9cKHJPp97Er'
+    const to = ecc.toPublicKey(await ecc.generateKey())
 
     let value
     let fee = 0.000001
