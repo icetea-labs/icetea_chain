@@ -256,9 +256,35 @@ export default class IceTeaWeb3 {
      *
      * @param {MessageEvent} EventName
      */
-    subscribe(event) {
+    subscribe(eventName, conditions = {}, callback) {
         if(!this.isWebSocket) throw new Error('subscribe for WebSocket only');
-        return this.rpc.call("subscribe", {"query": "tm.event='"+event+"'"});
+
+        let query = "";
+        if (typeof conditions === "string") {
+            query = conditions;
+        } else {
+            query = Object.keys(conditions).reduce((arr, key) => {
+                const value = conditions[key];
+                if (key === "fromBlock") {
+                    arr.push(`tx.height>${value-1}`)
+                } else if (key === "toBlock") {
+                    arr.push(`tx.height<${value+1}`)
+                } else {
+                    arr.push(`${key}=${value}`)
+                }
+                return arr;
+            }, [`tm.event = '${eventName}'`]).join(" AND ");
+        }
+        // console.log("query: ", query);
+        return this.rpc.call("subscribe", {"query": query}).then(() => {
+            this.rpc.registerEventListener('onMessage', (message) => {
+                if(JSON.parse(message).id.indexOf('event') > 0){
+                    let datatype = JSON.parse(message).result.data.type.split("/");
+                    if(eventName === datatype[datatype.length-1])
+                    return callback(message);
+                }
+            });
+        });
     }
     /**
      * Unsubscribes by event (for WebSocket only)
@@ -272,24 +298,24 @@ export default class IceTeaWeb3 {
         return this.rpc.call("unsubscribe", {"query": "tm.event='"+event+"'"});
     }
 
-    onMessage (callback) {
+    onMessage (eventName, callback) {
         if(!this.isWebSocket) throw new Error('onMessage for WebSocket only');
-        return this.rpc.registerEventListener('onMessage',callback);
+        this.rpc.registerEventListener('onMessage',_callback);
     }
 
     onResponse(callback) {
         if(!this.isWebSocket) throw new Error('onResponse for WebSocket only');
-        return this.rpc.registerEventListener('onResponse',callback);
+        this.rpc.registerEventListener('onResponse',callback);
     }
 
     onError(callback) {
         if(!this.isWebSocket) throw new Error('onError for WebSocket only');
-        return this.rpc.registerEventListener('onError',callback);
+        this.rpc.registerEventListener('onError',callback);
     }
 
     onClose(callback) {
         if(!this.isWebSocket) throw new Error('onClose for WebSocket only');
-        return this.rpc.registerEventListener('onClose',callback);
+        this.rpc.registerEventListener('onClose',callback);
     }
 }
 
@@ -309,7 +335,7 @@ export class WebSocketProvider {
     }
 
     registerEventListener(event, callback){
-        this.wsp[event].addListener(callback)
+        this.wsp[event].addListener(callback);
     }
 
     async _call(method, params = {}) {
