@@ -62,6 +62,10 @@ function showMessage () {
       document.getElementById('info').textContent = ''
     }, 4000)
   }
+
+  // tweb3.subscribe('NewBlock',{}, message => {
+  //   console.log("message: ", JSON.parse(message));
+  // });
 }
 
 let blockCount = 0

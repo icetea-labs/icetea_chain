@@ -1,6 +1,7 @@
 const fetch = require('node-fetch');
 const { signTxData } = require('../icetea/helper/ecc')
 const { switchEncoding, encodeTX, tryParseJson } = require('../tweb3/utils')
+const WebSocketAsPromised = require ('websocket-as-promised');
 
 function decodeTags(tx, keepEvents) {
   const EMPTY_RESULT = {}
@@ -84,8 +85,13 @@ exports.IceTeaWeb3 = class IceTeaWeb3 {
    * Initialize the IceTeaWeb3 instance.
    * @param {string} endpoint tendermint endpoint, e.g. http://localhost:26657
    */
-  constructor(endpoint) {
-    this.rpc = new HttpProvider(endpoint)
+  constructor(endpoint, options) {
+    this.isWebSocket = !!(endpoint.startsWith("ws://") || endpoint.startsWith("wss://"));
+    if(this.isWebSocket){
+        this.rpc = new WebSocketProvider(endpoint, options);
+    } else {
+        this.rpc = new HttpProvider(endpoint);
+    }
 
     this.utils = {
       decodeEventData,
@@ -252,10 +258,165 @@ exports.IceTeaWeb3 = class IceTeaWeb3 {
   }
 
   // shorthand for transfer, deploy, write, read contract goes here
-  // subscribe, unsubscribe goes here (for WebSocket only)
+  /**
+     * Subscribes by event (for WebSocket only)
+     *
+     * @method subscribe
+     *
+     * @param {MessageEvent} EventName
+     */
+  subscribe(eventName, conditions = {}, callback) {
+    if(!this.isWebSocket) throw new Error('subscribe for WebSocket only');
+    let query = "";
+    if (typeof conditions === "string") {
+        query = conditions;
+    } else {
+        query = Object.keys(conditions).reduce((arr, key) => {
+            const value = conditions[key];
+            if (key === "fromBlock") {
+                arr.push(`tx.height>${value-1}`)
+            } else if (key === "toBlock") {
+                arr.push(`tx.height<${value+1}`)
+            } else {
+                arr.push(`${key}=${value}`)
+            }
+            return arr;
+        }, [`tm.event = '${eventName}'`]).join(" AND ");
+    }
+    // console.log("query: ", query);
+    return this.rpc.call("subscribe", {"query": query}).then(() => {
+        this.rpc.registerEventListener('onMessage', (message) => {
+            if(JSON.parse(message).id.indexOf('event') > 0){
+                let datatype = JSON.parse(message).result.data.type.split("/");
+                if(eventName === datatype[datatype.length-1])
+                  return callback(message);
+            }
+        });
+    });
+  }
+  /**
+   * Unsubscribes by event (for WebSocket only)
+   *
+   * @method unsubscribe
+   *
+   * @param {EventName} EventName
+   */
+  unsubscribe(eventName) {
+      if(!this.isWebSocket) throw new Error('unsubscribe for WebSocket only');
+      return this.rpc.call("unsubscribe", {"query": "tm.event='"+eventName+"'"});
+  }
+
+  onMessage (callback) {
+      if(!this.isWebSocket) throw new Error('onMessage for WebSocket only');
+      this.rpc.registerEventListener('onMessage',callback);
+  }
+
+  onResponse(callback) {
+      if(!this.isWebSocket) throw new Error('onResponse for WebSocket only');
+      this.rpc.registerEventListener('onResponse',callback);
+  }
+
+  onError(callback) {
+      if(!this.isWebSocket) throw new Error('onError for WebSocket only');
+      this.rpc.registerEventListener('onError',callback);
+  }
+
+  onClose(callback) {
+      if(!this.isWebSocket) throw new Error('onClose for WebSocket only');
+      this.rpc.registerEventListener('onClose',callback);
+  }
 }
 
-// TODO: add WebSocketProvider
+class WebSocketProvider {
+  constructor(endpoint, options) {
+      // this.endpoint = "ws://localhost:26657/websocket"
+      this.endpoint = endpoint
+      this.options = options || {
+          packMessage: data => JSON.stringify(data),
+          unpackMessage: message => JSON.parse(message),
+          attachRequestId: (data, requestId) => Object.assign({id: requestId}, data),
+          extractRequestId: data => data.id,
+          // timeout: 10000,
+      };
+      this.wsp = new WebSocketAsPromised(this.endpoint, this.options);
+  }
+
+  registerEventListener(event, callback){
+      this.wsp[event].addListener(callback);
+  }
+
+  async _call(method, params = {}) {
+      const json = {
+          jsonrpc: "2.0",
+          method,
+          params
+      }
+
+      if (typeof params !== 'undefined') {
+          json.params = params;
+      }
+
+      if(!this.wsp.isOpened){ 
+          await this.wsp.open();
+      }
+      return this.wsp.sendRequest(json);
+  }
+
+  call(method, params) {
+      return this._call(method, params).then(resp => {
+          if (resp.error) {
+              const err = new Error(resp.error.message);
+              Object.assign(err, resp.error);
+              throw err;
+          }
+          
+          return resp.result;
+      })
+  }
+
+  // query application state (read)
+  query(path, data, options) {
+      const params = {path, ...options};
+      if (data) {
+          if (typeof data !== "string") {
+              data = JSON.stringify(data);
+          }
+          params.data = switchEncoding(data, "utf8", "hex");
+      }
+
+      return this._call("abci_query", params).then(resp => {
+          if (resp.error) {
+              const err = new Error(resp.error.message);
+              Object.assign(err, resp.error);
+              throw err;
+          }
+
+          // decode query data embeded in info
+          let r = resp.result;
+          if (r && r.response && r.response.info) {
+              r = JSON.parse(r.response.info);
+          }
+          return r;
+      })
+  }
+
+  // send a transaction (write)
+  send(method, tx) {
+      return this.call(method, {
+          // for jsonrpc, encode in 'base64'
+          // for query string (REST), encode in 'hex' (or 'utf8' inside quotes)
+          tx: encodeTX(tx, 'base64')
+      }).then(result => {
+          if (result.code) {
+              const err = new Error(result.log);
+              Object.assign(err, result);
+              throw err;
+          }
+
+          return result;
+      })
+  }
+}
 
 class HttpProvider {
   constructor(endpoint) {
