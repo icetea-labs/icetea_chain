@@ -27,6 +27,7 @@ describe('transfer', () => {
 
     const tx = await tweb3.getTransaction(result.hash)
 
+    // tags must be correct
     const tags = tweb3.utils.decodeTags(tx)
     expect(tags['tx.from']).toBe(from)
     expect(tags['tx.to']).toBe(to)
@@ -34,6 +35,7 @@ describe('transfer', () => {
     const tags2 = tweb3.utils.decodeTags(result)
     expect(tags).toEqual(tags2)
 
+    // since value > 0, a system 'Transferred' event must be emitted
     const events = tweb3.utils.decodeEventData(result)
     expect(events.length).toBe(1)
     expect(events[0]).toEqual({
@@ -41,6 +43,8 @@ describe('transfer', () => {
       eventName: 'Transferred',
       eventData: { from, to, value }
     })
+
+    // Verify balance changes after TX
 
     const newFromBalance = (await tweb3.getBalance(from)).balance
     expect(newFromBalance).toBe(fromBalance - value - fee)
