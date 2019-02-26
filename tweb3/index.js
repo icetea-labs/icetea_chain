@@ -86,7 +86,7 @@ exports.IceTeaWeb3 = class IceTeaWeb3 {
    * @param {string} endpoint tendermint endpoint, e.g. http://localhost:26657
    */
   constructor(endpoint, options) {
-    this.isWebSocket = !!(endpoint.indexOf("/ws") > 0);
+    this.isWebSocket = !!(endpoint.startsWith("ws://") || endpoint.startsWith("wss://"));
     if(this.isWebSocket){
         this.rpc = new WebSocketProvider(endpoint, options);
     } else {
@@ -329,8 +329,8 @@ exports.IceTeaWeb3 = class IceTeaWeb3 {
 
 class WebSocketProvider {
   constructor(endpoint, options) {
-      this.endpoint = "ws://localhost:26657/websocket"
-      // this.endpoint = endpoint
+      // this.endpoint = "ws://localhost:26657/websocket"
+      this.endpoint = endpoint
       this.options = options || {
           packMessage: data => JSON.stringify(data),
           unpackMessage: message => JSON.parse(message),
