@@ -1,4 +1,4 @@
-/* global jest describe test expect */
+/* global jest describe test expect beforeAll afterAll */
 
 const { IceTeaWeb3 } = require('../tweb3')
 const ecc = require('../icetea/helper/ecc')
@@ -12,7 +12,7 @@ beforeAll(() => {
 
 afterAll(() => {
   tweb3.close()
-});
+})
 
 describe('transfer', () => {
   test('transfer with enough balance', async () => {

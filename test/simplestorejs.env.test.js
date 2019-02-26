@@ -1,4 +1,4 @@
-/* global jest describe test expect */
+/* global jest describe test expect beforeAll afterAll */
 
 const { IceTeaWeb3 } = require('../tweb3')
 const ecc = require('../icetea/helper/ecc')
@@ -14,7 +14,7 @@ beforeAll(() => {
 
 afterAll(() => {
   tweb3.close()
-});
+})
 
 async function testSimpleStore (mode, src) {
   const privateKey = '5K4kMyGz839wEsG7a9xvPNXCmtgFE5He2Q8y9eurEQ4uNgpSRq7'
