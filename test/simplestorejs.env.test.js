@@ -1,15 +1,17 @@
 /* global jest describe test expect beforeAll afterAll */
 
 const { IceTeaWeb3 } = require('../tweb3')
-const ecc = require('../icetea/helper/ecc')
 const { switchEncoding } = require('../tweb3/utils')
+const { randomAccountWithBalance } = require('./helper')
 const { TxOp, ContractMode } = require('../icetea/enum')
 
 jest.setTimeout(30000)
 
 let tweb3
-beforeAll(() => {
+let account10k // this key should have 10k of coins before running test suite
+beforeAll(async () => {
   tweb3 = new IceTeaWeb3('http://localhost:3001/api')
+  account10k = await randomAccountWithBalance(tweb3, 10000)
 })
 
 afterAll(() => {
@@ -17,13 +19,12 @@ afterAll(() => {
 })
 
 async function testSimpleStore (mode, src) {
-  const privateKey = '5K4kMyGz839wEsG7a9xvPNXCmtgFE5He2Q8y9eurEQ4uNgpSRq7'
+  const { key, address: from } = account10k
 
-  const from = ecc.toPublicKey(privateKey)
   const fromBalance = (await tweb3.getBalance(from)).balance
   expect(fromBalance).toBeGreaterThan(1000)
 
-  const value = 100.5
+  const value = 1.5
   const fee = 0.1
 
   const data = {
@@ -32,7 +33,7 @@ async function testSimpleStore (mode, src) {
     src: switchEncoding(src, 'utf8', 'base64')
   }
 
-  const result = await tweb3.sendTransactionCommit({ from, value, fee, data }, privateKey)
+  const result = await tweb3.sendTransactionCommit({ from, value, fee, data }, key)
   expect(result.deliver_tx.code).toBeFalsy()
 
   // tags must be correct
@@ -81,7 +82,7 @@ async function testSimpleStore (mode, src) {
     params: [value2Set]
   }
 
-  const result2 = await tweb3.sendTransactionCommit({ from, to, data: data2 }, privateKey)
+  const result2 = await tweb3.sendTransactionCommit({ from, to, data: data2 }, key)
   expect(result2.deliver_tx.code).toBeFalsy()
 
   // Check ValueChanged event was emit
