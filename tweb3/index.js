@@ -2,13 +2,18 @@ const fetch = require('node-fetch');
 const { signTxData } = require('../icetea/helper/ecc')
 const { switchEncoding, encodeTX, tryParseJson } = require('../tweb3/utils')
 
-function decodeTags(tx, keepEvents) {
+function decodeTags(tx, keepEvents = false) {
   const EMPTY_RESULT = {}
-  if (!tx.tx_result || !tx.tx_result.tags || !tx.tx_result.tags.length) {
+  let b64Tags = tx
+  if (tx.tx_result && tx.tx_result.tags) {
+    b64Tags = tx.tx_result.tags
+  } else if (tx.deliver_tx && tx.deliver_tx.tags) {
+    b64Tags = tx.deliver_tx.tags
+  }
+  if (!b64Tags.length) {
     return EMPTY_RESULT
   }
 
-  const b64Tags = tx.tx_result.tags
   const tags = {}
   // decode tags
   b64Tags.forEach(t => {
@@ -79,7 +84,7 @@ function decodeEventData(tx) {
  * The IceTea web client.
  */
 exports.IceTeaWeb3 = class IceTeaWeb3 {
-  
+
   /**
    * Initialize the IceTeaWeb3 instance.
    * @param {string} endpoint tendermint endpoint, e.g. http://localhost:26657

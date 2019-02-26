@@ -23,6 +23,10 @@ module.exports = class Tx {
     this.data = data || {}
     this.nonce = nonce || Date.now()
 
+    if (this.value < 0 || this.fee < 0) {
+      throw new Error('Value and fee cannot be negative.')
+    }
+
     const content = {
       from: this.from,
       to: this.to,
