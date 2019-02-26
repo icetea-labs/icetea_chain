@@ -1,6 +1,7 @@
 const fetch = require('node-fetch');
 const { signTxData } = require('../icetea/helper/ecc')
 const { switchEncoding, encodeTX, tryParseJson } = require('../tweb3/utils')
+const W3CWebSocket = require('websocket').w3cwebsocket;
 const WebSocketAsPromised = require ('websocket-as-promised');
 
 function decodeTags(tx, keepEvents = false) {
@@ -354,6 +355,7 @@ class WebSocketProvider {
       // this.endpoint = "ws://localhost:26657/websocket"
       this.endpoint = endpoint
       this.options = options || {
+          createWebSocket: url => new W3CWebSocket(url),
           packMessage: data => JSON.stringify(data),
           unpackMessage: message => JSON.parse(message),
           attachRequestId: (data, requestId) => Object.assign({id: requestId}, data),

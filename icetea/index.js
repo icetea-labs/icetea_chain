@@ -44,7 +44,6 @@ const handlers = {
   beginBlock (req) {
     const hash = req.hash.toString('hex')
     const number = req.header.height.toNumber()
-    console.log('beginblock', number)
     const timestamp = req.header.time.seconds.toNumber()
     worker.beginBlock({ number, hash, timestamp })
     return {} // tags
@@ -95,7 +94,7 @@ const handlers = {
   },
 
   async commit (req) {
-    console.log('commit', req)
+    //console.log('commit', req)
     return { data: await worker.commit() } // return the block stateRoot
   },
 

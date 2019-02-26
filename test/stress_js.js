@@ -1,17 +1,12 @@
-/* global  */
-
 const { IceTeaWeb3 } = require('../tweb3')
 const { switchEncoding } = require('../tweb3/utils')
-const ecc = require('../icetea/helper/ecc')
 const { TxOp, ContractMode } = require('../icetea/enum')
 
-const tweb3 = new IceTeaWeb3('http://localhost:3001/api')
-
-tweb3.close()
+const tweb3 = new IceTeaWeb3('ws://localhost:26657/websocket')
 
 async function testSimpleStore (mode, src, times = 10) {
   const key = '5K4kMyGz839wEsG7a9xvPNXCmtgFE5He2Q8y9eurEQ4uNgpSRq7'
-  const from = ecc.toPublicKey(key)
+  const from = '617BFqg1QhNtsJiNiWz9jGpsm5iAJKqWQBhhk36KjvUFqNkh47'
 
   const data = {
     op: TxOp.DEPLOY_CONTRACT,
@@ -60,6 +55,7 @@ async function test (times) {
   }
 
   console.log('Time', Date.now() - START)
+  tweb3.close()
 }
 
 const START = Date.now()

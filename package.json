@@ -42,6 +42,7 @@
     "prismjs": "^1.15.0",
     "recast": "0.16.2",
     "webpack-dev-server": "3.1.14",
+    "websocket": "^1.0.28",
     "websocket-as-promised": "^0.9.0"
   },
   "devDependencies": {
