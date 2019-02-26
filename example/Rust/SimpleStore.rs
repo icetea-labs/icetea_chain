@@ -6,23 +6,26 @@ use wasm_bindgen::prelude::*;
 // Import blockchain info
 #[wasm_bindgen]
 extern {
-    fn log(text: &str);
-    fn get_sender() -> String;
-    fn load(key: &str) -> JsValue;
-    fn save(key: &str, value: &JsValue);
-    fn json_stringify(value: &JsValue) -> String;
+  fn log(text: &str);
+  fn get_sender() -> String;
+  fn load(key: &str) -> JsValue;
+  fn save(key: &str, value: &JsValue);
+  fn json_stringify(value: &JsValue) -> String;
 }
 
 // Smart contract entry point
 #[wasm_bindgen]
 pub fn main(operation: &str, param: &JsValue) -> JsValue {
-    log(&format!("[RUST] Hello {}, you call method {}", get_sender(), operation));
-    if operation == "get_value" {
-      return get_value();
-    } else if operation == "set_value" {
-      set_value(param);
+  let params: Vec<JsValue> = param.into_serde().unwrap();
+  log(&format!("[RUST] Hello {}, you call method {}", get_sender(), operation));
+  if operation == "get_value" {
+    return get_value();
+  } else if operation == "set_value" {
+    if params.len() > 0 {
+      set_value(&params[0]);
     }
-    return JsValue::from_bool(true);
+  }
+  return JsValue::from_bool(true);
 }
 
 #[wasm_bindgen]
