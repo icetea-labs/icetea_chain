@@ -104,6 +104,12 @@ exports.IceTeaWeb3 = class IceTeaWeb3 {
     }
   }
 
+  close () {
+    if (this.isWebSocket) {
+      this.rpc.close()
+    }
+  }
+
   /**
    * Get account balance.
    * @param {string} address address of the account.
@@ -344,6 +350,10 @@ class WebSocketProvider {
           // timeout: 10000,
       };
       this.wsp = new WebSocketAsPromised(this.endpoint, this.options);
+  }
+
+  close () {
+    this.wsp.close()
   }
 
   registerEventListener(event, callback){

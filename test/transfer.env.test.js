@@ -2,9 +2,17 @@
 
 const { IceTeaWeb3 } = require('../tweb3')
 const ecc = require('../icetea/helper/ecc')
-const tweb3 = new IceTeaWeb3('http://localhost:3001/api')
 
 jest.setTimeout(30000)
+
+let tweb3
+beforeAll(() => {
+  tweb3 = new IceTeaWeb3('http://localhost:3001/api')
+})
+
+afterAll(() => {
+  tweb3.close()
+});
 
 describe('transfer', () => {
   test('transfer with enough balance', async () => {

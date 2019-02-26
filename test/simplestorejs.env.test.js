@@ -3,10 +3,18 @@
 const { IceTeaWeb3 } = require('../tweb3')
 const ecc = require('../icetea/helper/ecc')
 const { switchEncoding } = require('../tweb3/utils')
-const tweb3 = new IceTeaWeb3('http://localhost:3001/api')
 const { TxOp, ContractMode } = require('../icetea/enum')
 
 jest.setTimeout(30000)
+
+let tweb3
+beforeAll(() => {
+  tweb3 = new IceTeaWeb3('http://localhost:3001/api')
+})
+
+afterAll(() => {
+  tweb3.close()
+});
 
 async function testSimpleStore (mode, src) {
   const privateKey = '5K4kMyGz839wEsG7a9xvPNXCmtgFE5He2Q8y9eurEQ4uNgpSRq7'
