@@ -18,7 +18,7 @@ exports.contextForWrite = (tx, block, stateTable, { address, fname, fparams }) =
     importTableName,
     log: console.log,
     get_msg_name: () => fname,
-    get_msg_param: () => (fparams && fparams.length) ? parseInt(fparams[0]) : 0,
+    get_msg_param: () => (fparams && fparams.length) ? fparams[0] : '',
     get_sender: () => tx.from,
     get_address: () => address,
     now: () => block.timestamp,
@@ -35,6 +35,13 @@ exports.contextForWrite = (tx, block, stateTable, { address, fname, fparams }) =
       return state[key] || ''
     },
     save_string: (key, value) => {
+      ctx._state[key] = value
+    },
+    load: (key) => {
+      return ctx._state.hasOwnProperty(key) ? ctx._state[key] : (state.hasOwnProperty(key) ? state[key] : 0)
+    },
+    save: (key, value) => {
+      console.log(key, value)
       ctx._state[key] = value
     }
   }
@@ -71,6 +78,12 @@ exports.contextForView = exports.contextForView = (stateTable, address, name, pa
     },
     save_string: () => {
       throw new Error('Cannot change state inside a view function')
+    },
+    load: (key) => {
+      return state[key] || 0
+    },
+    save: () => {
+      throw new Error('Cannot change state inside a view function')
     }
   }
 
@@ -85,7 +98,7 @@ exports.contextForPure = (address, name, params, options) => {
       throw new Error('Cannot view balance a pure function')
     },
     get_msg_name: () => name,
-    get_msg_param: () => (params && params.length) ? parseInt(params[0]) : 0,
+    get_msg_param: () => (params && params.length) ? params[0] : '',
     get_sender: () => options.from,
     load_int: () => {
       throw new Error('Cannot read state inside a pure function')

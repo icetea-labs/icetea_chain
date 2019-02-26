@@ -8,31 +8,32 @@ use wasm_bindgen::prelude::*;
 extern {
     fn log(text: &str);
     fn get_sender() -> String;
-    fn load_int(key: &str) -> i32;
-    fn save_int(key: &str, value: i32);
+    fn load(key: &str) -> JsValue;
+    fn save(key: &str, value: &JsValue);
+    fn json_stringify(value: &JsValue) -> String;
 }
 
 // Smart contract entry point
 #[wasm_bindgen]
-pub fn main(operation: &str, param: i32) -> i32 {
+pub fn main(operation: &str, param: &JsValue) -> JsValue {
     log(&format!("[RUST] Hello {}, you call method {}", get_sender(), operation));
     if operation == "get_value" {
       return get_value();
     } else if operation == "set_value" {
       set_value(param);
     }
-    return 0;
+    return JsValue::from_bool(true);
 }
 
 #[wasm_bindgen]
-pub fn get_value() -> i32 {
-  let v = load_int("value");
-  log(&format!("[RUST] get_value: {}", v));
+pub fn get_value() -> JsValue {
+  let v = load("value");
+  log(&format!("[RUST] get_value: {}", json_stringify(v)));
   return v;
 }
 
 #[wasm_bindgen]
-pub fn set_value(value: i32) {
-  log(&format!("[RUST] set_value: {}", value));
-  save_int("value", value);
+pub fn set_value(value: &JsValue) {
+  log(&format!("[RUST] set_value: {}", json_stringify(value)));
+  save("value", value);
 }
