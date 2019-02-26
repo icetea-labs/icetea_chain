@@ -81,6 +81,17 @@ function decodeEventData(tx) {
   return result
 }
 
+function sanitizeParams (params) {
+  params = params || {}
+  Object.keys(params).forEach(k => {
+    let v = params[k]
+    if (typeof v === 'number') {
+      params[k] = String(v)
+    }
+  })
+  return params
+}
+
 /**
  * The IceTea web client.
  */
@@ -360,15 +371,11 @@ class WebSocketProvider {
       this.wsp[event].addListener(callback);
   }
 
-  async _call(method, params = {}) {
+  async _call(method, params) {
       const json = {
           jsonrpc: "2.0",
           method,
-          params
-      }
-
-      if (typeof params !== 'undefined') {
-          json.params = params;
+          params: sanitizeParams(params)
       }
 
       if(!this.wsp.isOpened){ 
@@ -438,12 +445,12 @@ class HttpProvider {
     this.endpoint = endpoint
   }
 
-  _call(method, params = {}) {
+  _call(method, params) {
     const json = {
       jsonrpc: '2.0',
       id: Date.now(),
       method,
-      params
+      params: sanitizeParams(params)
     }
 
     return fetch(this.endpoint, {

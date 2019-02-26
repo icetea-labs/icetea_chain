@@ -84,15 +84,14 @@ async function loadData () {
     let fromBlock = myBlocks[0].header.height
     for (let i = 0; i < blockCount; i++) {
       const num = +myBlocks[i].header.num_txs
-      if (txCount + num <= MAX_SHOW_TX) {
-        txCount += num
-        fromBlock--
-      } else {
+      txCount += num
+      fromBlock--
+      if (txCount > MAX_SHOW_TX) {
         break
       }
     }
 
-    const myTxs = await tweb3.searchTransactions('tx.height>' + fromBlock)
+    const myTxs = await tweb3.searchTransactions('tx.height>' + fromBlock, { per_page: txCount })
     if (myTxs.txs && myTxs.txs.length) {
       // console.log(myTxs)
       document.getElementById('transactions').innerHTML = txTemplate(fmtTxs(myTxs.txs))
