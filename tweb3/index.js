@@ -306,9 +306,9 @@ exports.IceTeaWeb3 = class IceTeaWeb3 {
       return this.rpc.call("unsubscribe", {"query": "tm.event='"+eventName+"'"});
   }
 
-  onMessage (eventName, callback) {
+  onMessage (callback) {
       if(!this.isWebSocket) throw new Error('onMessage for WebSocket only');
-      this.rpc.registerEventListener('onMessage',_callback);
+      this.rpc.registerEventListener('onMessage',callback);
   }
 
   onResponse(callback) {
