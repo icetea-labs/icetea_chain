@@ -1,6 +1,8 @@
+const { ContractMode } = require('../../../enum')
+
 module.exports = mode => {
-    if (mode === 1) {
-        return require('./decorated');
-    }
-    return require('./raw');
+  if (mode === ContractMode.JS_DECORATED) {
+    return require('./decorated')
+  }
+  return require('./raw')
 }

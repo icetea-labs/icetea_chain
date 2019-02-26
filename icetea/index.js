@@ -1,160 +1,158 @@
 const createABCIServer = require('abci')
-  , msgpack = require('msgpack5')();
 
-const Worker = require('./Worker');
-const Tx = require('./Tx');
+const codec = require('./helper/codec')
 
-const worker = new Worker();
+const Worker = require('./Worker')
+const Tx = require('./Tx')
+
+const worker = new Worker()
 
 // turn on debug logging
 // require('debug').enable('abci*')
 
-let handlers = {
-  info(req) {
-    return {
+const handlers = {
+
+  info (req) {
+    return Object.assign({
       data: 'icetea',
       version: '0.0.1',
-      appVerion: '0.0.1',
-      lastBlockHeight: worker.lastBlock?worker.lastBlock.number:0,
-      lastBlockAppHash: Buffer.alloc(0)
-    }
+      appVerion: '0.0.1'
+    }, worker.info())
   },
 
-  checkTx(req) {
-
-    let reqTx = decodeBytes(req.tx);
-    //console.log("checkTx", reqTx);
+  checkTx (req) {
+    let reqTx = codec.decode(req.tx)
+    // console.log("checkTx", reqTx);
 
     const tx = new Tx(
-      reqTx.from, 
-      reqTx.to, 
-      reqTx.value, 
+      reqTx.from,
+      reqTx.to,
+      reqTx.value,
       reqTx.fee,
-      JSON.parse(reqTx.data || "{}"),
-      reqTx.nonce);
-    tx.setSignature(reqTx.signature);
+      JSON.parse(reqTx.data || '{}'),
+      reqTx.nonce)
+    tx.setSignature(reqTx.signature)
 
     try {
-      worker.checkTx(tx);
+      worker.checkTx(tx)
       return {}
     } catch (err) {
-      return {code: 1, log: String(err)}
+      return { code: 1, log: String(err) }
     }
   },
 
-  beginBlock(req) {
-    const hash = req.hash.toString("hex");
-    const number = req.header.height.toNumber();
-    const timestamp = req.header.time.seconds.toNumber();
-    worker.beginBlock({number, hash, timestamp});
-    return {}; // tags
+  beginBlock (req) {
+    const hash = req.hash.toString('hex')
+    const number = req.header.height.toNumber()
+    console.log('beginblock', number)
+    const timestamp = req.header.time.seconds.toNumber()
+    worker.beginBlock({ number, hash, timestamp })
+    return {} // tags
   },
 
-  async deliverTx(req) {
-    let reqTx = decodeBytes(req.tx);
-    //console.log("deliverTx", reqTx);
+  async deliverTx (req) {
+    let reqTx = codec.decode(req.tx)
+    // console.log("deliverTx", reqTx);
 
     const tx = new Tx(
-      reqTx.from, 
-      reqTx.to, 
-      parseFloat(reqTx.value) || 0, 
+      reqTx.from,
+      reqTx.to,
+      parseFloat(reqTx.value) || 0,
       parseFloat(reqTx.fee) || 0,
-      JSON.parse(reqTx.data || "{}"),
-      reqTx.nonce);
-    tx.setSignature(reqTx.signature);
+      JSON.parse(reqTx.data || '{}'),
+      reqTx.nonce)
+    tx.setSignature(reqTx.signature)
 
     try {
-      worker.verifyTx(tx);
-      const [data, tags] = await worker.execTx(tx);
-      const result = {};
-      if (typeof data !== "undefined") {
-        result.data = Buffer.from(JSON.stringify(data));
+      worker.verifyTx(tx)
+      const [data, tags] = await worker.execTx(tx)
+      const result = {}
+      if (typeof data !== 'undefined') {
+        result.data = Buffer.from(JSON.stringify(data))
       }
 
-      result.tags = [];
-      if (typeof tags !== "undefined" && Object.keys(tags).length) {
+      result.tags = []
+      if (typeof tags !== 'undefined' && Object.keys(tags).length) {
         Object.keys(tags).forEach((key) => {
-          result.tags.push({key: Buffer.from(key), value: Buffer.from(tags[key])});
-        });
+          result.tags.push({ key: Buffer.from(key), value: Buffer.from(tags[key]) })
+        })
       }
-      
-      // add system tags
-      result.tags.push({key: Buffer.from("tx.from"), value: Buffer.from(tx.from)});
-      result.tags.push({key: Buffer.from("tx.to"), value: Buffer.from(tx.isContractCreation()?data:tx.to)});
 
-      //console.log(result);
-      return result;
-      
+      // add system tags
+      result.tags.push({ key: Buffer.from('tx.from'), value: Buffer.from(tx.from) })
+      result.tags.push({ key: Buffer.from('tx.to'), value: Buffer.from(tx.isContractCreation() ? data : tx.to) })
+
+      // console.log(result);
+      return result
     } catch (err) {
-      return {code: 1, log: String(err)}
+      return { code: 1, log: String(err) }
     }
   },
 
-  endBlock(...args) {
-    //console.log("endBlock", ...args);
-    return {};
+  endBlock (...args) {
+    // console.log("endBlock", ...args);
+    return {}
   },
 
-  commit(...args) {
-    //console.log("commit", ...args);
-    return {data: Buffer.alloc(0)}; // return the block stateRoot
+  async commit (req) {
+    console.log('commit', req)
+    return { data: await worker.commit() } // return the block stateRoot
   },
 
-  query(req) {
-    //console.log(req.path, req.data.toString(), req.prove || false);
+  async query (req) {
+    try {
+      // console.log(req.path, req.data.toString(), req.prove || false);
 
-    //const prove = !!req.prove;
-    const path = req.path;
-    const data = req.data.toString();
+      // const prove = !!req.prove;
+      const path = req.path
+      const data = req.data.toString()
 
-    switch (path) {
-      case "balance":
-        return replyQuery({
-          balance: worker.balanceOf(data)
-        })
-      case "state":
-        return replyQuery(worker);
-      case "contracts":
-        return replyQuery(worker.getContractAddresses());
-      case "funcs": {
-        let arr = [];
-        if (data) {
-            arr = worker.getFuncNames(data);
-        } 
-        return replyQuery(arr);
-      }
-      case "call": {
-        try {
-          const options = JSON.parse(data);
-          const result = replyQuery(worker.callViewFunc(options.address, options.name, options.params, options.options));
+      switch (path) {
+        case 'balance':
           return replyQuery({
-            success: true,
-            data: result
+            balance: worker.balanceOf(data)
           })
-        } catch (error) {
-          console.log(error)
-          return replyQuery({
-            success: false,
-            error: String(error)
-          })
+        case 'state':
+          return replyQuery(worker)
+        case 'contracts':
+          return replyQuery(worker.getContractAddresses())
+        case 'metadata': {
+          return replyQuery(worker.getMetadata(data))
+        }
+        case 'call': {
+          try {
+            const options = JSON.parse(data)
+            const result = await worker.callViewFunc(options.address, options.name, options.params, options.options)
+            return replyQuery({
+              success: true,
+              data: result
+            })
+          } catch (error) {
+            console.log(error)
+            return replyQuery({
+              success: false,
+              error: String(error)
+            })
+          }
         }
       }
+
+      return { code: 1, info: 'Path not supported' }
+    } catch (error) {
+      return { code: 1, info: String(error) }
     }
-
-    return {code: 1, info: "Path not supported"}
-  },
+  }
 }
 
-// make sure the transaction data is 4 bytes long
-function decodeBytes(bytes) {
-  return msgpack.decode(bytes);
+function replyQuery (data) {
+  return { code: 0, info: JSON.stringify(data) }
 }
 
-function replyQuery(data) {
-  return {code: 0, info: JSON.stringify(data)};
-}
-
-let port = 26658
-createABCIServer(handlers).listen(port, () => {
-  console.log(`listening on port ${port}`)
+const port = 26658
+worker.loadState().then(() => {
+  createABCIServer(handlers).listen(port, () => {
+    console.log(`listening on port ${port}`)
+  })
+}).catch(error => {
+  console.error(error)
 })

@@ -31,22 +31,17 @@
                 <select id="srcMode">
                     <option value="0">Raw JS</option>
                     <option value="1" selected>Decorated JS</option>
-                    <option value="2">Wasm (Rust wasm_bindgen)</option>
+                    <option value="100">Wasm (Rust wasm_bindgen)</option>
                 </select>
             </label></p>
-            <p data-modes="2" class="hide"><label>Wasm file: <input type="file" id="wasmFile" accept=".wasm"></label></p>
+            <p data-modes="100" class="hide"><label>Wasm file: <input type="file" id="wasmFile" accept=".wasm"></label></p>
             <section data-modes="0;1">
             <p><label>JS source:</label></p>
             <p><textarea id="src" style="width: 600px;height: 280px;">@contract class SimpleStore  {
-    @state #value
-
+    @state value
     @transaction setValue(value) {
-        this.emitEvent("ValueChanged", {oldValue: this.#value, newValue: value})
-        this.#value = value
-    }
-
-    getValue() {
-        return this.#value
+        this.value = value
+        this.emitEvent("ValueChanged", {oldValue: this.value, newValue: value})
     }
 }</textarea></p>
 </section>
