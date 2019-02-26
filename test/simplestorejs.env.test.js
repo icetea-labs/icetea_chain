@@ -1,4 +1,4 @@
-/* global jest describe test expect */
+/* global jest describe test expect beforeAll afterAll */
 
 const { IceTeaWeb3 } = require('../tweb3')
 const ecc = require('../icetea/helper/ecc')
@@ -14,7 +14,7 @@ beforeAll(() => {
 
 afterAll(() => {
   tweb3.close()
-});
+})
 
 async function testSimpleStore (mode, src) {
   const privateKey = '5K4kMyGz839wEsG7a9xvPNXCmtgFE5He2Q8y9eurEQ4uNgpSRq7'
@@ -57,6 +57,16 @@ async function testSimpleStore (mode, src) {
 
   const newToBalance = await tweb3.getBalance(to)
   expect(newToBalance.balance).toBe(value)
+
+  // Verify getContracts
+  const contracts = await tweb3.getContracts()
+  expect(contracts).toContain(to)
+
+  // Verify medatada
+  const meta = await tweb3.getMetadata(to)
+  expect(meta.getOwner.decorators[0]).toEqual('view')
+  expect(meta.getValue.decorators[0]).toEqual('view')
+  expect(meta.setValue.decorators[0]).toEqual('transaction')
 
   // check owner
   const owner = (await tweb3.callReadonlyContractMethod(to, 'getOwner')).data
@@ -115,6 +125,7 @@ describe('SimpleStore', () => {
             default:
                 // call unsupported function -> inform caller our function list
                 return {
+                    'getOwner': { decorators: ['view'] },
                     'getValue': { decorators: ['view'] },
                     'setValue': { decorators: ['transaction'] }
                 }
