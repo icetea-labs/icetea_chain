@@ -1,5 +1,3 @@
-// Current prelude for using `wasm_bindgen`, and this'll get smaller over time!
-#![feature(proc_macro, wasm_custom_section, wasm_import_module)]
 extern crate wasm_bindgen;
 use wasm_bindgen::prelude::*;
 
@@ -16,13 +14,13 @@ extern {
 // Smart contract entry point
 #[wasm_bindgen]
 pub fn main(operation: &str, param: &JsValue) -> JsValue {
-  let params: Vec<JsValue> = param.into_serde().unwrap();
+  let params: Vec<f64> = param.into_serde().unwrap();
   log(&format!("[RUST] Hello {}, you call method {}", get_sender(), operation));
   if operation == "get_value" {
     return get_value();
   } else if operation == "set_value" {
     if params.len() > 0 {
-      set_value(&params[0]);
+      set_value(&JsValue::from_f64(params[0]));
     }
   }
   return JsValue::from_bool(true);

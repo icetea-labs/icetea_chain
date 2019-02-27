@@ -1,5 +1,3 @@
-// Current prelude for using `wasm_bindgen`, and this'll get smaller over time!
-#![feature(proc_macro, wasm_custom_section, wasm_import_module)]
 extern crate wasm_bindgen;
 use wasm_bindgen::prelude::*;
 
@@ -11,6 +9,7 @@ extern {
   fn get_address() -> String;
   fn now() -> i32;
   fn get_block_hash() -> String;
+  fn get_block_number() -> i32;
 }
 
 // Smart contract entry point
@@ -25,5 +24,5 @@ pub fn main(operation: &str) {
 pub fn hello() {
   log(&format!("[RUST] Hello {} from {}", get_sender(), get_address()));
   log(&format!("This block is mined at {}", now()));
-  log(&format!("The block hash is {}", get_block_hash()));
+  log(&format!("The block hash is {}, block number is {}", get_block_hash(), get_block_number()));
 }
