@@ -1,3 +1,4 @@
+extern crate js_sys;
 extern crate wasm_bindgen;
 use wasm_bindgen::prelude::*;
 
@@ -14,13 +15,14 @@ extern {
 // Smart contract entry point
 #[wasm_bindgen]
 pub fn main(operation: &str, param: &JsValue) -> JsValue {
-  let params: Vec<f64> = param.into_serde().unwrap();
   log(&format!("[RUST] Hello {}, you call method {}", get_sender(), operation));
+  let params = js_sys::Array::from(param);
   if operation == "get_value" {
     return get_value();
   } else if operation == "set_value" {
-    if params.len() > 0 {
-      set_value(&JsValue::from_f64(params[0]));
+    if params.length() > 0 {
+      let need_param = js_sys::Reflect::get(&params, &JsValue::from_f64(0.0)).unwrap();
+      set_value(&need_param)
     }
   }
   return JsValue::from_bool(true);
