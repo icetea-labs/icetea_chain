@@ -25,5 +25,11 @@ async function test (times) {
   tweb3.close()
 }
 
+let times = 50
+if (process.argv.length > 2) {
+  times = parseInt(process.argv[2]) || times
+}
+
+console.log(`Create ${times} transactions...`)
 const START = Date.now()
-test(50)
+test(times)
