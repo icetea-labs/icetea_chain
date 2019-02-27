@@ -190,6 +190,42 @@ const wasm_bindgen = function ({ log, importTableName, save_int, load_int, get_s
     }
   }
 
+  __exports.__wbg_error_f7214ae7db04600c = function (arg0, arg1) {
+    let varg0 = getStringFromWasm(arg0, arg1);
+
+    varg0 = varg0.slice();
+    wasm.__wbindgen_free(arg0, arg1 * 1);
+
+    try {
+      console.error(varg0);
+    } catch (e) {
+      console.error("wasm-bindgen: imported JS function that was not marked as `catch` threw an error:", e);
+      throw e;
+    }
+  }
+
+  __exports.__wbg_new_a99726b0abef495b = function () {
+    try {
+      return addHeapObject(new Error());
+    } catch (e) {
+      console.error("wasm-bindgen: imported JS function that was not marked as `catch` threw an error:", e);
+      throw e;
+    }
+  }
+
+  __exports.__wbg_stack_4931b18709aff089 = function (ret, arg0) {
+    try {
+      const retptr = passStringToWasm(getObject(arg0).stack);
+      const retlen = WASM_VECTOR_LEN;
+      const mem = getUint32Memory();
+      mem[ret / 4] = retptr;
+      mem[ret / 4 + 1] = retlen;
+    } catch (e) {
+      console.error("wasm-bindgen: imported JS function that was not marked as `catch` threw an error:", e);
+      throw e;
+    }
+  }
+
   __exports.__wbindgen_object_drop_ref = function (i) { dropObject(i) }
 
   __exports.__wbindgen_string_new = function (p, l) {
