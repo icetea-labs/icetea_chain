@@ -41,7 +41,6 @@ exports.contextForWrite = (tx, block, stateTable, { address, fname, fparams }) =
       return ctx._state.hasOwnProperty(key) ? ctx._state[key] : (state.hasOwnProperty(key) ? state[key] : 0)
     },
     save: (key, value) => {
-      console.log(key, value)
       ctx._state[key] = value
     }
   }

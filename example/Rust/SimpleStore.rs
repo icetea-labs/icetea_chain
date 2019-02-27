@@ -21,7 +21,7 @@ pub fn main(operation: &str, param: &JsValue) -> JsValue {
     return get_value();
   } else if operation == "set_value" {
     if params.length() > 0 {
-      let need_param = js_sys::Reflect::get(&params, &JsValue::from_f64(0.0)).unwrap();
+      let need_param = js_sys::Reflect::get(&params, &JsValue::from_f64(0.0)).unwrap(); // cannot see better way now
       set_value(&need_param)
     }
   }

@@ -222,6 +222,10 @@ const wasm_bindgen = function ({ log, importTableName, save_int, load_int, get_s
     }
   }
 
+  function _assertNum (n) {
+    if (typeof (n) !== 'number') throw new Error('expected a number argument')
+  }
+
   __exports.__wbg_error_f7214ae7db04600c = function (arg0, arg1) {
     let varg0 = getStringFromWasm(arg0, arg1)
 
@@ -264,16 +268,16 @@ const wasm_bindgen = function ({ log, importTableName, save_int, load_int, get_s
     return addHeapObject(getStringFromWasm(p, l))
   }
 
-  __exports.__wbindgen_boolean_new = function (v) {
-    return addHeapObject(v === 1)
+  __exports.__wbindgen_string_get = function (i, len_ptr) {
+    let obj = getObject(i);
+    if (typeof(obj) !== 'string') return 0;
+    const ptr = passStringToWasm(obj);
+    getUint32Memory()[len_ptr / 4] = WASM_VECTOR_LEN;
+    return ptr;
   }
 
-  __exports.__wbindgen_string_get = function (i, len_ptr) {
-    let obj = getObject(i)
-    if (typeof (obj) !== 'string') { return 0 }
-    const [ptr, len] = passStringToWasm(obj)
-    getUint32Memory()[len_ptr / 4] = len
-    return ptr
+  __exports.__wbindgen_boolean_new = function (v) {
+    return addHeapObject(v === 1)
   }
 
   __exports.__wbindgen_number_new = function (i) {
@@ -291,6 +295,10 @@ const wasm_bindgen = function ({ log, importTableName, save_int, load_int, get_s
     const ptr = passStringToWasm(JSON.stringify(getObject(idx)))
     getUint32Memory()[ptrptr / 4] = ptr
     return WASM_VECTOR_LEN
+  }
+
+  __exports.__wbindgen_json_parse = function (ptr, len) {
+    return addHeapObject(JSON.parse(getStringFromWasm(ptr, len)));
   }
 
   __exports.__wbindgen_debug_string = function (i, len_ptr) {
