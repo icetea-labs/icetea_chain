@@ -1,4 +1,4 @@
-const wasm_bindgen = function ({ log, importTableName, save_int, load_int, get_sender, get_address, now, get_block_hash, get_block_number, load_string, save_string, load, save }) { // eslint-disable-line
+const wasm_bindgen = function ({ log, importTableName, get_sender, get_address, now, get_block_hash, get_block_number, get_msg_value, load, save }) { // eslint-disable-line
   var wasm
   const __exports = {}
 
@@ -101,6 +101,18 @@ const wasm_bindgen = function ({ log, importTableName, save_int, load_int, get_s
       return get_block_number()
     } catch (e) {
       console.error('wasm-bindgen: imported JS function that was not marked as `catch` threw an error:', e)
+      throw e
+    }
+  }
+
+  __exports.__wbg_getmsgvalue_e530ff9a41fe655f = function () {
+    try {
+      return get_msg_value()
+    } catch (e) {
+      console.error(
+        'wasm-bindgen: imported JS function that was not marked as `catch` threw an error:',
+        e
+      )
       throw e
     }
   }
@@ -269,11 +281,11 @@ const wasm_bindgen = function ({ log, importTableName, save_int, load_int, get_s
   }
 
   __exports.__wbindgen_string_get = function (i, len_ptr) {
-    let obj = getObject(i);
-    if (typeof(obj) !== 'string') return 0;
-    const ptr = passStringToWasm(obj);
-    getUint32Memory()[len_ptr / 4] = WASM_VECTOR_LEN;
-    return ptr;
+    let obj = getObject(i)
+    if (typeof (obj) !== 'string') return 0
+    const ptr = passStringToWasm(obj)
+    getUint32Memory()[len_ptr / 4] = WASM_VECTOR_LEN
+    return ptr
   }
 
   __exports.__wbindgen_boolean_new = function (v) {
@@ -298,7 +310,7 @@ const wasm_bindgen = function ({ log, importTableName, save_int, load_int, get_s
   }
 
   __exports.__wbindgen_json_parse = function (ptr, len) {
-    return addHeapObject(JSON.parse(getStringFromWasm(ptr, len)));
+    return addHeapObject(JSON.parse(getStringFromWasm(ptr, len)))
   }
 
   __exports.__wbindgen_debug_string = function (i, len_ptr) {
