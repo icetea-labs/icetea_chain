@@ -27,6 +27,21 @@ exports.contextForWrite = (tx, block, stateTable, { address, fname, fparams }) =
     now: () => block.timestamp,
     get_block_hash: () => block.hash,
     get_block_number: () => block.number,
+    load_contract: (to) => {
+      const worker = new Worker(stateTable)
+      return new Proxy({}, {
+        get (obj, method) {
+          const real = obj[method]
+          if (!real) {
+            return (...params) => {
+              const tx = new Tx(address, to, 0, 0, { name: method, params }, 0)
+              return worker.callContract(tx, block, stateTable)
+            }
+          }
+          return real
+        }
+      })
+    },
     _state: {},
     load: (key) => {
       return ctx._state.hasOwnProperty(key) ? ctx._state[key] : (state.hasOwnProperty(key) ? state[key] : 0)

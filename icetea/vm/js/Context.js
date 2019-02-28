@@ -29,17 +29,7 @@ exports.contextForWrite = (tx, block, stateTable, { address, fname, fparams }) =
             const real = obj[method]
             if (!real) {
               return (...params) => {
-                const tx = new Tx(
-                  address,
-                  to,
-                  0,
-                  0,
-                  {
-                    name: method,
-                    params
-                  },
-                  0
-                )
+                const tx = new Tx(address, to, 0, 0, { name: method, params }, 0)
                 return worker.callContract(tx, theBlock, stateTable)
               }
             }

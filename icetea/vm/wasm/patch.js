@@ -236,9 +236,41 @@ const wasm_bindgen = function ({ log, importTableName, get_sender, get_address, 
     view[exnptr / 4 + 1] = addHeapObject(e)
   }
 
+  __exports.__wbg_apply_b7cb7040572f956e = function (arg0, arg1, arg2, exnptr) {
+    try {
+      return addHeapObject(getObject(arg0).apply(getObject(arg1), getObject(arg2)))
+    } catch (e) {
+      handleError(exnptr, e)
+    }
+  }
+
   __exports.__wbg_call_b1011dd6b074a84c = function (arg0, arg1, exnptr) {
     try {
       return addHeapObject(getObject(arg0).call(getObject(arg1)))
+    } catch (e) {
+      handleError(exnptr, e)
+    }
+  }
+
+  __exports.__wbg_call_88d2a6153573084e = function (arg0, arg1, arg2, exnptr) {
+    try {
+      return addHeapObject(getObject(arg0).call(getObject(arg1), getObject(arg2)))
+    } catch (e) {
+      handleError(exnptr, e)
+    }
+  }
+
+  __exports.__wbg_call_7d492f332f3e8798 = function (arg0, arg1, arg2, arg3, exnptr) {
+    try {
+      return addHeapObject(getObject(arg0).call(getObject(arg1), getObject(arg2), getObject(arg3)))
+    } catch (e) {
+      handleError(exnptr, e)
+    }
+  }
+
+  __exports.__wbg_call_f7834149513195b8 = function (arg0, arg1, arg2, arg3, arg4, exnptr) {
+    try {
+      return addHeapObject(getObject(arg0).call(getObject(arg1), getObject(arg2), getObject(arg3), getObject(arg4)))
     } catch (e) {
       handleError(exnptr, e)
     }
