@@ -61,6 +61,16 @@ pub fn main(operation: &str, param: &JsValue) -> JsValue {
       let value = (js_sys::Reflect::get(&params, &JsValue::from_f64(2.0)).unwrap()).as_f64().unwrap();
       return JsValue::from_bool(transfer_from(&from, &to, value));
     },
+    "increase_allowance" => {
+      let spender = (js_sys::Reflect::get(&params, &JsValue::from_f64(0.0)).unwrap()).as_string().unwrap();
+      let value = (js_sys::Reflect::get(&params, &JsValue::from_f64(1.0)).unwrap()).as_f64().unwrap();
+      return JsValue::from_bool(increase_allowance(&spender, value));
+    },
+    "decrease_allowance" => {
+      let spender = (js_sys::Reflect::get(&params, &JsValue::from_f64(0.0)).unwrap()).as_string().unwrap();
+      let value = (js_sys::Reflect::get(&params, &JsValue::from_f64(1.0)).unwrap()).as_f64().unwrap();
+      return JsValue::from_bool(decrease_allowance(&spender, value));
+    },
     &_ => log(&format!("[RUST] Method not found"))
   }
 

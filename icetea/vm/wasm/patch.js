@@ -1,4 +1,4 @@
-const wasm_bindgen = function ({ log, importTableName, get_sender, get_address, now, get_block_hash, get_block_number, get_msg_value, load, save }) { // eslint-disable-line
+const wasm_bindgen = function ({ log, importTableName, get_sender, get_address, now, get_block_hash, get_block_number, get_msg_value, load, save, load_contract }) { // eslint-disable-line
   var wasm
   const __exports = {}
 
@@ -158,6 +158,16 @@ const wasm_bindgen = function ({ log, importTableName, get_sender, get_address, 
     }
   }
 
+  __exports.__wbg_loadcontract_89a5ded7e7be8839 = function (arg0, arg1) {
+    let varg0 = getStringFromWasm(arg0, arg1)
+    try {
+      return addHeapObject(load_contract(varg0))
+    } catch (e) {
+      console.error('wasm-bindgen: imported JS function that was not marked as `catch` threw an error:', e)
+      throw e
+    }
+  }
+
   __exports.__wbg_jsonstringify_8bf98dfd8c0f9963 = function (ret, arg0) {
     try {
       const retptr = passStringToWasm(JSON.stringify(getObject(arg0)))
@@ -224,6 +234,18 @@ const wasm_bindgen = function ({ log, importTableName, get_sender, get_address, 
     const view = getUint32Memory()
     view[exnptr / 4] = 1
     view[exnptr / 4 + 1] = addHeapObject(e)
+  }
+
+  __exports.__wbg_call_b1011dd6b074a84c = function (arg0, arg1, exnptr) {
+    try {
+      return addHeapObject(getObject(arg0).call(getObject(arg1)))
+    } catch (e) {
+      handleError(exnptr, e)
+    }
+  }
+
+  __exports.__wbindgen_object_clone_ref = function (idx) {
+    return addHeapObject(getObject(idx))
   }
 
   __exports.__wbg_get_e323dac36fd230a3 = function (arg0, arg1, exnptr) {
@@ -301,6 +323,10 @@ const wasm_bindgen = function ({ log, importTableName, get_sender, get_address, 
     if (typeof (obj) === 'number') { return obj }
     getUint8Memory()[invalid] = 1
     return 0
+  }
+
+  __exports.__wbindgen_is_function = function (i) {
+    return typeof (getObject(i)) === 'function' ? 1 : 0
   }
 
   __exports.__wbindgen_json_serialize = function (idx, ptrptr) {

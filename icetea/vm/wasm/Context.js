@@ -1,4 +1,6 @@
 const _ = require('lodash')
+const Worker = require('../../Worker')
+const Tx = require('../../Tx')
 
 const emptyBlock = {
   timestamp: 0,
@@ -50,22 +52,23 @@ exports.contextForView = exports.contextForView = (stateTable, address, name, pa
     importTableName,
     get_msg_name: () => name,
     get_msg_param: () => params,
+    get_msg_value: () => { throw new Error('Cannot get message value inside a view function') },
     get_sender: () => options.from,
     get_address: () => address,
     now: () => block.timestamp,
     get_block_hash: () => block.hash,
     get_block_number: () => block.number,
-    load_int: (key) => {
-      return state[key] || 0
-    },
-    save_int: () => {
-      throw new Error('Cannot change state inside a view function')
-    },
-    load_string: (key) => {
-      return state[key] || ''
-    },
-    save_string: () => {
-      throw new Error('Cannot change state inside a view function')
+    load_contract: (addr) => {
+      const worker = new Worker(stateTable)
+      return new Proxy({}, {
+        get (obj, method) {
+          const real = obj[method]
+          if (!real) {
+            return (...params) => worker.callViewFunc(addr, method, params, { from: address })
+          }
+          return real
+        }
+      })
     },
     load: (key) => {
       return state[key] || 0
