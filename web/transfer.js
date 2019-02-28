@@ -1,5 +1,5 @@
 import $ from 'jquery'
-import { parseParamsFromField, registerTxForm } from './domhelper'
+import { parseParamsFromField, registerTxForm } from './helper'
 window.$ = $
 
 function buildData () {

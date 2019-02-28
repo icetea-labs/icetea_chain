@@ -1,6 +1,6 @@
 import JSONFormatter from 'json-formatter-js'
 import handlebars from 'handlebars/dist/handlebars.min.js'
-import { decodeTX } from './utils'
+import { decodeTX } from '../tweb3/utils'
 import tweb3 from './tweb3'
 
 const blockTemplate = handlebars.compile(document.getElementById('blockTemplate').innerHTML)
@@ -62,6 +62,10 @@ function showMessage () {
       document.getElementById('info').textContent = ''
     }, 4000)
   }
+
+  // tweb3.subscribe('NewBlock',{}, message => {
+  //   console.log("message: ", JSON.parse(message));
+  // });
 }
 
 let blockCount = 0
@@ -75,7 +79,19 @@ async function loadData () {
     document.getElementById('blocks').innerHTML = blockTemplate(fmtBlocks(myBlocks))
 
     // load txs info
-    const myTxs = await tweb3.searchTransactions('tx.height>0')
+    const MAX_SHOW_TX = 30 // only show last 30 txs
+    let txCount = 0
+    let fromBlock = myBlocks[0].header.height
+    for (let i = 0; i < blockCount; i++) {
+      const num = +myBlocks[i].header.num_txs
+      txCount += num
+      fromBlock--
+      if (txCount > MAX_SHOW_TX) {
+        break
+      }
+    }
+
+    const myTxs = await tweb3.searchTransactions('tx.height>' + fromBlock, { per_page: txCount })
     if (myTxs.txs && myTxs.txs.length) {
       // console.log(myTxs)
       document.getElementById('transactions').innerHTML = txTemplate(fmtTxs(myTxs.txs))

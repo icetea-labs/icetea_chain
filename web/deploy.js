@@ -1,6 +1,6 @@
 import $ from 'jquery'
-import * as utils from './domhelper'
-import { switchEncoding } from './utils'
+import * as utils from './helper'
+import { switchEncoding } from '../tweb3/utils'
 window.$ = $
 
 var wasmBuffer = null
