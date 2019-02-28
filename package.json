@@ -4,11 +4,13 @@
   "description": "Tendermint-based icetea",
   "main": "server.js",
   "scripts": {
-    "test": "standard \"web/**/*.js\" \"icetea/**/*.js\"",
-    "fix": "standard \"web/**/*.js\" \"icetea/**/*.js\" --fix",
+    "test": "standard \"web/**/*.js\" \"icetea/**/*.js\" \"test/**/*.js\"",
+    "fix": "standard \"web/**/*.js\" \"icetea/**/*.js\" \"test/**/*.js\" --fix",
+    "jest": "jest",
     "start": "node icetea",
     "dev": "tendermint node & npm start & webpack-dev-server --content-base web --inline --hot --port 3001 --open",
     "dev2": "tendermint node & npm start & webpack-dev-server --content-base web --inline --hot --port 3001",
+    "dev3": "npm start & webpack-dev-server --content-base web --inline --hot --port 3001",
     "app": "webpack-dev-server --content-base web --inline --hot --port 3001 --open",
     "reset": "tendermint unsafe_reset_all & node ./scripts/destroy.js",
     "dump": "node ./scripts/dump.js",
@@ -39,13 +41,16 @@
     "npx": "10.2.0",
     "prismjs": "^1.15.0",
     "recast": "0.16.2",
-    "webpack-dev-server": "3.1.14"
+    "webpack-dev-server": "3.1.14",
+    "websocket": "^1.0.28",
+    "websocket-as-promised": "^0.9.0"
   },
   "devDependencies": {
     "@babel/core": "7.2.2",
     "@babel/preset-env": "7.3.1",
     "babel-loader": "8.0.5",
     "copy-webpack-plugin": "4.6.0",
+    "jest": "^24.1.0",
     "nodemon": "1.18.9",
     "standard": "^12.0.1",
     "webpack": "4.29.3",

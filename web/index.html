@@ -13,27 +13,7 @@
             <a href="/contract.html">Read/Write Contract</a>
             <a href="/wallet.html">Wallet</a>
         </nav>
-        <h1>Blocks</h1>
-        <section id="blocks">No blocks.</section>
-        <script id="blockTemplate" type="text/x-handlebars-template">
-            <table>
-                <tr>
-                    <th>Hash</th>
-                    <th>Height</th>
-                    <th>Time</th>
-                    <th>#TX</th>
-                </tr>
-                {{#each this}}
-                <tr>
-                    <td>{{shash}}</td>
-                    <td>{{height}}</td>
-                    <td>{{timestamp}}</td>
-                    <td>{{txCount}}</td>
-                </tr>
-                {{/each}}
-            </table>
-        </script>
-        <h2>Transactions</h2>
+        <h1>Transactions</h1>
         <section id="transactions">No transactions.</section>
         <script id="txTemplate" type="text/x-handlebars-template">
             <table>
@@ -57,8 +37,30 @@
                 {{/each}}
             </table>
         </script>
+
         <h2>State inspect (for debug)</h2>
         <section id="debug">Nothing.</section>
+
+        <h2>Blocks</h2>
+        <section id="blocks">No blocks.</section>
+        <script id="blockTemplate" type="text/x-handlebars-template">
+            <table>
+                <tr>
+                    <th>Hash</th>
+                    <th>Height</th>
+                    <th>Time</th>
+                    <th>#TX</th>
+                </tr>
+                {{#each this}}
+                <tr>
+                    <td>{{shash}}</td>
+                    <td>{{height}}</td>
+                    <td>{{timestamp}}</td>
+                    <td>{{txCount}}</td>
+                </tr>
+                {{/each}}
+            </table>
+        </script>
     </div>
     <script src="index.js"></script>
 </body>
