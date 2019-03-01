@@ -492,8 +492,7 @@ const wasm_bindgen = function ({ log, importTableName, get_sender, get_address, 
 module.exports = (wasmBuffer) => {
   return async (ctx) => {
     var bindgen = wasm_bindgen(ctx)
-    return bindgen(wasmBuffer).then(() => {
-      return bindgen.main(ctx.get_msg_name(), ctx.get_msg_param())
-    })
+    await bindgen(wasmBuffer)
+    return bindgen.main(ctx.get_msg_name(), ctx.get_msg_param())
   }
 }
