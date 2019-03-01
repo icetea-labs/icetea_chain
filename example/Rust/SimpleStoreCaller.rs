@@ -1,5 +1,10 @@
+extern crate futures;
 extern crate wasm_bindgen;
+extern crate wasm_bindgen_futures;
+
 use wasm_bindgen::prelude::*;
+use wasm_bindgen_futures::{future_to_promise};
+use futures::future::ok;
 
 const CONTRACT_KEY: &str = "ck";
 
@@ -16,7 +21,7 @@ extern {
 
 // Smart contract entry point
 #[wasm_bindgen]
-pub fn main(operation: &str, param: &JsValue) -> JsValue {
+pub fn main(operation: &str, param: &JsValue) -> js_sys::Promise {
   let params = js_sys::Array::from(param);
 
   match operation {
@@ -31,13 +36,16 @@ pub fn main(operation: &str, param: &JsValue) -> JsValue {
     &_ => log(&format!("[RUST] Method not found"))
   }
 
-  return JsValue::from_bool(true);
+  // return JsFuture::from(js_sys::Promise::resolve(&JsValue::NULL));
+  return js_sys::Promise::resolve(&JsValue::from_bool(true));
 }
 
 #[wasm_bindgen]
-pub fn set_value(value: &JsValue) -> JsValue {
+pub fn set_value(value: &JsValue) -> js_sys::Promise {
   let contract_address = load(CONTRACT_KEY).as_string().unwrap();
   let params = js_sys::Array::new();
   params.push(value);
-  return call_contract(&contract_address, "set_value", params);
+  let future = ok::<JsValue, JsValue>(call_contract(&contract_address, "set_value", params));
+  let promise = future_to_promise(future);
+  return promise
 }

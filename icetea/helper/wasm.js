@@ -11,7 +11,7 @@ exports.parseMetadata = (buffer) => {
       const fn = path.node.name
       if (fn === 'main') {
         mainFnFound = true
-      } else if (!['memory', '__wbindgen_malloc', '__wbindgen_free', '__rustc_debug_gdb_scripts_section__'].includes(fn)) {
+      } else if (!['memory', '__wbindgen_malloc', '__wbindgen_free', '__rustc_debug_gdb_scripts_section__', '__wbg_function_table'].includes(fn)) {
         operations.push(fn)
       }
     },

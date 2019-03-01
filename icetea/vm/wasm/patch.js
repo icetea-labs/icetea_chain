@@ -335,6 +335,50 @@ const wasm_bindgen = function ({ log, importTableName, get_sender, get_address, 
     }
   }
 
+  // new js_sys::Promise
+  __exports.__wbg_new_86c0ea6acca9eed8 = function (arg0, arg1) {
+    let cbarg0 = function (arg0, arg1) {
+      let a = this.a
+      this.a = 0
+      try {
+        return this.f(a, this.b, addHeapObject(arg0), addHeapObject(arg1))
+      } finally {
+        this.a = a
+      }
+    }
+    cbarg0.f = wasm.__wbg_function_table.get(36)
+    cbarg0.a = arg0
+    cbarg0.b = arg1
+    try {
+      try {
+        return addHeapObject(new Promise(cbarg0.bind(cbarg0)))
+      } catch (e) {
+        console.error('wasm-bindgen: imported JS function that was not marked as `catch` threw an error:', e)
+        throw e
+      }
+    } finally {
+      cbarg0.a = cbarg0.b = 0
+    }
+  }
+
+  __exports.__wbg_resolve_5fc6132876c4b96b = function (arg0) {
+    try {
+      return addHeapObject(Promise.resolve(getObject(arg0)))
+    } catch (e) {
+      console.error('wasm-bindgen: imported JS function that was not marked as `catch` threw an error:', e)
+      throw e
+    }
+  }
+
+  __exports.__wbg_then_d745932b7ab63614 = function (arg0, arg1) {
+    try {
+      return addHeapObject(getObject(arg0).then(getObject(arg1)))
+    } catch (e) {
+      console.error('wasm-bindgen: imported JS function that was not marked as `catch` threw an error:', e)
+      throw e
+    }
+  }
+
   __exports.__wbg_stack_4931b18709aff089 = function (ret, arg0) {
     try {
       const retptr = passStringToWasm(getObject(arg0).stack)
@@ -472,6 +516,37 @@ const wasm_bindgen = function ({ log, importTableName, get_sender, get_address, 
     const ptr = passStringToWasm(debug)
     getUint32Memory()[len_ptr / 4] = WASM_VECTOR_LEN
     return ptr
+  }
+
+  __exports.__wbindgen_cb_drop = function (i) {
+    const obj = getObject(i).original
+    dropObject(i)
+    if (obj.cnt-- == 1) {
+      obj.a = 0
+      return 1
+    }
+    return 0
+  }
+
+  __exports.__wbindgen_closure_wrapper288 = function (a, b, _ignored) {
+    const f = wasm.__wbg_function_table.get(28)
+    const d = wasm.__wbg_function_table.get(29)
+    const cb = function (arg0) {
+      this.cnt++
+      let a = this.a
+      this.a = 0
+      try {
+        return f(a, b, addHeapObject(arg0))
+      } finally {
+        this.a = a
+        if (this.cnt-- == 1) d(this.a, b)
+      }
+    }
+    cb.a = a
+    cb.cnt = 1
+    let real = cb.bind(cb)
+    real.original = cb
+    return addHeapObject(real)
   }
 
   __exports.__wbindgen_throw = function (ptr, len) {
