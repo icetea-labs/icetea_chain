@@ -1,8 +1,12 @@
 const fetch = require('node-fetch');
+const { TxOp, ContractMode } = require('../icetea/enum');
 const { signTxData } = require('../icetea/helper/ecc')
-const { switchEncoding, encodeTX, tryParseJson } = require('../tweb3/utils')
+const ecc = require('../icetea/helper/ecc');
+const { switchEncoding, encodeTX, decodeTX, tryParseJson } = require('../tweb3/utils')
 const W3CWebSocket = require('websocket').w3cwebsocket;
 const WebSocketAsPromised = require ('websocket-as-promised');
+const Contract = require ('./Contract');
+
 
 function decodeTags(tx, keepEvents = false) {
   const EMPTY_RESULT = {}
@@ -294,6 +298,10 @@ exports.IceTeaWeb3 = class IceTeaWeb3 {
     if (typeof conditions === "string") {
         query = conditions;
     } else {
+        if (typeof conditions === "function" && typeof callback === "undefined"){
+          callback = conditions;
+          conditions = {};
+        }
         query = Object.keys(conditions).reduce((arr, key) => {
             const value = conditions[key];
             if (key === "fromBlock") {
@@ -348,6 +356,54 @@ exports.IceTeaWeb3 = class IceTeaWeb3 {
       if(!this.isWebSocket) throw new Error('onClose for WebSocket only');
       this.rpc.registerEventListener('onClose',callback);
   }
+
+  contract(address, privateKey) {
+    return new Contract(this, address, privateKey);
+  }
+
+  async deploy(mode, src, privateKey){
+    let tx = this._serializeData(mode, src, privateKey);
+    let res = await this.sendTransactionCommit(tx, privateKey);
+    return tweb3.getTransaction(res.hash).then(result => {
+      if (result.tx_result.code) {
+        const err = new Error(result.tx_result.log);
+        Object.assign(err, result);
+        throw err;
+      }
+      const data = decodeTX(result.tx);
+      // console.log("data1",data);
+      return {
+        hash: result.hash,
+        height: result.height,
+        address: result.tx_result.data,
+        data: {
+            from: data.from,
+            to: result.tx_result.data,
+            value: data.value,
+            fee: data.fee,
+        }
+      }
+  });
+  }
+
+  _serializeData (mode, src, privateKey, params = [], options = {}) {
+    var formData = {};
+    var txData = {
+        op: TxOp.DEPLOY_CONTRACT,
+        mode: mode,
+        params: params
+    }
+    if (mode === ContractMode.JS_DECORATED || mode === ContractMode.JS_RAW) {
+      txData.src = switchEncoding(src, 'utf8', 'base64');
+    } else {
+      txData.src = src;
+    }
+    formData.from = ecc.toPublicKey(privateKey);
+    formData.value = options.value || 0;
+    formData.fee = options.fee || 0;
+    formData.data = txData;
+    return formData;
+  }
 }
 
 class WebSocketProvider {
@@ -387,6 +443,8 @@ class WebSocketProvider {
   }
 
   call(method, params) {
+    // console.log('method: ',method);
+    // console.log('params: ',params);
       return this._call(method, params).then(resp => {
           if (resp.error) {
               const err = new Error(resp.error.message);
