@@ -27,24 +27,14 @@ exports.contextForWrite = (tx, block, stateTable, { address, fname, fparams }) =
     now: () => block.timestamp,
     get_block_hash: () => block.hash,
     get_block_number: () => block.number,
-    load_contract: (to) => {
+    call_contract: (to, method, params) => {
       const worker = new Worker(stateTable)
-      return new Proxy({}, {
-        get (obj, method) {
-          const real = obj[method]
-          if (!real) {
-            return (...params) => {
-              const tx = new Tx(address, to, 0, 0, { name: method, params }, 0)
-              return worker.callContract(tx, block, stateTable)
-            }
-          }
-          return real
-        }
-      })
+      const tx = new Tx(address, to, 0, 0, { name: method, params }, 0)
+      return worker.callContract(tx, block, stateTable)
     },
     _state: {},
     load: (key) => {
-      return ctx._state.hasOwnProperty(key) ? ctx._state[key] : (state.hasOwnProperty(key) ? state[key] : 0)
+      return ctx._state.hasOwnProperty(key) ? ctx._state[key] : (state.hasOwnProperty(key) ? state[key] : null)
     },
     save: (key, value) => {
       ctx._state[key] = value
@@ -73,20 +63,12 @@ exports.contextForView = exports.contextForView = (stateTable, address, name, pa
     now: () => block.timestamp,
     get_block_hash: () => block.hash,
     get_block_number: () => block.number,
-    load_contract: (addr) => {
+    call_contract: (addr, method, params) => {
       const worker = new Worker(stateTable)
-      return new Proxy({}, {
-        get (obj, method) {
-          const real = obj[method]
-          if (!real) {
-            return (...params) => worker.callViewFunc(addr, method, params, { from: address })
-          }
-          return real
-        }
-      })
+      return worker.callViewFunc(addr, method, params, { from: address })
     },
     load: (key) => {
-      return state[key] || 0
+      return state[key] || null
     },
     save: () => {
       throw new Error('Cannot change state inside a view function')

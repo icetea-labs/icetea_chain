@@ -11,7 +11,7 @@ extern {
   fn get_address() -> String;
   fn load(key: &str) -> JsValue;
   fn save(key: &str, value: &JsValue);
-  fn load_contract(address: &str) -> JsValue;
+  fn call_contract(address: &str, method: &str, params: js_sys::Array) -> JsValue;
 }
 
 // Smart contract entry point
@@ -32,17 +32,6 @@ pub fn main(operation: &str, param: &JsValue) {
 #[wasm_bindgen]
 pub fn test() {
   let contract_address = load(CONTRACT_KEY).as_string().unwrap();
-  let test_fn = load_fn(&contract_address, "test");
   log(&format!("I am {}, calling {}", get_address(), contract_address));
-  test_fn.call0(&JsValue::null()).unwrap();
-}
-
-fn load_fn(contract_address: &str, name: &str) -> js_sys::Function {
-  let contract = load_contract(contract_address);
-  let js_fn = js_sys::Reflect::get(&contract, &JsValue::from_str(name)).unwrap();
-  let rs_fn = js_sys::Function::try_from(&js_fn);
-  match rs_fn {
-    Some(x) => x.clone(),
-    None    => panic!("contract method not found!")
-  }
+  call_contract(&contract_address, "test", js_sys::Array::new());
 }

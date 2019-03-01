@@ -1,4 +1,4 @@
-const wasm_bindgen = function ({ log, importTableName, get_sender, get_address, now, get_block_hash, get_block_number, get_msg_value, load, save, load_contract }) { // eslint-disable-line
+const wasm_bindgen = function ({ log, importTableName, get_sender, get_address, now, get_block_hash, get_block_number, get_msg_value, load, save, call_contract }) { // eslint-disable-line
   var wasm
   const __exports = {}
 
@@ -212,6 +212,17 @@ const wasm_bindgen = function ({ log, importTableName, get_sender, get_address, 
     }
   }
 
+  __exports.__wbg_callcontract_10799fb44e4114f5 = function (arg0, arg1, arg2, arg3, arg4) {
+    let varg0 = getStringFromWasm(arg0, arg1)
+    let varg2 = getStringFromWasm(arg2, arg3)
+    try {
+      return addHeapObject(call_contract(varg0, varg2, takeObject(arg4)))
+    } catch (e) {
+      console.error('wasm-bindgen: imported JS function that was not marked as `catch` threw an error:', e)
+      throw e
+    }
+  }
+
   __exports.__wbg_from_4314bb5c298e92a4 = function (arg0) {
     try {
       return addHeapObject(Array.from(getObject(arg0)))
@@ -315,6 +326,15 @@ const wasm_bindgen = function ({ log, importTableName, get_sender, get_address, 
     }
   }
 
+  __exports.__wbg_new_366f5eda217e0401 = function () {
+    try {
+      return addHeapObject(new Array())
+    } catch (e) {
+      console.error('wasm-bindgen: imported JS function that was not marked as `catch` threw an error:', e)
+      throw e
+    }
+  }
+
   __exports.__wbg_stack_4931b18709aff089 = function (ret, arg0) {
     try {
       const retptr = passStringToWasm(getObject(arg0).stack)
@@ -322,6 +342,15 @@ const wasm_bindgen = function ({ log, importTableName, get_sender, get_address, 
       const mem = getUint32Memory()
       mem[ret / 4] = retptr
       mem[ret / 4 + 1] = retlen
+    } catch (e) {
+      console.error('wasm-bindgen: imported JS function that was not marked as `catch` threw an error:', e)
+      throw e
+    }
+  }
+
+  __exports.__wbg_push_8cc1eb329bba75cb = function (arg0, arg1) {
+    try {
+      return getObject(arg0).push(getObject(arg1))
     } catch (e) {
       console.error('wasm-bindgen: imported JS function that was not marked as `catch` threw an error:', e)
       throw e
