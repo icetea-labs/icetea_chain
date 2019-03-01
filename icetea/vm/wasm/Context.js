@@ -34,7 +34,7 @@ exports.contextForWrite = (tx, block, stateTable, { address, fname, fparams }) =
     },
     _state: {},
     load: (key) => {
-      return ctx._state.hasOwnProperty(key) ? ctx._state[key] : (state.hasOwnProperty(key) ? state[key] : null)
+      return ctx._state.hasOwnProperty(key) ? ctx._state[key] : (state.hasOwnProperty(key) ? state[key] : 0)
     },
     save: (key, value) => {
       ctx._state[key] = value
@@ -68,7 +68,7 @@ exports.contextForView = exports.contextForView = (stateTable, address, name, pa
       return worker.callViewFunc(addr, method, params, { from: address })
     },
     load: (key) => {
-      return state[key] || null
+      return state[key] || 0
     },
     save: () => {
       throw new Error('Cannot change state inside a view function')
