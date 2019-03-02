@@ -44,6 +44,7 @@ async function fetchTxDetails (template, hash) {
     if (data.data.op === 0) {
       tx.txType = 'create contract'
       tx.to = tx.tx_result.data
+      tx.metadata = JSON.stringify(await tweb3.getMetadata(tx.to), null, 2)
     } else if (data.data.op === 1) {
       tx.txType = 'call contract'
     }
