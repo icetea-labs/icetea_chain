@@ -14,6 +14,8 @@ module.exports = class Tx {
   //    name: "functionName",
   //    params: [1, "hello"]
   // }
+  //
+  // Some op in the future: set alias/options, vote, etc.
 
   constructor (from, to, value, fee, data, nonce) {
     this.from = from || ''
@@ -40,6 +42,7 @@ module.exports = class Tx {
 
   setSignature (signature) {
     this.signature = signature
+    return this
   }
 
   isContractCreation () {

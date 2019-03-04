@@ -1,9 +1,6 @@
-const _ = require('lodash')
 const config = require('./config')
 const utils = require('./helper/utils')
-const ecc = require('./helper/ecc')
 const merkle = require('./helper/merkle')
-const { getRunner, getContext } = require('./vm')
 
 module.exports = class StateManager {
   constructor (stateTable) {
@@ -22,8 +19,9 @@ module.exports = class StateManager {
   async loadState () {
     const storedData = await merkle.load()
     this.stateTable = storedData.state
-    this.lastBlockHeight = storedData.height
+    this.lastBlock = storedData.block
 
+    // FIXME it is ok now as we don't allow delete state
     if (!Object.keys(this.stateTable).length) {
       console.log('Empty state after load => set init value')
       this.init()
@@ -31,78 +29,43 @@ module.exports = class StateManager {
   }
 
   getLastState () {
-    if (this.lastBlockHeight) {
+    if (this.lastBlock && this.lastBlock > 1) {
       return {
-        lastBlockHeight: this.lastBlockHeight,
+        lastBlockHeight: this.lastBlock.number,
         lastBlockAppHash: merkle.getHash(this.stateTable)
       }
     } else {
       return {
-        lastBlockHeight: 0,
+        lastBlockHeight: this.lastBlock ? 1 : 0,
         lastBlockAppHash: Buffer.alloc(0)
       }
     }
   }
 
-  beginBlock (block) {
-    this.lastBlock = block
+  onNewBlock (block) {
+    this.lastBlock = Object.freeze(block)
   }
 
-  endBlock () {
-  }
-
-  commit () {
-    this.lastBlockHeight = (this.lastBlockHeight || 0) + 1
-    if (this.lastBlockHeight === 1) return Buffer.alloc(0)
+  saveState () {
+    if (!this.lastBlock || this.lastBlock.number === 1) {
+      return Buffer.alloc(0)
+    }
     return merkle.save({
-      height: this.lastBlockHeight,
+      block: this.lastBlock,
       state: this.stateTable
     })
   }
 
-  checkTx (tx) {
-    // Check TX should not modify state
-    // This way, we could avoid make a copy of state
-
-    // Verify signature
-    ecc.verifyTxSignature(tx)
-
-    // Check balance
-    if (tx.value + tx.fee > utils.balanceOf(tx.from, this.stateTable)) {
-      throw new Error('Not enough balance')
-    }
+  balanceOf (addr) {
+    return utils.balanceOf(addr, this.stateTable)
   }
 
   getContractAddresses () {
-    const arr = []
-    _.each(this.stateTable, (value, key) => {
-      if (value.src) {
-        arr.push(key)
+    return Object.keys(this.stateTable).reduce((prev, addr) => {
+      if (this.stateTable[addr].src) {
+        prev.unshift(addr)
       }
-    })
-
-    return arr
-  }
-
-  getMetadata (addr) {
-    if (this.stateTable[addr] && this.stateTable[addr].src) {
-      const { mode, src, meta } = this.stateTable[addr]
-
-      if (meta && meta.operations) {
-        return utils.unifyMetadata(meta.operations)
-      }
-
-      const vm = getRunner(mode)
-      const context = getContext(mode).dummyContext
-      const info = vm.run(src, { context })
-      if (!info) return utils.unifyMetadata()
-
-      const props = info.meta ||
-        (info.instance ? utils.getAllPropertyNames(info.instance) : info)
-
-      return utils.unifyMetadata(props)
-    }
-
-    throw new Error('Address is not a valid contract.')
+      return prev
+    }, [])
   }
 }

@@ -1,8 +1,9 @@
 const createABCIServer = require('abci')
 
 const codec = require('./helper/codec')
-
+const ecc = require('./helper/ecc')
 const StateManager = require('./StateManager')
+const ContractExecutor = require('./ContractExecutor')
 const Tx = require('./Tx')
 
 const stateManager = new StateManager()
@@ -34,7 +35,13 @@ const handlers = {
     tx.setSignature(reqTx.signature)
 
     try {
-      stateManager.checkTx(tx)
+      // verify signature
+      ecc.verifyTxSignature(tx)
+
+      // check balance, call type, etc.
+      checkTx(tx, stateManager)
+
+      // all checks pass, just return
       return {}
     } catch (err) {
       return { code: 1, log: String(err) }
@@ -45,7 +52,7 @@ const handlers = {
     const hash = req.hash.toString('hex')
     const number = req.header.height.toNumber()
     const timestamp = req.header.time.seconds.toNumber()
-    stateManager.beginBlock({ number, hash, timestamp })
+    stateManager.onNewBlock({ number, hash, timestamp })
     return {} // tags
   },
 
@@ -53,8 +60,8 @@ const handlers = {
     try {
       const tx = getTx(req)
 
-      stateManager.deliverTx(tx)
-      const [data, tags] = await stateManager.execTx(tx)
+      const [data, tags] = await execTx(tx, stateManager)
+
       const result = {}
       if (typeof data !== 'undefined') {
         result.data = Buffer.from(JSON.stringify(data))
@@ -74,17 +81,13 @@ const handlers = {
       // console.log(result);
       return result
     } catch (err) {
+      console.error(err)
       return { code: 1, log: String(err) }
     }
   },
 
-  endBlock (req) {
-    stateManager.endBlock()
-    return {}
-  },
-
-  async commit (req) {
-    return { data: await stateManager.commit() } // return the block stateRoot
+  async commit () {
+    return { data: await stateManager.saveState() } // return the block stateRoot
   },
 
   async query (req) {
@@ -98,6 +101,8 @@ const handlers = {
       const path = req.path
       const data = req.data.toString()
 
+      const executor = new ContractExecutor(stateManager.stateTable, stateManager.lastBlock)
+
       switch (path) {
         case 'balance':
           return replyQuery({
@@ -108,12 +113,12 @@ const handlers = {
         case 'contracts':
           return replyQuery(stateManager.getContractAddresses())
         case 'metadata': {
-          return replyQuery(stateManager.getMetadata(data))
+          return replyQuery(await executor.getMetadata(data))
         }
         case 'call': {
           try {
             const options = JSON.parse(data)
-            const result = await stateManager.callViewFunc(options.address, options.name, options.params, options.options)
+            const result = await executor.invokeView(options.address, options.name, options.params, options.options)
             return replyQuery({
               success: true,
               data: result
@@ -130,24 +135,29 @@ const handlers = {
 
       return { code: 1, info: 'Path not supported' }
     } catch (error) {
-      return { code: 1, info: String(error) }
+      return { code: 2, info: String(error) }
     }
   }
 }
 
-function getTx(req) {
+function checkTx (tx, stateManager) {
+  return new ContractExecutor(stateManager.stateTable, stateManager.lastBlock).checkTx(tx)
+}
+
+function execTx (tx, stateManager) {
+  return new ContractExecutor(stateManager.stateTable, stateManager.lastBlock).execTx(tx)
+}
+
+function getTx (req) {
   let reqTx = codec.decode(req.tx)
 
-  const tx = new Tx(
+  return new Tx(
     reqTx.from,
     reqTx.to,
-    parseFloat(reqTx.value) || 0,
-    parseFloat(reqTx.fee) || 0,
+    reqTx.value,
+    reqTx.fee,
     JSON.parse(reqTx.data || '{}'),
-    reqTx.nonce)
-  tx.setSignature(reqTx.signature)
-
-  return tx
+    reqTx.nonce).setSignature(reqTx.signature)
 }
 
 function replyQuery (data) {

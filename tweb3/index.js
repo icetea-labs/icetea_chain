@@ -2,7 +2,7 @@ const fetch = require('node-fetch');
 const { signTxData } = require('../icetea/helper/ecc')
 const { switchEncoding, encodeTX, tryParseJson } = require('../tweb3/utils')
 const W3CWebSocket = require('websocket').w3cwebsocket;
-const WebSocketAsPromised = require ('websocket-as-promised');
+const WebSocketAsPromised = require('websocket-as-promised');
 
 function decodeTags(tx, keepEvents = false) {
   const EMPTY_RESULT = {}
@@ -82,7 +82,18 @@ function decodeEventData(tx) {
   return result
 }
 
-function sanitizeParams (params) {
+function decodeTxResult(result) {
+  if (!result) return result
+  const name = result.tx_result ? 'tx_result' : 'deliver_tx'
+
+  if (result[name] && result[name].data) {
+    result[name].data = tryParseJson(switchEncoding(result[name].data, 'base64', 'utf8'))
+  }
+
+  return result
+}
+
+function sanitizeParams(params) {
   params = params || {}
   Object.keys(params).forEach(k => {
     let v = params[k]
@@ -104,19 +115,20 @@ exports.IceTeaWeb3 = class IceTeaWeb3 {
    */
   constructor(endpoint, options) {
     this.isWebSocket = !!(endpoint.startsWith("ws://") || endpoint.startsWith("wss://"));
-    if(this.isWebSocket){
-        this.rpc = new WebSocketProvider(endpoint, options);
+    if (this.isWebSocket) {
+      this.rpc = new WebSocketProvider(endpoint, options);
     } else {
-        this.rpc = new HttpProvider(endpoint);
+      this.rpc = new HttpProvider(endpoint);
     }
 
     this.utils = {
       decodeEventData,
-      decodeTags
+      decodeTags,
+      decodeTxResult
     }
   }
 
-  close () {
+  close() {
     if (this.isWebSocket) {
       this.rpc.close()
     }
@@ -160,13 +172,7 @@ exports.IceTeaWeb3 = class IceTeaWeb3 {
       throw new Error('hash is required')
     }
     return this.rpc.call('tx', { hash: switchEncoding(hash, 'hex', 'base64'), ...options })
-      .then(result => {
-        if (result && result.tx_result && result.tx_result.data) {
-          result.tx_result.data = tryParseJson(switchEncoding(result.tx_result.data, 'base64', 'utf8'))
-        }
-
-        return result
-      })
+      .then(decodeTxResult)
   }
 
   /**
@@ -267,6 +273,7 @@ exports.IceTeaWeb3 = class IceTeaWeb3 {
    */
   sendTransactionCommit(tx, privateKey) {
     return this.rpc.send('broadcast_tx_commit', signTxData(tx, privateKey))
+      .then(decodeTxResult)
   }
 
   /**
@@ -289,32 +296,32 @@ exports.IceTeaWeb3 = class IceTeaWeb3 {
      * @param {MessageEvent} EventName
      */
   subscribe(eventName, conditions = {}, callback) {
-    if(!this.isWebSocket) throw new Error('subscribe for WebSocket only');
+    if (!this.isWebSocket) throw new Error('subscribe for WebSocket only');
     let query = "";
     if (typeof conditions === "string") {
-        query = conditions;
+      query = conditions;
     } else {
-        query = Object.keys(conditions).reduce((arr, key) => {
-            const value = conditions[key];
-            if (key === "fromBlock") {
-                arr.push(`tx.height>${value-1}`)
-            } else if (key === "toBlock") {
-                arr.push(`tx.height<${value+1}`)
-            } else {
-                arr.push(`${key}=${value}`)
-            }
-            return arr;
-        }, [`tm.event = '${eventName}'`]).join(" AND ");
+      query = Object.keys(conditions).reduce((arr, key) => {
+        const value = conditions[key];
+        if (key === "fromBlock") {
+          arr.push(`tx.height>${value - 1}`)
+        } else if (key === "toBlock") {
+          arr.push(`tx.height<${value + 1}`)
+        } else {
+          arr.push(`${key}=${value}`)
+        }
+        return arr;
+      }, [`tm.event = '${eventName}'`]).join(" AND ");
     }
     // console.log("query: ", query);
-    return this.rpc.call("subscribe", {"query": query}).then(() => {
-        this.rpc.registerEventListener('onMessage', (message) => {
-            if(JSON.parse(message).id.indexOf('event') > 0){
-                let datatype = JSON.parse(message).result.data.type.split("/");
-                if(eventName === datatype[datatype.length-1])
-                  return callback(message);
-            }
-        });
+    return this.rpc.call("subscribe", { "query": query }).then(() => {
+      this.rpc.registerEventListener('onMessage', (message) => {
+        if (JSON.parse(message).id.indexOf('event') > 0) {
+          let datatype = JSON.parse(message).result.data.type.split("/");
+          if (eventName === datatype[datatype.length - 1])
+            return callback(message);
+        }
+      });
     });
   }
   /**
@@ -325,120 +332,120 @@ exports.IceTeaWeb3 = class IceTeaWeb3 {
    * @param {EventName} EventName
    */
   unsubscribe(eventName) {
-      if(!this.isWebSocket) throw new Error('unsubscribe for WebSocket only');
-      return this.rpc.call("unsubscribe", {"query": "tm.event='"+eventName+"'"});
+    if (!this.isWebSocket) throw new Error('unsubscribe for WebSocket only');
+    return this.rpc.call("unsubscribe", { "query": "tm.event='" + eventName + "'" });
   }
 
-  onMessage (callback) {
-      if(!this.isWebSocket) throw new Error('onMessage for WebSocket only');
-      this.rpc.registerEventListener('onMessage',callback);
+  onMessage(callback) {
+    if (!this.isWebSocket) throw new Error('onMessage for WebSocket only');
+    this.rpc.registerEventListener('onMessage', callback);
   }
 
   onResponse(callback) {
-      if(!this.isWebSocket) throw new Error('onResponse for WebSocket only');
-      this.rpc.registerEventListener('onResponse',callback);
+    if (!this.isWebSocket) throw new Error('onResponse for WebSocket only');
+    this.rpc.registerEventListener('onResponse', callback);
   }
 
   onError(callback) {
-      if(!this.isWebSocket) throw new Error('onError for WebSocket only');
-      this.rpc.registerEventListener('onError',callback);
+    if (!this.isWebSocket) throw new Error('onError for WebSocket only');
+    this.rpc.registerEventListener('onError', callback);
   }
 
   onClose(callback) {
-      if(!this.isWebSocket) throw new Error('onClose for WebSocket only');
-      this.rpc.registerEventListener('onClose',callback);
+    if (!this.isWebSocket) throw new Error('onClose for WebSocket only');
+    this.rpc.registerEventListener('onClose', callback);
   }
 }
 
 class WebSocketProvider {
   constructor(endpoint, options) {
-      // this.endpoint = "ws://localhost:26657/websocket"
-      this.endpoint = endpoint
-      this.options = options || {
-          createWebSocket: url => new W3CWebSocket(url),
-          packMessage: data => JSON.stringify(data),
-          unpackMessage: message => JSON.parse(message),
-          attachRequestId: (data, requestId) => Object.assign({id: requestId}, data),
-          extractRequestId: data => data.id,
-          // timeout: 10000,
-      };
-      this.wsp = new WebSocketAsPromised(this.endpoint, this.options);
+    // this.endpoint = "ws://localhost:26657/websocket"
+    this.endpoint = endpoint
+    this.options = options || {
+      createWebSocket: url => new W3CWebSocket(url),
+      packMessage: data => JSON.stringify(data),
+      unpackMessage: message => JSON.parse(message),
+      attachRequestId: (data, requestId) => Object.assign({ id: requestId }, data),
+      extractRequestId: data => data.id,
+      // timeout: 10000,
+    };
+    this.wsp = new WebSocketAsPromised(this.endpoint, this.options);
   }
 
-  close () {
+  close() {
     this.wsp.close()
   }
 
-  registerEventListener(event, callback){
-      this.wsp[event].addListener(callback);
+  registerEventListener(event, callback) {
+    this.wsp[event].addListener(callback);
   }
 
   async _call(method, params) {
-      const json = {
-          jsonrpc: "2.0",
-          method,
-          params: sanitizeParams(params)
-      }
+    const json = {
+      jsonrpc: "2.0",
+      method,
+      params: sanitizeParams(params)
+    }
 
-      if(!this.wsp.isOpened){ 
-          await this.wsp.open();
-      }
-      return this.wsp.sendRequest(json);
+    if (!this.wsp.isOpened) {
+      await this.wsp.open();
+    }
+    return this.wsp.sendRequest(json);
   }
 
   call(method, params) {
-      return this._call(method, params).then(resp => {
-          if (resp.error) {
-              const err = new Error(resp.error.message);
-              Object.assign(err, resp.error);
-              throw err;
-          }
-          
-          return resp.result;
-      })
+    return this._call(method, params).then(resp => {
+      if (resp.error) {
+        const err = new Error(resp.error.message);
+        Object.assign(err, resp.error);
+        throw err;
+      }
+
+      return resp.result;
+    })
   }
 
   // query application state (read)
   query(path, data, options) {
-      const params = {path, ...options};
-      if (data) {
-          if (typeof data !== "string") {
-              data = JSON.stringify(data);
-          }
-          params.data = switchEncoding(data, "utf8", "hex");
+    const params = { path, ...options };
+    if (data) {
+      if (typeof data !== "string") {
+        data = JSON.stringify(data);
+      }
+      params.data = switchEncoding(data, "utf8", "hex");
+    }
+
+    return this._call("abci_query", params).then(resp => {
+      if (resp.error) {
+        const err = new Error(resp.error.message);
+        Object.assign(err, resp.error);
+        throw err;
       }
 
-      return this._call("abci_query", params).then(resp => {
-          if (resp.error) {
-              const err = new Error(resp.error.message);
-              Object.assign(err, resp.error);
-              throw err;
-          }
-
-          // decode query data embeded in info
-          let r = resp.result;
-          if (r && r.response && r.response.info) {
-              r = JSON.parse(r.response.info);
-          }
-          return r;
-      })
+      // decode query data embeded in info
+      let r = resp.result;
+      if (r && r.response && r.response.info) {
+        r = tryParseJson(r.response.info);
+      }
+      return r;
+    })
   }
 
   // send a transaction (write)
   send(method, tx) {
-      return this.call(method, {
-          // for jsonrpc, encode in 'base64'
-          // for query string (REST), encode in 'hex' (or 'utf8' inside quotes)
-          tx: encodeTX(tx, 'base64')
-      }).then(result => {
-          if (result.code) {
-              const err = new Error(result.log);
-              Object.assign(err, result);
-              throw err;
-          }
+    return this.call(method, {
+      // for jsonrpc, encode in 'base64'
+      // for query string (REST), encode in 'hex' (or 'utf8' inside quotes)
+      tx: encodeTX(tx, 'base64')
+    }).then(result => {
+      if (result.code) {
+        const err = new Error(result.log);
+        Object.assign(err, result);
+        throw err;
+      }
 
-          return result;
-      })
+      return result;
+    })
   }
 }
 
@@ -499,7 +506,7 @@ class HttpProvider {
       // decode query data embeded in info
       let r = resp.result
       if (r && r.response && r.response.info) {
-        r = JSON.parse(r.response.info)
+        r = tryParseJson(r.response.info)
       }
       return r
     })

@@ -3,10 +3,17 @@ const utils = require('../../helper/utils')
 const Worker = require('../../ContractExecutor')
 
 exports.for = (invokeType, contractAddress, methodName, methodParams, options) => {
+  const map = {
+    transaction: exports.forTransaction,
+    view: exports.forView,
+    pure: exports.forPure
+  }
 
+  const fn = map[invokeType] ? map[invokeType] : exports.forMetadata
+  return typeof fn === 'function' ? fn(contractAddress, methodName, methodParams, options) : fn
 }
 
-exports.forTransaction = (contractAddress, methodName, methodParams, {tx, block, stateTable}) => {
+exports.forTransaction = (contractAddress, methodName, methodParams, { tx, block, stateTable }) => {
   const msg = {}
   msg.name = methodName
   msg.params = Object.freeze(methodParams) // contract still can change if some param is object
@@ -14,16 +21,16 @@ exports.forTransaction = (contractAddress, methodName, methodParams, {tx, block,
   msg.value = tx.value || 0
   msg.fee = tx.fee || 0
   msg.callType = (msg.value > 0) ? 'payable' : 'transaction'
-  msg = Object.freeze(msg)
+  Object.freeze(msg)
 
-  const state = stateTable[address].state || {}
-  const balance = stateTable[address].balance || 0
+  const state = stateTable[contractAddress].state || {}
+  const balance = stateTable[contractAddress].balance || 0
   const tags = {}
 
   const ctx = {
     address: contractAddress,
     balance,
-    getEnv: () => ({ 
+    getEnv: () => ({
       msg,
       block,
       tags,
@@ -35,7 +42,7 @@ exports.forTransaction = (contractAddress, methodName, methodParams, {tx, block,
             if (!real) {
               return (...params) => {
                 const tx = { from: contractAddress }
-                return worker.invokeUpdate(to, method, params, {tx, block, stateTable})
+                return worker.invokeUpdate(to, method, params, { tx, block, stateTable })
               }
             }
             return real
@@ -45,9 +52,9 @@ exports.forTransaction = (contractAddress, methodName, methodParams, {tx, block,
     }),
     transfer: (to, value) => {
       ctx.balance -= value
-      utils.decBalance(address, value, stateTable)
+      utils.decBalance(contractAddress, value, stateTable)
       utils.incBalance(to, value, stateTable)
-      utils.emitTransferred(address, tags, address, to, value)
+      utils.emitTransferred(contractAddress, tags, contractAddress, to, value)
     },
     _state: {},
     hasState: (key) => {
@@ -62,7 +69,7 @@ exports.forTransaction = (contractAddress, methodName, methodParams, {tx, block,
       return old
     },
     emitEvent: (eventName, eventData, indexes = []) => {
-      utils.emitEvent(address, tags, eventName, eventData, indexes)
+      utils.emitEvent(contractAddress, tags, eventName, eventData, indexes)
     }
   }
 
@@ -79,12 +86,12 @@ exports.forView = (contractAddress, name, params, options) => {
       return Reflect.get(target, prop)
     },
     set () {
-      throw new Error("msg properties are readonly.")
+      throw new Error('msg properties are readonly.')
     }
   })
 
-  const state = _.cloneDeep(stateTable[address].state || {})
-  const balance = stateTable[address].balance || 0
+  const state = _.cloneDeep(stateTable[contractAddress].state || {})
+  const balance = stateTable[contractAddress].balance || 0
 
   const ctx = {
     address: contractAddress,
@@ -98,7 +105,7 @@ exports.forView = (contractAddress, name, params, options) => {
           get (obj, method) {
             const real = obj[method]
             if (!real) {
-              return (...params) => worker.invokeView(addr, method, params, { 
+              return (...params) => worker.invokeView(addr, method, params, {
                 from: contractAddress,
                 stateTable
               })
@@ -127,18 +134,18 @@ exports.forView = (contractAddress, name, params, options) => {
   return Object.freeze(ctx)
 }
 
-exports.forPure = (address, name, params, {from}) => {
+exports.forPure = (address, name, params, { from }) => {
   const ctx = {
     address,
     get balance () {
       throw new Error('Cannot view balance a pure function')
     },
-    getEnv: () => ({msg: { sender: from, name, params, callType: 'pure' }})
+    getEnv: () => ({ msg: { sender: from, name, params, callType: 'pure' } })
   }
 
   return Object.freeze(ctx)
 }
 
 exports.forMetadata = {
-  getEnv: () => ({ msg: { callType: 'metadata', name: '__metadata' }, block: {} }),
+  getEnv: () => ({ msg: { callType: 'metadata', name: '__metadata' }, block: {} })
 }

@@ -4,7 +4,7 @@ import utils from '../tweb3/utils'
 import tweb3 from './tweb3'
 window.$ = $
 
-function buildData () {
+function buildData() {
   return {
     op: 1,
     name: document.getElementById('name').value,
@@ -12,39 +12,49 @@ function buildData () {
   }
 }
 
-async function fillContracts () {
-  const contracts = await tweb3.getContracts()
+async function fillContracts() {
+  try {
+    const contracts = await tweb3.getContracts()
 
-  if (!contracts.length) return
+    if (!contracts.length) return
 
-  var select = document.getElementById('to')
-  contracts.reverse().forEach(item => {
-    let option = document.createElement('option')
-    option.value = item
-    option.textContent = item
-    select.appendChild(option)
-  })
-
-  fillFuncs()
-  select.addEventListener('change', fillFuncs)
-}
-
-async function fillFuncs () {
-  var contract = document.getElementById('to').value
-  if (!contract) return
-
-  const funcs = await tweb3.getMetadata(contract)
-
-  var select = document.getElementById('funcs')
-  select.innerHTML = ''
-  Object.keys(funcs).forEach(item => {
-    if (item.indexOf('$') !== 0) {
+    var select = document.getElementById('to')
+    contracts.forEach(item => {
       let option = document.createElement('option')
       option.value = item
-      option.textContent = (funcs[item].decorators || []).join(', ')
+      option.textContent = item
       select.appendChild(option)
-    }
-  })
+    })
+
+    fillFuncs()
+    select.addEventListener('change', fillFuncs)
+  } catch (error) {
+    console.log(error)
+    alert(String(error))
+  }
+}
+
+async function fillFuncs() {
+  try {
+    var contract = document.getElementById('to').value
+    if (!contract) return
+
+    const funcs = await tweb3.getMetadata(contract)
+
+    var select = document.getElementById('funcs')
+    select.innerHTML = ''
+    Object.keys(funcs).forEach(item => {
+      if (item.indexOf('$') !== 0) {
+        let option = document.createElement('option')
+        option.value = item
+        option.textContent = (funcs[item].decorators || []).join(', ')
+        select.appendChild(option)
+      }
+    })
+  } catch (error) {
+    console.log(error)
+    alert(String(error))
+  }
 }
 
 $(document).ready(function () {
