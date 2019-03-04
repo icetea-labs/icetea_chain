@@ -13,7 +13,8 @@ const stateManager = new StateManager()
 
 const handlers = {
 
-  info (req) {
+  async info (req) {
+    await stateManager.loadState()
     return Object.assign({
       data: 'icetea',
       version: '0.0.1',
@@ -86,8 +87,8 @@ const handlers = {
     }
   },
 
-  async commit () {
-    return { data: await stateManager.saveState() } // return the block stateRoot
+  commit () {
+    return { data: stateManager.saveState() } // return the block stateRoot
   },
 
   async query (req) {
@@ -165,10 +166,6 @@ function replyQuery (data) {
 }
 
 const port = 26658
-stateManager.loadState().then(() => {
-  createABCIServer(handlers).listen(port, () => {
-    console.log(`listening on port ${port}`)
-  })
-}).catch(error => {
-  console.error(error)
+createABCIServer(handlers).listen(port, () => {
+  console.log(`listening on port ${port}`)
 })

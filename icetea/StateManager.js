@@ -29,7 +29,7 @@ module.exports = class StateManager {
   }
 
   getLastState () {
-    if (this.lastBlock && this.lastBlock > 1) {
+    if (this.lastBlock && this.lastBlock.number > 1) {
       return {
         lastBlockHeight: this.lastBlock.number,
         lastBlockAppHash: merkle.getHash(this.stateTable)
@@ -47,13 +47,17 @@ module.exports = class StateManager {
   }
 
   saveState () {
-    if (!this.lastBlock || this.lastBlock.number === 1) {
+    if (!this.lastBlock || this.lastBlock.number <= 1) {
       return Buffer.alloc(0)
     }
-    return merkle.save({
+    const appHash = merkle.getHash(this.stateTable)
+    merkle.save({
       block: this.lastBlock,
       state: this.stateTable
     })
+
+    // return, no need to wait for save to finish
+    return appHash
   }
 
   balanceOf (addr) {

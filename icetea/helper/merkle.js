@@ -31,7 +31,8 @@ exports.save = (data) => {
     db.put(KEY, data, err => {
       reject(err)
     })
-    resolve(exports.getHash(data.state))
+    //resolve(exports.getHash(data.state))
+    resolve(data.state)
   })
 }
 
