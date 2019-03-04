@@ -5,7 +5,7 @@ function getBlock (req) {
   const hash = req.hash.toString('hex')
   const number = req.header.height.toNumber()
   const timestamp = req.header.time.seconds.toNumber()
-  return new { hash, number, timestamp }()
+  return { hash, number, timestamp }
 }
 
 function getTx (req) {

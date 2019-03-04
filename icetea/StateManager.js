@@ -6,7 +6,7 @@ const _ = require('lodash')
 module.exports = class StateManager {
   async load () {
     const storedData = (await merkle.load()) || {
-      stateTable: this._initStateTable()
+      state: this._initStateTable()
     }
 
     this.stateTable = storedData.state
@@ -56,7 +56,7 @@ module.exports = class StateManager {
 
   // Utility function to get state
 
-  getStateTable () {
+  getStateView () {
     return this.stateTable
   }
 

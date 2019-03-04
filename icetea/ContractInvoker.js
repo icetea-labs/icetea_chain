@@ -18,7 +18,7 @@ module.exports = class {
     if (methodName === 'address') {
       return contractAddress
     } else if (methodName === 'balance') {
-      return utils.balanceOf(contractAddress, options.stateTable)
+      return options.stateTable[contractAddress].balance || 0
     }
 
     const { mode, src } = this._getContractInfo(contractAddress, options.stateTable)
@@ -90,7 +90,7 @@ module.exports = class {
 
   deployContract (tx, stateTable) {
     // make new address for smart contract
-    let contractAddress = this._makeContractAddress(tx.from)
+    let contractAddress = this._makeContractAddress(stateTable, tx.from)
     tx.to = contractAddress
 
     // analyze and compile source
@@ -128,13 +128,13 @@ module.exports = class {
     throw new Error('The address supplied is not a deployed contract')
   }
 
-  _makeContractAddress (deployedBy) {
+  _makeContractAddress (stateTable, deployedBy) {
     // make new address for smart contract
     // should be deterministic
 
     // TODO: change this
 
-    const count = Object.keys(this.stateTable).reduce((t, k) => (
+    const count = Object.keys(stateTable).reduce((t, k) => (
       (k.startsWith('contract_') && k.endsWith(deployedBy)) ? (t + 1) : t
     ), 0)
 

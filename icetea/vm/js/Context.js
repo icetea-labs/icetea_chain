@@ -1,6 +1,6 @@
 const _ = require('lodash')
 const utils = require('../../helper/utils')
-const Worker = require('../../ContractExecutor')
+const Worker = require('../../ContractInvoker')
 
 exports.for = (invokeType, contractAddress, methodName, methodParams, options) => {
   const map = {

@@ -7,11 +7,20 @@ const config = require('./config')
 module.exports = class {
   constructor () {
     this.invoker = new ContractInvoker()
-    this.stateManager = new StateManager()
+    const t = this.stateManager = new StateManager()
+    
+    // Copy some methods
+    Object.assign(this, {
+      setBlock: t.setBlock.bind(t),
+      persistState: t.persist.bind(t),
+      balanceOf: t.balanceOf.bind(t),
+      getContractAddresses: t.getContractAddresses.bind(t)
+    })
   }
 
-  activate () {
-    return this.stateManager.load().then(() => this.stateManager.getLastState())
+  async activate () {
+    await this.stateManager.load()
+    return this.stateManager.getLastState()
   }
 
   checkTx (tx) {
@@ -26,26 +35,19 @@ module.exports = class {
     }
   }
 
-  setBlock (block) {
-    this.stateManager.setBlock(block)
-  }
-
-  persistState () {
-    return this.stateManager.persist()
-  }
-
-  balanceOf (addr) {
-    return this.stateManager.balanceOf(addr)
-  }
-
   invokeView (contractAddress, methodName, methodParams, options = {}) {
-    options.stateTable = options.stateTable || this.stateManager.getStateTable()
+    options.stateTable = options.stateTable || this.stateManager.getStateView()
     options.block = this.stateManager.getBlock()
     return this.invoker.invokeView(contractAddress, methodName, methodParams, options)
   }
 
+  queryMetadata (contractAddress, options = {}) {
+    options.stateTable = options.stateTable || this.stateManager.getStateView()
+    return this.invoker.queryMetadata(contractAddress, options)
+  }
+
   async getMetadata (addr) {
-    const { src, meta } = this.stateManager.getState(addr)
+    const { src, meta } = this.stateManager.getAccountState(addr)
     if (!src) {
       throw new Error('Address is not a valid contract.')
     }
