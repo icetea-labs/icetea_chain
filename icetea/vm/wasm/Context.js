@@ -1,6 +1,7 @@
 const _ = require('lodash')
 const Worker = require('../../Worker')
 const Tx = require('../../Tx')
+const utils = require('../../helper/utils')
 
 const emptyBlock = {
   timestamp: 0,
@@ -38,6 +39,9 @@ exports.contextForWrite = (tx, block, stateTable, { address, fname, fparams }) =
     },
     save: (key, value) => {
       ctx._state[key] = value
+    },
+    emit_event: (eventName, eventData, indexes = []) => {
+      utils.emitEvent(address, tags, eventName, eventData, indexes)
     }
   }
 

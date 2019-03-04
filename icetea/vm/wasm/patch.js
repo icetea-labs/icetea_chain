@@ -1,4 +1,4 @@
-const wasm_bindgen = function ({ log, importTableName, get_sender, get_address, now, get_block_hash, get_block_number, get_msg_value, load, save, call_contract }) { // eslint-disable-line
+const wasm_bindgen = function ({ log, importTableName, get_sender, get_address, now, get_block_hash, get_block_number, get_msg_value, load, save, call_contract, emit_event }) { // eslint-disable-line
   var wasm
   const __exports = {}
 
@@ -177,6 +177,19 @@ const wasm_bindgen = function ({ log, importTableName, get_sender, get_address, 
       mem[ret / 4 + 1] = retlen
     } catch (e) {
       console.error('wasm-bindgen: imported JS function that was not marked as `catch` threw an error:', e)
+      throw e
+    }
+  }
+
+  __exports.__wbg_emitevent_60d77e17c3e05343 = function (arg0, arg1, arg2, arg3) {
+    let varg0 = getStringFromWasm(arg0, arg1)
+    try {
+      emit_event(varg0, getObject(arg2), getObject(arg3))
+    } catch (e) {
+      console.error(
+        'wasm-bindgen: imported JS function that was not marked as `catch` threw an error:',
+        e
+      )
       throw e
     }
   }
