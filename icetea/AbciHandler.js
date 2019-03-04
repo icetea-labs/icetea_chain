@@ -4,7 +4,11 @@ const app = require('./App')
 // turn on debug logging
 require('debug').enable('abci*')
 
-module.exports = {
+module.exports = () => {
+  return app.loadState().then(() => handler)
+}
+
+const handler = {
 
   async info () {
     return Object.assign({

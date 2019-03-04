@@ -16,6 +16,7 @@ class App {
     // Copy some methods
     Object.assign(this, {
       setBlock: stateManager.setBlock,
+      loadState: stateManager.load,
       persistState: stateManager.persist,
       balanceOf: stateManager.balanceOf,
       getContractAddresses: stateManager.getContractAddresses

@@ -1,7 +1,9 @@
 const server = require('abci')
-const handler = require('./AbciHandler')
+const startup = require('./AbciHandler')
 const { abciServerPort } = require('./config')
 
-server(handler).listen(abciServerPort, () => {
-  console.log(`ABCI server listening on port ${abciServerPort}`)
+startup().then(handler => {
+  server(handler).listen(abciServerPort, () => {
+    console.log(`ABCI server listening on port ${abciServerPort}`)
+  })
 })
