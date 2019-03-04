@@ -312,6 +312,15 @@ const wasm_bindgen = function ({ log, importTableName, get_sender, get_address, 
     }
   }
 
+  __exports.__wbg_parse_1c7a7cd2dd24c5cb = function (arg0, arg1, exnptr) {
+    let varg0 = getStringFromWasm(arg0, arg1)
+    try {
+      return addHeapObject(JSON.parse(varg0))
+    } catch (e) {
+      handleError(exnptr, e)
+    }
+  }
+
   function _assertNum (n) {
     if (typeof (n) !== 'number') throw new Error('expected a number argument')
   }

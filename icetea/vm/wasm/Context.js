@@ -14,10 +14,12 @@ exports.contextForWrite = (tx, block, stateTable, { address, fname, fparams }) =
   const balance = stateTable[address].balance || 0
   const importTableName = stateTable[address].meta.importTableName
 
+  const tags = {}
+
   const ctx = {
     address,
     balance,
-    getEnv: () => ({ tags: [] }),
+    getEnv: () => ({ tags }),
     importTableName,
     log: console.log,
     get_msg_name: () => fname,
@@ -62,7 +64,7 @@ exports.contextForView = exports.contextForView = (stateTable, address, name, pa
     get_msg_name: () => name,
     get_msg_param: () => params,
     get_msg_value: () => { throw new Error('Cannot get message value inside a view function') },
-    get_sender: () => options.from,
+    get_sender: () => options.from || '',
     get_address: () => address,
     now: () => block.timestamp,
     get_block_hash: () => block.hash,
