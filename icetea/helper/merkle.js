@@ -16,7 +16,7 @@ exports.load = () => {
     db.get(KEY, (err, value) => {
       if (err) {
         if (err.notFound) {
-          resolve({ state: {} })
+          resolve(undefined)
         } else {
           reject(err)
         }
@@ -31,7 +31,7 @@ exports.save = (data) => {
     db.put(KEY, data, err => {
       reject(err)
     })
-    //resolve(exports.getHash(data.state))
+    // resolve(exports.getHash(data.state))
     resolve(data.state)
   })
 }

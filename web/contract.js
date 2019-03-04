@@ -4,7 +4,7 @@ import utils from '../tweb3/utils'
 import tweb3 from './tweb3'
 window.$ = $
 
-function buildData() {
+function buildData () {
   return {
     op: 1,
     name: document.getElementById('name').value,
@@ -12,7 +12,7 @@ function buildData() {
   }
 }
 
-async function fillContracts() {
+async function fillContracts () {
   try {
     const contracts = await tweb3.getContracts()
 
@@ -30,11 +30,11 @@ async function fillContracts() {
     select.addEventListener('change', fillFuncs)
   } catch (error) {
     console.log(error)
-    alert(String(error))
+    window.alert(String(error))
   }
 }
 
-async function fillFuncs() {
+async function fillFuncs () {
   try {
     var contract = document.getElementById('to').value
     if (!contract) return
@@ -53,7 +53,7 @@ async function fillFuncs() {
     })
   } catch (error) {
     console.log(error)
-    alert(String(error))
+    window.alert(String(error))
   }
 }
 

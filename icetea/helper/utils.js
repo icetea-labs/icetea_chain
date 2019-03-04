@@ -29,13 +29,6 @@ exports.prepareState = (addr, stateTable, initialValues) => {
   return stateTable[addr]
 }
 
-exports.balanceOf = (addr, stateTable) => {
-  const state = stateTable[addr]
-  if (!state) return 0
-
-  return state.balance || 0
-}
-
 exports.incBalance = (addr, delta, stateTable) => {
   delta = parseFloat(delta) || 0
   const state = exports.prepareState(addr, stateTable)

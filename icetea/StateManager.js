@@ -1,31 +1,16 @@
 const config = require('./config')
 const utils = require('./helper/utils')
 const merkle = require('./helper/merkle')
+const _ = require('lodash')
 
 module.exports = class StateManager {
-  constructor (stateTable) {
-    this.stateTable = stateTable || {}
-    this.init()
-  }
+  async load () {
+    const storedData = (await merkle.load()) || {
+      stateTable: this._initStateTable()
+    }
 
-  init () {
-    config.initialBalances.forEach(item => {
-      utils.prepareState(item.address, this.stateTable, {
-        balance: item.balance
-      })
-    })
-  }
-
-  async loadState () {
-    const storedData = await merkle.load()
     this.stateTable = storedData.state
     this.lastBlock = storedData.block
-
-    // FIXME it is ok now as we don't allow delete state
-    if (!Object.keys(this.stateTable).length) {
-      console.log('Empty state after load => set init value')
-      this.init()
-    }
   }
 
   getLastState () {
@@ -42,11 +27,11 @@ module.exports = class StateManager {
     }
   }
 
-  onNewBlock (block) {
+  setBlock (block) {
     this.lastBlock = Object.freeze(block)
   }
 
-  saveState () {
+  persist () {
     if (!this.lastBlock || this.lastBlock.number <= 1) {
       return Buffer.alloc(0)
     }
@@ -60,8 +45,31 @@ module.exports = class StateManager {
     return appHash
   }
 
+  produceDraft () {
+    return _.cloneDeep(this.stateTable)
+  }
+
+  applyDraft (draft) {
+    utils.mergeStateTables(this.stateTable, draft)
+    return this
+  }
+
+  // Utility function to get state
+
+  getStateTable () {
+    return this.stateTable
+  }
+
+  getAccountState (addr) {
+    return this.stateTable[addr] || {}
+  }
+
+  getBlock () {
+    return this.lastBlock
+  }
+
   balanceOf (addr) {
-    return utils.balanceOf(addr, this.stateTable)
+    return this.getAccountState(addr).balance || 0
   }
 
   getContractAddresses () {
@@ -71,5 +79,16 @@ module.exports = class StateManager {
       }
       return prev
     }, [])
+  }
+
+  // Private stuff
+
+  _initStateTable () {
+    return config.initialBalances.reduce((stateTable, item) => {
+      utils.prepareState(item.address, stateTable, {
+        balance: item.balance
+      })
+      return stateTable
+    }, {})
   }
 }

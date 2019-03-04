@@ -1,48 +1,24 @@
 const createABCIServer = require('abci')
-
-const codec = require('./helper/codec')
-const ecc = require('./helper/ecc')
-const StateManager = require('./StateManager')
-const ContractExecutor = require('./ContractExecutor')
-const Tx = require('./Tx')
-
-const stateManager = new StateManager()
+const { getBlock, getTx, replyQuery } = require('./helper/abci')
+const IceTeaApp = require('./App')
+const app = new IceTeaApp()
 
 // turn on debug logging
-// require('debug').enable('abci*')
+require('debug').enable('abci*')
 
 const handlers = {
 
-  async info (req) {
-    await stateManager.loadState()
+  async info () {
     return Object.assign({
       data: 'icetea',
       version: '0.0.1',
       appVerion: '0.0.1'
-    }, stateManager.getLastState())
+    }, await app.activate())
   },
 
   checkTx (req) {
-    let reqTx = codec.decode(req.tx)
-    // console.log("checkTx", reqTx);
-
-    const tx = new Tx(
-      reqTx.from,
-      reqTx.to,
-      reqTx.value,
-      reqTx.fee,
-      JSON.parse(reqTx.data || '{}'),
-      reqTx.nonce)
-    tx.setSignature(reqTx.signature)
-
     try {
-      // verify signature
-      ecc.verifyTxSignature(tx)
-
-      // check balance, call type, etc.
-      checkTx(tx, stateManager)
-
-      // all checks pass, just return
+      app.checkTx(getTx(req))
       return {}
     } catch (err) {
       return { code: 1, log: String(err) }
@@ -50,18 +26,15 @@ const handlers = {
   },
 
   beginBlock (req) {
-    const hash = req.hash.toString('hex')
-    const number = req.header.height.toNumber()
-    const timestamp = req.header.time.seconds.toNumber()
-    stateManager.onNewBlock({ number, hash, timestamp })
-    return {} // tags
+    app.setBlock(getBlock(req))
+    return {}
   },
 
   async deliverTx (req) {
     try {
       const tx = getTx(req)
 
-      const [data, tags] = await execTx(tx, stateManager)
+      const [data, tags] = await app.execTx(tx)
 
       const result = {}
       if (typeof data !== 'undefined') {
@@ -88,7 +61,7 @@ const handlers = {
   },
 
   commit () {
-    return { data: stateManager.saveState() } // return the block stateRoot
+    return { data: app.persistState() } // return the block stateRoot
   },
 
   async query (req) {
@@ -102,24 +75,22 @@ const handlers = {
       const path = req.path
       const data = req.data.toString()
 
-      const executor = new ContractExecutor(stateManager.stateTable, stateManager.lastBlock)
-
       switch (path) {
         case 'balance':
           return replyQuery({
-            balance: stateManager.balanceOf(data)
+            balance: app.balanceOf(data)
           })
         case 'state':
-          return replyQuery(stateManager)
+          return replyQuery(app)
         case 'contracts':
-          return replyQuery(stateManager.getContractAddresses())
+          return replyQuery(app.getContractAddresses())
         case 'metadata': {
-          return replyQuery(await executor.getMetadata(data))
+          return replyQuery(await app.getMetadata(data))
         }
         case 'call': {
           try {
             const options = JSON.parse(data)
-            const result = await executor.invokeView(options.address, options.name, options.params, options.options)
+            const result = await app.invokeView(options.address, options.name, options.params, options.options)
             return replyQuery({
               success: true,
               data: result
@@ -139,30 +110,6 @@ const handlers = {
       return { code: 2, info: String(error) }
     }
   }
-}
-
-function checkTx (tx, stateManager) {
-  return new ContractExecutor(stateManager.stateTable, stateManager.lastBlock).checkTx(tx)
-}
-
-function execTx (tx, stateManager) {
-  return new ContractExecutor(stateManager.stateTable, stateManager.lastBlock).execTx(tx)
-}
-
-function getTx (req) {
-  let reqTx = codec.decode(req.tx)
-
-  return new Tx(
-    reqTx.from,
-    reqTx.to,
-    reqTx.value,
-    reqTx.fee,
-    JSON.parse(reqTx.data || '{}'),
-    reqTx.nonce).setSignature(reqTx.signature)
-}
-
-function replyQuery (data) {
-  return { code: 0, info: JSON.stringify(data) }
 }
 
 const port = 26658

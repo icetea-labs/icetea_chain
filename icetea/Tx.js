@@ -1,7 +1,7 @@
 const { TxOp } = require('./enum')
 const { sha256 } = require('../icetea/helper/codec')
 
-module.exports = class Tx {
+module.exports = class {
   // data is null or empty: normal tx
   // create contract
   // data = {
