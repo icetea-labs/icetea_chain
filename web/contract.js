@@ -13,38 +13,48 @@ function buildData () {
 }
 
 async function fillContracts () {
-  const contracts = await tweb3.getContracts()
+  try {
+    const contracts = await tweb3.getContracts()
 
-  if (!contracts.length) return
+    if (!contracts.length) return
 
-  var select = document.getElementById('to')
-  contracts.reverse().forEach(item => {
-    let option = document.createElement('option')
-    option.value = item
-    option.textContent = item
-    select.appendChild(option)
-  })
+    var select = document.getElementById('to')
+    contracts.forEach(item => {
+      let option = document.createElement('option')
+      option.value = item
+      option.textContent = item
+      select.appendChild(option)
+    })
 
-  fillFuncs()
-  select.addEventListener('change', fillFuncs)
+    fillFuncs()
+    select.addEventListener('change', fillFuncs)
+  } catch (error) {
+    console.log(error)
+    window.alert(String(error))
+  }
 }
 
 async function fillFuncs () {
-  var contract = document.getElementById('to').value
-  if (!contract) return
+  try {
+    var contract = document.getElementById('to').value
+    if (!contract) return
 
-  const funcs = await tweb3.getMetadata(contract)
+    const funcs = await tweb3.getMetadata(contract)
 
-  var select = document.getElementById('funcs')
-  select.innerHTML = ''
-  Object.keys(funcs).forEach(item => {
-    if (item.indexOf('$') !== 0) {
-      let option = document.createElement('option')
-      option.value = item
-      option.textContent = (funcs[item].decorators || []).join(', ')
-      select.appendChild(option)
-    }
-  })
+    var select = document.getElementById('funcs')
+    select.innerHTML = ''
+    Object.keys(funcs).forEach(item => {
+      if (item.indexOf('$') !== 0) {
+        let option = document.createElement('option')
+        option.value = item
+        option.textContent = (funcs[item].decorators || []).join(', ')
+        select.appendChild(option)
+      }
+    })
+  } catch (error) {
+    console.log(error)
+    window.alert(String(error))
+  }
 }
 
 $(document).ready(function () {

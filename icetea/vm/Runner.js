@@ -20,7 +20,7 @@ module.exports = class {
     throw new Error('Not implemented')
   }
 
-  verify (src) {
+  analyze (src) {
     this.lint(src)
   }
 }

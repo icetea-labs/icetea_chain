@@ -11,8 +11,8 @@ module.exports = class extends Runner {
     return patcher(context)
   }
 
-  verify (src) {
-    super.verify(src)
+  analyze (src) {
+    super.analyze(src)
     return parseMetadata(src)
   }
 }

@@ -8,8 +8,10 @@ const t = {
     return ecc.verify(signature, message, 'EOS' + pubKey)
   },
 
-  verifyTx: function (tx) {
-    return t.verify(tx.signature, tx.signatureMessage, tx.from)
+  verifyTxSignature: function (tx) {
+    if (!t.verify(tx.signature, tx.signatureMessage, tx.from)) {
+      throw new Error('Invalid signature')
+    }
   },
 
   generateKey: ecc.randomKey,
