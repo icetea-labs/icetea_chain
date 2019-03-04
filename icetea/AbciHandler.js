@@ -1,6 +1,5 @@
 const { getBlock, getTx, replyQuery } = require('./helper/abci')
-const IceTeaApp = require('./App')
-const app = new IceTeaApp()
+const app = require('./App')
 
 // turn on debug logging
 require('debug').enable('abci*')

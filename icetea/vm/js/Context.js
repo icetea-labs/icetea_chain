@@ -1,6 +1,15 @@
 const _ = require('lodash')
 const utils = require('../../helper/utils')
-const Worker = require('../../ContractInvoker')
+const invoker = require('../../ContractInvoker')
+
+function makeInvokableMethod (invokerTypes, destContract, method, options) {
+  return invokerTypes.reduce((obj, t) => {
+    obj[t] = (...params) => {
+      return invoker[t](destContract, method, params, options)
+    }
+    return obj
+  }, {})
+}
 
 exports.for = (invokeType, contractAddress, methodName, methodParams, options) => {
   const map = {
@@ -34,18 +43,13 @@ exports.forTransaction = (contractAddress, methodName, methodParams, { tx, block
       msg,
       block,
       tags,
+      balanceOf: (addr) => utils.balanceOf(addr, stateTable),
       loadContract: (to) => {
-        const worker = new Worker(stateTable)
         return new Proxy({}, {
           get (obj, method) {
-            const real = obj[method]
-            if (!real) {
-              return (...params) => {
-                const tx = { from: contractAddress }
-                return worker.invokeUpdate(to, method, params, { tx, block, stateTable })
-              }
-            }
-            return real
+            const tx = { from: contractAddress }
+            const options = { tx, ...tx, block, stateTable }
+            return makeInvokableMethod(['invokeUpdate', 'invokeView', 'invokePure'], to, method, options)
           }
         })
       }
@@ -99,21 +103,17 @@ exports.forView = (contractAddress, name, params, options) => {
     getEnv: () => ({
       msg,
       block,
-      loadContract: (addr) => {
-        const worker = new Worker(stateTable)
+      balanceOf: (addr) => utils.balanceOf(addr, stateTable),
+      loadContract: (to) => {
         return new Proxy({}, {
           get (obj, method) {
-            const real = obj[method]
-            if (!real) {
-              return (...params) => worker.invokeView(addr, method, params, {
-                from: contractAddress,
-                stateTable
-              })
-            }
-            return real
+            const tx = { from: contractAddress }
+            const options = { tx, ...tx, block, stateTable }
+            return makeInvokableMethod(['invokeView', 'invokePure'], to, method, options)
           }
         })
-      } }),
+      }
+    }),
     transfer: () => {
       throw new Error('Cannot transfer inside a view function.')
     },

@@ -5,6 +5,6 @@
 
     @transaction setValue(value) {
         const contract = loadContract(this.otherContract);
-        contract.setValue(value)
+        contract.setValue.invokeUpdate(value)
     }
 }

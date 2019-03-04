@@ -17,7 +17,6 @@ module.exports = class {
   // Some op in the future: set alias/options, vote, etc.
 
   constructor (from, to, value, fee, data, nonce) {
-
     if (!from) {
       throw new Error('Transaction "from" is required.')
     }

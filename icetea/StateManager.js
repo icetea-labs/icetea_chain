@@ -3,42 +3,45 @@ const utils = require('./helper/utils')
 const merkle = require('./helper/merkle')
 const _ = require('lodash')
 
-module.exports = class StateManager {
+// Declare outside class to ensure private
+let stateTable, lastBlock
+
+class StateManager {
   async load () {
     const storedData = (await merkle.load()) || {
-      state: this._initStateTable()
+      state: initStateTable()
     }
 
-    this.stateTable = storedData.state
-    this.lastBlock = storedData.block
+    stateTable = storedData.state
+    lastBlock = storedData.block
   }
 
   getLastState () {
-    if (this.lastBlock && this.lastBlock.number > 1) {
+    if (lastBlock && lastBlock.number > 1) {
       return {
-        lastBlockHeight: this.lastBlock.number,
-        lastBlockAppHash: merkle.getHash(this.stateTable)
+        lastBlockHeight: lastBlock.number,
+        lastBlockAppHash: merkle.getHash(stateTable)
       }
     } else {
       return {
-        lastBlockHeight: this.lastBlock ? 1 : 0,
+        lastBlockHeight: lastBlock ? 1 : 0,
         lastBlockAppHash: Buffer.alloc(0)
       }
     }
   }
 
   setBlock (block) {
-    this.lastBlock = Object.freeze(block)
+    lastBlock = Object.freeze(block)
   }
 
   persist () {
-    if (!this.lastBlock || this.lastBlock.number <= 1) {
+    if (!lastBlock || lastBlock.number <= 1) {
       return Buffer.alloc(0)
     }
-    const appHash = merkle.getHash(this.stateTable)
+    const appHash = merkle.getHash(stateTable)
     merkle.save({
-      block: this.lastBlock,
-      state: this.stateTable
+      block: lastBlock,
+      state: stateTable
     })
 
     // return, no need to wait for save to finish
@@ -46,49 +49,51 @@ module.exports = class StateManager {
   }
 
   produceDraft () {
-    return _.cloneDeep(this.stateTable)
+    return _.cloneDeep(stateTable)
   }
 
   applyDraft (draft) {
-    utils.mergeStateTables(this.stateTable, draft)
+    utils.mergeStateTables(stateTable, draft)
     return this
   }
 
   // Utility function to get state
 
   getStateView () {
-    return this.stateTable
+    return stateTable
   }
 
   getAccountState (addr) {
-    return this.stateTable[addr] || {}
+    return stateTable[addr] || {}
   }
 
   getBlock () {
-    return this.lastBlock
+    return lastBlock
   }
 
   balanceOf (addr) {
-    return this.getAccountState(addr).balance || 0
+    return utils.balanceOf(addr, stateTable)
   }
 
   getContractAddresses () {
-    return Object.keys(this.stateTable).reduce((prev, addr) => {
-      if (this.stateTable[addr].src) {
+    return Object.keys(stateTable).reduce((prev, addr) => {
+      if (stateTable[addr].src) {
         prev.unshift(addr)
       }
       return prev
     }, [])
   }
-
-  // Private stuff
-
-  _initStateTable () {
-    return config.initialBalances.reduce((stateTable, item) => {
-      utils.prepareState(item.address, stateTable, {
-        balance: item.balance
-      })
-      return stateTable
-    }, {})
-  }
 }
+
+// Private stuff
+
+function initStateTable () {
+  return config.initialBalances.reduce((stateTable, item) => {
+    utils.prepareState(item.address, stateTable, {
+      balance: item.balance
+    })
+    return stateTable
+  }, {})
+}
+
+module.exports = utils.newAndBind(StateManager)

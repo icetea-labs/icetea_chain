@@ -1,26 +1,30 @@
-const ContractInvoker = require('./ContractInvoker')
-const StateManager = require('./StateManager')
 const ecc = require('./helper/ecc')
 const utils = require('./helper/utils')
 const config = require('./config')
+const {
+  queryMetadata,
+  deployContract,
+  invokeView,
+  invokeUpdate,
+  invokeTx
+} = require('./ContractInvoker')
 
-module.exports = class {
+const stateManager = require('./StateManager')
+
+class App {
   constructor () {
-    this.invoker = new ContractInvoker()
-    const t = this.stateManager = new StateManager()
-    
     // Copy some methods
     Object.assign(this, {
-      setBlock: t.setBlock.bind(t),
-      persistState: t.persist.bind(t),
-      balanceOf: t.balanceOf.bind(t),
-      getContractAddresses: t.getContractAddresses.bind(t)
+      setBlock: stateManager.setBlock,
+      persistState: stateManager.persist,
+      balanceOf: stateManager.balanceOf,
+      getContractAddresses: stateManager.getContractAddresses
     })
   }
 
   async activate () {
-    await this.stateManager.load()
-    return this.stateManager.getLastState()
+    await stateManager.load()
+    return stateManager.getLastState()
   }
 
   checkTx (tx) {
@@ -30,24 +34,19 @@ module.exports = class {
     ecc.verifyTxSignature(tx)
 
     // Check balance
-    if (tx.value + tx.fee > this.stateManager.balanceOf(tx.from)) {
+    if (tx.value + tx.fee > stateManager.balanceOf(tx.from)) {
       throw new Error('Not enough balance')
     }
   }
 
   invokeView (contractAddress, methodName, methodParams, options = {}) {
-    options.stateTable = options.stateTable || this.stateManager.getStateView()
-    options.block = this.stateManager.getBlock()
-    return this.invoker.invokeView(contractAddress, methodName, methodParams, options)
-  }
-
-  queryMetadata (contractAddress, options = {}) {
-    options.stateTable = options.stateTable || this.stateManager.getStateView()
-    return this.invoker.queryMetadata(contractAddress, options)
+    options.stateTable = options.stateTable || stateManager.getStateView()
+    options.block = stateManager.getBlock()
+    return invokeView(contractAddress, methodName, methodParams, options)
   }
 
   async getMetadata (addr) {
-    const { src, meta } = this.stateManager.getAccountState(addr)
+    const { src, meta } = stateManager.getAccountState(addr)
     if (!src) {
       throw new Error('Address is not a valid contract.')
     }
@@ -56,7 +55,7 @@ module.exports = class {
       return utils.unifyMetadata(meta.operations)
     }
 
-    const info = await this.queryMetadata(addr)
+    const info = await queryMetadata(addr, { stateTable: stateManager.getStateView() })
     if (!info) return utils.unifyMetadata()
 
     const props = info.meta ||
@@ -66,75 +65,77 @@ module.exports = class {
   }
 
   async execTx (tx) {
-    const draft = this.stateManager.produceDraft()
+    const draft = stateManager.produceDraft()
 
-    const result = await this._doExecTx({
+    const result = await doExecTx({
       tx,
-      block: this.stateManager.getBlock(),
+      block: stateManager.getBlock(),
       stateTable: draft
     })
 
     // commit change made to state
     // if _doExecTx throws, this won't be called
-    this.stateManager.applyDraft(draft)
+    stateManager.applyDraft(draft)
 
     return result || []
   }
+}
 
-  /**
+/**
    * @private
    */
-  async _doExecTx (options) {
-    const { tx, stateTable } = options
-    let result
+async function doExecTx (options) {
+  const { tx, stateTable } = options
+  let result
 
-    if (tx.isContractCreation()) {
-      // analyze & save contract state
-      const contractAddress = this.invoker.deployContract(tx, stateTable)
+  if (tx.isContractCreation()) {
+    // analyze & save contract state
+    const contractAddress = deployContract(tx, stateTable)
 
-      // call constructor
-      result = this.invoker.invokeUpdate(
-        contractAddress,
-        '__on_deployed',
-        tx.data.params,
-        options
-      ).then(r => {
-        // when deploy contract, always return the contract address
-        r[0] = contractAddress
+    // call constructor
+    result = invokeUpdate(
+      contractAddress,
+      '__on_deployed',
+      tx.data.params,
+      options
+    ).then(r => {
+      // when deploy contract, always return the contract address
+      r[0] = contractAddress
+      return r
+    })
+  } else if (tx.isContractCall()) {
+    if (['constructor', '__on_received', '__on_deployed', 'getState', 'setState', 'getEnv'].includes(tx.data.name)) {
+      throw new Error('Calling this method directly is not allowed')
+    }
+    result = invokeTx(options)
+  }
+
+  // process value transfer
+  utils.decBalance(tx.from, tx.value + tx.fee, stateTable)
+  utils.incBalance(tx.to, tx.value, stateTable)
+  utils.incBalance(config.feeCollector, tx.fee, stateTable)
+
+  // call __on_received
+  if (tx.value && stateTable[tx.to].src && !tx.isContractCreation() && !tx.isContractCall()) {
+    result = invokeUpdate(tx.to, '__on_received', tx.data.params, options)
+  }
+
+  // emit Transferred event
+  if (tx.value > 0) {
+    const emitTransferred = (tags) => {
+      return utils.emitTransferred(null, tags, tx.from, tx.to, tx.value)
+    }
+    if (result) {
+      result.then(r => {
+        emitTransferred(r[1])
         return r
       })
-    } else if (tx.isContractCall()) {
-      if (['constructor', '__on_received', '__on_deployed', 'getState', 'setState', 'getEnv'].includes(tx.data.name)) {
-        throw new Error('Calling this method directly is not allowed')
-      }
-      result = this.invoker.invokeTx(options)
+    } else {
+      result = [undefined, emitTransferred()]
     }
-
-    // process value transfer
-    utils.decBalance(tx.from, tx.value + tx.fee, stateTable)
-    utils.incBalance(tx.to, tx.value, stateTable)
-    utils.incBalance(config.feeCollector, tx.fee, stateTable)
-
-    // call __on_received
-    if (tx.value && stateTable[tx.to].src && !tx.isContractCreation() && !tx.isContractCall()) {
-      result = this.invoker.invokeUpdate(tx.to, '__on_received', tx.data.params, options)
-    }
-
-    // emit Transferred event
-    if (tx.value > 0) {
-      const emitTransferred = (tags) => {
-        return utils.emitTransferred(null, tags, tx.from, tx.to, tx.value)
-      }
-      if (result) {
-        result.then(r => {
-          emitTransferred(r[1])
-          return r
-        })
-      } else {
-        result = [undefined, emitTransferred()]
-      }
-    }
-
-    return result
   }
+
+  return result
 }
+
+module.exports = utils.newAndBind(App)

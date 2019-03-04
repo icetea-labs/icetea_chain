@@ -1,7 +1,7 @@
 const utils = require('./helper/utils')
 const { getRunner, getContext, getGuard } = require('./vm')
 
-module.exports = class {
+class ContractInvoker {
   /**
      * Invoke a contract method.
      * @param {string} invokeType 'transaction', 'view', or 'pure'.
@@ -21,7 +21,7 @@ module.exports = class {
       return options.stateTable[contractAddress].balance || 0
     }
 
-    const { mode, src } = this._getContractInfo(contractAddress, options.stateTable)
+    const { mode, src } = getContractInfo(contractAddress, options.stateTable)
     const vm = getRunner(mode)
     const context = getContext(mode).for(invokeType, contractAddress, methodName, methodParams, options)
     const guard = getGuard(mode)(src)
@@ -90,7 +90,7 @@ module.exports = class {
 
   deployContract (tx, stateTable) {
     // make new address for smart contract
-    let contractAddress = this._makeContractAddress(stateTable, tx.from)
+    let contractAddress = makeContractAddress(stateTable, tx.from)
     tx.to = contractAddress
 
     // analyze and compile source
@@ -115,29 +115,31 @@ module.exports = class {
 
     return contractAddress
   }
+}
 
-  /**
+/**
    * Get contract information. Throw if not a valid contract.
    * @private
    * @returns {{state: any, mode: number, src: string|Buffer}} contract data.
    */
-  _getContractInfo (addr, stateTable) {
-    if (stateTable[addr] && stateTable[addr].src) {
-      return stateTable[addr]
-    }
-    throw new Error('The address supplied is not a deployed contract')
+function getContractInfo (addr, stateTable) {
+  if (stateTable[addr] && stateTable[addr].src) {
+    return stateTable[addr]
   }
-
-  _makeContractAddress (stateTable, deployedBy) {
-    // make new address for smart contract
-    // should be deterministic
-
-    // TODO: change this
-
-    const count = Object.keys(stateTable).reduce((t, k) => (
-      (k.startsWith('contract_') && k.endsWith(deployedBy)) ? (t + 1) : t
-    ), 0)
-
-    return 'contract_' + count + '_' + deployedBy
-  }
+  throw new Error('The address supplied is not a deployed contract')
 }
+
+function makeContractAddress (stateTable, deployedBy) {
+  // make new address for smart contract
+  // should be deterministic
+
+  // TODO: change this
+
+  const count = Object.keys(stateTable).reduce((t, k) => (
+    (k.startsWith('contract_') && k.endsWith(deployedBy)) ? (t + 1) : t
+  ), 0)
+
+  return 'contract_' + count + '_' + deployedBy
+}
+
+module.exports = utils.newAndBind(ContractInvoker)

@@ -29,6 +29,10 @@ exports.prepareState = (addr, stateTable, initialValues) => {
   return stateTable[addr]
 }
 
+exports.balanceOf = (addr, stateTable) => {
+  return (stateTable[addr] || {}).balance || 0
+}
+
 exports.incBalance = (addr, delta, stateTable) => {
   delta = parseFloat(delta) || 0
   const state = exports.prepareState(addr, stateTable)
@@ -179,4 +183,19 @@ exports.deepFreeze = (object) => {
   }
 
   return Object.freeze(object)
+}
+
+exports.bindAll = obj => {
+  Object.getOwnPropertyNames(obj).forEach(p => {
+    if (p !== 'constructor' && typeof obj[p] === 'function') {
+      obj[p] = obj[p].bind(obj)
+    }
+  })
+  return obj
+}
+
+exports.newAndBind = (SomeClass, ...params) => {
+  const instance = new SomeClass(params)
+  exports.bindAll(Object.getPrototypeOf(instance))
+  return instance
 }
