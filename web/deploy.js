@@ -1,5 +1,5 @@
 import $ from 'jquery'
-import * as utils from './helper'
+import * as helper from './helper'
 import { switchEncoding } from '../tweb3/utils'
 window.$ = $
 
@@ -31,11 +31,11 @@ function buildData () {
     op: 0,
     mode: mode,
     src: src,
-    params: utils.parseParamsFromField('#params')
+    params: helper.parseParamsFromField('#params')
   }
 }
 
-utils.registerTxForm($('#form'), buildData)
+helper.registerTxForm($('#form'), buildData)
 
 document.getElementById('srcMode').addEventListener('change', function (e) {
   var s = this.value
