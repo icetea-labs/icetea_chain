@@ -30,14 +30,38 @@ const wasm_bindgen = function ({ log, importTableName, get_sender, get_address, 
 
   let WASM_VECTOR_LEN = 0
 
-  function passStringToWasm (arg) {
-    if (typeof (arg) !== 'string') throw new Error('expected a string argument')
+  let passStringToWasm
+  if (typeof cachedTextEncoder.encodeInto === 'function') {
+    passStringToWasm = function (arg) {
+      if (typeof (arg) !== 'string') throw new Error('expected a string argument')
 
-    const buf = cachedTextEncoder.encode(arg)
-    const ptr = wasm.__wbindgen_malloc(buf.length)
-    getUint8Memory().set(buf, ptr)
-    WASM_VECTOR_LEN = buf.length
-    return ptr
+      let size = arg.length
+      let ptr = wasm.__wbindgen_malloc(size)
+      let writeOffset = 0
+      while (true) {
+        const view = getUint8Memory().subarray(ptr + writeOffset, ptr + size)
+        const { read, written } = cachedTextEncoder.encodeInto(arg, view)
+        arg = arg.substring(read)
+        writeOffset += written
+        if (arg.length === 0) {
+          break
+        }
+        ptr = wasm.__wbindgen_realloc(ptr, size, size * 2)
+        size *= 2
+      }
+      WASM_VECTOR_LEN = writeOffset
+      return ptr
+    }
+  } else {
+    passStringToWasm = function (arg) {
+      if (typeof (arg) !== 'string') throw new Error('expected a string argument')
+
+      const buf = cachedTextEncoder.encode(arg)
+      const ptr = wasm.__wbindgen_malloc(buf.length)
+      getUint8Memory().set(buf, ptr)
+      WASM_VECTOR_LEN = buf.length
+      return ptr
+    }
   }
 
   let cachegetUint32Memory = null
@@ -245,6 +269,25 @@ const wasm_bindgen = function ({ log, importTableName, get_sender, get_address, 
     }
   }
 
+  // keep two same function, depend on wasm-bindgen signature
+  __exports.__wbg_from_3443719e1e26ff42 = function (arg0) {
+    try {
+      return addHeapObject(Array.from(getObject(arg0)))
+    } catch (e) {
+      console.error('wasm-bindgen: imported JS function that was not marked as `catch` threw an error:', e)
+      throw e
+    }
+  }
+
+  __exports.__wbg_length_1b01f07c51dbf51f = function (arg0) {
+    try {
+      return getObject(arg0).length
+    } catch (e) {
+      console.error('wasm-bindgen: imported JS function that was not marked as `catch` threw an error:', e)
+      throw e
+    }
+  }
+
   __exports.__wbg_length_434e555f76c0b257 = function (arg0) {
     try {
       return getObject(arg0).length
@@ -305,6 +348,14 @@ const wasm_bindgen = function ({ log, importTableName, get_sender, get_address, 
   }
 
   __exports.__wbg_get_e323dac36fd230a3 = function (arg0, arg1, exnptr) {
+    try {
+      return addHeapObject(Reflect.get(getObject(arg0), getObject(arg1)))
+    } catch (e) {
+      handleError(exnptr, e)
+    }
+  }
+
+  __exports.__wbg_get_9136c910ad341873 = function (arg0, arg1, exnptr) {
     try {
       return addHeapObject(Reflect.get(getObject(arg0), getObject(arg1)))
     } catch (e) {
@@ -450,6 +501,14 @@ const wasm_bindgen = function ({ log, importTableName, get_sender, get_address, 
     if (typeof (obj) === 'number') { return obj }
     getUint8Memory()[invalid] = 1
     return 0
+  }
+
+  __exports.__wbindgen_is_null = function (idx) {
+    return getObject(idx) === null ? 1 : 0
+  }
+
+  __exports.__wbindgen_is_undefined = function (idx) {
+    return getObject(idx) === undefined ? 1 : 0
   }
 
   __exports.__wbindgen_is_function = function (i) {

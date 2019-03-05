@@ -94,7 +94,7 @@ const handlers = {
   },
 
   async commit (req) {
-    //console.log('commit', req)
+    // console.log('commit', req)
     return { data: await worker.commit() } // return the block stateRoot
   },
 
