@@ -49,9 +49,28 @@ async function fillFuncs () {
 
 $(document).ready(function () {
   fillContracts()
-  helper.registerTxForm($('#form'), buildData)
+  // helper.registerTxForm($('#form'), buildData);
+  
+  $('#form').submit(async function (e) {
+    e.preventDefault();
+    const privateKey = window.$('#private_key').val().trim();
+    const address = window.$('#to').val().trim();
+    const name = document.getElementById('name').value;
+    const params = helper.parseParamsFromField('#params')
+    // submit tx
+    try {
+      var ct = tweb3.contract(address, privateKey);
+      var tx = await ct.methods.setValue.sendSync(name, params);
+      // console.log('tx',tx);
+      window.location.href = '/tx.html?hash=' + tx.hash;
+    } catch (error) {
+      console.log(error)
+      window.alert(String(error))
+    }
+  });
 
   $('#read').on('click', async function (e) {
+    e.preventDefault();
     var form = document.getElementById('form')
     var address = form.to.value.trim()
     var name = form.name.value.trim()
@@ -60,12 +79,14 @@ $(document).ready(function () {
     //     return;
     // }
     document.getElementById('funcName').textContent = name
-
     var params = helper.parseParamsFromField('#params')
+    const privateKey = window.$('#private_key').val().trim();
 
     // TODO: modify frontend, add from address
     try {
-      const result = await tweb3.callReadonlyContractMethod(address, name, params, { from: '617BFqg1QhNtsJiNiWz9jGpsm5iAJKqWQBhhk36KjvUFqNkh47' })
+      // const result = await tweb3.callReadonlyContractMethod(address, name, params, { from: '617BFqg1QhNtsJiNiWz9jGpsm5iAJKqWQBhhk36KjvUFqNkh47' })
+      var ct = tweb3.contract(address, privateKey);
+      var result = await ct.methods.getValue.call(name, params);
       if (result.success) {
         document.getElementById('resultJson').textContent = result.data
       } else {
