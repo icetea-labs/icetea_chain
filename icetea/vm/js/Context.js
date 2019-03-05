@@ -22,56 +22,38 @@ exports.for = (invokeType, contractAddress, methodName, methodParams, options) =
   return typeof fn === 'function' ? fn(contractAddress, methodName, methodParams, options) : fn
 }
 
-exports.forTransaction = (contractAddress, methodName, methodParams, { tx, block, stateTable }) => {
+exports.forTransaction = (contractAddress, methodName, methodParams, { tx, block, stateProxy }) => {
   const msg = {}
   msg.name = methodName
-  msg.params = Object.freeze(methodParams) // contract still can change if some param is object
+  msg.params = methodParams
   msg.sender = tx.from
-  msg.value = tx.value || 0
-  msg.fee = tx.fee || 0
+  msg.value = tx.value
+  msg.fee = tx.fee
   msg.callType = (msg.value > 0) ? 'payable' : 'transaction'
-  Object.freeze(msg)
+  utils.deepFreeze(msg)
 
-  const state = stateTable[contractAddress].state || {}
-  const balance = stateTable[contractAddress].balance || 0
   const tags = {}
 
   const ctx = {
+    ...stateProxy,
     address: contractAddress,
-    balance,
+    get balance () {
+      return stateProxy.balanceOf(contractAddress)
+    },
     getEnv: () => ({
       msg,
       block,
       tags,
-      balanceOf: (addr) => utils.balanceOf(addr, stateTable),
       loadContract: (to) => {
         return new Proxy({}, {
           get (obj, method) {
             const tx = { from: contractAddress }
-            const options = { tx, ...tx, block, stateTable }
+            const options = { tx, ...tx, block, stateProxy }
             return makeInvokableMethod(['invokeUpdate', 'invokeView', 'invokePure'], to, method, options)
           }
         })
       }
     }),
-    transfer: (to, value) => {
-      ctx.balance -= value
-      utils.decBalance(contractAddress, value, stateTable)
-      utils.incBalance(to, value, stateTable)
-      utils.emitTransferred(contractAddress, tags, contractAddress, to, value)
-    },
-    _state: {},
-    hasState: (key) => {
-      return ctx._state.hasOwnProperty(key) || state.hasOwnProperty(key)
-    },
-    getState: (key, defVal) => {
-      return ctx._state.hasOwnProperty(key) ? ctx._state[key] : (state.hasOwnProperty(key) ? state[key] : defVal)
-    },
-    setState: (key, value) => {
-      const old = ctx.getState(key)
-      ctx._state[key] = value
-      return old
-    },
     emitEvent: (eventName, eventData, indexes = []) => {
       utils.emitEvent(contractAddress, tags, eventName, eventData, indexes)
     }
@@ -81,7 +63,7 @@ exports.forTransaction = (contractAddress, methodName, methodParams, { tx, block
 }
 
 exports.forView = (contractAddress, name, params, options) => {
-  const { from, block, stateTable } = options
+  const { from, block, stateProxy } = options
   const msg = new Proxy({ name, params, sender: from, callType: 'view' }, {
     get (target, prop) {
       if (Object.keys(msg).includes(prop) && !['name', 'params', 'callType', 'sender'].includes(prop)) {
@@ -94,12 +76,12 @@ exports.forView = (contractAddress, name, params, options) => {
     }
   })
 
-  const state = _.cloneDeep(stateTable[contractAddress].state || {})
-  const balance = stateTable[contractAddress].balance || 0
-
   const ctx = {
+    ...stateProxy,
     address: contractAddress,
-    balance,
+    get balance () {
+      return stateProxy.balanceOf(contractAddress)
+    },
     getEnv: () => ({
       msg,
       block,
@@ -113,22 +95,7 @@ exports.forView = (contractAddress, name, params, options) => {
           }
         })
       }
-    }),
-    transfer: () => {
-      throw new Error('Cannot transfer inside a view function.')
-    },
-    hasState: (key) => {
-      return state.hasOwnProperty(key)
-    },
-    getState: (key) => {
-      return state[key] // if contract change it's props, it'll be ignored anyway
-    },
-    setState: () => {
-      throw new Error('Cannot change state inside a view function.')
-    },
-    emitEvent: () => {
-      throw new Error('Cannot emit event inside a view function.')
-    }
+    })
   }
 
   return Object.freeze(ctx)
@@ -143,7 +110,7 @@ exports.forPure = (address, name, params, { from }) => {
     getEnv: () => ({ msg: { sender: from, name, params, callType: 'pure' } })
   }
 
-  return Object.freeze(ctx)
+  return utils.deepFreeze(ctx)
 }
 
 exports.forMetadata = {

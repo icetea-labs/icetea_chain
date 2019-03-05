@@ -2,6 +2,7 @@ const config = require('./config')
 const utils = require('./helper/utils')
 const merkle = require('./helper/merkle')
 const _ = require('lodash')
+const stateProxy = require('./helper/StateProxy')
 
 // Declare outside class to ensure private
 let stateTable, lastBlock
@@ -59,14 +60,16 @@ class StateManager {
 
   // Utility function to get state
 
-  getStateView () {
-    return stateTable
+  getStateForView (contractAddress) {
+    return stateProxy.getStateForView(stateTable, contractAddress)
   }
 
+  // FIXME This is not safe, should refactor
   getAccountState (addr) {
     return stateTable[addr] || {}
   }
 
+  // block is immutable (Object.freeze), so it is safe to pass around
   getBlock () {
     return lastBlock
   }
