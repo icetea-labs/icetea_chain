@@ -10,8 +10,11 @@ const Contract = require ('./Contract');
 
 function decodeTags(tx, keepEvents = false) {
   const EMPTY_RESULT = {}
-  let b64Tags = tx
-  if (tx.tx_result && tx.tx_result.tags) {
+  let b64Tags = tx;
+
+  if (tx.data && tx.data.value && tx.data.value.TxResult.result.tags) {
+    b64Tags = tx.data.value.TxResult.result.tags; //For subscribe
+  } else if (tx.tx_result && tx.tx_result.tags) {
     b64Tags = tx.tx_result.tags
   } else if (tx.deliver_tx && tx.deliver_tx.tags) {
     b64Tags = tx.deliver_tx.tags
@@ -30,7 +33,7 @@ function decodeTags(tx, keepEvents = false) {
 
   if (!keepEvents && tags.EventNames) {
     // remove event-related tags
-    const events = tags.EventNames.split('|')
+    const events = tags.EventNames.split('|');
     events.forEach(e => {
       if (e) {
         const eventName = e.split('.')[1]
@@ -294,7 +297,16 @@ exports.IceTeaWeb3 = class IceTeaWeb3 {
      */
   subscribe(eventName, conditions = {}, callback) {
     if(!this.isWebSocket) throw new Error('subscribe for WebSocket only');
-    let query = "";
+    let systemEvent = ['NewBlock','NewBlockHeader','Tx','RoundState','NewRound','CompleteProposal','Vote','ValidatorSetUpdates','ProposalString']
+    let isSystemEvent = true;
+    // let nonSystemEventName = '';
+    if(systemEvent.indexOf(eventName) < 0 ){
+      isSystemEvent = false;
+      // nonSystemEventName = eventName;
+      eventName = 'Tx';
+    }
+
+    var query = "";
     if (typeof conditions === "string") {
         query = conditions;
     } else {
@@ -314,15 +326,23 @@ exports.IceTeaWeb3 = class IceTeaWeb3 {
             return arr;
         }, [`tm.event = '${eventName}'`]).join(" AND ");
     }
-    // console.log("query: ", query);
-    return this.rpc.call("subscribe", {"query": query}).then(() => {
+
+    return this.rpc.call("subscribe", {"query": query}).then((result) => {
         this.rpc.registerEventListener('onMessage', (message) => {
-            if(JSON.parse(message).id.indexOf('event') > 0){
-                let datatype = JSON.parse(message).result.data.type.split("/");
-                if(eventName === datatype[datatype.length-1])
-                  return callback(message);
+          if(result.id && JSON.parse(message).id.indexOf(result.id) >= 0 ) {
+            if(isSystemEvent) {
+                return callback(message);
+            } else {
+              let result = {};
+              result.id = JSON.parse(message).id;
+              result.result = tweb3.utils.decodeEventData(JSON.parse(message).result)[0];
+              // if(nonSystemEventName === JSON.parse(event)[0]['eventName'])
+                return callback(JSON.stringify(result), null, 2);
             }
+          }
         });
+        
+        return result;
     });
   }
   /**
@@ -443,15 +463,15 @@ class WebSocketProvider {
   }
 
   call(method, params) {
-    // console.log('method: ',method);
-    // console.log('params: ',params);
+    // console.log('method ',method, '| params: ',params);
       return this._call(method, params).then(resp => {
           if (resp.error) {
               const err = new Error(resp.error.message);
               Object.assign(err, resp.error);
               throw err;
           }
-          
+          if(resp.id) resp.result.id = resp.id;
+          console.log('method',method,' resp.id',resp.id);
           return resp.result;
       })
   }
@@ -532,7 +552,7 @@ class HttpProvider {
         Object.assign(err, resp.error)
         throw err
       }
-
+      if(resp.id) resp.result.id = resp.id;
       return resp.result
     })
   }
