@@ -4,14 +4,6 @@ import utils from '../tweb3/utils'
 import tweb3 from './tweb3'
 window.$ = $
 
-function buildData () {
-  return {
-    op: 1,
-    name: document.getElementById('name').value,
-    params: helper.parseParamsFromField('#params')
-  }
-}
-
 async function fillContracts () {
   try {
     const contracts = await tweb3.getContracts()
@@ -60,27 +52,27 @@ async function fillFuncs () {
 $(document).ready(function () {
   fillContracts()
   // helper.registerTxForm($('#form'), buildData);
-  
+
   $('#form').submit(async function (e) {
-    e.preventDefault();
-    const privateKey = window.$('#private_key').val().trim();
-    const address = window.$('#to').val().trim();
-    const name = document.getElementById('name').value;
+    e.preventDefault()
+    const privateKey = window.$('#private_key').val().trim()
+    const address = window.$('#to').val().trim()
+    const name = document.getElementById('name').value
     const params = helper.parseParamsFromField('#params')
     // submit tx
     try {
-      var ct = tweb3.contract(address, privateKey);
-      var tx = await ct.methods.setValue.sendSync(name, params);
+      var ct = tweb3.contract(address, privateKey)
+      var tx = await ct.methods.setValue.sendSync(name, params)
       // console.log('tx',tx);
-      window.location.href = '/tx.html?hash=' + tx.hash;
+      window.location.href = '/tx.html?hash=' + tx.hash
     } catch (error) {
       console.log(error)
       window.alert(String(error))
     }
-  });
+  })
 
   $('#read').on('click', async function (e) {
-    e.preventDefault();
+    e.preventDefault()
     var form = document.getElementById('form')
     var address = form.to.value.trim()
     var name = form.name.value.trim()
@@ -90,13 +82,13 @@ $(document).ready(function () {
     // }
     document.getElementById('funcName').textContent = name
     var params = helper.parseParamsFromField('#params')
-    const privateKey = window.$('#private_key').val().trim();
+    const privateKey = window.$('#private_key').val().trim()
 
     // TODO: modify frontend, add from address
     try {
       // const result = await tweb3.callReadonlyContractMethod(address, name, params, { from: '617BFqg1QhNtsJiNiWz9jGpsm5iAJKqWQBhhk36KjvUFqNkh47' })
-      var ct = tweb3.contract(address, privateKey);
-      var result = await ct.methods.getValue.call(name, params);
+      var ct = tweb3.contract(address, privateKey)
+      var result = await ct.methods.getValue.call(name, params)
       if (result.success) {
         document.getElementById('resultJson').textContent = result.data
       } else {
