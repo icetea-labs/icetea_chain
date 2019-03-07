@@ -23,7 +23,7 @@ exports.contextForWrite = (tx, block, stateTable, { address, fname, fparams }) =
     importTableName,
     log: console.log,
     get_msg_name: () => fname,
-    get_msg_param: () => fparams,
+    get_msg_param: () => fparams.map(x => typeof x === 'number' ? x.toString() : x),
     get_msg_value: () => tx.value,
     get_sender: () => tx.from,
     get_address: () => address,
@@ -37,7 +37,7 @@ exports.contextForWrite = (tx, block, stateTable, { address, fname, fparams }) =
     },
     _state: {},
     load: (key) => {
-      return ctx._state.hasOwnProperty(key) ? ctx._state[key] : (state.hasOwnProperty(key) ? state[key] : 0)
+      return ctx._state.hasOwnProperty(key) ? ctx._state[key] : (state.hasOwnProperty(key) ? state[key] : "0")
     },
     save: (key, value) => {
       ctx._state[key] = value
@@ -62,7 +62,7 @@ exports.contextForView = exports.contextForView = (stateTable, address, name, pa
     log: console.log,
     importTableName,
     get_msg_name: () => name,
-    get_msg_param: () => params,
+    get_msg_param: () => params.map(x => typeof x === 'number' ? x.toString() : x),
     get_msg_value: () => { throw new Error('Cannot get message value inside a view function') },
     get_sender: () => options.from || '',
     get_address: () => address,
@@ -74,7 +74,7 @@ exports.contextForView = exports.contextForView = (stateTable, address, name, pa
       return worker.callViewFunc(addr, method, params, { from: address })
     },
     load: (key) => {
-      return state[key] || 0
+      return state[key] || "0"
     },
     save: () => {
       throw new Error('Cannot change state inside a view function')

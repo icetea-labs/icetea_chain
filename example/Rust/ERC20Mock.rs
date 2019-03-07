@@ -34,82 +34,82 @@ pub fn main(operation: &str, value: &Value) -> Value {
     },
     "balance_of" => {
       let owner = params[0].as_string().unwrap();
-      return Value::from_u32(balance_of(&owner));
+      return balance_of(&owner).to_value();
     },
     "total_supply" => {
-      return Value::from_u32(total_supply());
+      return total_supply().to_value();
     },
     "allowance" => {
       let owner = params[0].as_string().unwrap();
       let spender = params[1].as_string().unwrap();
-      return Value::from_u32(allowance(&owner, &spender));
+      return allowance(&owner, &spender).to_value();
     }
     "transfer" => {
       let to = params[0].as_string().unwrap();
-      let value = params[1].as_u32().unwrap();
-      return Value::from_bool(transfer(&to, value));
+      let value = params[1].as_u128().unwrap();
+      return transfer(&to, value).to_value();
     },
     "approve" => {
       let spender = params[0].as_string().unwrap();
-      let value = params[1].as_u32().unwrap();
-      return Value::from_bool(approve(&spender, value));
+      let value = params[1].as_u128().unwrap();
+      return approve(&spender, value).to_value();
     },
     "transfer_from" => {
       let from = params[0].as_string().unwrap();
       let to = params[1].as_string().unwrap();
-      let value = params[2].as_u32().unwrap();
-      return Value::from_bool(transfer_from(&from, &to, value));
+      let value = params[2].as_u128().unwrap();
+      return transfer_from(&from, &to, value).to_value();
     },
     "increase_allowance" => {
       let spender = params[0].as_string().unwrap();
-      let value = params[1].as_u32().unwrap();
-      return Value::from_bool(increase_allowance(&spender, value));
+      let value = params[1].as_u128().unwrap();
+      return increase_allowance(&spender, value).to_value();
     },
     "decrease_allowance" => {
       let spender = params[0].as_string().unwrap();
-      let value = params[1].as_u32().unwrap();
-      return Value::from_bool(decrease_allowance(&spender, value));
+      let value = params[1].as_u128().unwrap();
+      return decrease_allowance(&spender, value).to_value();
     },
     &_ => log(&format!("[RUST] Method not found"))
   }
 
-  return Value::from_bool(true);
+  return true.to_value();
 }
 
-#[wasm_bindgen]
-pub fn total_supply() -> u32 {
-  let total_supply = load!(u32, TOTAL_SUPPLY_KEY);
+//#[wasm_bindgen]
+pub fn total_supply() -> u128 {
+  let total_supply = load!(u128, TOTAL_SUPPLY_KEY);
   return total_supply;
 }
 
-#[wasm_bindgen]
-pub fn balance_of(owner: &str) -> u32 {
-  let balance = load!(u32, &get_key!(BALANCE_KEY, owner));
+//#[wasm_bindgen]
+pub fn balance_of(owner: &str) -> u128 {
+  let balance = load!(u128, &get_key!(BALANCE_KEY, owner));
   return balance;
 }
 
-#[wasm_bindgen]
-pub fn allowance(owner: &str, spender: &str) -> u32 {
-  let allow = load!(u32, &get_key!(ALLOW_KEY, owner, spender));
+//#[wasm_bindgen]
+pub fn allowance(owner: &str, spender: &str) -> u128 {
+  let allow = load!(u128, &get_key!(ALLOW_KEY, owner, spender));
   return allow;
 }
 
-#[wasm_bindgen]
-pub fn transfer(to: &str, value: u32) -> bool {
+//#[wasm_bindgen]
+pub fn transfer(to: &str, value: u128) -> bool {
   let sender = get_sender();
   _transfer(&sender, to, value);
   return true;
 }
 
-#[wasm_bindgen]
-pub fn approve(spender: &str, value: u32) -> bool {
+//#[wasm_bindgen]
+pub fn approve(spender: &str, value: u128) -> bool {
   let sender = get_sender();
   _approve(&sender, spender, value);
   return true;
 }
 
-#[wasm_bindgen]
-pub fn transfer_from(from: &str, to: &str, value: u32) -> bool {
+//#[wasm_bindgen]
+pub fn transfer_from(from: &str, to: &str, value: u128) -> bool {
   let sender = get_sender();
   let allow = allowance(from, &sender);
   _transfer(from, to, value);
@@ -117,63 +117,63 @@ pub fn transfer_from(from: &str, to: &str, value: u32) -> bool {
   return true;
 }
 
-#[wasm_bindgen]
-pub fn increase_allowance(spender: &str, add_value: u32) -> bool {
+//#[wasm_bindgen]
+pub fn increase_allowance(spender: &str, add_value: u128) -> bool {
   let sender = get_sender();
   let allow = allowance(&sender, spender);
   _approve(&sender, spender, allow.add(add_value));
   return true;
 }
 
-#[wasm_bindgen]
-pub fn decrease_allowance(spender: &str, subtracted_value: u32) -> bool {
+//#[wasm_bindgen]
+pub fn decrease_allowance(spender: &str, subtracted_value: u128) -> bool {
   let sender = get_sender();
   let allow = allowance(&sender, spender);
   _approve(&sender, spender, allow.sub(subtracted_value));
   return true;
 }
 
-fn _transfer(from: &str, to: &str, value: u32) {
+fn _transfer(from: &str, to: &str, value: u128) {
   require!(to != "", "invalid to address!");
 
-  let mut from_balance = load!(u32, &get_key!(BALANCE_KEY, from));
+  let mut from_balance = load!(u128, &get_key!(BALANCE_KEY, from));
   from_balance = from_balance.sub(value);
-  save!(u32, &get_key!(BALANCE_KEY, from), from_balance);
+  save!(u128, &get_key!(BALANCE_KEY, from), from_balance);
 
-  let mut to_balance = load!(u32, &get_key!(BALANCE_KEY, to));
+  let mut to_balance = load!(u128, &get_key!(BALANCE_KEY, to));
   to_balance = to_balance.add(value);
-  save!(u32, &get_key!(BALANCE_KEY, to), to_balance);
+  save!(u128, &get_key!(BALANCE_KEY, to), to_balance);
 }
 
-fn _approve(owner: &str, spender: &str, value: u32) {
+fn _approve(owner: &str, spender: &str, value: u128) {
   require!(owner != "" && spender != "", "invalid address!");
-  save!(u32, &get_key!(ALLOW_KEY, owner, spender), value);
+  save!(u128, &get_key!(ALLOW_KEY, owner, spender), value);
 }
 
-fn _mint(account: &str, value: u32) {
+fn _mint(account: &str, value: u128) {
   require!(account != "", "invalid address!");
 
-  let mut total_supply = load!(u32, TOTAL_SUPPLY_KEY);
-  let mut balance = load!(u32, &get_key!(BALANCE_KEY, account));
+  let mut total_supply = load!(u128, TOTAL_SUPPLY_KEY);
+  let mut balance = load!(u128, &get_key!(BALANCE_KEY, account));
   total_supply = total_supply.add(value);
   balance = balance.add(value);
-  save!(u32, TOTAL_SUPPLY_KEY, total_supply);
-  save!(u32, &get_key!(BALANCE_KEY, account), balance);
+  save!(u128, TOTAL_SUPPLY_KEY, total_supply);
+  save!(u128, &get_key!(BALANCE_KEY, account), balance);
 }
 
-fn _burn(account: &str, value: u32) {
+fn _burn(account: &str, value: u128) {
   require!(account != "", "invalid address!");
 
-  let mut total_supply = load!(u32, TOTAL_SUPPLY_KEY);
-  let mut balance = load!(u32, &get_key!(BALANCE_KEY, account));
+  let mut total_supply = load!(u128, TOTAL_SUPPLY_KEY);
+  let mut balance = load!(u128, &get_key!(BALANCE_KEY, account));
   total_supply = total_supply.sub(value);
   balance = balance.sub(value);
 
-  save!(u32, TOTAL_SUPPLY_KEY, total_supply);
-  save!(u32, &get_key!(BALANCE_KEY, account), balance);
+  save!(u128, TOTAL_SUPPLY_KEY, total_supply);
+  save!(u128, &get_key!(BALANCE_KEY, account), balance);
 }
 
-fn _burn_from(account: &str, value: u32) {
+fn _burn_from(account: &str, value: u128) {
   let sender = get_sender();
   let allow = allowance(account, &sender);
   _burn(account, value);
