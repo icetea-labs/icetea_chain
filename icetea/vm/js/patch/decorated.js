@@ -1,15 +1,13 @@
 module.exports = src => `
 'use strict';
-const global = void 0, globalThis = void 0, process = void 0, Math = void 0,
+const global = void 0, globalThis = void 0, process = void 0, Date = void 0, Math = void 0,
     setInterval = void 0, setTimeout = void 0, setImmediate = void 0;
 const revert = text => {throw new Error(text || "Transaction reverted")};
 const require = (condition, text) => {if (!condition) revert(text)}
 const assert = require;
 
-const {msg, block, tags: __tags, loadContract} = this.getEnv();
-const now = block?block.timestamp:0;
-//const now = ["view", "pure", "dummy"].includes(msg.callType)?Date.now()/1000|0:block.timestamp;
-const Date = void 0;
+const {msg, block, tags: __tags, balanceOf, loadContract} = this.getEnv();
+const now = block ? block.timestamp : 0;
 
 assert(typeof msg !== "undefined" && msg, "Invalid or corrupt transaction data");
 require(msg.name, "Method name not specified");
@@ -24,9 +22,9 @@ if (["__on_deployed", "__on_received"].includes(msg.name) && !(msg.name in __con
 }
 require(["__metadata", "address", "balance"].includes(msg.name) || msg.name in __contract, "Method " + msg.name + " does not exist");
 
-const __this = this;
+Object.defineProperties(__contract, Object.getOwnPropertyDescriptors(this));
 const __c = {
-    instance: Object.assign(__contract, __this),
+    instance: __contract,
     meta: __metadata
 };
 

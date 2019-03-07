@@ -1,6 +1,17 @@
 const _ = require('lodash')
 
-exports.contextForWrite = (tx, block, stateTable, { address, fname, fparams }) => {
+exports.for = (invokeType, contractAddress, methodName, methodParams, options) => {
+  const map = {
+    transaction: exports.forTransaction,
+    view: exports.forView,
+    pure: exports.forPure
+  }
+
+  const fn = map[invokeType] ? map[invokeType] : exports.forMetadata
+  return typeof fn === 'function' ? fn(contractAddress, methodName, methodParams, options) : fn
+}
+
+exports.forTransaction = (address, fname, fparams, { tx, block, stateTable }) => {
   const state = stateTable[address].state || {}
   const balance = stateTable[address].balance || 0
   const importTableName = stateTable[address].meta.importTableName
@@ -26,7 +37,7 @@ exports.contextForWrite = (tx, block, stateTable, { address, fname, fparams }) =
   return ctx
 }
 
-exports.contextForView = exports.contextForView = (stateTable, address, name, params, options) => {
+exports.forView = (address, name, params, { from, block, stateTable }) => {
   const state = _.cloneDeep(stateTable[address].state || {})
   const balance = state.balance || 0
   const importTableName = stateTable[address].meta.importTableName
@@ -38,7 +49,7 @@ exports.contextForView = exports.contextForView = (stateTable, address, name, pa
     importTableName,
     get_msg_name: () => name,
     get_msg_param: () => (params && params.length) ? parseInt(params[0]) : 0,
-    get_sender: () => options.from,
+    get_sender: () => from,
     load_int: (key) => {
       return state[key] || 0
     },
@@ -50,7 +61,7 @@ exports.contextForView = exports.contextForView = (stateTable, address, name, pa
   return ctx
 }
 
-exports.contextForPure = (address, name, params, options) => {
+exports.forPure = (address, name, params, { from }) => {
   const ctx = {
     address,
     log: console.log,
@@ -59,7 +70,7 @@ exports.contextForPure = (address, name, params, options) => {
     },
     get_msg_name: () => name,
     get_msg_param: () => (params && params.length) ? parseInt(params[0]) : 0,
-    get_sender: () => options.from,
+    get_sender: () => from,
     load_int: () => {
       throw new Error('Cannot read state inside a pure function')
     },
@@ -71,7 +82,7 @@ exports.contextForPure = (address, name, params, options) => {
   return ctx
 }
 
-exports.dummyContext = {
+exports.forMetadata = {
   address: '',
   balance: 0,
   log: console.log,

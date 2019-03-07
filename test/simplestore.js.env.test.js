@@ -42,6 +42,8 @@ async function testSimpleStore (mode, src) {
   expect(typeof tags['tx.to']).toBe('string')
   const to = tags['tx.to']
 
+  expect(to).toBe(result.deliver_tx.data)
+
   // since value > 0, a system 'Transferred' event must be emitted
   const events = tweb3.utils.decodeEventData(result)
   expect(events.length).toBe(1)
