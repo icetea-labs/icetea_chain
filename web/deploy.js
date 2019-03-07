@@ -1,12 +1,14 @@
 import $ from 'jquery'
-import * as utils from './helper'
-import { switchEncoding } from '../tweb3/utils'
+import tweb3 from './tweb3'
 window.$ = $
 
 var wasmBuffer = null
 
-function buildData () {
+// helper.registerTxForm($('#form'), buildData);
+$('#form').submit(async function (e) {
+  e.preventDefault()
   var mode = +document.getElementById('srcMode').value
+  const privateKey = window.$('#private_key').val().trim()
   var src
   if (mode === 100) {
     src = wasmBuffer
@@ -24,18 +26,17 @@ function buildData () {
       window.alert("There is no @contract decorator. You should select 'Raw JS' contract source mode.")
       return null
     }
-    src = switchEncoding(src, 'utf8', 'base64')
   }
 
-  return {
-    op: 0,
-    mode: mode,
-    src: src,
-    params: utils.parseParamsFromField('#params')
+  try {
+    var tx = await tweb3.deploy(mode, src, privateKey)
+    // console.log('tx',tx);
+    window.location.href = '/tx.html?hash=' + tx.hash
+  } catch (error) {
+    console.log(error)
+    window.alert(String(error))
   }
-}
-
-utils.registerTxForm($('#form'), buildData)
+})
 
 document.getElementById('srcMode').addEventListener('change', function (e) {
   var s = this.value
