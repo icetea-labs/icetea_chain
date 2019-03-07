@@ -121,6 +121,8 @@ exports.IceTeaWeb3 = class IceTeaWeb3 {
       decodeEventData,
       decodeTags
     }
+    this.subscriptions = {};
+    this.countSubscribeEvent = 0;
   }
 
   close () {
@@ -299,11 +301,18 @@ exports.IceTeaWeb3 = class IceTeaWeb3 {
     if(!this.isWebSocket) throw new Error('subscribe for WebSocket only');
     let systemEvent = ['NewBlock','NewBlockHeader','Tx','RoundState','NewRound','CompleteProposal','Vote','ValidatorSetUpdates','ProposalString']
     let isSystemEvent = true;
-    // let nonSystemEventName = '';
+    let nonSystemEventName;
+    let space = '';
+
     if(systemEvent.indexOf(eventName) < 0 ){
       isSystemEvent = false;
-      // nonSystemEventName = eventName;
+      nonSystemEventName = eventName;
+      this.countSubscribeEvent += 1;
       eventName = 'Tx';
+    }
+
+    for(var i = 0; i < this.countSubscribeEvent; i++) {
+      space = space + ' ';
     }
 
     var query = "";
@@ -324,20 +333,33 @@ exports.IceTeaWeb3 = class IceTeaWeb3 {
                 arr.push(`${key}=${value}`)
             }
             return arr;
-        }, [`tm.event = '${eventName}'`]).join(" AND ");
+        }, [`tm.event = ${space}'${eventName}'`]).join(" AND ");
     }
 
     return this.rpc.call("subscribe", {"query": query}).then((result) => {
+        this.subscriptions[result.id] = {
+          id: result.id,
+          subscribeMethod: nonSystemEventName || eventName,
+          query: query
+        };
+        // console.log('this.subscriptions',this.subscriptions);
         this.rpc.registerEventListener('onMessage', (message) => {
-          if(result.id && JSON.parse(message).id.indexOf(result.id) >= 0 ) {
+          let jsonMsg = JSON.parse(message);
+          if(result.id && jsonMsg.id.indexOf(result.id) >= 0 ) {
             if(isSystemEvent) {
                 return callback(message);
             } else {
-              let result = {};
-              result.id = JSON.parse(message).id;
-              result.result = tweb3.utils.decodeEventData(JSON.parse(message).result)[0];
-              // if(nonSystemEventName === JSON.parse(event)[0]['eventName'])
-                return callback(JSON.stringify(result), null, 2);
+              let events = tweb3.utils.decodeEventData(jsonMsg.result);
+              events.forEach( event => {
+                if(event.eventName && nonSystemEventName === event.eventName) {
+                  let res = {};
+                  res.jsonrpc = jsonMsg.jsonrpc;
+                  res.id = jsonMsg.id;
+                  res.result = event;
+                  res.result.query = this.subscriptions[result.id].query;
+                  return callback(JSON.stringify(res), null, 2);
+                }
+              });
             }
           }
         });
@@ -350,11 +372,17 @@ exports.IceTeaWeb3 = class IceTeaWeb3 {
    *
    * @method unsubscribe
    *
-   * @param {EventName} EventName
+   * @param {SubscriptionId} subscriptionId
    */
-  unsubscribe(eventName) {
-      if(!this.isWebSocket) throw new Error('unsubscribe for WebSocket only');
-      return this.rpc.call("unsubscribe", {"query": "tm.event='"+eventName+"'"});
+  unsubscribe(subscriptionId) {
+    if(!this.isWebSocket) throw new Error('unsubscribe for WebSocket only');
+    if (typeof this.subscriptions[subscriptionId] !== 'undefined') {
+      return this.rpc.call("unsubscribe", {"query": this.subscriptions[subscriptionId].query}).then((res) => {
+          delete this.subscriptions[subscriptionId];
+          return res;
+      });
+    }
+    return Promise.reject(new Error(`Error: Subscription with ID ${subscriptionId} does not exist.`));
   }
 
   onMessage (callback) {
@@ -459,6 +487,7 @@ class WebSocketProvider {
       if(!this.wsp.isOpened){ 
           await this.wsp.open();
       }
+
       return this.wsp.sendRequest(json);
   }
 
@@ -471,7 +500,7 @@ class WebSocketProvider {
               throw err;
           }
           if(resp.id) resp.result.id = resp.id;
-          console.log('method',method,' resp.id',resp.id);
+
           return resp.result;
       })
   }
@@ -498,6 +527,7 @@ class WebSocketProvider {
           if (r && r.response && r.response.info) {
               r = JSON.parse(r.response.info);
           }
+          
           return r;
       })
   }
