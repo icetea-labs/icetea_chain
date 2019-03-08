@@ -1,3 +1,4 @@
+require('dotenv').config()
 const server = require('abci')
 const startup = require('./AbciHandler')
 const { abciServerPort } = require('./config')

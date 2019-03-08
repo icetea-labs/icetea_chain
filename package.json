@@ -28,6 +28,7 @@
     "abci": "5.0.1",
     "ansi_up": "3.0.0",
     "body-parser": "1.18.3",
+    "dotenv": "^6.2.0",
     "eosjs-ecc": "4.0.4",
     "express": "4.16.4",
     "halting-problem": "1.0.3",
