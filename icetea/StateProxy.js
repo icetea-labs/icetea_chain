@@ -202,7 +202,12 @@ const getStateProxy = (stateTable) => {
 }
 
 const applyChanges = (stateTable, { deployedContracts, storages, balances }) => {
-  console.log(storages, deployedContracts, stateTable)
+
+  let oldStateTable
+  if (process.env.PRINT_STATE_DIFF === '1') {
+    oldStateTable = _.cloneDeep(stateTable)
+  }
+
   Object.assign(stateTable, deployedContracts)
 
   Object.keys(storages).forEach(addr => {
@@ -218,6 +223,24 @@ const applyChanges = (stateTable, { deployedContracts, storages, balances }) => 
       }
       stateTable[addr] = stateTable[addr] || {}
       stateTable[addr].balance = value
+    })
+  }
+
+  if (process.env.PRINT_STATE_DIFF === '1') {
+    const {deepEqual, diff} = require('./helper/diff')
+
+    Object.keys(stateTable).forEach(addr => {
+      if (!oldStateTable.hasOwnProperty(addr)) {
+        diff(stateTable[addr], {}, `DEPLOYED: ${addr}`)
+      }
+    })
+
+    Object.keys(oldStateTable).forEach(addr => {
+      if (!stateTable.hasOwnProperty(addr)) {
+        diff(oldStateTable[addr], {}, `DELETED: ${addr}`)
+      } else if (!deepEqual(oldStateTable[addr], stateTable[addr])) {
+        diff(oldStateTable[addr], stateTable[addr], `MODIFIED: ${addr}`)
+      }
     })
   }
 

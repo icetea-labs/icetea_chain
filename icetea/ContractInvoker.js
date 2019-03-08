@@ -92,10 +92,13 @@ class ContractInvoker {
 
     // save contract src and data to state
     const state = {
-      balance: 0,
-      mode,
+      // balance: 0,
+      // mode,
       deployedBy,
       src: compiledSrc
+    }
+    if (mode) {
+      state.mode = mode
     }
     if (meta) {
       state.meta = meta
