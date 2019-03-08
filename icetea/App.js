@@ -14,18 +14,23 @@ class App {
   constructor () {
     // Copy some methods
     Object.assign(this, {
-      setBlock: stateManager.setBlock,
-      loadState: stateManager.load,
-      persistState: stateManager.persist,
-      balanceOf: stateManager.balanceOf,
-      getContractAddresses: stateManager.getContractAddresses,
-      debugState: stateManager.debugState
+      setBlock: stateManager.setBlock.bind(stateManager),
+      loadState: stateManager.load.bind(stateManager),
+      persistState: stateManager.persist.bind(stateManager),
+      balanceOf: stateManager.balanceOf.bind(stateManager),
+      getContractAddresses: stateManager.getContractAddresses.bind(stateManager),
+      debugState: stateManager.debugState.bind(stateManager)
     })
   }
 
   async activate () {
     await stateManager.load()
     return stateManager.getLastState()
+  }
+
+  addStateObserver ({ beforeTx, afterTx }) {
+    stateManager.on('beginCheckpoint', beforeTx)
+    stateManager.on('endCheckpoint', afterTx)
   }
 
   checkTx (tx) {
@@ -68,6 +73,8 @@ class App {
   }
 
   async execTx (tx) {
+    stateManager.beginCheckpoint()
+
     const needState = willCallContract(tx)
     const { stateAccess, patch, tools } = needState ? stateManager.produceDraft(tx) : {}
 
@@ -83,6 +90,8 @@ class App {
     if (needState) {
       stateManager.applyDraft(patch)
     }
+
+    stateManager.endCheckpoint()
 
     return result || []
   }

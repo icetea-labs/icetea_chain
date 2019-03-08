@@ -1,13 +1,12 @@
 const config = require('./config')
-const utils = require('./helper/utils')
 const merkle = require('./helper/merkle')
-// const _ = require('lodash')
+const EventEmitter = require('events')
 const stateProxy = require('./StateProxy')
 
 // Declare outside class to ensure private
 let stateTable, lastBlock
 
-class StateManager {
+class StateManager extends EventEmitter {
   async load () {
     const storedData = (await merkle.load()) || {
       state: initStateTable()
@@ -64,6 +63,14 @@ class StateManager {
     // utils.mergeStateTables(stateTable, draft)
     stateProxy.applyChanges(stateTable, patch)
     return this
+  }
+
+  beginCheckpoint () {
+    this.emit('beginCheckpoint', stateTable)
+  }
+
+  endCheckpoint () {
+    this.emit('endCheckpoint', stateTable)
   }
 
   // Utility function to get state
@@ -136,4 +143,4 @@ function decBalance (addr, delta) {
   incBalance(addr, -delta)
 }
 
-module.exports = utils.newAndBind(StateManager)
+module.exports = new StateManager()

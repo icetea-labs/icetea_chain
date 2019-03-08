@@ -1,6 +1,7 @@
 // Credit: https://github.com/odo-network/immuta/blob/master/src/utils/print-difference.js
 
 const chalk = require('chalk')
+const _ = require('lodash')
 
 const c = {
   padstart: 5,
@@ -189,7 +190,7 @@ function stringFromTo (from, to, separator = '--->') {
   return `${from}  ${chalk.greenBright(separator)}  ${to}`
 }
 
-exports.deepEqual = (x, y) => {
+function deepEqual (x, y) {
   if (x === y) {
     return true
   } else if (Buffer.isBuffer(x) && Buffer.isBuffer(y)) {
@@ -199,7 +200,7 @@ exports.deepEqual = (x, y) => {
 
     for (var prop in x) {
       if (y.hasOwnProperty(prop)) {
-        if (!exports.deepEqual(x[prop], y[prop])) { return false }
+        if (!deepEqual(x[prop], y[prop])) { return false }
       } else { return false }
     }
 
@@ -207,7 +208,7 @@ exports.deepEqual = (x, y) => {
   } else { return false }
 }
 
-exports.diff = (from, to, label) => {
+function diff (from, to, label) {
   console.group(chalk.yellow(label))
   if (from === to) {
     console.log(c.equal('state: { ...Equal  }'))
@@ -218,4 +219,37 @@ exports.diff = (from, to, label) => {
     console.log(c.change('}'))
   }
   console.groupEnd()
+}
+
+function yellow (message) {
+  console.log(chalk.yellow(message))
+}
+
+let oldStateTable
+exports.beforeTx = (stateTable) => {
+  oldStateTable = _.cloneDeep(stateTable)
+}
+
+exports.afterTx = (stateTable) => {
+  yellow('--- STATE DIFF ---')
+  let noDiff = true
+  Object.keys(stateTable).forEach(addr => {
+    if (!oldStateTable.hasOwnProperty(addr)) {
+      noDiff = false
+      diff(undefined, stateTable[addr], `DEPLOYED: ${addr}`)
+    }
+  })
+
+  Object.keys(oldStateTable).forEach(addr => {
+    if (!stateTable.hasOwnProperty(addr)) {
+      noDiff = false
+      diff(oldStateTable[addr], undefined, `DELETED: ${addr}`)
+    } else if (!deepEqual(oldStateTable[addr], stateTable[addr])) {
+      noDiff = false
+      diff(oldStateTable[addr], stateTable[addr], `MODIFIED: ${addr}`)
+    }
+  })
+
+  noDiff && yellow('No state changed.')
+  yellow('To turn off state diff, set env variable PRINT_STATE_DIFF=0')
 }

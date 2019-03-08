@@ -4,6 +4,11 @@ const app = require('./App')
 // turn on debug logging
 require('debug').enable('abci*')
 
+// turn on logging state diff to console
+if (process.env.NODE_ENV === 'development' && process.env.PRINT_STATE_DIFF === '1') {
+  app.addStateObserver(require('./helper/diff'))
+}
+
 module.exports = () => {
   return app.loadState().then(() => handler)
 }
