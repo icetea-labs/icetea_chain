@@ -1,8 +1,19 @@
-const _ = require('lodash')
 const utils = require('../../helper/utils')
 const invoker = require('../../ContractInvoker')
 
-function makeInvokableMethod (invokerTypes, destContract, method, options) {
+function _makeLoadContract (invokerTypes, srcContract, options) {
+  return destContract => {
+    return new Proxy({}, {
+      get (obj, method) {
+        const tx = { from: srcContract }
+        const newOpts = { ...options, tx, ...tx }
+        return _makeInvokableMethod(invokerTypes, destContract, method, newOpts)
+      }
+    })
+  }
+}
+
+function _makeInvokableMethod (invokerTypes, destContract, method, options) {
   return invokerTypes.reduce((obj, t) => {
     obj[t] = (...params) => {
       return invoker[t](destContract, method, params, options)
@@ -22,7 +33,9 @@ exports.for = (invokeType, contractAddress, methodName, methodParams, options) =
   return typeof fn === 'function' ? fn(contractAddress, methodName, methodParams, options) : fn
 }
 
-exports.forTransaction = (contractAddress, methodName, methodParams, { tx, block, stateProxy }) => {
+exports.forTransaction = (contractAddress, methodName, methodParams, options) => {
+  const { tx, block, stateAccess, tools } = options
+
   const msg = {}
   msg.name = methodName
   msg.params = methodParams
@@ -32,27 +45,20 @@ exports.forTransaction = (contractAddress, methodName, methodParams, { tx, block
   msg.callType = (msg.value > 0) ? 'payable' : 'transaction'
   utils.deepFreeze(msg)
 
+  const contractHelpers = stateAccess.forUpdate(contractAddress)
   const tags = {}
 
   const ctx = {
-    ...stateProxy,
+    ...contractHelpers,
     address: contractAddress,
     get balance () {
-      return stateProxy.balanceOf(contractAddress)
+      return tools.balanceOf(contractAddress)
     },
     getEnv: () => ({
       msg,
       block,
       tags,
-      loadContract: (to) => {
-        return new Proxy({}, {
-          get (obj, method) {
-            const tx = { from: contractAddress }
-            const options = { tx, ...tx, block, stateProxy }
-            return makeInvokableMethod(['invokeUpdate', 'invokeView', 'invokePure'], to, method, options)
-          }
-        })
-      }
+      loadContract: _makeLoadContract(['invokeUpdate', 'invokeView', 'invokePure'], contractAddress, options)
     }),
     emitEvent: (eventName, eventData, indexes = []) => {
       utils.emitEvent(contractAddress, tags, eventName, eventData, indexes)
@@ -63,7 +69,8 @@ exports.forTransaction = (contractAddress, methodName, methodParams, { tx, block
 }
 
 exports.forView = (contractAddress, name, params, options) => {
-  const { from, block, stateProxy } = options
+  const { from, block, stateAccess, tools } = options
+
   const msg = new Proxy({ name, params, sender: from, callType: 'view' }, {
     get (target, prop) {
       if (Object.keys(msg).includes(prop) && !['name', 'params', 'callType', 'sender'].includes(prop)) {
@@ -76,25 +83,18 @@ exports.forView = (contractAddress, name, params, options) => {
     }
   })
 
+  const contractHelpers = stateAccess.forView(contractAddress)
+
   const ctx = {
-    ...stateProxy,
+    ...contractHelpers,
     address: contractAddress,
     get balance () {
-      return stateProxy.balanceOf(contractAddress)
+      return tools.balanceOf(contractAddress)
     },
     getEnv: () => ({
       msg,
       block,
-      balanceOf: (addr) => utils.balanceOf(addr, stateTable),
-      loadContract: (to) => {
-        return new Proxy({}, {
-          get (obj, method) {
-            const tx = { from: contractAddress }
-            const options = { tx, ...tx, block, stateTable }
-            return makeInvokableMethod(['invokeView', 'invokePure'], to, method, options)
-          }
-        })
-      }
+      loadContract: _makeLoadContract(['invokeView', 'invokePure'], contractAddress, options)
     })
   }
 

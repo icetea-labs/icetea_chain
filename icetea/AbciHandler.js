@@ -83,7 +83,7 @@ const handler = {
             balance: app.balanceOf(data)
           })
         case 'state':
-          return replyQuery(app)
+          return replyQuery(app.debugState())
         case 'contracts':
           return replyQuery(app.getContractAddresses())
         case 'metadata': {

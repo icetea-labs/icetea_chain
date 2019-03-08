@@ -36,4 +36,4 @@ exports.save = (data) => {
   })
 }
 
-exports.getHash = (stateTable) => sha256(stateTable)
+exports.getHash = (message) => sha256(message)

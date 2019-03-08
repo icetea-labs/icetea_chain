@@ -8,7 +8,7 @@ class ContractInvoker {
      * @param {string} contractAddress address of the contract.
      * @param {string} methodName name of the method.
      * @param {Array} methodParams optional, params to be passed to method.
-     * @param {{block, stateTable}} options additional options, depending on invokeType.
+     * @param {{tx, block, stateAccess, tools}} options additional options, depending on invokeType.
      */
   async invoke (invokeType, contractAddress, methodName, methodParams, options) {
     if (!['pure', 'view', 'transaction', 'metadata'].includes(invokeType)) {
@@ -18,24 +18,17 @@ class ContractInvoker {
     if (methodName === 'address') {
       return contractAddress
     } else if (methodName === 'balance') {
-      return options.stateTable[contractAddress].balance || 0
+      return options.tools.balanceOf(contractAddress)
     }
 
-    const { mode, src } = getContractInfo(contractAddress, options.stateTable)
+    const { mode, src } = options.tools.getCode(contractAddress)
     const vm = getRunner(mode)
     const context = getContext(mode).for(invokeType, contractAddress, methodName, methodParams, options)
     const guard = getGuard(mode)(src)
+
     const result = await vm.run(src, { context, guard })
-
-    if (invokeType === 'transaction') {
-      // save back the state
-      options.stateTable[contractAddress].state =
-        Object.assign(options.stateTable[contractAddress].state || {}, context._state)
-
-      return [result, context.getEnv().tags]
-    }
-
-    return result
+    
+    return invokeType === 'transaction' ? [result, context.getEnv().tags] : result
   }
 
   /**
@@ -73,26 +66,22 @@ class ContractInvoker {
      * @param {*} contractAddress address of the contract.
      * @param {*} methodName name of the method.
      * @param {*} methodParams optional, params to be passed to method.
-     * @param {{tx, block, stateTable}} options additional options.
+     * @param {{tx, block, stateAccess, tools}} options additional options.
      */
   invokeUpdate (contractAddress, methodName, methodParams, options) {
     return this.invoke('transaction', contractAddress, methodName, methodParams, options)
   }
 
   /**
-     * Invoke a transaction broadcast by client. Transaction can change state, balance, and emit events.
-     * @param {{tx: {to: string, data: {name: string, params: Array}}, block, stateTable}} options
+     * Invoke a transaction broadcasted by client. Transaction can change state, balance, and emit events.
+     * @param {{tx: {to: string, data: {name: string, params: Array}}, block, stateAccess, tools}} options
      */
   invokeTx (options) {
     const { tx } = options
     return this.invokeUpdate(tx.to, tx.data.name, tx.data.params, options)
   }
 
-  deployContract (tx, stateTable) {
-    // make new address for smart contract
-    let contractAddress = makeContractAddress(stateTable, tx.from)
-    tx.to = contractAddress
-
+  prepareContract (tx) {
     // analyze and compile source
     const mode = tx.data.mode
     const src = Buffer.from(tx.data.src, 'base64')
@@ -111,35 +100,9 @@ class ContractInvoker {
     if (meta) {
       state.meta = meta
     }
-    utils.prepareState(contractAddress, stateTable, state)
 
-    return contractAddress
+    return state
   }
-}
-
-/**
-   * Get contract information. Throw if not a valid contract.
-   * @private
-   * @returns {{state: any, mode: number, src: string|Buffer}} contract data.
-   */
-function getContractInfo (addr, stateTable) {
-  if (stateTable[addr] && stateTable[addr].src) {
-    return stateTable[addr]
-  }
-  throw new Error('The address supplied is not a deployed contract')
-}
-
-function makeContractAddress (stateTable, deployedBy) {
-  // make new address for smart contract
-  // should be deterministic
-
-  // TODO: change this
-
-  const count = Object.keys(stateTable).reduce((t, k) => (
-    (k.startsWith('contract_') && k.endsWith(deployedBy)) ? (t + 1) : t
-  ), 0)
-
-  return 'contract_' + count + '_' + deployedBy
 }
 
 module.exports = utils.newAndBind(ContractInvoker)

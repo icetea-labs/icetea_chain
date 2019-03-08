@@ -11,6 +11,7 @@
     "dev": "tendermint node & npm start & webpack-dev-server --content-base web --inline --hot --port 3001 --open",
     "dev2": "tendermint node & npm start & webpack-dev-server --content-base web --inline --hot --port 3001",
     "dev3": "npm start & webpack-dev-server --content-base web --inline --hot --port 3001",
+    "server": "tendermint node & npm start",
     "app": "webpack-dev-server --content-base web --inline --hot --port 3001 --open",
     "reset": "tendermint unsafe_reset_all & node ./scripts/destroy.js",
     "dump": "node ./scripts/dump.js",
@@ -40,7 +41,6 @@
     "node-fetch": "2.3.0",
     "npx": "10.2.0",
     "prismjs": "^1.15.0",
-    "recast": "0.16.2",
     "webpack-dev-server": "3.1.14",
     "websocket": "^1.0.28",
     "websocket-as-promised": "^0.9.0"

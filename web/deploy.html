@@ -39,9 +39,9 @@
             <p><label>JS source:</label></p>
             <p><textarea id="src" style="width: 600px;height: 280px;">@contract class SimpleStore  {
     @state value
-    @transaction setValue(value) {
+    @transaction setValue (value) {
         this.value = value
-        this.emitEvent("ValueChanged", {oldValue: this.value, newValue: value})
+        this.emitEvent("ValueChanged", { value })
     }
 }</textarea></p>
 </section>

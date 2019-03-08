@@ -1,8 +1,8 @@
 const config = require('./config')
 const utils = require('./helper/utils')
 const merkle = require('./helper/merkle')
-const _ = require('lodash')
-const stateProxy = require('./helper/StateProxy')
+// const _ = require('lodash')
+const stateProxy = require('./StateProxy')
 
 // Declare outside class to ensure private
 let stateTable, lastBlock
@@ -49,19 +49,31 @@ class StateManager {
     return appHash
   }
 
-  produceDraft () {
-    return _.cloneDeep(stateTable)
+  handleTransfer (tx) {
+    (tx.value + tx.fee) && decBalance(tx.from, tx.value + tx.fee)
+    tx.value && incBalance(tx.to, tx.value)
+    tx.fee && incBalance(config.feeCollector, tx.fee)
   }
 
-  applyDraft (draft) {
-    utils.mergeStateTables(stateTable, draft)
+  produceDraft () {
+    // return _.cloneDeep(stateTable)
+    return stateProxy.getStateProxy(stateTable)
+  }
+
+  applyDraft (patch) {
+    // utils.mergeStateTables(stateTable, draft)
+    stateProxy.applyChanges(stateTable, patch)
     return this
   }
 
   // Utility function to get state
 
-  getStateForView (contractAddress) {
-    return stateProxy.getStateForView(stateTable, contractAddress)
+  getMetaProxy () {
+    return stateProxy.getMetaProxy(stateTable)
+  }
+
+  isContract (address) {
+    return !!(stateTable[address] || {}).src
   }
 
   // FIXME This is not safe, should refactor
@@ -75,7 +87,7 @@ class StateManager {
   }
 
   balanceOf (addr) {
-    return utils.balanceOf(addr, stateTable)
+    return (stateTable[addr] || {}).balance || 0
   }
 
   getContractAddresses () {
@@ -86,17 +98,42 @@ class StateManager {
       return prev
     }, [])
   }
+
+  debugState () {
+    if (process.env.NODE_ENV === 'development') {
+      return stateTable
+    }
+
+    return {
+      info: 'Enable debug by setting NODE_ENV=development'
+    }
+  }
 }
 
 // Private stuff
 
 function initStateTable () {
   return config.initialBalances.reduce((stateTable, item) => {
-    utils.prepareState(item.address, stateTable, {
+    stateTable[item.address] = {
       balance: item.balance
-    })
+    }
+
     return stateTable
   }, {})
+}
+
+function incBalance (addr, delta) {
+  delta = parseFloat(delta) || 0
+  const state = stateTable[addr] || (stateTable[addr] = {})
+  const balance = state.balance || 0
+  if (balance + delta < 0) {
+    throw new Error('Not enough balance')
+  }
+  state.balance = balance + delta
+}
+
+function decBalance (addr, delta) {
+  incBalance(addr, -delta)
 }
 
 module.exports = utils.newAndBind(StateManager)

@@ -11,51 +11,66 @@ exports.for = (invokeType, contractAddress, methodName, methodParams, options) =
   return typeof fn === 'function' ? fn(contractAddress, methodName, methodParams, options) : fn
 }
 
-exports.forTransaction = (address, fname, fparams, { tx, block, stateTable }) => {
-  const state = stateTable[address].state || {}
-  const balance = stateTable[address].balance || 0
-  const importTableName = stateTable[address].meta.importTableName
+exports.forTransaction = (address, fname, fparams, { tx, block, stateAccess, tools }) => {
+  const { balanceOf, getCode } = tools
+  const {
+    hasState,
+    getState,
+    setState,
+    deleteState,
+    transfer: doTransfer
+  } = stateAccess.forUpdate(address)
+
+  const importTableName = getCode(address).meta.importTableName
+  const transfer = (to, value) => {
+    doTransfer(to, value)
+    ctx.balance -= parseFloat(value) || 0
+  }
 
   const ctx = {
     address,
-    balance,
+    balance: balanceOf(address),
     getEnv: () => ({ tags: [] }),
     importTableName,
     log: console.log,
     get_msg_name: () => fname,
     get_msg_param: () => (fparams && fparams.length) ? parseInt(fparams[0]) : 0,
     get_sender: () => tx.from,
-    _state: {},
-    load_int: (key) => {
-      return ctx._state.hasOwnProperty(key) ? ctx._state[key] : (state.hasOwnProperty(key) ? state[key] : 0)
-    },
-    save_int: (key, value) => {
-      ctx._state[key] = value
-    }
+    has_state: hasState,
+    load_int: getState,
+    save_int: setState,
+    delete_state: deleteState,
+    transfer
   }
 
   return ctx
 }
 
-exports.forView = (address, name, params, { from, block, stateTable }) => {
-  const state = _.cloneDeep(stateTable[address].state || {})
-  const balance = state.balance || 0
-  const importTableName = stateTable[address].meta.importTableName
+exports.forView = (address, name, params, { from, block, stateAccess, tools }) => {
+  const { balanceOf, getCode } = tools
+  const {
+    hasState,
+    getState,
+    setState,
+    deleteState,
+    transfer
+  } = stateAccess.forView(address)
+
+  const importTableName = getCode(address).meta.importTableName
 
   const ctx = {
     address,
-    balance,
+    balance: balanceOf(address),
     log: console.log,
     importTableName,
     get_msg_name: () => name,
     get_msg_param: () => (params && params.length) ? parseInt(params[0]) : 0,
     get_sender: () => from,
-    load_int: (key) => {
-      return state[key] || 0
-    },
-    save_int: () => {
-      throw new Error('Cannot change state inside a view function')
-    }
+    has_state: hasState,
+    load_int: getState,
+    save_int: setState,
+    delete_state: deleteState,
+    transfer
   }
 
   return ctx
@@ -65,18 +80,9 @@ exports.forPure = (address, name, params, { from }) => {
   const ctx = {
     address,
     log: console.log,
-    get balance () {
-      throw new Error('Cannot view balance a pure function')
-    },
     get_msg_name: () => name,
     get_msg_param: () => (params && params.length) ? parseInt(params[0]) : 0,
     get_sender: () => from,
-    load_int: () => {
-      throw new Error('Cannot read state inside a pure function')
-    },
-    save_int: () => {
-      throw new Error('Cannot change state inside a pure function')
-    }
   }
 
   return ctx

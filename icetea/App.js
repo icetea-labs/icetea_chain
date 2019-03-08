@@ -1,9 +1,8 @@
 const ecc = require('./helper/ecc')
 const utils = require('./helper/utils')
-const config = require('./config')
 const {
   queryMetadata,
-  deployContract,
+  prepareContract,
   invokeView,
   invokeUpdate,
   invokeTx
@@ -19,7 +18,8 @@ class App {
       loadState: stateManager.load,
       persistState: stateManager.persist,
       balanceOf: stateManager.balanceOf,
-      getContractAddresses: stateManager.getContractAddresses
+      getContractAddresses: stateManager.getContractAddresses,
+      debugState: stateManager.debugState
     })
   }
 
@@ -41,7 +41,9 @@ class App {
   }
 
   invokeView (contractAddress, methodName, methodParams, options = {}) {
-    options.stateTable = options.stateTable || stateManager.getStateView()
+    const { stateAccess, tools } = stateManager.produceDraft()
+    options.stateAccess = stateAccess
+    options.tools = tools
     options.block = stateManager.getBlock()
     return invokeView(contractAddress, methodName, methodParams, options)
   }
@@ -56,52 +58,69 @@ class App {
       return utils.unifyMetadata(meta.operations)
     }
 
-    const info = await queryMetadata(addr, { stateTable: stateManager.getStateView() })
+    const info = await queryMetadata(addr, stateManager.getMetaProxy(addr))
     if (!info) return utils.unifyMetadata()
 
     const props = info.meta ||
-            (info.instance ? utils.getAllPropertyNames(info.instance) : info)
+      (info.instance ? utils.getAllPropertyNames(info.instance) : info)
 
     return utils.unifyMetadata(props)
   }
 
   async execTx (tx) {
-    const draft = stateManager.produceDraft()
+    const needState = willCallContract(tx)
+    const { stateAccess, patch, tools } = needState ? stateManager.produceDraft(tx) : {}
 
     const result = await doExecTx({
       tx,
       block: stateManager.getBlock(),
-      stateTable: draft
+      stateAccess,
+      tools
     })
 
     // commit change made to state
     // if _doExecTx throws, this won't be called
-    stateManager.applyDraft(draft)
+    if (needState) {
+      stateManager.applyDraft(patch)
+    }
 
     return result || []
   }
 }
 
 /**
+ * @private
+ */
+function willCallContract (tx) {
+  return tx.isContractCreation() || tx.isContractCall() || (tx.value > 0 && stateManager.isContract(tx.to))
+}
+
+/**
    * @private
    */
 async function doExecTx (options) {
-  const { tx, stateTable } = options
+  const { tx, tools = {} } = options
   let result
 
   if (tx.isContractCreation()) {
     // analyze & save contract state
-    const contractAddress = deployContract(tx, stateTable)
+    const contractState = prepareContract(tx)
+    tx.to = tools.deployContract(tx.from, contractState)
+  }
 
+  // process value transfer
+  (tools.refectTxValueAndFee || stateManager.handleTransfer)(tx)
+
+  if (tx.isContractCreation()) {
     // call constructor
     result = invokeUpdate(
-      contractAddress,
+      tx.to,
       '__on_deployed',
       tx.data.params,
       options
     ).then(r => {
       // when deploy contract, always return the contract address
-      r[0] = contractAddress
+      r[0] = tx.to
       return r
     })
   } else if (tx.isContractCall()) {
@@ -111,13 +130,8 @@ async function doExecTx (options) {
     result = invokeTx(options)
   }
 
-  // process value transfer
-  utils.decBalance(tx.from, tx.value + tx.fee, stateTable)
-  utils.incBalance(tx.to, tx.value, stateTable)
-  utils.incBalance(config.feeCollector, tx.fee, stateTable)
-
   // call __on_received
-  if (tx.value && stateTable[tx.to].src && !tx.isContractCreation() && !tx.isContractCall()) {
+  if (tx.value && stateManager.isContract(tx.to) && !tx.isContractCreation() && !tx.isContractCall()) {
     result = invokeUpdate(tx.to, '__on_received', tx.data.params, options)
   }
 
