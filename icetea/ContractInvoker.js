@@ -27,7 +27,7 @@ class ContractInvoker {
     const guard = getGuard(mode)(src)
 
     const result = await vm.run(src, { context, guard })
-    
+
     return invokeType === 'transaction' ? [result, context.getEnv().tags] : result
   }
 

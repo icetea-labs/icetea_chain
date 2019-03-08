@@ -1,5 +1,3 @@
-const _ = require('lodash')
-
 exports.for = (invokeType, contractAddress, methodName, methodParams, options) => {
   const map = {
     transaction: exports.forTransaction,
@@ -82,7 +80,7 @@ exports.forPure = (address, name, params, { from }) => {
     log: console.log,
     get_msg_name: () => name,
     get_msg_param: () => (params && params.length) ? parseInt(params[0]) : 0,
-    get_sender: () => from,
+    get_sender: () => from
   }
 
   return ctx
