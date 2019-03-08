@@ -16,18 +16,14 @@ exports.forTransaction = (address, fname, fparams, { tx, block, stateAccess, too
     getState,
     setState,
     deleteState,
-    transfer: doTransfer
+    transfer
   } = stateAccess.forUpdate(address)
 
   const importTableName = getCode(address).meta.importTableName
-  const transfer = (to, value) => {
-    doTransfer(to, value)
-    ctx.balance -= parseFloat(value) || 0
-  }
 
   const ctx = {
-    address,
-    balance: balanceOf(address),
+    get_address: () => address,
+    get_balance: () => balanceOf(address),
     getEnv: () => ({ tags: [] }),
     importTableName,
     log: console.log,
@@ -57,8 +53,8 @@ exports.forView = (address, name, params, { from, block, stateAccess, tools }) =
   const importTableName = getCode(address).meta.importTableName
 
   const ctx = {
-    address,
-    balance: balanceOf(address),
+    get_address: () => address,
+    get_balance: () => balanceOf(address),
     log: console.log,
     importTableName,
     get_msg_name: () => name,
