@@ -227,17 +227,17 @@ const applyChanges = (stateTable, { deployedContracts, storages, balances }) => 
   }
 
   if (process.env.PRINT_STATE_DIFF === '1') {
-    const {deepEqual, diff} = require('./helper/diff')
+    const { deepEqual, diff } = require('./helper/diff')
 
     Object.keys(stateTable).forEach(addr => {
       if (!oldStateTable.hasOwnProperty(addr)) {
-        diff(stateTable[addr], {}, `DEPLOYED: ${addr}`)
+        diff(undefined, stateTable[addr], `DEPLOYED: ${addr}`)
       }
     })
 
     Object.keys(oldStateTable).forEach(addr => {
       if (!stateTable.hasOwnProperty(addr)) {
-        diff(oldStateTable[addr], {}, `DELETED: ${addr}`)
+        diff(oldStateTable[addr], undefined, `DELETED: ${addr}`)
       } else if (!deepEqual(oldStateTable[addr], stateTable[addr])) {
         diff(oldStateTable[addr], stateTable[addr], `MODIFIED: ${addr}`)
       }

@@ -90,7 +90,7 @@ $(document).ready(function () {
       var ct = tweb3.contract(address, privateKey)
       var result = await ct.methods.getValue.call(name, params)
       if (result.success) {
-        document.getElementById('resultJson').textContent = result.data
+        document.getElementById('resultJson').textContent = utils.tryStringifyJson(result.data)
       } else {
         document.getElementById('resultJson').textContent = utils.tryStringifyJson(result.error)
       }
