@@ -138,16 +138,16 @@ fn _transfer(from: &str, to: &str, value: u128) {
 
   let mut from_balance = load!(u128, &get_key!(BALANCE_KEY, from));
   from_balance = from_balance.sub(value);
-  save!(u128, &get_key!(BALANCE_KEY, from), from_balance);
+  save!(&get_key!(BALANCE_KEY, from), from_balance);
 
   let mut to_balance = load!(u128, &get_key!(BALANCE_KEY, to));
   to_balance = to_balance.add(value);
-  save!(u128, &get_key!(BALANCE_KEY, to), to_balance);
+  save!(&get_key!(BALANCE_KEY, to), to_balance);
 }
 
 fn _approve(owner: &str, spender: &str, value: u128) {
   require!(owner != "" && spender != "", "invalid address!");
-  save!(u128, &get_key!(ALLOW_KEY, owner, spender), value);
+  save!(&get_key!(ALLOW_KEY, owner, spender), value);
 }
 
 fn _mint(account: &str, value: u128) {
@@ -157,8 +157,8 @@ fn _mint(account: &str, value: u128) {
   let mut balance = load!(u128, &get_key!(BALANCE_KEY, account));
   total_supply = total_supply.add(value);
   balance = balance.add(value);
-  save!(u128, TOTAL_SUPPLY_KEY, total_supply);
-  save!(u128, &get_key!(BALANCE_KEY, account), balance);
+  save!(TOTAL_SUPPLY_KEY, total_supply);
+  save!(&get_key!(BALANCE_KEY, account), balance);
 }
 
 fn _burn(account: &str, value: u128) {
@@ -169,8 +169,8 @@ fn _burn(account: &str, value: u128) {
   total_supply = total_supply.sub(value);
   balance = balance.sub(value);
 
-  save!(u128, TOTAL_SUPPLY_KEY, total_supply);
-  save!(u128, &get_key!(BALANCE_KEY, account), balance);
+  save!(TOTAL_SUPPLY_KEY, total_supply);
+  save!(&get_key!(BALANCE_KEY, account), balance);
 }
 
 fn _burn_from(account: &str, value: u128) {
