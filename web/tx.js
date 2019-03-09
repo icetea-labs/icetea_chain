@@ -1,5 +1,5 @@
 import handlebars from 'handlebars/dist/handlebars.min.js'
-import { decodeTX, switchEncoding } from '../tweb3/utils'
+import { decodeTX, switchEncoding, tryParseJson } from '../tweb3/utils'
 import tweb3 from './tweb3'
 import Prism from 'prismjs'
 
@@ -16,7 +16,13 @@ function formatContractData (data, contract) {
     return comment + source
   } else if (data.op === 1) {
     const method = data.name
-    const params = (data.params || []).join(', ')
+    const params = (data.params || []).map(p => {
+      let pp = tryParseJson(p)
+      if (typeof pp === 'string') {
+        pp = `"${pp}"`
+      }
+      return JSON.stringify(pp)
+    }).join(', ')
     const line = `${method}(${params});`
     const comment = `// Call method '${method}' of\n// ${contract}`
 
