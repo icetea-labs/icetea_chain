@@ -5,6 +5,9 @@ function isPublic(type) {
 function isPrivate(type) {
     return ["ClassPrivateMethod", "ClassPrivateProperty"].includes(type);
 }
+function isClassProperty(type) {
+  return ["ClassProperty", "ClassPrivateProperty"].includes(type);
+}
 */
 
 function isMethod (mp) {
@@ -18,7 +21,67 @@ function isMethod (mp) {
   // check if value if function is a function or arrow function
   const valueType = mp.node.value && mp.node.value.type
   return valueType === 'FunctionExpression' ||
-        valueType === 'ArrowFunctionExpression'
+    valueType === 'ArrowFunctionExpression'
+}
+
+const KNOWN_FLOW_TYPES = ['number', 'string', 'boolean', 'bigint', 'null', 'undefined']
+
+function concatUnique (a, b) {
+  if (!Array.isArray(a)) {
+    a = [a]
+  }
+  if (!Array.isArray(b)) {
+    b = [b]
+  }
+  const result = a.concat(b.filter(i => !a.includes(i)))
+
+  for (let i = 0; i < result.length; i++) {
+    if (!KNOWN_FLOW_TYPES.includes(result[i])) {
+      return 'any'
+    }
+  }
+
+  if (result.length === 1) {
+    return result[0]
+  }
+
+  return result
+}
+
+function getTypeName (node, insideUnion) {
+  if (!node) return 'any'
+  const ta = insideUnion ? node : node.typeAnnotation
+  const tn = ta.type
+  if (!tn) return 'any'
+
+  let result
+  if (tn === 'Identifier') {
+    result = ta.name
+  } else if (!tn.endsWith('TypeAnnotation')) {
+    result = tn.toLowerCase()
+  } else {
+    result = tn.slice(0, tn.length - 14).toLowerCase()
+  }
+
+  // sanitize result
+
+  if (result === 'void') {
+    result = 'undefined'
+  } else if (result === 'nullliteral') {
+    result = 'null'
+  } else if (result === 'generic') {
+    result = ['undefined', 'bigint'].includes(ta.id.name) ? ta.id.name : 'any'
+  } else if (result === 'nullable') {
+    result = concatUnique(['undefined', 'null'], getTypeName(ta))
+  } else if (result === 'union') {
+    result = []
+    ta.types.forEach(ut => {
+      result = concatUnique(result, getTypeName(ut, true))
+    })
+  } else if (!KNOWN_FLOW_TYPES.includes(result)) {
+    result = 'any'
+  }
+  return result !== 'any' && Array.isArray(result) ? result : [result]
 }
 
 function wrapState (t, item) {
@@ -55,6 +118,38 @@ function wrapState (t, item) {
     const setExp = t.memberExpression(thisExp, t.identifier(name))
     var assignState = t.expressionStatement(t.assignmentExpression('=', setExp, initVal))
     deployer.body.body.unshift(assignState)
+  }
+}
+
+function astify (t, literal) {
+  if (literal === null) {
+    return t.nullLiteral()
+  }
+  switch (typeof literal) {
+    case 'function':
+      throw new Error('Not support function')
+    case 'number':
+      return t.numericLiteral(literal)
+    case 'string':
+      return t.stringLiteral(literal)
+    case 'boolean':
+      return t.booleanLiteral(literal)
+    case 'undefined':
+      return t.unaryExpression('void', t.numericLiteral(0), true)
+    default:
+      if (Array.isArray(literal)) {
+        return t.arrayExpression(literal.map(m => astify(t, m)))
+      }
+      return t.objectExpression(Object.keys(literal)
+        .filter((k) => {
+          return !SPECIAL_MEMBERS.includes(k) && !k.startsWith('#') && typeof literal[k] !== 'undefined'
+        })
+        .map((k) => {
+          return t.objectProperty(
+            t.stringLiteral(k),
+            astify(t, literal[k])
+          )
+        }))
   }
 }
 
@@ -113,9 +208,36 @@ module.exports = function ({ types: t }) {
                   if (SYSTEM_DECORATORS.includes(dname)) dp.remove()
                 })
               }
+
+              // process type annotation
+              if (!isMethod(mp)) {
+                memberMeta[propName].fieldType = getTypeName(m.typeAnnotation)
+              } else {
+                const fn = m.value || m
+                memberMeta[propName].returnType = getTypeName(fn.returnType)
+                memberMeta[propName].params = []
+                // process parameters
+                fn.params.forEach(p => {
+                  const item = p.left || p
+                  const param = {
+                    name: item.name,
+                    type: getTypeName(item.typeAnnotation)
+                  }
+                  if (p.right) {
+                    if (t.isNullLiteral(p.right)) {
+                      param.defaultValue = null
+                    } else if (t.isLiteral(p.right)) {
+                      param.defaultValue = p.right.value
+                    }
+                  }
+                  memberMeta[propName].params.push(param)
+                })
+              }
             })
 
-            // process constructor => no need since we'll use Object.create
+            // console.log(memberMeta)
+
+            // process constructor
 
             const m = path.parent.body.body.find(n => n.kind === 'constructor')
             if (m) {
@@ -123,12 +245,13 @@ module.exports = function ({ types: t }) {
               m.key.name = '__on_deployed'
             }
 
-            // process metadata
+            // validate metadata
 
             Object.keys(memberMeta).forEach(key => {
               const stateDeco = memberMeta[key].decorators.filter(e => STATE_CHANGE_DECORATORS.includes(e))
               // const isState = memberMeta[key].decorators.includes("state");
               const mp = memberMeta[key].mp
+              delete memberMeta[key].mp
               if (!isMethod(mp)) {
                 if (stateDeco.length) { throw mp.buildCodeFrameError('State mutability decorators cannot be attached to variables') } else {
                   if (memberMeta[key].decorators.includes('state')) {
@@ -149,22 +272,13 @@ module.exports = function ({ types: t }) {
               }
             })
 
+            // add to __metadata
+            // console.log(astify(t, memberMeta))
+
             const program = path.findParent(p => p.isProgram())
             const metaDeclare = program.get('body').find(p => p.isVariableDeclaration() && p.node.declarations[0].id.name === '__metadata')
             if (metaDeclare) {
-              const props = metaDeclare.node.declarations[0].init.properties
-              Object.keys(memberMeta).forEach(prop => {
-                if (!SPECIAL_MEMBERS.includes(prop) && !prop.startsWith('#')) {
-                  const value = memberMeta[prop]
-                  const ds = []
-                  value.decorators.forEach(d => ds.push(t.stringLiteral(d)))
-                  props.push(t.objectProperty(t.identifier(prop),
-                    t.objectExpression([
-                      t.objectProperty(t.identifier('type'), t.stringLiteral(value.type)),
-                      t.objectProperty(t.identifier('decorators'), t.arrayExpression(ds))
-                    ])))
-                }
-              })
+              metaDeclare.node.declarations[0].init = astify(t, memberMeta)
             }
           }
           path.remove()

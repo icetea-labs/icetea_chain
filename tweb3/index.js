@@ -531,7 +531,7 @@ class WebSocketProvider {
       // decode query data embeded in info
       let r = resp.result;
       if (r && r.response && r.response.info) {
-          r = JSON.parse(r.response.info);
+          r = tryParseJson(r.response.info);
       }
       
       return r;
