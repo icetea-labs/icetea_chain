@@ -18,7 +18,8 @@ module.exports = mode => {
       return babel.transformSync(src, {
         plugins: [
           '@babel/plugin-proposal-private-methods',
-          '@babel/plugin-proposal-class-properties'
+          '@babel/plugin-proposal-class-properties',
+          '@babel/plugin-transform-flow-strip-types'
         ]
       }).code
     }
