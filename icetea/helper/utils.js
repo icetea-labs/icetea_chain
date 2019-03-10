@@ -85,13 +85,13 @@ exports.unifyMetadata = meta => {
   const DEF_PROPS = {
     address: {
       type: 'ClassProperty',
-      decorators: ['view'],
-      returnType: 'string'
+      decorators: ['pure'],
+      fieldType: 'string'
     },
     balance: {
       type: 'ClassProperty',
       decorators: ['view'],
-      returnType: 'number'
+      fieldType: 'number'
     }
   }
 
@@ -114,7 +114,7 @@ exports.unifyMetadata = meta => {
 
   const excepts = ['constructor', '__on_deployed', '__on_received', 'getEnv', 'getState', 'setState']
   Object.keys(meta).forEach(k => {
-    if (excepts.includes(k)) {
+    if (excepts.includes(k) || k.startsWith('#')) {
       delete meta[k]
     }
   })
