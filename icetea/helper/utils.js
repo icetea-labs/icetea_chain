@@ -92,6 +92,11 @@ exports.unifyMetadata = meta => {
       type: 'ClassProperty',
       decorators: ['view'],
       fieldType: 'number'
+    },
+    deployedBy: {
+      type: 'ClassProperty',
+      decorators: ['view'],
+      fieldType: 'number'
     }
   }
 

@@ -94,10 +94,11 @@ const handler = {
         case 'metadata': {
           return replyQuery(await app.getMetadata(data))
         }
-        case 'call': {
+        case 'invokeView':
+        case 'invokePure': {
           try {
             const options = JSON.parse(data)
-            const result = await app.invokeView(options.address, options.name, options.params, options.options)
+            const result = await app[path](options.address, options.name, options.params, options.options)
             return replyQuery({
               success: true,
               data: result
