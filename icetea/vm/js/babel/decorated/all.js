@@ -10,18 +10,26 @@ function isClassProperty(type) {
 }
 */
 
-function isMethod (mp) {
+function isMethod (node) {
   // console.log(mp);
-  if (!mp.node) return false
-  const type = mp.node.type
+  if (!node) return false
+  const type = node.type
   if (type === 'ClassMethod' || type === 'ClassPrivateMethod') {
     return true
   }
 
-  // check if value if function is a function or arrow function
-  const valueType = mp.node.value && mp.node.value.type
+  // check if value is a function or arrow function
+  const valueType = node.value && node.value.type
   return valueType === 'FunctionExpression' ||
     valueType === 'ArrowFunctionExpression'
+}
+
+function buildError (message, nodePath) {
+  if (nodePath && nodePath.buildCodeFrameError) {
+    throw nodePath.buildCodeFrameError('State mutability decorators cannot be attached to variables')
+  }
+
+  throw new SyntaxError(message)
 }
 
 const KNOWN_FLOW_TYPES = ['number', 'string', 'boolean', 'bigint', 'null', 'undefined']
@@ -84,7 +92,7 @@ function getTypeName (node, insideUnion) {
   return result !== 'any' && Array.isArray(result) ? result : [result]
 }
 
-function wrapState (t, item) {
+function wrapState (t, item, memberMeta) {
   const name = item.node.key.name || ('#' + item.node.key.id.name)
   const initVal = item.node.value
   const getState = t.identifier('getState')
@@ -106,12 +114,17 @@ function wrapState (t, item) {
 
   // if there's initializer, move it into constructor
   if (initVal) {
-    let deployer = item.parent.body.find(p => p.kind === 'constructor')
+    let deployer = item.parent.body.find(p => p.key.name === '__on_deployed')
 
     // if no constructor, create one
     if (!deployer) {
-      deployer = t.classMethod('constructor', t.identifier('constructor'), [], t.blockStatement([]))
+      deployer = t.classMethod('method', t.identifier('__on_deployed'), [], t.blockStatement([]))
       item.parent.body.unshift(deployer)
+      memberMeta['__on_deployed'] = {
+        mp: { node: deployer },
+        type: deployer.type,
+        decorators: ['payable']
+      }
     }
 
     // create a this.item = initVal;
@@ -142,7 +155,7 @@ function astify (t, literal) {
       }
       return t.objectExpression(Object.keys(literal)
         .filter((k) => {
-          return !SPECIAL_MEMBERS.includes(k) && !k.startsWith('#') && typeof literal[k] !== 'undefined'
+          return /* !SPECIAL_MEMBERS.includes(k) && !k.startsWith('#') && */ typeof literal[k] !== 'undefined'
         })
         .map((k) => {
           return t.objectProperty(
@@ -155,7 +168,7 @@ function astify (t, literal) {
 
 const SYSTEM_DECORATORS = ['state', 'onReceived', 'transaction', 'view', 'pure', 'payable']
 const STATE_CHANGE_DECORATORS = ['transaction', 'view', 'pure', 'payable']
-const SPECIAL_MEMBERS = ['constructor', '__on_deployed', '__on_received']
+// const SPECIAL_MEMBERS = ['constructor', '__on_deployed', '__on_received']
 
 module.exports = function ({ types: t }) {
   let contractName = null
@@ -166,9 +179,19 @@ module.exports = function ({ types: t }) {
         if (decoratorName === 'contract') {
           if (path.parent.type === 'ClassDeclaration') {
             if (contractName && contractName !== path.parent.id.name) {
-              throw path.buildCodeFrameError('More than one class marked with @contract. Only one is allowed.')
+              throw buildError('More than one class marked with @contract. Only one is allowed.', path)
             }
             contractName = path.parent.id.name
+
+            // process constructor
+
+            const m = path.parent.body.body.find(n => n.kind === 'constructor')
+            if (m) {
+              m.kind = 'method'
+              m.key.name = '__on_deployed'
+            }
+
+            // Collect member metadata
 
             const memberMeta = {}
 
@@ -195,14 +218,20 @@ module.exports = function ({ types: t }) {
                   memberMeta[propName].decorators.push(dname)
 
                   if (dname === 'state') {
-                    if (isMethod(mp)) {
-                      throw mp.buildCodeFrameError('Class method cannot be decorated as @state')
+                    if (isMethod(m)) {
+                      throw buildError('Class method cannot be decorated as @state', mp)
                     }
-                    wrapState(t, mp)
+                    wrapState(t, mp, memberMeta)
                   } else if (dname === 'onReceived') {
-                    const newNode = t.classProperty(t.identifier('__on_received'),
-                      t.memberExpression(t.thisExpression(), t.identifier(propName)))
-                    path.parent.body.body.push(newNode)
+                    // const newNode = t.classProperty(t.identifier('__on_received'),
+                    //   t.memberExpression(t.thisExpression(), t.identifier(propName)))
+                    // path.parent.body.body.push(newNode)
+                    // memberMeta['__on_received'] = {
+                    //   mp: {node: newNode},
+                    //   type: newNode.type,
+                    //   decorators: []
+                    // }
+                    memberMeta['__on_received'] = propName
                   }
 
                   if (SYSTEM_DECORATORS.includes(dname)) dp.remove()
@@ -210,7 +239,9 @@ module.exports = function ({ types: t }) {
               }
 
               // process type annotation
-              if (!isMethod(mp)) {
+              if (typeof memberMeta[propName] === 'string') {
+                // link to other method, like __on_received => @onReceived. No handle.
+              } if (!isMethod(m)) {
                 memberMeta[propName].fieldType = getTypeName(m.typeAnnotation)
               } else {
                 const fn = m.value || m
@@ -237,37 +268,34 @@ module.exports = function ({ types: t }) {
 
             // console.log(memberMeta)
 
-            // process constructor
-
-            const m = path.parent.body.body.find(n => n.kind === 'constructor')
-            if (m) {
-              m.kind = 'method'
-              m.key.name = '__on_deployed'
-            }
-
             // validate metadata
 
             Object.keys(memberMeta).forEach(key => {
-              const stateDeco = memberMeta[key].decorators.filter(e => STATE_CHANGE_DECORATORS.includes(e))
-              // const isState = memberMeta[key].decorators.includes("state");
-              const mp = memberMeta[key].mp
-              delete memberMeta[key].mp
-              if (!isMethod(mp)) {
-                if (stateDeco.length) { throw mp.buildCodeFrameError('State mutability decorators cannot be attached to variables') } else {
-                  if (memberMeta[key].decorators.includes('state')) {
-                    memberMeta[key].decorators.push('view')
+              if (typeof memberMeta[key] !== 'string') {
+                const stateDeco = memberMeta[key].decorators.filter(e => STATE_CHANGE_DECORATORS.includes(e))
+                // const isState = memberMeta[key].decorators.includes("state");
+                const mp = memberMeta[key].mp
+                delete memberMeta[key].mp
+                if (!isMethod(mp.node)) {
+                  if (stateDeco.length) {
+                    console.log(key)
+                    throw buildError('State mutability decorators cannot be attached to variables', mp)
                   } else {
-                    memberMeta[key].decorators.push('pure')
+                    if (memberMeta[key].decorators.includes('state')) {
+                      memberMeta[key].decorators.push('view')
+                    } else {
+                      memberMeta[key].decorators.push('pure')
+                    }
                   }
-                }
-              } else if (key.startsWith('#') && stateDeco.includes('payable')) {
-                throw mp.buildCodeFrameError('Private function cannot be payable')
-              } else {
-                if (!stateDeco.length) {
-                  // default to view
-                  memberMeta[key].decorators.push('view')
-                } else if (stateDeco.length > 1) {
-                  throw mp.buildCodeFrameError(`Could not define multiple state mutablility decorators: ${stateDeco.join(', ')}`)
+                } else if (key.startsWith('#') && stateDeco.includes('payable')) {
+                  throw buildError('Private function cannot be payable', mp)
+                } else {
+                  if (!stateDeco.length) {
+                    // default to view
+                    memberMeta[key].decorators.push('view')
+                  } else if (stateDeco.length > 1) {
+                    throw buildError(`Could not define multiple state mutablility decorators: ${stateDeco.join(', ')}`, mp)
+                  }
                 }
               }
             })
@@ -287,19 +315,19 @@ module.exports = function ({ types: t }) {
       NewExpression (path) {
         const calleeName = path.node.callee.name
         if (calleeName === 'Function') {
-          throw path.buildCodeFrameError('Running dynamic code at global scope is restricted.')
+          throw buildError('Running dynamic code at global scope is restricted.', path)
         }
       },
       Identifier (path) {
         if (path.node.name === '__contract_name') {
           if (!contractName) {
-            throw path.buildCodeFrameError('Must have one class marked @contract.')
+            throw buildError('Must have one class marked @contract.', path)
           }
           path.node.name = contractName
         } else if (path.node.name === '__on_deployed' || path.node.name === '__on_received') {
-          throw path.buildCodeFrameError('__on_deployed and __on_received cannot be specified directly.')
+          throw buildError('__on_deployed and __on_received cannot be specified directly.', path)
         } else if (path.node.name === 'constructor' && path.parent.type !== 'ClassMethod') {
-          throw path.buildCodeFrameError('Access to constructor is not supported.')
+          throw buildError('Access to constructor is not supported.', path)
         }
       }
     }

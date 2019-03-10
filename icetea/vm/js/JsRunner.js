@@ -50,7 +50,13 @@ module.exports = mode => {
     }
 
     doRun (patchedSrc, { context, guard, info }) {
-      // console.log(patchedSrc);
+      if (process.env.NODE_ENV === 'development' &&
+       typeof patchedSrc === 'string' &&
+       context.getEnv().msg.name === '__on_deployed') {
+        const { EOL } = require('os')
+        const lines = patchedSrc.split(EOL).map((line, i) => (i + ': ' + line))
+        console.log(lines.join(EOL))
+      }
       const f = new Function('__g', '__info', patchedSrc) // eslint-disable-line
       return f.call(context, guard, info)
     }
