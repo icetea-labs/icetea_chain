@@ -5,6 +5,7 @@ const global = void 0, globalThis = void 0, process = void 0, Date = void 0, Mat
 const revert = text => {throw new Error(text || "Transaction reverted.")};
 const require = (condition, text) => {if (!condition) revert(text)}
 const assert = require;
+const expect = require;
 
 const {msg, block, tags: __tags, balanceOf, loadContract} = this.getEnv();
 const now = block ? block.timestamp : 0;
@@ -23,7 +24,7 @@ ${src}
         // call event methods but contract does not have one
         return;
     }
-    require(["__metadata", "address", "balance"].includes(__name) || 
+    require(["__metadata", "address", "balance", "deployedBy"].includes(__name) || 
         (__name in __contract && !__name.startsWith('#')), "Method " + __name + " is private or does not exist.");
 
     Object.defineProperties(__contract, Object.getOwnPropertyDescriptors(this));
@@ -36,7 +37,9 @@ ${src}
         return __c;
     }
 
-    const __checkType = (value, types, info) => {
+    const __checkType = (value, typeHolder, typeProp, info) => {
+        if (!typeHolder) return value
+        const types = typeHolder[typeProp]
         if (types && Array.isArray(types)) {
             const valueType = value === null ? 'null' : typeof value;
             if (!types.includes(valueType)) {
@@ -67,15 +70,15 @@ ${src}
         if (__metadata[__name] && __metadata[__name].params && __metadata[__name].params.length) {
             __metadata[__name].params.forEach((p, index) => {
                 const pv = (params.length  > index) ? params[index] : undefined;
-                __checkType(pv, p.type, "param '" + p.name + "'");
+                __checkType(pv, p, 'type', "param '" + p.name + "'");
             })
         }
 
         // Call the function, finally
         const result = __c.instance[__name].apply(__c.instance, params);
-        return __checkType(result, __metadata[__name].returnType, "return");
+        return __checkType(result, __metadata[__name], 'returnType', "return");
     }
 
-    return __checkType(__c.instance[__name], __metadata[__name].fieldType, 'field');
+    return __checkType(__c.instance[__name], __metadata[__name], 'fieldType', 'field');
 }
 `

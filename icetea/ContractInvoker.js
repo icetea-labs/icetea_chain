@@ -19,6 +19,8 @@ class ContractInvoker {
       return contractAddress
     } else if (methodName === 'balance') {
       return options.tools.balanceOf(contractAddress)
+    } else if (methodName === 'deployedBy') {
+      return options.tools.getCode(contractAddress).deployedBy
     }
 
     const { mode, src } = options.tools.getCode(contractAddress)

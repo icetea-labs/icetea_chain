@@ -46,11 +46,13 @@ exports.forTransaction = (contractAddress, methodName, methodParams, options) =>
   utils.deepFreeze(msg)
 
   const contractHelpers = stateAccess.forUpdate(contractAddress)
+  const { deployedBy } = tools.getCode(contractAddress)
   const tags = {}
 
   const ctx = {
     ...contractHelpers,
     address: contractAddress,
+    deployedBy,
     get balance () {
       return tools.balanceOf(contractAddress)
     },
@@ -84,10 +86,12 @@ exports.forView = (contractAddress, name, params, options) => {
   })
 
   const contractHelpers = stateAccess.forView(contractAddress)
+  const { deployedBy } = tools.getCode(contractAddress)
 
   const ctx = {
     ...contractHelpers,
     address: contractAddress,
+    deployedBy,
     get balance () {
       return tools.balanceOf(contractAddress)
     },
@@ -104,9 +108,6 @@ exports.forView = (contractAddress, name, params, options) => {
 exports.forPure = (address, name, params, { from }) => {
   const ctx = {
     address,
-    get balance () {
-      throw new Error('Cannot view balance a pure function')
-    },
     getEnv: () => ({ msg: { sender: from, name, params, callType: 'pure' } })
   }
 

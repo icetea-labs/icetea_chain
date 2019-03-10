@@ -47,6 +47,7 @@ const _srcFor = (contractAddress, { stateTable, deployedContracts }) => {
   }
 
   return {
+    deployedBy: state.deployedBy,
     mode: state.mode || 0,
     src: state.src,
     meta: state.meta
@@ -153,7 +154,7 @@ const getStateProxy = (stateTable) => {
   }
 
   const balanceOf = (addr) => {
-    if (balances.hasOwnProperty[addr]) {
+    if (balances.hasOwnProperty(addr)) {
       return balances[addr]
     }
     return (deployedContracts[addr] || stateTable[addr] || {}).balance || 0

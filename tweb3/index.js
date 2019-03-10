@@ -292,7 +292,18 @@ exports.IceTeaWeb3 = class IceTeaWeb3 {
    * @param {*} options optional options, e.g. {from: 'xxx'}
    */
   callReadonlyContractMethod(contract, method, params = [], options = {}) {
-    return this.rpc.query('call', { address: contract, name: method, params, options })
+    return this.rpc.query('invokeView', { address: contract, name: method, params, options })
+  }
+
+    /**
+   * Call a pure (@pure) contract method or field.
+   * @param {string} contract required, the contract address.
+   * @param {string} method required, method or field name.
+   * @param {Array} params method params, if any.
+   * @param {*} options optional options, e.g. {from: 'xxx'}
+   */
+  callPureContractMethod(contract, method, params = [], options = {}) {
+    return this.rpc.query('invokePure', { address: contract, name: method, params, options })
   }
 
   // shorthand for transfer, deploy, write, read contract goes here
