@@ -1,14 +1,13 @@
-const { spawn } = require('child_process');
+const { spawn } = require('child_process')
 
 // start icetea server
-spawn(process.argv[0], ['./icetea/index.js'])
+spawn(process.argv[0], ['./icetea/index.js'], {
+    stdio: 'inherit'
+})
 
 // deploy the faucet
 setTimeout(() => {
-    const subprocess = spawn(process.argv[0], ['./scripts/faucet.js'], {
-        detached: true,
-        stdio: 'inherit',
-        shell: true
-      });
-      subprocess.unref();
-}, 3000)
+    spawn(process.argv[0], ['./scripts/faucet.js'], {
+        stdio: 'inherit'
+    })
+}, 5000)

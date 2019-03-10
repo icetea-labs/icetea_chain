@@ -154,7 +154,7 @@ const getStateProxy = (stateTable) => {
   }
 
   const balanceOf = (addr) => {
-    if (balances.hasOwnProperty[addr]) {
+    if (balances.hasOwnProperty(addr)) {
       return balances[addr]
     }
     return (deployedContracts[addr] || stateTable[addr] || {}).balance || 0
@@ -209,7 +209,7 @@ const applyChanges = (stateTable, { deployedContracts, storages, balances }) => 
     // Because we deep cloned, should be ok with direct assignment, no need for _.merge?
     stateTable[addr].storage = storages[addr]
   })
-
+  
   if (balances) {
     Object.keys(balances).forEach(addr => {
       const value = balances[addr]

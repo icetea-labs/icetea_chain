@@ -71,7 +71,7 @@ $(document).ready(function () {
     }
   })
 
-  $('#read').on('click', async function (e) {
+  $('#read, #pure').on('click', async function (e) {
     e.preventDefault()
     var form = document.getElementById('form')
     var address = form.to.value.trim()
@@ -82,13 +82,14 @@ $(document).ready(function () {
     // }
     document.getElementById('funcName').textContent = name
     var params = helper.parseParamsFromField('#params')
-    const privateKey = window.$('#private_key').val().trim()
+    // const privateKey = window.$('#private_key').val().trim()
 
     // TODO: modify frontend, add from address
     try {
-      const result = await tweb3.callReadonlyContractMethod(address, name, params, { from: '617BFqg1QhNtsJiNiWz9jGpsm5iAJKqWQBhhk36KjvUFqNkh47' })
-      //var ct = tweb3.contract(address, privateKey)
-      //var result = await ct.methods[name].call(name, params)
+      const method = this.id === 'read' ? 'callReadonlyContractMethod' : 'callPureContractMethod'
+      const result = await tweb3[method](address, name, params, { from: '617BFqg1QhNtsJiNiWz9jGpsm5iAJKqWQBhhk36KjvUFqNkh47' })
+      // var ct = tweb3.contract(address, privateKey)
+      // var result = await ct.methods[name].call(name, params)
       if (result.success) {
         document.getElementById('resultJson').textContent = utils.tryStringifyJson(result.data)
       } else {

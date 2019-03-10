@@ -108,9 +108,6 @@ exports.forView = (contractAddress, name, params, options) => {
 exports.forPure = (address, name, params, { from }) => {
   const ctx = {
     address,
-    get balance () {
-      throw new Error('Cannot view balance a pure function')
-    },
     getEnv: () => ({ msg: { sender: from, name, params, callType: 'pure' } })
   }
 

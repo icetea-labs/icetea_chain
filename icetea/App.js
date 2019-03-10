@@ -4,6 +4,7 @@ const {
   queryMetadata,
   prepareContract,
   invokeView,
+  invokePure,
   invokeUpdate,
   invokeTx
 } = require('./ContractInvoker')
@@ -51,6 +52,12 @@ class App {
     options.tools = tools
     options.block = stateManager.getBlock()
     return invokeView(contractAddress, methodName, methodParams, options)
+  }
+
+  invokePure (contractAddress, methodName, methodParams, options = {}) {
+    const { tools } = stateManager.produceDraft()
+    options.tools = tools
+    return invokePure(contractAddress, methodName, methodParams, options)
   }
 
   async getMetadata (addr) {

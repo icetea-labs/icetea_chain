@@ -85,17 +85,17 @@ exports.unifyMetadata = meta => {
   const DEF_PROPS = {
     address: {
       type: 'ClassProperty',
-      decorators: ['pure'],
+      decorators: ['attribute'],
       fieldType: 'string'
     },
     balance: {
       type: 'ClassProperty',
-      decorators: ['view'],
+      decorators: ['attribute'],
       fieldType: 'number'
     },
     deployedBy: {
       type: 'ClassProperty',
-      decorators: ['view'],
+      decorators: ['attribute'],
       fieldType: 'number'
     }
   }
