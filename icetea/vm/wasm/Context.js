@@ -12,7 +12,7 @@ exports.for = (invokeType, contractAddress, methodName, methodParams, options) =
   return typeof fn === 'function' ? fn(contractAddress, methodName, methodParams, options) : fn
 }
 
-exports.forTransaction = (address, fname, fparams, { tx, block, stateAccess, tools }) => {
+exports.forTransaction = (address, fname, fparams=[], { tx, block, stateAccess, tools }) => {
   const { balanceOf, getCode } = tools
   const {
     hasState,
@@ -29,13 +29,13 @@ exports.forTransaction = (address, fname, fparams, { tx, block, stateAccess, too
   const ctx = {
     get_address: () => address,
     get_balance: () => balanceOf(address),
-    getEnv: () => ({ tags: [] }),
+    getEnv: () => ({ tags }),
     importTableName,
     log: console.log,
     get_msg_name: () => fname,
-    get_msg_param: () => (fparams || []).map(x => typeof x === 'number' ? x.toString() : x),
+    get_msg_param: () => fparams.map(x => typeof x === 'number' ? x.toString() : x),
     get_msg_value: () => tx.value,
-    get_sender: () => tx.from,
+    get_sender: () => tx.from || '',
     now: () => block.timestamp,
     get_block_hash: () => block.hash,
     get_block_number: () => block.number,
@@ -55,7 +55,7 @@ exports.forTransaction = (address, fname, fparams, { tx, block, stateAccess, too
   return ctx
 }
 
-exports.forView = (address, name, params, { from, block, stateAccess, tools }) => {
+exports.forView = (address, name, params=[], { from='', block, stateAccess, tools }) => {
   const { balanceOf, getCode } = tools
   const {
     hasState,
@@ -73,7 +73,7 @@ exports.forView = (address, name, params, { from, block, stateAccess, tools }) =
     log: console.log,
     importTableName,
     get_msg_name: () => name,
-    get_msg_param: () => (params || []).map(x => typeof x === 'number' ? x.toString() : x),
+    get_msg_param: () => params.map(x => typeof x === 'number' ? x.toString() : x),
     get_msg_value: () => { throw new Error('Cannot get message value inside a view function') },
     get_sender: () => from,
     get_address: () => address,
@@ -93,12 +93,12 @@ exports.forView = (address, name, params, { from, block, stateAccess, tools }) =
   return ctx
 }
 
-exports.forPure = (address, name, params, { from }) => {
+exports.forPure = (address, name, params=[], { from='' }) => {
   const ctx = {
     address,
     log: console.log,
     get_msg_name: () => name,
-    get_msg_param: () => (params || []).map(x => typeof x === 'number' ? x.toString() : x),
+    get_msg_param: () => params.map(x => typeof x === 'number' ? x.toString() : x),
     get_sender: () => from
   }
 

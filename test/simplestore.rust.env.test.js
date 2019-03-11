@@ -93,12 +93,12 @@ async function testSimpleStore (mode, contractPath) {
   expect(events2[0]).toEqual({
     emitter: to,
     eventName: 'ValueChanged',
-    eventData: { value: value2Set }
+    eventData: { value: value2Set.toString() } // for u128
   })
 
   // Get the value after check
   const valueCheck = (await tweb3.callReadonlyContractMethod(to, 'get_value')).data
-  expect(valueCheck).toBe(value2Set)
+  expect(valueCheck).toBe(value2Set.toString()) // for u128
 }
 
 describe('SimpleStore', () => {
