@@ -1,3 +1,6 @@
+const { emitEvent } = require('../../helper/utils')
+const invoker = require('../../ContractInvoker')
+
 exports.for = (invokeType, contractAddress, methodName, methodParams, options) => {
   const map = {
     transaction: exports.forTransaction,
@@ -21,6 +24,8 @@ exports.forTransaction = (address, fname, fparams, { tx, block, stateAccess, too
 
   const importTableName = getCode(address).meta.importTableName
 
+  const tags = {}
+
   const ctx = {
     get_address: () => address,
     get_balance: () => balanceOf(address),
@@ -28,13 +33,23 @@ exports.forTransaction = (address, fname, fparams, { tx, block, stateAccess, too
     importTableName,
     log: console.log,
     get_msg_name: () => fname,
-    get_msg_param: () => (fparams && fparams.length) ? parseInt(fparams[0]) : 0,
+    get_msg_param: () => (fparams || []).map(x => typeof x === 'number' ? x.toString() : x),
+    get_msg_value: () => tx.value,
     get_sender: () => tx.from,
+    now: () => block.timestamp,
+    get_block_hash: () => block.hash,
+    get_block_number: () => block.number,
+    call_contract: (to, method, params) => {
+      return invoker.invokeUpdate(to, method, params, options)
+    },
     has_state: hasState,
-    load_int: getState,
-    save_int: setState,
+    load: key => getState(key, ''),
+    save: setState,
     delete_state: deleteState,
-    transfer
+    transfer,
+    emit_event: (eventName, eventData, indexes = []) => {
+      emitEvent(address, tags, eventName, eventData, indexes)
+    }
   }
 
   return ctx
@@ -58,11 +73,19 @@ exports.forView = (address, name, params, { from, block, stateAccess, tools }) =
     log: console.log,
     importTableName,
     get_msg_name: () => name,
-    get_msg_param: () => (params && params.length) ? parseInt(params[0]) : 0,
+    get_msg_param: () => (params || []).map(x => typeof x === 'number' ? x.toString() : x),
+    get_msg_value: () => { throw new Error('Cannot get message value inside a view function') },
     get_sender: () => from,
+    get_address: () => address,
+    now: () => block.timestamp,
+    get_block_hash: () => block.hash,
+    get_block_number: () => block.number,
+    call_contract: (addr, method, params) => {
+      return invoker.invokeView(addr, method, params, { ...options, from: address })
+    },
     has_state: hasState,
-    load_int: getState,
-    save_int: setState,
+    load: key => getState(key, ''),
+    save: setState,
     delete_state: deleteState,
     transfer
   }
@@ -75,7 +98,7 @@ exports.forPure = (address, name, params, { from }) => {
     address,
     log: console.log,
     get_msg_name: () => name,
-    get_msg_param: () => (params && params.length) ? parseInt(params[0]) : 0,
+    get_msg_param: () => (params || []).map(x => typeof x === 'number' ? x.toString() : x),
     get_sender: () => from
   }
 
@@ -83,12 +106,8 @@ exports.forPure = (address, name, params, { from }) => {
 }
 
 exports.forMetadata = {
-  address: '',
-  balance: 0,
   log: console.log,
   get_msg_name: () => '__metadata',
   get_msg_param: () => 0,
   get_sender: () => '',
-  load_int: () => 0,
-  save_int: () => undefined
 }
