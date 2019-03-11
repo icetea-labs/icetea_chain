@@ -12,7 +12,8 @@ exports.for = (invokeType, contractAddress, methodName, methodParams, options) =
   return typeof fn === 'function' ? fn(contractAddress, methodName, methodParams, options) : fn
 }
 
-exports.forTransaction = (address, fname, fparams=[], { tx, block, stateAccess, tools }) => {
+exports.forTransaction = (address, fname, fparams=[], options) => {
+  const { tx, block, stateAccess, tools } = options
   const { balanceOf, getCode } = tools
   const {
     hasState,
@@ -55,7 +56,8 @@ exports.forTransaction = (address, fname, fparams=[], { tx, block, stateAccess, 
   return ctx
 }
 
-exports.forView = (address, name, params=[], { from='', block, stateAccess, tools }) => {
+exports.forView = (address, name, params=[], options) => {
+  const { from='', block, stateAccess, tools } = options
   const { balanceOf, getCode } = tools
   const {
     hasState,
@@ -76,7 +78,6 @@ exports.forView = (address, name, params=[], { from='', block, stateAccess, tool
     get_msg_param: () => params.map(x => typeof x === 'number' ? x.toString() : x),
     get_msg_value: () => { throw new Error('Cannot get message value inside a view function') },
     get_sender: () => from,
-    get_address: () => address,
     now: () => block.timestamp,
     get_block_hash: () => block.hash,
     get_block_number: () => block.number,
