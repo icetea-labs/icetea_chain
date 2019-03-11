@@ -1,10 +1,8 @@
-/* global jest describe test expect beforeAll afterAll */
-
 const { IceTeaWeb3 } = require('../tweb3')
 const { TxOp, ContractMode } = require('../icetea/enum')
-const fs = require('fs');
+const fs = require('fs')
 
-console.log("Deploying the faucet...")
+console.log('Deploying the faucet...')
 
 const tweb3 = new IceTeaWeb3('ws://localhost:26657/websocket')
 
@@ -17,7 +15,7 @@ const op = TxOp.DEPLOY_CONTRACT
 const mode = ContractMode.JS_DECORATED
 
 tweb3.sendTransactionCommit({ from, value, data: { op, mode, src } }, key)
-    .then(result => {
-        console.log('Deployed faucet finished with code: ' + ((result.deliver_tx || result.check_tx).code || 0))
-        tweb3.close()
-    })
+  .then(result => {
+    console.log('Deployed faucet finished with code: ' + ((result.deliver_tx || result.check_tx).code || 0))
+    tweb3.close()
+  })

@@ -12,7 +12,7 @@ exports.for = (invokeType, contractAddress, methodName, methodParams, options) =
   return typeof fn === 'function' ? fn(contractAddress, methodName, methodParams, options) : fn
 }
 
-exports.forTransaction = (address, fname, fparams=[], options) => {
+exports.forTransaction = (address, fname, fparams = [], options) => {
   const { tx, block, stateAccess, tools } = options
   const { balanceOf, getCode } = tools
   const {
@@ -56,8 +56,8 @@ exports.forTransaction = (address, fname, fparams=[], options) => {
   return ctx
 }
 
-exports.forView = (address, name, params=[], options) => {
-  const { from='', block, stateAccess, tools } = options
+exports.forView = (address, name, params = [], options) => {
+  const { from = '', block, stateAccess, tools } = options
   const { balanceOf, getCode } = tools
   const {
     hasState,
@@ -94,7 +94,7 @@ exports.forView = (address, name, params=[], options) => {
   return ctx
 }
 
-exports.forPure = (address, name, params=[], { from='' }) => {
+exports.forPure = (address, name, params = [], { from = '' }) => {
   const ctx = {
     address,
     log: console.log,
@@ -110,5 +110,5 @@ exports.forMetadata = {
   log: console.log,
   get_msg_name: () => '__metadata',
   get_msg_param: () => 0,
-  get_sender: () => '',
+  get_sender: () => ''
 }
