@@ -1,12 +1,11 @@
 const { TxOp } = require('./enum')
 const { sha256 } = require('../icetea/helper/codec')
 
-module.exports = class Tx {
-  // data is null or empty: normal tx
+module.exports = class {
   // create contract
   // data = {
   //    op: 0,
-  //    src: "console.log('hello worl')"";
+  //    src: "console.log('hello world')";
   // }
   // call contract function
   // data = {
@@ -14,14 +13,20 @@ module.exports = class Tx {
   //    name: "functionName",
   //    params: [1, "hello"]
   // }
+  //
+  // Some op in the future: set alias/options, vote, etc.
 
   constructor (from, to, value, fee, data, nonce) {
+    if (!from) {
+      throw new Error('Transaction "from" is required.')
+    }
+
     this.from = from || ''
     this.to = to || ''
     this.value = parseFloat(value) || 0
     this.fee = parseFloat(fee) || 0
     this.data = data || {}
-    this.nonce = nonce || Date.now()
+    this.nonce = nonce || Date.now() // FIXME
 
     if (this.value < 0 || this.fee < 0) {
       throw new Error('Value and fee cannot be negative.')
@@ -40,6 +45,7 @@ module.exports = class Tx {
 
   setSignature (signature) {
     this.signature = signature
+    return this
   }
 
   isContractCreation () {

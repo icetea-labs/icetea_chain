@@ -2,7 +2,6 @@
 
 const fs = require('fs')
 const { IceTeaWeb3 } = require('../tweb3')
-const { switchEncoding } = require('../tweb3/utils')
 const { randomAccountWithBalance } = require('./helper')
 const { TxOp, ContractMode } = require('../icetea/enum')
 
@@ -28,8 +27,7 @@ async function testSimpleStore (mode, contractPath) {
 
   const value = 1.5
   const fee = 0.1
-  let src = fs.readFileSync(contractPath)
-  src = src.toString('base64')
+  let src = fs.readFileSync(contractPath, 'base64')
 
   const data = {
     op: TxOp.DEPLOY_CONTRACT,

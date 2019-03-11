@@ -1,147 +1,119 @@
-const _ = require('lodash')
 const utils = require('../../helper/utils')
-const Worker = require('../../Worker')
-const Tx = require('../../Tx')
+const invoker = require('../../ContractInvoker')
 
-exports.contextForWrite = (tx, block, stateTable, { address, fname, fparams }) => {
-  let msg = _.cloneDeep(tx)
-  msg.name = fname
-  msg.params = fparams
-  msg.sender = msg.from // alias
+function _makeLoadContract (invokerTypes, srcContract, options) {
+  return destContract => {
+    return new Proxy({}, {
+      get (obj, method) {
+        const tx = { from: srcContract }
+        const newOpts = { ...options, tx, ...tx }
+        return _makeInvokableMethod(invokerTypes, destContract, method, newOpts)
+      }
+    })
+  }
+}
+
+function _makeInvokableMethod (invokerTypes, destContract, method, options) {
+  return invokerTypes.reduce((obj, t) => {
+    obj[t] = (...params) => {
+      return invoker[t](destContract, method, params, options)
+    }
+    return obj
+  }, {})
+}
+
+exports.for = (invokeType, contractAddress, methodName, methodParams, options) => {
+  const map = {
+    transaction: exports.forTransaction,
+    view: exports.forView,
+    pure: exports.forPure
+  }
+
+  const fn = map[invokeType] ? map[invokeType] : exports.forMetadata
+  return typeof fn === 'function' ? fn(contractAddress, methodName, methodParams, options) : fn
+}
+
+exports.forTransaction = (contractAddress, methodName, methodParams, options) => {
+  const { tx, block, stateAccess, tools } = options
+
+  const msg = {}
+  msg.name = methodName
+  msg.params = methodParams
+  msg.sender = tx.from
+  msg.value = tx.value
+  msg.fee = tx.fee
   msg.callType = (msg.value > 0) ? 'payable' : 'transaction'
-  msg = Object.freeze(msg)
+  utils.deepFreeze(msg)
 
-  const theBlock = Object.freeze(_.cloneDeep(block))
-  const state = stateTable[address].state || {}
-  const balance = stateTable[address].balance || 0
+  const contractHelpers = stateAccess.forUpdate(contractAddress)
+  const { deployedBy } = tools.getCode(contractAddress)
   const tags = {}
 
   const ctx = {
-    address,
-    balance,
-    getEnv: () => Object.freeze({ msg,
-      block: theBlock,
+    ...contractHelpers,
+    address: contractAddress,
+    deployedBy,
+    get balance () {
+      return tools.balanceOf(contractAddress)
+    },
+    getEnv: () => ({
+      msg,
+      block,
       tags,
-      loadContract: (to) => {
-        const worker = new Worker(stateTable)
-        return new Proxy({}, {
-          get (obj, method) {
-            const real = obj[method]
-            if (!real) {
-              return (...params) => {
-                const tx = new Tx(address, to, 0, 0, { name: method, params }, 0)
-                return worker.callContract(tx, theBlock, stateTable)
-              }
-            }
-            return real
-          }
-        })
-      } }),
-    transfer: (to, value) => {
-      ctx.balance -= value
-      utils.decBalance(address, value, stateTable)
-      utils.incBalance(to, value, stateTable)
-      utils.emitTransferred(address, tags, address, to, value)
-    },
-    _state: {},
-    hasState: (key) => {
-      return ctx._state.hasOwnProperty(key) || state.hasOwnProperty(key)
-    },
-    getState: (key, defVal) => {
-      return ctx._state.hasOwnProperty(key) ? ctx._state[key] : (state.hasOwnProperty(key) ? state[key] : defVal)
-    },
-    setState: (key, value) => {
-      const old = ctx.getState(key)
-      ctx._state[key] = value
-      return old
-    },
+      loadContract: _makeLoadContract(['invokeUpdate', 'invokeView', 'invokePure'], contractAddress, options)
+    }),
     emitEvent: (eventName, eventData, indexes = []) => {
-      utils.emitEvent(address, tags, eventName, eventData, indexes)
+      utils.emitEvent(contractAddress, tags, eventName, eventData, indexes)
     }
   }
 
-  return Object.freeze(ctx)
+  return Object.freeze(ctx) // prevent from changing address, balance, etc.
 }
 
-exports.contextForView = (stateTable, address, name, params, options) => {
-  const { from, block } = options
+exports.forView = (contractAddress, name, params, options) => {
+  const { from, block, stateAccess, tools } = options
+
   const msg = new Proxy({ name, params, sender: from, callType: 'view' }, {
     get (target, prop) {
       if (Object.keys(msg).includes(prop) && !['name', 'params', 'callType', 'sender'].includes(prop)) {
-        throw new Error('Cannot access msg.' + prop + ' when calling a @view function')
+        throw new Error('Cannot access msg.' + prop + ' when calling a view function')
       }
       return Reflect.get(target, prop)
+    },
+    set () {
+      throw new Error('msg properties are readonly.')
     }
   })
 
-  const state = _.cloneDeep(stateTable[address].state || {})
-  const balance = stateTable[address].balance || 0
+  const contractHelpers = stateAccess.forView(contractAddress)
+  const { deployedBy } = tools.getCode(contractAddress)
 
   const ctx = {
-    address,
-    balance,
-    getEnv: () => ({ msg,
-      block: Object.freeze(_.cloneDeep(block)),
-      loadContract: (addr) => {
-        const worker = new Worker(stateTable)
-        return new Proxy({}, {
-          get (obj, method) {
-            const real = obj[method]
-            if (!real) {
-              return (...params) => worker.callViewFunc(addr, method, params, { from: address })
-            }
-            return real
-          }
-        })
-      } }),
-    transfer: () => {
-      throw new Error('Cannot transfer inside a view function')
-    },
-    hasState: (key) => {
-      return state.hasOwnProperty(key)
-    },
-    getState: (key) => {
-      return state[key]
-    },
-    setState: () => {
-      throw new Error('Cannot change state inside a view function')
-    }
-  }
-
-  return Object.freeze(ctx)
-}
-
-exports.contextForPure = (address, name, params) => {
-  const msg = {}
-  msg.name = name
-  msg.params = params
-  msg.callType = 'pure'
-
-  const ctx = {
-    address,
+    ...contractHelpers,
+    address: contractAddress,
+    deployedBy,
     get balance () {
-      throw new Error('Cannot view balance a pure function')
+      return tools.balanceOf(contractAddress)
     },
-    getEnv: () => ({ msg }),
-    transfer: () => {
-      throw new Error('Cannot transfer inside a pure function')
-    },
-    hasState: () => {
-      throw new Error('Cannot access state inside a pure function')
-    },
-    getState: () => {
-      throw new Error('Cannot access state inside a pure function')
-    },
-    setState: () => {
-      throw new Error('Cannot access state inside a pure function')
-    }
+    getEnv: () => ({
+      msg,
+      block,
+      loadContract: _makeLoadContract(['invokeView', 'invokePure'], contractAddress, options)
+    })
   }
 
   return Object.freeze(ctx)
 }
 
-exports.dummyContext = Object.freeze({
-  getEnv: () => ({ msg: { callType: 'dummy', name: '__metadata' }, block: {} }),
-  getState: () => undefined,
-  setState: () => undefined
-})
+exports.forPure = (address, name, params, { from }) => {
+  const ctx = {
+    address,
+    getEnv: () => ({ msg: { sender: from, name, params, callType: 'pure' } })
+  }
+
+  return utils.deepFreeze(ctx)
+}
+
+exports.forMetadata = {
+  getEnv: () => ({ msg: { callType: 'metadata', name: '__metadata' }, block: {} })
+}

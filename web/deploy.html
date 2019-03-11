@@ -37,15 +37,15 @@
             <p data-modes="100" class="hide"><label>Wasm file: <input type="file" id="wasmFile" accept=".wasm"></label></p>
             <section data-modes="0;1">
             <p><label>JS source:</label></p>
-            <p><textarea id="src" style="width: 600px;height: 280px;">@contract class SimpleStore  {
-    @state value
-    @transaction setValue(value) {
+            <p><textarea id="src" style="width: 600px;height: 280px;">@contract class NumberStore  {
+    @state value: ?number // same as number | undefined | null
+    @transaction setValue (value: number): void {
         this.value = value
-        this.emitEvent("ValueChanged", {oldValue: this.value, newValue: value})
+        this.emitEvent("ValueChanged", { value })
     }
 }</textarea></p>
 </section>
-            <p><label>Params for constructor (each param one row, use " to denote string)</label></p>
+            <p><label>Params (each param 1 row, JSON accepted, use " to denote string)</label></p>
             <p><textarea id="params" style="width: 600px;height: 60px;"></textarea></p>
             <p><button type="submit" style="padding: 8px 32px" id="submit_btn">Send</button>
         </form>

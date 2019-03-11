@@ -18,7 +18,8 @@ module.exports = mode => {
       return babel.transformSync(src, {
         plugins: [
           '@babel/plugin-proposal-private-methods',
-          '@babel/plugin-proposal-class-properties'
+          '@babel/plugin-proposal-class-properties',
+          '@babel/plugin-transform-flow-strip-types'
         ]
       }).code
     }
@@ -27,8 +28,8 @@ module.exports = mode => {
       return this.ensureES5(src, true)
     }
 
-    verify (src) {
-      super.verify(src)
+    analyze (src) {
+      super.analyze(src)
       try {
         halts(src)
       } catch (err) {
@@ -49,7 +50,13 @@ module.exports = mode => {
     }
 
     doRun (patchedSrc, { context, guard, info }) {
-      // console.log(patchedSrc);
+      if (process.env.NODE_ENV === 'development' &&
+       typeof patchedSrc === 'string' &&
+       context.getEnv().msg.name === '__on_deployed') {
+        const { EOL } = require('os')
+        const lines = patchedSrc.split(EOL).map((line, i) => (i + ': ' + line))
+        console.log(lines.join(EOL))
+      }
       const f = new Function('__g', '__info', patchedSrc) // eslint-disable-line
       return f.call(context, guard, info)
     }

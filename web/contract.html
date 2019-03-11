@@ -22,11 +22,12 @@
             <p><label>Contract address:</label> <select id="to" name="to" autofocus required></select></p>
             <p><label>Function name:</label> <input id="name" name="name" autocomplete="off" list="funcs"></select></p>
             <datalist id="funcs"></datalist>
-            <p><label>Function params (each param one row, use " to denote string)</label></p>
+            <p><label>Params (each param 1 row, JSON accepted, use " to denote string)</label></p>
             <p><textarea id="params" style="width: 600px;height: 100px;"></textarea></p>
             <p><button type="submit" style="padding: 8px 32px" id="submit_btn">Send (Write)</button>
         </form>
-        <p><button id="read" style="padding: 8px 32px" >Call (Read)</button></p>
+        <p><button id="read" style="padding: 8px 32px" >Call (View)</button>&nbsp;&nbsp;&nbsp;
+            <button id="pure" style="padding: 8px 32px" >Call (Pure)</button></p>
         <section id="result">
             <div><b id="funcName"></b></div>
             <div id="resultJson"></div>

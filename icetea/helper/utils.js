@@ -1,47 +1,5 @@
 const _ = require('lodash')
 
-exports.prepareState = (addr, stateTable, initialValues) => {
-  if (!stateTable[addr]) {
-    stateTable[addr] = {}
-  }
-
-  if (typeof stateTable[addr].balance === 'undefined') {
-    let balance = 0
-
-    Object.defineProperty(stateTable[addr], 'balance', {
-      enumerable: true,
-      get () {
-        return balance
-      },
-      set (value) {
-        if (value < 0) {
-          throw new Error('Balance cannot be negative')
-        }
-        balance = value
-      }
-    })
-  }
-
-  if (initialValues) {
-    Object.assign(stateTable[addr], initialValues)
-  }
-
-  return stateTable[addr]
-}
-
-exports.incBalance = (addr, delta, stateTable) => {
-  delta = parseFloat(delta) || 0
-  const state = exports.prepareState(addr, stateTable)
-  if (state.balance + delta < 0) {
-    throw new Error('Not enough balance')
-  }
-  state.balance += delta
-}
-
-exports.decBalance = (addr, delta, stateTable) => {
-  exports.incBalance(addr, -delta, stateTable)
-}
-
 exports.getAllPropertyNames = function (obj) {
   var props = []
   if (!obj) return props
@@ -127,13 +85,18 @@ exports.unifyMetadata = meta => {
   const DEF_PROPS = {
     address: {
       type: 'ClassProperty',
-      decorators: ['view'],
-      returnType: 'string'
+      decorators: ['attribute'],
+      fieldType: 'string'
     },
     balance: {
       type: 'ClassProperty',
-      decorators: ['view'],
-      returnType: 'number'
+      decorators: ['attribute'],
+      fieldType: 'number'
+    },
+    deployedBy: {
+      type: 'ClassProperty',
+      decorators: ['attribute'],
+      fieldType: 'number'
     }
   }
 
@@ -156,10 +119,42 @@ exports.unifyMetadata = meta => {
 
   const excepts = ['constructor', '__on_deployed', '__on_received', 'getEnv', 'getState', 'setState']
   Object.keys(meta).forEach(k => {
-    if (excepts.includes(k)) {
+    if (excepts.includes(k) || k.startsWith('#')) {
       delete meta[k]
     }
   })
 
   return Object.assign(meta, DEF_PROPS)
+}
+
+// Credit: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/freeze
+exports.deepFreeze = (object) => {
+  // Retrieve the property names defined on object
+  var propNames = Object.getOwnPropertyNames(object)
+
+  // Freeze properties before freezing self
+
+  for (let name of propNames) {
+    let value = object[name]
+
+    object[name] = value && typeof value === 'object'
+      ? exports.deepFreeze(value) : value
+  }
+
+  return Object.freeze(object)
+}
+
+exports.bindAll = obj => {
+  Object.getOwnPropertyNames(obj).forEach(p => {
+    if (p !== 'constructor' && typeof obj[p] === 'function') {
+      obj[p] = obj[p].bind(obj)
+    }
+  })
+  return obj
+}
+
+exports.newAndBind = (SomeClass, ...params) => {
+  const instance = new SomeClass(params)
+  exports.bindAll(Object.getPrototypeOf(instance))
+  return instance
 }
