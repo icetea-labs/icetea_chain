@@ -1,5 +1,5 @@
 const Buffer = require('safe-buffer').Buffer
-const codec = require('../icetea/helper/codec')
+const codec = require('./helper/codec')
 
 exports.replaceAll = (text, search, replacement) => {
   return text.split(search).join(replacement)

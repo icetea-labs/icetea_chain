@@ -1,114 +1,13 @@
 const fetch = require('node-fetch')
 const { TxOp, ContractMode } = require('../icetea/enum')
-const { signTxData } = require('../icetea/helper/ecc')
-const ecc = require('../icetea/helper/ecc')
-const { switchEncoding, encodeTX, decodeTX, tryParseJson } = require('../tweb3/utils')
-const W3CWebSocket = require('websocket').w3cwebsocket
-const WebSocketAsPromised = require('websocket-as-promised')
-const Contract = require('./Contract')
-
-function decodeTags (tx, keepEvents = false) {
-  const EMPTY_RESULT = {}
-  let b64Tags = tx
-
-  if (tx.data && tx.data.value && tx.data.value.TxResult.result.tags) {
-    b64Tags = tx.data.value.TxResult.result.tags // For subscribe
-  } else if (tx.tx_result && tx.tx_result.tags) {
-    b64Tags = tx.tx_result.tags
-  } else if (tx.deliver_tx && tx.deliver_tx.tags) {
-    b64Tags = tx.deliver_tx.tags
-  }
-  if (!b64Tags.length) {
-    return EMPTY_RESULT
-  }
-
-  const tags = {}
-  // decode tags
-  b64Tags.forEach(t => {
-    const key = switchEncoding(t.key, 'base64', 'utf8')
-    const value = switchEncoding(t.value, 'base64', 'utf8')
-    tags[key] = tryParseJson(value)
-  })
-
-  if (!keepEvents && tags.EventNames) {
-    // remove event-related tags
-    const events = tags.EventNames.split('|')
-    events.forEach(e => {
-      if (e) {
-        const eventName = e.split('.')[1]
-        Object.keys(tags).forEach(key => {
-          if (key.indexOf(eventName) === 0) {
-            delete tags[key]
-          }
-        })
-        delete tags[e]
-      }
-    })
-    delete tags.EventNames
-  }
-
-  return tags
-}
-
-function decodeEventData (tx) {
-  const EMPTY_RESULT = []
-
-  const tags = decodeTags(tx, true)
-
-  if (!tags.EventNames) {
-    return EMPTY_RESULT
-  }
-
-  const events = tags.EventNames.split('|')
-  if (!events.length) {
-    return EMPTY_RESULT
-  }
-
-  const result = events.reduce((r, e) => {
-    if (e) {
-      const parts = e.split('.')
-      const emitter = parts[0]
-      const eventName = parts[1]
-      const eventData = Object.keys(tags).reduce((data, key) => {
-        const prefix = eventName + '.'
-        if (key.startsWith(prefix)) {
-          const name = key.substr(prefix.length)
-          const value = tags[key]
-          data[name] = value
-        } else if (key === eventName) {
-          Object.assign(data, tags[key])
-        }
-        return data
-      }, {})
-      r.push({ emitter, eventName, eventData })
-    }
-    return r
-  }, [])
-
-  return result
-}
-
-function decodeTxResult (result) {
-  if (!result) return result
-  const name = result.tx_result ? 'tx_result' : 'deliver_tx'
-
-  if (result[name] && result[name].data) {
-    result[name].data = tryParseJson(switchEncoding(result[name].data, 'base64', 'utf8'))
-  }
-
-  return result
-}
-
-function sanitizeParams (params) {
-  params = params || {}
-  Object.keys(params).forEach(k => {
-    let v = params[k]
-    if (typeof v === 'number') {
-      params[k] = String(v)
-    }
-  })
-  return params
-}
+const { signTxData } = require('./helper/ecc')
+const ecc = require('./helper/ecc')
+const { switchEncoding, encodeTX, decodeTX, tryParseJson } = require('./utils')
+// const W3CWebSocket = require('websocket').w3cwebsocket
+// const WebSocketAsPromised = require('websocket-as-promised')
+const Contract = require('./contract/Contract')
+const HttpProvider = require('./providers/HttpProvider');
+const WebSocketProvider = require('./providers/WebSocketProvider');
 
 /**
  * The IceTea web client.
@@ -127,9 +26,9 @@ exports.IceTeaWeb3 = class IceTeaWeb3 {
     }
 
     this.utils = {
-      decodeEventData,
-      decodeTags,
-      decodeTxResult
+      decodeEventData: this.rpc.decodeEventData,
+      decodeTags: this.rpc.decodeTags,
+      decodeTxResult: this.rpc.decodeTxResult,
     }
     this.subscriptions = {}
     this.countSubscribeEvent = 0
@@ -179,7 +78,7 @@ exports.IceTeaWeb3 = class IceTeaWeb3 {
       throw new Error('hash is required')
     }
     return this.rpc.call('tx', { hash: switchEncoding(hash, 'hex', 'base64'), ...options })
-      .then(decodeTxResult)
+      .then(this.rpc.decodeTxResult)
   }
 
   /**
@@ -280,7 +179,7 @@ exports.IceTeaWeb3 = class IceTeaWeb3 {
    */
   sendTransactionCommit (tx, privateKey) {
     return this.rpc.send('broadcast_tx_commit', signTxData(tx, privateKey))
-      .then(decodeTxResult)
+      .then(this.rpc.decodeTxResult)
   }
 
   /**
@@ -365,7 +264,7 @@ exports.IceTeaWeb3 = class IceTeaWeb3 {
           if (isSystemEvent) {
             return callback(message)
           } else {
-            let events = tweb3.utils.decodeEventData(jsonMsg.result)
+            let events = this.rpc.decodeEventData(jsonMsg.result)
             events.forEach(event => {
               if (event.eventName && nonSystemEventName === event.eventName) {
                 let res = {}
@@ -425,8 +324,8 @@ exports.IceTeaWeb3 = class IceTeaWeb3 {
     return new Contract(this, address, privateKey)
   }
 
-  async deploy (mode, src, privateKey) {
-    let tx = this._serializeData(mode, src, privateKey)
+  async deploy (mode, src, privateKey, params = [], options = {}) {
+    let tx = this._serializeData(mode, src, privateKey, params, options)
     let res = await this.sendTransactionCommit(tx, privateKey)
     return tweb3.getTransaction(res.hash).then(result => {
       if (result.tx_result.code) {
@@ -450,7 +349,7 @@ exports.IceTeaWeb3 = class IceTeaWeb3 {
     })
   }
 
-  _serializeData (mode, src, privateKey, params = [], options = {}) {
+  _serializeData (mode, src, privateKey, params, options) {
     var formData = {}
     var txData = {
       op: TxOp.DEPLOY_CONTRACT,
@@ -467,182 +366,5 @@ exports.IceTeaWeb3 = class IceTeaWeb3 {
     formData.fee = options.fee || 0
     formData.data = txData
     return formData
-  }
-}
-
-class WebSocketProvider {
-  constructor (endpoint, options) {
-    // this.endpoint = "ws://localhost:26657/websocket"
-    this.endpoint = endpoint
-    this.options = options || {
-      createWebSocket: url => new W3CWebSocket(url),
-      packMessage: data => JSON.stringify(data),
-      unpackMessage: message => JSON.parse(message),
-      attachRequestId: (data, requestId) => Object.assign({ id: requestId }, data),
-      extractRequestId: data => data.id
-      // timeout: 10000,
-    }
-    this.wsp = new WebSocketAsPromised(this.endpoint, this.options)
-  }
-
-  close () {
-    this.wsp.close()
-  }
-
-  registerEventListener (event, callback) {
-    this.wsp[event].addListener(callback)
-  }
-
-  async _call (method, params) {
-    const json = {
-      jsonrpc: '2.0',
-      method,
-      params: sanitizeParams(params)
-    }
-
-    if (!this.wsp.isOpened) {
-      await this.wsp.open()
-    }
-
-    return this.wsp.sendRequest(json)
-  }
-
-  call (method, params) {
-    // console.log('method ',method, '| params: ',params);
-    return this._call(method, params).then(resp => {
-      if (resp.error) {
-        const err = new Error(resp.error.message)
-        Object.assign(err, resp.error)
-        throw err
-      }
-      if (resp.id) resp.result.id = resp.id
-
-      return resp.result
-    })
-  }
-
-  // query application state (read)
-  query (path, data, options) {
-    const params = { path, ...options }
-    if (data) {
-      if (typeof data !== 'string') {
-        data = JSON.stringify(data)
-      }
-      params.data = switchEncoding(data, 'utf8', 'hex')
-    }
-
-    return this._call('abci_query', params).then(resp => {
-      if (resp.error) {
-        const err = new Error(resp.error.message)
-        Object.assign(err, resp.error)
-        throw err
-      }
-
-      // decode query data embeded in info
-      let r = resp.result
-      if (r && r.response && r.response.info) {
-        r = tryParseJson(r.response.info)
-      }
-
-      return r
-    })
-  }
-
-  // send a transaction (write)
-  send (method, tx) {
-    return this.call(method, {
-      // for jsonrpc, encode in 'base64'
-      // for query string (REST), encode in 'hex' (or 'utf8' inside quotes)
-      tx: encodeTX(tx, 'base64')
-    }).then(result => {
-      if (result.code) {
-        const err = new Error(result.log)
-        Object.assign(err, result)
-        throw err
-      }
-
-      return result
-    })
-  }
-}
-
-class HttpProvider {
-  constructor (endpoint) {
-    this.endpoint = endpoint
-  }
-
-  _call (method, params) {
-    const json = {
-      jsonrpc: '2.0',
-      id: Date.now(),
-      method,
-      params: sanitizeParams(params)
-    }
-
-    return fetch(this.endpoint, {
-      method: 'POST',
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json; charset=utf-8'
-      },
-      body: JSON.stringify(json)
-    })
-      .then(resp => resp.json())
-  }
-
-  // call a jsonrpc, normally to query blockchain (block, tx, validator, consensus, etc.) data
-  call (method, params) {
-    return this._call(method, params).then(resp => {
-      if (resp.error) {
-        const err = new Error(resp.error.message)
-        Object.assign(err, resp.error)
-        throw err
-      }
-      if (resp.id) resp.result.id = resp.id
-      return resp.result
-    })
-  }
-
-  // query application state (read)
-  query (path, data, options) {
-    const params = { path, ...options }
-    if (data) {
-      if (typeof data !== 'string') {
-        data = JSON.stringify(data)
-      }
-      params.data = switchEncoding(data, 'utf8', 'hex')
-    }
-
-    return this._call('abci_query', params).then(resp => {
-      if (resp.error) {
-        const err = new Error(resp.error.message)
-        Object.assign(err, resp.error)
-        throw err
-      }
-
-      // decode query data embeded in info
-      let r = resp.result
-      if (r && r.response && r.response.info) {
-        r = tryParseJson(r.response.info)
-      }
-      return r
-    })
-  }
-
-  // send a transaction (write)
-  send (method, tx) {
-    return this.call(method, {
-      // for jsonrpc, encode in 'base64'
-      // for query string (REST), encode in 'hex' (or 'utf8' inside quotes)
-      tx: encodeTX(tx, 'base64')
-    }).then(result => {
-      if (result.code) {
-        const err = new Error(result.log)
-        Object.assign(err, result)
-        throw err
-      }
-
-      return result
-    })
   }
 }

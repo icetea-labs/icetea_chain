@@ -1,5 +1,5 @@
-const ecc = require('../icetea/helper/ecc')
-const { TxOp } = require('../icetea/enum')
+const ecc = require('../helper/ecc')
+const { TxOp } = require('../helper/enum')
 
 class Contract {
   constructor (tweb3, address, privateKey) {
