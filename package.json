@@ -4,10 +4,10 @@
   "description": "Tendermint-based icetea",
   "main": "server.js",
   "scripts": {
-    "test": "standard \"web/**/*.js\" \"icetea/**/*.js\" \"test/**/*.js\"",
-    "fix": "standard \"web/**/*.js\" \"icetea/**/*.js\" \"test/**/*.js\" --fix",
+    "test": "standard",
+    "fix": "standard --fix",
     "jest": "jest",
-    "start": "node ./scripts/start",
+    "start": "node icetea",
     "dev": "tendermint node & npm start & webpack-dev-server --content-base web --inline --hot --port 3001 --open",
     "dev2": "tendermint node & npm start & webpack-dev-server --content-base web --inline --hot --port 3001",
     "dev3": "npm start & webpack-dev-server --content-base web --inline --hot --port 3001",
@@ -20,6 +20,12 @@
   "keywords": [],
   "author": "Trada Tech",
   "license": "MIT",
+  "standard": {
+    "ignore": [
+      "**/tmp/",
+      "**/example/"
+    ]
+  },
   "dependencies": {
     "@babel/plugin-proposal-class-properties": "7.3.0",
     "@babel/plugin-proposal-private-methods": "7.3.2",

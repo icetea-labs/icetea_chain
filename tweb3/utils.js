@@ -38,4 +38,3 @@ exports.switchEncoding = (str, from, to) => {
 exports.decodeTX = (data, enc = 'base64') => {
   return codec.decode(exports.toBuffer(data, enc))
 }
-
