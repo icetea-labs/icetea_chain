@@ -1,15 +1,10 @@
-const { switchEncoding, encodeTX, decodeTX, tryParseJson } = require('../../tweb3/utils')
+const { switchEncoding, encodeTX, tryParseJson } = require('../../tweb3/utils')
 
 class BaseProvider {
-
-  // constructor (endpoint) {
-  //   this.endpoint = endpoint
-  // }
-
   decodeTags (tx, keepEvents = false) {
     const EMPTY_RESULT = {}
     let b64Tags = tx
-  
+
     if (tx.data && tx.data.value && tx.data.value.TxResult.result.tags) {
       b64Tags = tx.data.value.TxResult.result.tags // For subscribe
     } else if (tx.tx_result && tx.tx_result.tags) {
@@ -20,7 +15,7 @@ class BaseProvider {
     if (!b64Tags.length) {
       return EMPTY_RESULT
     }
-  
+
     const tags = {}
     // decode tags
     b64Tags.forEach(t => {
@@ -28,7 +23,7 @@ class BaseProvider {
       const value = switchEncoding(t.value, 'base64', 'utf8')
       tags[key] = tryParseJson(value)
     })
-  
+
     if (!keepEvents && tags.EventNames) {
       // remove event-related tags
       const events = tags.EventNames.split('|')
@@ -45,35 +40,35 @@ class BaseProvider {
       })
       delete tags.EventNames
     }
-  
+
     return tags
   }
 
   decodeTxResult (result) {
     if (!result) return result
     const name = result.tx_result ? 'tx_result' : 'deliver_tx'
-  
+
     if (result[name] && result[name].data) {
       result[name].data = tryParseJson(switchEncoding(result[name].data, 'base64', 'utf8'))
     }
-  
+
     return result
   }
-  
+
   decodeEventData (tx) {
     const EMPTY_RESULT = []
-  
+
     const tags = this.decodeTags(tx, true)
-  
+
     if (!tags.EventNames) {
       return EMPTY_RESULT
     }
-  
+
     const events = tags.EventNames.split('|')
     if (!events.length) {
       return EMPTY_RESULT
     }
-  
+
     const result = events.reduce((r, e) => {
       if (e) {
         const parts = e.split('.')
@@ -94,7 +89,7 @@ class BaseProvider {
       }
       return r
     }, [])
-  
+
     return result
   }
 
@@ -109,9 +104,9 @@ class BaseProvider {
     return params
   }
 
-  _call(method, params) {}
-  
-// call a jsonrpc, normally to query blockchain (block, tx, validator, consensus, etc.) data
+  _call (method, params) {}
+
+  // call a jsonrpc, normally to query blockchain (block, tx, validator, consensus, etc.) data
   call (method, params) {
     return this._call(method, params).then(resp => {
       if (resp.error) {

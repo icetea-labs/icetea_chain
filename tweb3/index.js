@@ -1,13 +1,12 @@
-const fetch = require('node-fetch')
 const { TxOp, ContractMode } = require('../icetea/enum')
 const { signTxData } = require('./helper/ecc')
 const ecc = require('./helper/ecc')
-const { switchEncoding, encodeTX, decodeTX, tryParseJson } = require('./utils')
+const { switchEncoding, decodeTX } = require('./utils')
 // const W3CWebSocket = require('websocket').w3cwebsocket
 // const WebSocketAsPromised = require('websocket-as-promised')
 const Contract = require('./contract/Contract')
-const HttpProvider = require('./providers/HttpProvider');
-const WebSocketProvider = require('./providers/WebSocketProvider');
+const HttpProvider = require('./providers/HttpProvider')
+const WebSocketProvider = require('./providers/WebSocketProvider')
 
 /**
  * The IceTea web client.
@@ -28,7 +27,7 @@ exports.IceTeaWeb3 = class IceTeaWeb3 {
     this.utils = {
       decodeEventData: this.rpc.decodeEventData,
       decodeTags: this.rpc.decodeTags,
-      decodeTxResult: this.rpc.decodeTxResult,
+      decodeTxResult: this.rpc.decodeTxResult
     }
     this.subscriptions = {}
     this.countSubscribeEvent = 0
@@ -327,7 +326,7 @@ exports.IceTeaWeb3 = class IceTeaWeb3 {
   async deploy (mode, src, privateKey, params = [], options = {}) {
     let tx = this._serializeData(mode, src, privateKey, params, options)
     let res = await this.sendTransactionCommit(tx, privateKey)
-    return tweb3.getTransaction(res.hash).then(result => {
+    return this.getTransaction(res.hash).then(result => {
       if (result.tx_result.code) {
         const err = new Error(result.tx_result.log)
         Object.assign(err, result)
