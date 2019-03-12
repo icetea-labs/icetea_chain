@@ -1,9 +1,7 @@
-const { TxOp, ContractMode } = require('../icetea/enum')
-const { signTxData } = require('./helper/ecc')
 const ecc = require('./helper/ecc')
+const { signTxData } = require('./helper/ecc')
+const { TxOp, ContractMode } = require('../icetea/enum')
 const { switchEncoding, decodeTX } = require('./utils')
-// const W3CWebSocket = require('websocket').w3cwebsocket
-// const WebSocketAsPromised = require('websocket-as-promised')
 const Contract = require('./contract/Contract')
 const HttpProvider = require('./providers/HttpProvider')
 const WebSocketProvider = require('./providers/WebSocketProvider')
