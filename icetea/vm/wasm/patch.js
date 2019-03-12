@@ -1,3 +1,4 @@
+/*eslint-disable*/
 const wasm_bindgen = function ({ log, importTableName, get_sender, get_address, now, get_block_hash, get_block_number, get_msg_value, load, save, call_contract, emit_event }) { // eslint-disable-line
   var wasm
   const __exports = {}

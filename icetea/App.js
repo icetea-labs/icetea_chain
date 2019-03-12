@@ -1,5 +1,7 @@
 const ecc = require('./helper/ecc')
 const utils = require('./helper/utils')
+const sysContracts = require('./system')
+
 const {
   queryMetadata,
   prepareContract,
@@ -27,6 +29,10 @@ class App {
   async activate () {
     await stateManager.load()
     return stateManager.getLastState()
+  }
+
+  installSystemContracts () {
+    sysContracts.all().forEach(stateManager.installSystemContract)
   }
 
   addStateObserver ({ beforeTx, afterTx }) {
@@ -62,7 +68,7 @@ class App {
 
   async getMetadata (addr) {
     const { src, meta } = stateManager.getAccountState(addr)
-    if (!src) {
+    if (!src && !(meta && meta.system)) {
       throw new Error('Address is not a valid contract.')
     }
 
@@ -71,6 +77,7 @@ class App {
     }
 
     const info = await queryMetadata(addr, stateManager.getMetaProxy(addr))
+
     if (!info) return utils.unifyMetadata()
 
     const props = info.meta ||
@@ -147,7 +154,7 @@ async function doExecTx (options) {
   }
 
   // call __on_received
-  if (tx.value && stateManager.isContract(tx.to) && !tx.isContractCreation() && !tx.isContractCall()) {
+  if (tx.value && stateManager.isRegularContract(tx.to) && !tx.isContractCreation() && !tx.isContractCall()) {
     result = invokeUpdate(tx.to, '__on_received', tx.data.params, options)
   }
 
