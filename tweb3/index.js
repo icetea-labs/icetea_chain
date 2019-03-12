@@ -365,7 +365,7 @@ exports.IceTeaWeb3 = class IceTeaWeb3 {
           if (isSystemEvent) {
             return callback(message)
           } else {
-            let events = tweb3.utils.decodeEventData(jsonMsg.result)
+            let events = this.utils.decodeEventData(jsonMsg.result)
             events.forEach(event => {
               if (event.eventName && nonSystemEventName === event.eventName) {
                 let res = {}
@@ -428,7 +428,7 @@ exports.IceTeaWeb3 = class IceTeaWeb3 {
   async deploy (mode, src, privateKey) {
     let tx = this._serializeData(mode, src, privateKey)
     let res = await this.sendTransactionCommit(tx, privateKey)
-    return tweb3.getTransaction(res.hash).then(result => {
+    return this.getTransaction(res.hash).then(result => {
       if (result.tx_result.code) {
         const err = new Error(result.tx_result.log)
         Object.assign(err, result)

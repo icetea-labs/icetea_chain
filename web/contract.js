@@ -32,7 +32,7 @@ async function fillFuncs () {
     if (!contract) return
 
     const funcs = await tweb3.getMetadata(contract)
-
+    console.log(funcs)
     var select = document.getElementById('funcs')
     select.innerHTML = ''
     Object.keys(funcs).forEach(item => {

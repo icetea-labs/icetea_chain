@@ -15,6 +15,11 @@ module.exports = () => {
 
 const handler = {
 
+  initChain ({ consensusParams, validators }) {
+    app.installSystemContracts()
+    return { consensusParams, validators }
+  },
+
   async info () {
     return Object.assign({
       data: 'icetea',

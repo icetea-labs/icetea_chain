@@ -24,6 +24,10 @@ module.exports = {
   ],
 
   devServer: {
+    contentBase: 'web',
+    port: 3001,
+    noInfo: true,
+    overlay: true,
     proxy: {
       '/api': {
         target: 'http://localhost:26657',

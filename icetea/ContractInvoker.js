@@ -1,4 +1,5 @@
 const utils = require('./helper/utils')
+const sysContracts = require('./system')
 const { getRunner, getContext, getGuard } = require('./vm')
 
 class ContractInvoker {
@@ -24,11 +25,19 @@ class ContractInvoker {
     }
 
     const { mode, src } = options.tools.getCode(contractAddress)
-    const vm = getRunner(mode)
     const context = getContext(mode).for(invokeType, contractAddress, methodName, methodParams, options)
-    const guard = getGuard(mode)(src)
 
-    const result = await vm.run(src, { context, guard })
+    let result
+
+    const sysContract = sysContracts.get(contractAddress)
+    if (sysContract) {
+      result = sysContract.run(context)
+    } else {
+      const vm = getRunner(mode)
+      const guard = getGuard(mode)(src)
+
+      result = await vm.run(src, { context, guard })
+    }
 
     return invokeType === 'transaction' ? [result, context.getEnv().tags] : result
   }

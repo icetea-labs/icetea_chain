@@ -1,12 +1,41 @@
+/**
+ * A faucet for people to request some balance. Useful for testnet.
+ */
+
+const { checkMsg } = require('../helper/types')
+
+const METADATA = {
+  'getAmount': {
+    decorators: ['view'],
+    returnType: 'number'
+  },
+  'request': {
+    decorators: ['transaction'],
+    returnType: 'number'
+  },
+  'withdraw': {
+    decorators: ['transaction'],
+    params: [
+      { name: 'amount', type: ['number', 'undefined'] }
+    ],
+    returnType: 'number'
+  }
+}
+
 const REQUEST_AMOUNT = 10
 
-module.exports = function () {
-  const msg = this.getEnv().msg
-  const receivers = this.getState('receivers', {})
-  switch (msg.name) {
-    case 'getAmount':
+// standard contract interface
+exports.run = (context) => {
+  const { msg } = context.getEnv()
+  checkMsg(msg, METADATA)
+
+  const contract = {
+    getAmount () {
       return REQUEST_AMOUNT
-    case 'request': {
+    },
+
+    request () {
+      const receivers = this.getState('receivers', {})
       if (receivers[msg.sender]) {
         throw new Error(`You already received ${receivers[msg.sender]}. No more.`)
       }
@@ -15,10 +44,17 @@ module.exports = function () {
       }
       const v = REQUEST_AMOUNT > this.balance ? this.balance : REQUEST_AMOUNT
       receivers[msg.sender] = v
-      this.setSate('receivers', receivers)
-      break
-    }
-    case 'withdraw': {
+      this.setState('receivers', receivers)
+      this.transfer(msg.sender, v)
+      this.emitEvent('FaucetRequested', {
+        requester: msg.sender,
+        amount: v
+      }, ['requester'])
+
+      return v
+    },
+
+    withdraw () {
       if (this.deployedBy !== msg.sender) {
         throw new Error('Only contract owner can withdraw.')
       }
@@ -30,20 +66,14 @@ module.exports = function () {
         }
       }
       this.transfer(this.deployedBy, amount)
-      break
-    }
 
-    default:
-      // call unsupported function -> inform caller our function list
-      return {
-        'getAmount': { decorators: ['view'] },
-        'request': { decorators: ['transaction'] },
-        'withdraw': {
-          decorators: ['transaction'],
-          params: [
-            { name: 'amount', type: ['number', 'undefined'] }
-          ]
-        }
-      }
+      return amount
+    }
+  }
+
+  if (!contract.hasOwnProperty(msg.name)) {
+    return METADATA
+  } else {
+    return contract[msg.name].apply(context, msg.params)
   }
 }
