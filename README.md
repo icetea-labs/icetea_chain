@@ -1,5 +1,6 @@
 # ICETEA
 
+[![License](https://img.shields.io/npm/l/make-coverage-badge.svg)](https://opensource.org/licenses/MIT)
 [![Build Status](https://img.shields.io/travis/TradaTech/icetea.svg?branch=master&style=flat-square)](https://travis-ci.org/TradaTech/icetea)
 
 [![js-standard-style](https://cdn.rawgit.com/feross/standard/master/badge.svg)](https://github.com/feross/standard)  
