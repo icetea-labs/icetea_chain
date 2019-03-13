@@ -20,8 +20,10 @@
            <p><label>Value: <input type="number" value="0" name="value"></label></p>
             <p><label>Fee: <input type="number" value="0" name="fee"></label></p>
             <p><label>Contract address:</label> <select id="to" name="to" autofocus required></select></p>
+            <div id="contractInfo" class="info-box">No contract available, try deploy one.</div>
             <p><label>Function name:</label> <input id="name" name="name" autocomplete="off" list="funcs"></select></p>
             <datalist id="funcs"></datalist>
+            <div class="info-box"><p><code id="funcInfo">No function selected.</code></p></div>
             <p><label>Params (each param 1 row, JSON accepted, use " to denote string)</label></p>
             <p><textarea id="params" style="width: 600px;height: 100px;"></textarea></p>
             <p><button type="submit" style="padding: 8px 32px" id="submit_btn">Send (Write)</button>
@@ -29,10 +31,19 @@
         <p><button id="read" style="padding: 8px 32px" >Call (View)</button>&nbsp;&nbsp;&nbsp;
             <button id="pure" style="padding: 8px 32px" >Call (Pure)</button></p>
         <section id="result">
-            <div><b id="funcName"></b></div>
+            <div><b id="funcName"></i></div>
             <div id="resultJson"></div>
         </section>
     </div>
+    <script id="infoTemplate" type="text/x-handlebars-template">
+        <div>
+            <p>Address: <i>{{address}}</i></p>
+            <p>Type: <i>{{type}}</i></p>
+            <p>Deployed By: <i>{{deployedBy}}</i></p>
+            <p>Mode: <i>{{modeName}}</i></p>
+            <p>Balance: <i>{{balanceLocale}}</i></p>
+        <div>
+    </script>
     <script src="contract.js"></script>
 </body>
 

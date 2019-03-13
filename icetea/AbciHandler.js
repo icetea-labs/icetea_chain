@@ -99,6 +99,9 @@ const handler = {
         case 'metadata': {
           return replyQuery(await app.getMetadata(data))
         }
+        case 'account_info': {
+          return replyQuery(await app.getAccountInfo(data))
+        }
         case 'invokeView':
         case 'invokePure': {
           try {

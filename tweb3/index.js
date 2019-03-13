@@ -253,7 +253,7 @@ exports.IceTeaWeb3 = class IceTeaWeb3 {
   /**
    * Get account info.
    * @param {string} contractAddr  the contract address.
-   * @returns {{balance: number, code: string | Buffer, mode: number, deployedBy: string, system: boolean}} Contract metadata.
+   * @returns {{balance: number, code: string | Buffer, mode: number, deployedBy: string, system: boolean}} Acount info.
    */
   getAccountInfo (contractAddr) {
     return this.rpc.query('account_info', contractAddr)
@@ -299,7 +299,7 @@ exports.IceTeaWeb3 = class IceTeaWeb3 {
    * @param {string} contract required, the contract address.
    * @param {string} method required, method or field name.
    * @param {Array} params method params, if any.
-   * @param {*} options optional options, e.g. {from: 'xxx'}
+   * @param {{from: string}} options optional options, e.g. {from: 'xxx'}
    */
   callReadonlyContractMethod (contract, method, params = [], options = {}) {
     return this.rpc.query('invokeView', { address: contract, name: method, params, options })
@@ -310,7 +310,7 @@ exports.IceTeaWeb3 = class IceTeaWeb3 {
    * @param {string} contract required, the contract address.
    * @param {string} method required, method or field name.
    * @param {Array} params method params, if any.
-   * @param {*} options optional options, e.g. {from: 'xxx'}
+   * @param {{from: string}} options optional options, e.g. {from: 'xxx'}
    */
   callPureContractMethod (contract, method, params = [], options = {}) {
     return this.rpc.query('invokePure', { address: contract, name: method, params, options })

@@ -86,6 +86,11 @@ class App {
     return utils.unifyMetadata(props)
   }
 
+  getAccountInfo (addr) {
+    const { balance = 0, system, mode, src, deployedBy } = stateManager.getAccountState(addr)
+    return { balance, system, mode, hasSrc: !!src, deployedBy }
+  }
+
   async execTx (tx) {
     stateManager.beginCheckpoint()
 
