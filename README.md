@@ -43,7 +43,6 @@ To reset tendermint (delete all blocks), use `npm run reset`.
 ## Sample contracts
 ```js
 @contract class Withdraw {
-    @state owner = msg.sender
     @state fund = {}
 
     @onReceived @payable receive() {
@@ -63,7 +62,7 @@ To reset tendermint (delete all blocks), use `npm run reset`.
     }
 
     @transaction backdoor(value: ?numberc = this.balance) {
-        expect(msg.sender === this.owner, "Only owner can use this backdoor.")
+        expect(msg.sender === this.deployedBy, "Only owner can use this backdoor.")
         this.transfer(msg.sender, value)
     }
 }
