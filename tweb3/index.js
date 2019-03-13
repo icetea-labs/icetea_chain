@@ -110,6 +110,12 @@ function sanitizeParams (params) {
   return params
 }
 
+exports.Utils = {
+  decodeEventData,
+  decodeTags,
+  decodeTxResult
+}
+
 /**
  * The IceTea web client.
  */
@@ -126,11 +132,7 @@ exports.IceTeaWeb3 = class IceTeaWeb3 {
       this.rpc = new HttpProvider(endpoint)
     }
 
-    this.utils = {
-      decodeEventData,
-      decodeTags,
-      decodeTxResult
-    }
+    this.utils = this.constructor.utils = exports.Utils
     this.subscriptions = {}
     this.countSubscribeEvent = 0
   }
@@ -246,6 +248,15 @@ exports.IceTeaWeb3 = class IceTeaWeb3 {
    */
   getMetadata (contractAddr) {
     return this.rpc.query('metadata', contractAddr)
+  }
+
+  /**
+   * Get account info.
+   * @param {string} contractAddr  the contract address.
+   * @returns {{balance: number, code: string | Buffer, mode: number, deployedBy: string, system: boolean}} Contract metadata.
+   */
+  getAccountInfo (contractAddr) {
+    return this.rpc.query('account_info', contractAddr)
   }
 
   /**

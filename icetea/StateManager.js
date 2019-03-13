@@ -79,10 +79,8 @@ class StateManager extends EventEmitter {
     }
 
     stateTable[address] = Object.assign(stateTable[address] || {}, {
-      deployedBy: 'system',
-      meta: {
-        system: true
-      }
+      system: true,
+      deployedBy: 'system'
     })
   }
 
@@ -96,7 +94,7 @@ class StateManager extends EventEmitter {
     const state = stateTable[address]
     if (!state) return false
 
-    return state.src || (state.meta && state.meta.system)
+    return state.src || state.system
   }
 
   isRegularContract (address) {
@@ -104,10 +102,7 @@ class StateManager extends EventEmitter {
   }
 
   isSystemContract (address) {
-    const state = stateTable[address]
-    if (!state) return false
-
-    return !!(state.meta && state.meta.system)
+    return !!(stateTable[address] || {}).system
   }
 
   // FIXME This is not safe, should refactor

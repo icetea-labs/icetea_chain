@@ -67,8 +67,8 @@ class App {
   }
 
   async getMetadata (addr) {
-    const { src, meta } = stateManager.getAccountState(addr)
-    if (!src && !(meta && meta.system)) {
+    const { system, src, meta } = stateManager.getAccountState(addr)
+    if (!src && !system) {
       throw new Error('Address is not a valid contract.')
     }
 
