@@ -42,11 +42,11 @@ const handler = {
     return {}
   },
 
-  async deliverTx (req) {
+  deliverTx (req) {
     try {
       const tx = getTx(req)
 
-      const [data, tags] = await app.execTx(tx)
+      const [data, tags] = app.execTx(tx)
 
       const result = {}
       if (typeof data !== 'undefined') {
@@ -76,7 +76,7 @@ const handler = {
     return { data: app.persistState() } // return the block stateRoot
   },
 
-  async query (req) {
+  query (req) {
     try {
       // console.log(req.path, req.data.toString(), req.prove || false);
 
@@ -97,16 +97,16 @@ const handler = {
         case 'contracts':
           return replyQuery(app.getContractAddresses())
         case 'metadata': {
-          return replyQuery(await app.getMetadata(data))
+          return replyQuery(app.getMetadata(data))
         }
         case 'account_info': {
-          return replyQuery(await app.getAccountInfo(data))
+          return replyQuery(app.getAccountInfo(data))
         }
         case 'invokeView':
         case 'invokePure': {
           try {
             const options = JSON.parse(data)
-            const result = await app[path](options.address, options.name, options.params, options.options)
+            const result = app[path](options.address, options.name, options.params, options.options)
             return replyQuery({
               success: true,
               data: result

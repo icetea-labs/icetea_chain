@@ -1,19 +1,19 @@
 /*eslint-disable*/
-const wasm_bindgen = function ({ log, importTableName, get_sender, get_address, now, get_block_hash, get_block_number, get_msg_value, load, save, call_contract, emit_event }) { // eslint-disable-line
+const wasm_bindgen = function ({ log, importTableName, get_sender, get_address, now, get_block_hash, get_block_number, get_msg_value, load, save, call_contract, emit_event }) {
   var wasm
   const __exports = {}
 
   let cachedTextDecoder = new TextDecoder('utf-8')
 
   let cachegetUint8Memory = null
-  function getUint8Memory () {
+  function getUint8Memory() {
     if (cachegetUint8Memory === null || cachegetUint8Memory.buffer !== wasm.memory.buffer) {
       cachegetUint8Memory = new Uint8Array(wasm.memory.buffer)
     }
     return cachegetUint8Memory
   }
 
-  function getStringFromWasm (ptr, len) {
+  function getStringFromWasm(ptr, len) {
     return cachedTextDecoder.decode(getUint8Memory().subarray(ptr, ptr + len))
   }
 
@@ -66,7 +66,7 @@ const wasm_bindgen = function ({ log, importTableName, get_sender, get_address, 
   }
 
   let cachegetUint32Memory = null
-  function getUint32Memory () {
+  function getUint32Memory() {
     if (cachegetUint32Memory === null || cachegetUint32Memory.buffer !== wasm.memory.buffer) {
       cachegetUint32Memory = new Uint32Array(wasm.memory.buffer)
     }
@@ -150,7 +150,7 @@ const wasm_bindgen = function ({ log, importTableName, get_sender, get_address, 
 
   let heap_next = heap.length
 
-  function addHeapObject (obj) {
+  function addHeapObject(obj) {
     if (heap_next === heap.length) heap.push(heap.length + 1)
     const idx = heap_next
     heap_next = heap[idx]
@@ -171,7 +171,7 @@ const wasm_bindgen = function ({ log, importTableName, get_sender, get_address, 
     }
   }
 
-  function getObject (idx) { return heap[idx] }
+  function getObject(idx) { return heap[idx] }
 
   __exports.__wbg_save_2747f995ce6b07cb = function (arg0, arg1, arg2) {
     let varg0 = getStringFromWasm(arg0, arg1)
@@ -221,19 +221,19 @@ const wasm_bindgen = function ({ log, importTableName, get_sender, get_address, 
 
   let stack_pointer = 32
 
-  function addBorrowedObject (obj) {
+  function addBorrowedObject(obj) {
     if (stack_pointer == 1) throw new Error('out of js stack')
     heap[--stack_pointer] = obj
     return stack_pointer
   }
 
-  function dropObject (idx) {
+  function dropObject(idx) {
     if (idx < 36) return
     heap[idx] = heap_next
     heap_next = idx
   }
 
-  function takeObject (idx) {
+  function takeObject(idx) {
     const ret = getObject(idx)
     dropObject(idx)
     return ret
@@ -298,7 +298,7 @@ const wasm_bindgen = function ({ log, importTableName, get_sender, get_address, 
     }
   }
 
-  function handleError (exnptr, e) {
+  function handleError(exnptr, e) {
     const view = getUint32Memory()
     view[exnptr / 4] = 1
     view[exnptr / 4 + 1] = addHeapObject(e)
@@ -373,7 +373,7 @@ const wasm_bindgen = function ({ log, importTableName, get_sender, get_address, 
     }
   }
 
-  function _assertNum (n) {
+  function _assertNum(n) {
     if (typeof (n) !== 'number') throw new Error('expected a number argument')
   }
 
@@ -635,21 +635,26 @@ const wasm_bindgen = function ({ log, importTableName, get_sender, get_address, 
     throw new Error(getStringFromWasm(ptr, len))
   }
 
-  function init (buffer) {
+  function init(buffer) {
     // console.log({ [importTableName]: __exports });
-    return global.WebAssembly.instantiate(buffer, { [importTableName]: __exports })
-      .then(({ instance }) => {
-        wasm = init.wasm = instance.exports
-      })
+    // return global.WebAssembly.instantiate(buffer, { [importTableName]: __exports })
+    //   .then(({ instance }) => {
+    //     wasm = init.wasm = instance.exports
+    //   })
+
+    // Instantiate the Wasm module SYNC
+    // Consider: cache the module or the instance for reuse later
+    const instance = new WebAssembly.Instance(new WebAssembly.Module(buffer), { [importTableName]: __exports })
+    wasm = init.wasm = instance.exports
   };
 
   return Object.assign(init, __exports)
 }
 
 module.exports = (wasmBuffer) => {
-  return async (ctx) => {
+  return (ctx) => {
     var bindgen = wasm_bindgen(ctx)
-    await bindgen(wasmBuffer)
+    bindgen(wasmBuffer)
     return bindgen.main(ctx.get_msg_name(), ctx.get_msg_param())
   }
 }
