@@ -1,10 +1,10 @@
 # ICETEA
 
-![GitHub last commit](https://img.shields.io/github/last-commit/TradaTech/icetea.svg)
-![GitHub commit activity](https://img.shields.io/github/commit-activity/m/TradaTech/icetea.svg)
 [![Build Status](https://img.shields.io/travis/TradaTech/icetea.svg?branch=master)](https://travis-ci.org/TradaTech/icetea)
+![GitHub commit activity](https://img.shields.io/github/commit-activity/m/TradaTech/icetea.svg)
 ![Dependencies](https://img.shields.io/david/TradaTech/icetea.svg)
 ![Dev Dependencies](https://img.shields.io/david/dev/TradaTech/icetea.svg)
+[![](https://tokei.rs/b1/github/TradaTech/icetea?category=lines)](https://github.com/TradaTech/icetea)
 [![License](https://img.shields.io/npm/l/make-coverage-badge.svg)](https://opensource.org/licenses/MIT)
 
 [![js-standard-style](https://cdn.rawgit.com/feross/standard/master/badge.svg)](https://github.com/feross/standard)  
