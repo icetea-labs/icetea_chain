@@ -66,7 +66,7 @@ class App {
     return invokePure(contractAddress, methodName, methodParams, options)
   }
 
-  async getMetadata (addr) {
+  getMetadata (addr) {
     const { system, src, meta } = stateManager.getAccountState(addr)
     if (!src && !system) {
       throw new Error('Address is not a valid contract.')
@@ -76,7 +76,7 @@ class App {
       return utils.unifyMetadata(meta.operations)
     }
 
-    const info = await queryMetadata(addr, stateManager.getMetaProxy(addr))
+    const info = queryMetadata(addr, stateManager.getMetaProxy(addr))
 
     if (!info) return utils.unifyMetadata()
 
@@ -91,13 +91,13 @@ class App {
     return { balance, system, mode, hasSrc: !!src, deployedBy }
   }
 
-  async execTx (tx) {
+  execTx (tx) {
     stateManager.beginCheckpoint()
 
     const needState = willCallContract(tx)
     const { stateAccess, patch, tools } = needState ? stateManager.produceDraft(tx) : {}
 
-    const result = await doExecTx({
+    const result = doExecTx({
       tx,
       block: stateManager.getBlock(),
       stateAccess,
@@ -126,7 +126,7 @@ function willCallContract (tx) {
 /**
    * @private
    */
-async function doExecTx (options) {
+function doExecTx (options) {
   const { tx, tools = {} } = options
   let result
 
@@ -146,11 +146,9 @@ async function doExecTx (options) {
       '__on_deployed',
       tx.data.params,
       options
-    ).then(r => {
-      // when deploy contract, always return the contract address
-      r[0] = tx.to
-      return r
-    })
+    )
+    // Result of ondeploy should be address
+    result[0] = tx.to
   } else if (tx.isContractCall()) {
     if (['constructor', '__on_received', '__on_deployed', 'getState', 'setState', 'getEnv'].includes(tx.data.name)) {
       throw new Error('Calling this method directly is not allowed')
@@ -169,10 +167,7 @@ async function doExecTx (options) {
       return utils.emitTransferred(null, tags, tx.from, tx.to, tx.value)
     }
     if (result) {
-      result.then(r => {
-        emitTransferred(r[1])
-        return r
-      })
+      emitTransferred(result[1])
     } else {
       result = [undefined, emitTransferred()]
     }
