@@ -7,10 +7,12 @@ const { checkMsg } = require('../helper/types')
 const METADATA = {
   'getAmount': {
     decorators: ['view'],
+    params: [],
     returnType: 'number'
   },
   'request': {
     decorators: ['transaction'],
+    params: [],
     returnType: 'number'
   },
   'withdraw': {

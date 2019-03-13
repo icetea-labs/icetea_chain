@@ -110,6 +110,12 @@ function sanitizeParams (params) {
   return params
 }
 
+exports.Utils = {
+  decodeEventData,
+  decodeTags,
+  decodeTxResult
+}
+
 /**
  * The IceTea web client.
  */
@@ -126,11 +132,7 @@ exports.IceTeaWeb3 = class IceTeaWeb3 {
       this.rpc = new HttpProvider(endpoint)
     }
 
-    this.utils = {
-      decodeEventData,
-      decodeTags,
-      decodeTxResult
-    }
+    this.utils = this.constructor.utils = exports.Utils
     this.subscriptions = {}
     this.countSubscribeEvent = 0
   }
@@ -249,6 +251,15 @@ exports.IceTeaWeb3 = class IceTeaWeb3 {
   }
 
   /**
+   * Get account info.
+   * @param {string} contractAddr  the contract address.
+   * @returns {{balance: number, code: string | Buffer, mode: number, deployedBy: string, system: boolean}} Acount info.
+   */
+  getAccountInfo (contractAddr) {
+    return this.rpc.query('account_info', contractAddr)
+  }
+
+  /**
    * @private
    */
   getDebugState () {
@@ -288,7 +299,7 @@ exports.IceTeaWeb3 = class IceTeaWeb3 {
    * @param {string} contract required, the contract address.
    * @param {string} method required, method or field name.
    * @param {Array} params method params, if any.
-   * @param {*} options optional options, e.g. {from: 'xxx'}
+   * @param {{from: string}} options optional options, e.g. {from: 'xxx'}
    */
   callReadonlyContractMethod (contract, method, params = [], options = {}) {
     return this.rpc.query('invokeView', { address: contract, name: method, params, options })
@@ -299,7 +310,7 @@ exports.IceTeaWeb3 = class IceTeaWeb3 {
    * @param {string} contract required, the contract address.
    * @param {string} method required, method or field name.
    * @param {Array} params method params, if any.
-   * @param {*} options optional options, e.g. {from: 'xxx'}
+   * @param {{from: string}} options optional options, e.g. {from: 'xxx'}
    */
   callPureContractMethod (contract, method, params = [], options = {}) {
     return this.rpc.query('invokePure', { address: contract, name: method, params, options })

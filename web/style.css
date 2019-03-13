@@ -60,3 +60,9 @@ code[class*="language-"] {
     font-size: 0.8rem;
     line-height: 1.4;
 }
+.info-box {
+    line-height: 1;
+    font-size: 90%;
+    background-color: #eee;
+    padding: 2px 12px;
+}
