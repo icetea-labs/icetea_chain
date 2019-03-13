@@ -1,5 +1,5 @@
 /*eslint-disable*/
-const wasm_bindgen = function ({ log, importTableName, get_sender, get_address, now, get_block_hash, get_block_number, get_msg_value, load, save, call_contract, emit_event }) { // eslint-disable-line
+const wasm_bindgen = function ({ log, importTableName, get_sender, get_address, now, get_block_hash, get_block_number, get_msg_value, load, save, read_contract, write_contract, emit_event }) { // eslint-disable-line
   var wasm
   const __exports = {}
 
@@ -250,11 +250,22 @@ const wasm_bindgen = function ({ log, importTableName, get_sender, get_address, 
     }
   }
 
-  __exports.__wbg_callcontract_10799fb44e4114f5 = function (arg0, arg1, arg2, arg3, arg4) {
+  __exports.__wbg_readcontract_6393c1bec8f423f6 = function (arg0, arg1, arg2, arg3, arg4) {
     let varg0 = getStringFromWasm(arg0, arg1)
     let varg2 = getStringFromWasm(arg2, arg3)
     try {
-      return addHeapObject(call_contract(varg0, varg2, takeObject(arg4)))
+      return addHeapObject(read_contract(varg0, varg2, takeObject(arg4)))
+    } catch (e) {
+      console.error('wasm-bindgen: imported JS function that was not marked as `catch` threw an error:', e)
+      throw e
+    }
+  }
+
+  __exports.__wbg_writecontract_8e1552172eb8d491 = function (arg0, arg1, arg2, arg3, arg4) {
+    let varg0 = getStringFromWasm(arg0, arg1)
+    let varg2 = getStringFromWasm(arg2, arg3)
+    try {
+      return addHeapObject(write_contract(varg0, varg2, takeObject(arg4)))
     } catch (e) {
       console.error('wasm-bindgen: imported JS function that was not marked as `catch` threw an error:', e)
       throw e
@@ -401,6 +412,15 @@ const wasm_bindgen = function ({ log, importTableName, get_sender, get_address, 
   }
 
   __exports.__wbg_new_366f5eda217e0401 = function () {
+    try {
+      return addHeapObject(new Array())
+    } catch (e) {
+      console.error('wasm-bindgen: imported JS function that was not marked as `catch` threw an error:', e)
+      throw e
+    }
+  }
+
+  __exports.__wbg_new_eed4009beab03e81 = function () {
     try {
       return addHeapObject(new Array())
     } catch (e) {

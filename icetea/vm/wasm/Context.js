@@ -40,7 +40,10 @@ exports.forTransaction = (address, fname, fparams = [], options) => {
     now: () => block.timestamp,
     get_block_hash: () => block.hash,
     get_block_number: () => block.number,
-    call_contract: (to, method, params) => {
+    read_contract: (to, method, params) => {
+      return invoker.invokeView(to, method, params, { ...options, from: address })
+    },
+    write_contract: (to, method, params) => {
       return invoker.invokeUpdate(to, method, params, options)
     },
     has_state: hasState,
@@ -81,8 +84,11 @@ exports.forView = (address, name, params = [], options) => {
     now: () => block.timestamp,
     get_block_hash: () => block.hash,
     get_block_number: () => block.number,
-    call_contract: (addr, method, params) => {
-      return invoker.invokeView(addr, method, params, { ...options, from: address })
+    read_contract: (to, method, params) => {
+      return invoker.invokeView(to, method, params, { ...options, from: address })
+    },
+    write_contract: (to, method, params) => {
+      throw new Error('Cannot write_contract inside a view function')
     },
     has_state: hasState,
     load: key => getState(key, ''),
