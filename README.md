@@ -1,18 +1,21 @@
 # ICETEA
 
-![GitHub last commit](https://img.shields.io/github/last-commit/TradaTech/icetea.svg)
-![GitHub commit activity](https://img.shields.io/github/commit-activity/m/TradaTech/icetea.svg)
 [![Build Status](https://img.shields.io/travis/TradaTech/icetea.svg?branch=master)](https://travis-ci.org/TradaTech/icetea)
-![Maintenance](https://img.shields.io/maintenance/yes/2019.svg)
+![GitHub commit activity](https://img.shields.io/github/commit-activity/m/TradaTech/icetea.svg)
+![Dependencies](https://img.shields.io/david/TradaTech/icetea.svg)
+![Dev Dependencies](https://img.shields.io/david/dev/TradaTech/icetea.svg)
+[![](https://tokei.rs/b1/github/TradaTech/icetea?category=lines)](https://github.com/TradaTech/icetea)
 [![License](https://img.shields.io/npm/l/make-coverage-badge.svg)](https://opensource.org/licenses/MIT)
 
 [![js-standard-style](https://cdn.rawgit.com/feross/standard/master/badge.svg)](https://github.com/feross/standard)  
 
-Tendermint-based blockchain which is developer-friendly and support Javascript and Wasm contracts. And there's more but I won't tell you now.
+Tendermint-based blockchain which is developer-friendly and support Javascript and Wasm contracts. There's more to come, stay tune!
+
+> NOTE: this project is under active development. Don't use it for production.
 
 ## Presequisite
-1. NodeJS 11.9 or later
-2. [Tendermint](https://tendermint.com/docs/introduction/install.html)
+1. NodeJS lastest LTS version
+2. [Tendermint 0.30](https://tendermint.com/docs/introduction/install.html)
 3. `tendermint init`
 
 Open `~/.tendermint/config/config.toml`.
@@ -42,7 +45,7 @@ create_empty_blocks = false
 
 This will start a tendermint node, the icetea server, and open a sample web client to access blockchain features.
 
-To reset tendermint (delete all blocks), use `npm run reset`.
+To reset tendermint (delete all blocks & state), use `npm run reset`.
 
 ## Sample contracts
 ```js
