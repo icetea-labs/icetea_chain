@@ -1,4 +1,10 @@
-# Tendermint-based icetea
+# ICETEA
+
+[![Build Status](https://img.shields.io/travis/TradaTech/icetea.svg?branch=master&style=flat-square)](https://travis-ci.org/TradaTech/icetea)
+
+[![js-standard-style](https://cdn.rawgit.com/feross/standard/master/badge.svg)](https://github.com/feross/standard)  
+
+Tendermint-based blockchain which is developer-friendly and support Javascript and Wasm contracts. And there's more but I won't tell you now.
 
 ## Presequisite
 1. NodeJS 11.9 or later
@@ -37,28 +43,28 @@ To reset tendermint (delete all blocks), use `npm run reset`.
 ## Sample contracts
 ```js
 @contract class Withdraw {
-    @state owner = msg.sender;
-    @state fund = {};
+    @state owner = msg.sender
+    @state fund = {}
 
-    @onReceived receive() {
-        this.fund[msg.sender] = (+this.fund[msg.sender] || 0) + msg.value;
+    @onReceived @payable receive() {
+        this.fund[msg.sender] = (this.fund[msg.sender] || 0) + msg.value
     }
 
     @transaction withdraw() {
-        const available = +this.fund[msg.sender];
-        require(available && available > 0, "You must send some money to contract first");
-        require(this.balance > 0, "Contract out of money, please come back later.");
-        const amount = (available > this.balance)?available:this.balance;
-        this.fund[msg.sender] = (+this.fund[msg.sender] || 0) - amount;
-        this.transfer(msg.sender, amount);
+        const available = this.fund[msg.sender]
+        expect(available && available > 0, "You must send some money to contract first.")
+        expect(this.balance > 0, "Contract out of money, please come back later.")
 
-        this.emitEvent("Withdrawn", {withdrawer: msg.sender, amount});
+        const amount = available < this.balance ? available : this.balance
+        this.fund[msg.sender] = available - amount
+
+        this.transfer(msg.sender, amount)
+        this.emitEvent("Withdrawn", {cwithdrawer: msg.sender, amountc})
     }
 
-    @transaction backdoor(value) {
-        require(msg.sender === this.owner, "Only owner can use this backdoor");
-        value = value || this.balance;
-        this.transfer(msg.sender, value);
+    @transaction backdoor(value: ?numberc = this.balance) {
+        expect(msg.sender === this.owner, "Only owner can use this backdoor.")
+        this.transfer(msg.sender, value)
     }
 }
 ```
@@ -66,8 +72,3 @@ To reset tendermint (delete all blocks), use `npm run reset`.
 > More sample contracts are available in _example_ folder.
 
 > Check out our guide here https://github.com/TradaTech/icetea/wiki/Javascript-smart-contract
-
-## Next tasks
-- [x] Use tendermint for blockchain layer
-- [ ] Persist state to AVL merkle tree
-- [ ] Sandbox contract execution to isolated process pool
