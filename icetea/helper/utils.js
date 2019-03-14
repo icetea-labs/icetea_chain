@@ -83,6 +83,7 @@ exports.mergeStateTables = (t1, t2) => {
 
 exports.unifyMetadata = meta => {
   const DEF_PROPS = {
+    /*
     address: {
       type: 'ClassProperty',
       decorators: ['attribute'],
@@ -98,6 +99,7 @@ exports.unifyMetadata = meta => {
       decorators: ['attribute'],
       fieldType: 'number'
     }
+    */
   }
 
   if (!meta) {

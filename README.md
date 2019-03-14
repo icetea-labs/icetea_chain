@@ -1,8 +1,21 @@
-# Tendermint-based icetea
+# ICETEA
+
+[![Build Status](https://img.shields.io/travis/TradaTech/icetea.svg?branch=master)](https://travis-ci.org/TradaTech/icetea)
+![GitHub commit activity](https://img.shields.io/github/commit-activity/m/TradaTech/icetea.svg)
+![Dependencies](https://img.shields.io/david/TradaTech/icetea.svg)
+![Dev Dependencies](https://img.shields.io/david/dev/TradaTech/icetea.svg)
+[![](https://tokei.rs/b1/github/TradaTech/icetea?category=lines)](https://github.com/TradaTech/icetea)
+[![License](https://img.shields.io/npm/l/make-coverage-badge.svg)](https://opensource.org/licenses/MIT)
+
+[![js-standard-style](https://cdn.rawgit.com/feross/standard/master/badge.svg)](https://github.com/feross/standard)  
+
+Tendermint-based blockchain which is developer-friendly and support Javascript and Wasm contracts. There's more to come, stay tune!
+
+> NOTE: this project is under active development. Don't use it for production.
 
 ## Presequisite
-1. NodeJS 11.9 or later
-2. [Tendermint](https://tendermint.com/docs/introduction/install.html)
+1. NodeJS lastest LTS version
+2. [Tendermint 0.30](https://tendermint.com/docs/introduction/install.html)
 3. `tendermint init`
 
 Open `~/.tendermint/config/config.toml`.
@@ -32,33 +45,32 @@ create_empty_blocks = false
 
 This will start a tendermint node, the icetea server, and open a sample web client to access blockchain features.
 
-To reset tendermint (delete all blocks), use `npm run reset`.
+To reset tendermint (delete all blocks & state), use `npm run reset`.
 
 ## Sample contracts
 ```js
 @contract class Withdraw {
-    @state owner = msg.sender;
-    @state fund = {};
+    @state fund = {}
 
-    @onReceived receive() {
-        this.fund[msg.sender] = (+this.fund[msg.sender] || 0) + msg.value;
+    @onReceived @payable receive() {
+        this.fund[msg.sender] = (this.fund[msg.sender] || 0) + msg.value
     }
 
     @transaction withdraw() {
-        const available = +this.fund[msg.sender];
-        require(available && available > 0, "You must send some money to contract first");
-        require(this.balance > 0, "Contract out of money, please come back later.");
-        const amount = (available > this.balance)?available:this.balance;
-        this.fund[msg.sender] = (+this.fund[msg.sender] || 0) - amount;
-        this.transfer(msg.sender, amount);
+        const available = this.fund[msg.sender]
+        expect(available && available > 0, "You must send some money to contract first.")
+        expect(this.balance > 0, "Contract out of money, please come back later.")
 
-        this.emitEvent("Withdrawn", {withdrawer: msg.sender, amount});
+        const amount = available < this.balance ? available : this.balance
+        this.fund[msg.sender] = available - amount
+
+        this.transfer(msg.sender, amount)
+        this.emitEvent("Withdrawn", { withdrawer: msg.sender, amount })
     }
 
-    @transaction backdoor(value) {
-        require(msg.sender === this.owner, "Only owner can use this backdoor");
-        value = value || this.balance;
-        this.transfer(msg.sender, value);
+    @transaction backdoor(value: ?numberc = this.balance) {
+        expect(msg.sender === this.deployedBy, "Only owner can use this backdoor.")
+        this.transfer(msg.sender, value)
     }
 }
 ```
@@ -66,8 +78,3 @@ To reset tendermint (delete all blocks), use `npm run reset`.
 > More sample contracts are available in _example_ folder.
 
 > Check out our guide here https://github.com/TradaTech/icetea/wiki/Javascript-smart-contract
-
-## Next tasks
-- [x] Use tendermint for blockchain layer
-- [ ] Persist state to AVL merkle tree
-- [ ] Sandbox contract execution to isolated process pool

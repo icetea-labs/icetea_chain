@@ -1,23 +1,28 @@
 {
   "name": "icetea",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "Tendermint-based icetea",
   "main": "server.js",
   "scripts": {
     "test": "standard",
     "fix": "standard --fix",
     "jest": "jest",
-    "start": "node icetea",
-    "dev": "tendermint node & npm start & webpack-dev-server --content-base web --inline --hot --port 3001 --open",
-    "dev2": "tendermint node & npm start & webpack-dev-server --content-base web --inline --hot --port 3001",
-    "dev3": "npm start & webpack-dev-server --content-base web --inline --hot --port 3001",
-    "server": "tendermint node & npm start",
-    "app": "webpack-dev-server --content-base web --inline --hot --port 3001 --open",
-    "reset": "tendermint unsafe_reset_all & node ./scripts/destroy.js",
+    "start": "standard --fix && node icetea",
+    "dev": "standard --fix && tendermint node && node icetea && webpack-dev-server --open",
+    "dev2": "standard --fix && tendermint node && node icetea && webpack-dev-server",
+    "dev3": "standard --fix && node icetea && webpack-dev-server",
+    "server": "standard --fix && tendermint node && node icetea",
+    "app": "standard --fix && webpack-dev-server --open",
+    "web": "standard --fix && webpack-dev-server",
+    "reset": "tendermint unsafe_reset_all && node ./scripts/destroy.js",
     "dump": "node ./scripts/dump.js",
     "show": "sudo lsof -i tcp:26657"
   },
-  "keywords": [],
+  "keywords": [
+    "icetea",
+    "blockchain",
+    "tendermint"
+  ],
   "author": "Trada Tech",
   "license": "MIT",
   "standard": {
@@ -50,7 +55,6 @@
     "node-fetch": "2.3.0",
     "npx": "10.2.0",
     "prismjs": "^1.15.0",
-    "webpack-dev-server": "3.1.14",
     "websocket": "^1.0.28",
     "websocket-as-promised": "^0.9.0"
   },
@@ -63,6 +67,7 @@
     "nodemon": "1.18.9",
     "standard": "^12.0.1",
     "webpack": "4.29.3",
-    "webpack-cli": "^3.2.0"
+    "webpack-cli": "^3.2.0",
+    "webpack-dev-server": "^3.2.1"
   }
 }

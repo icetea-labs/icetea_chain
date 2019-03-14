@@ -42,7 +42,7 @@ const _generateContractAddress = (deployedBy, stateTable) => {
 const _srcFor = (contractAddress, { stateTable, deployedContracts }) => {
   const state = (deployedContracts && deployedContracts[contractAddress]) ||
         (stateTable && stateTable[contractAddress])
-  if (!state || !state.src) {
+  if (!state || !(state.src || state.system)) {
     throw new Error(`The address specified is not a valid deployed contract: ${contractAddress}`)
   }
 

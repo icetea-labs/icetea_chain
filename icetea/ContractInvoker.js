@@ -1,4 +1,5 @@
 const utils = require('./helper/utils')
+const sysContracts = require('./system')
 const { getRunner, getContext, getGuard } = require('./vm')
 
 class ContractInvoker {
@@ -10,7 +11,7 @@ class ContractInvoker {
      * @param {Array} methodParams optional, params to be passed to method.
      * @param {{tx, block, stateAccess, tools}} options additional options, depending on invokeType.
      */
-  async invoke (invokeType, contractAddress, methodName, methodParams, options) {
+  invoke (invokeType, contractAddress, methodName, methodParams, options) {
     if (!['pure', 'view', 'transaction', 'metadata'].includes(invokeType)) {
       throw new Error(`Invalid invoke type ${invokeType}. Must be 'pure', 'view', or 'transaction'.`)
     }
@@ -24,11 +25,19 @@ class ContractInvoker {
     }
 
     const { mode, src } = options.tools.getCode(contractAddress)
-    const vm = getRunner(mode)
     const context = getContext(mode).for(invokeType, contractAddress, methodName, methodParams, options)
-    const guard = getGuard(mode)(src)
 
-    const result = await vm.run(src, { context, guard })
+    let result
+
+    const sysContract = sysContracts.get(contractAddress)
+    if (sysContract) {
+      result = sysContract.run(context)
+    } else {
+      const vm = getRunner(mode)
+      const guard = getGuard(mode)(src)
+
+      result = vm.run(src, { context, guard })
+    }
 
     return invokeType === 'transaction' ? [result, context.getEnv().tags] : result
   }

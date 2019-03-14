@@ -73,6 +73,17 @@ class StateManager extends EventEmitter {
     this.emit('endCheckpoint', stateTable)
   }
 
+  installSystemContract (address) {
+    if (stateTable[address] && stateTable[address.deployedBy]) {
+      throw new Error(`Contract ${address} already installed.`)
+    }
+
+    stateTable[address] = Object.assign(stateTable[address] || {}, {
+      system: true,
+      deployedBy: 'system'
+    })
+  }
+
   // Utility function to get state
 
   getMetaProxy () {
@@ -80,7 +91,18 @@ class StateManager extends EventEmitter {
   }
 
   isContract (address) {
+    const state = stateTable[address]
+    if (!state) return false
+
+    return state.src || state.system
+  }
+
+  isRegularContract (address) {
     return !!(stateTable[address] || {}).src
+  }
+
+  isSystemContract (address) {
+    return !!(stateTable[address] || {}).system
   }
 
   // FIXME This is not safe, should refactor
@@ -99,7 +121,7 @@ class StateManager extends EventEmitter {
 
   getContractAddresses () {
     return Object.keys(stateTable).reduce((prev, addr) => {
-      if (stateTable[addr].src) {
+      if (this.isContract(addr)) {
         prev.unshift(addr)
       }
       return prev

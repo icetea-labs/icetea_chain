@@ -21,7 +21,7 @@ module.exports = class {
       throw new Error('Transaction "from" is required.')
     }
 
-    this.from = from || ''
+    this.from = from
     this.to = to || ''
     this.value = parseFloat(value) || 0
     this.fee = parseFloat(fee) || 0
@@ -30,6 +30,12 @@ module.exports = class {
 
     if (this.value < 0 || this.fee < 0) {
       throw new Error('Value and fee cannot be negative.')
+    }
+
+    if (typeof this.data.op !== 'undefined' &&
+      this.data.op !== TxOp.CALL_CONTRACT &&
+      this.data.op !== TxOp.DEPLOY_CONTRACT) {
+      throw new Error(`Invalid TxOp: ${data.op}`)
     }
 
     const content = {

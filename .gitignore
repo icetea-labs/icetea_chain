@@ -65,3 +65,4 @@ package-lock.json
 .vscode
 .DS_Store
 /state
+/tmp

@@ -1,6 +1,7 @@
 // This webpack config is for sample client in 'web' folder
 
-var path = require('path')
+const path = require('path')
+
 const CopyWebpackPlugin = require('copy-webpack-plugin')
 
 module.exports = {
@@ -24,6 +25,9 @@ module.exports = {
   ],
 
   devServer: {
+    contentBase: 'web',
+    port: 3001,
+    overlay: true,
     proxy: {
       '/api': {
         target: 'http://localhost:26657',
