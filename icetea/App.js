@@ -1,4 +1,4 @@
-const ecc = require('./helper/ecc')
+const { ecc } = require('icetea-common')
 const utils = require('./helper/utils')
 const sysContracts = require('./system')
 
