@@ -68,7 +68,7 @@ To reset tendermint (delete all blocks & state), use `npm run reset`.
         this.emitEvent("Withdrawn", { withdrawer: msg.sender, amount })
     }
 
-    @transaction backdoor(value: ?numberc = this.balance) {
+    @transaction backdoor(value: ?number = this.balance) {
         expect(msg.sender === this.deployedBy, "Only owner can use this backdoor.")
         this.transfer(msg.sender, value)
     }
