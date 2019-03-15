@@ -1,7 +1,7 @@
 /* global jest describe test expect beforeAll afterAll */
 
-const { IceTeaWeb3 } = require('../tweb3')
-const ecc = require('../icetea/helper/ecc')
+const { IceTeaWeb3 } = require('iceteaweb3')
+const { ecc } = require('icetea-common')
 const { randomAccountWithBalance } = require('./helper')
 
 jest.setTimeout(30000)

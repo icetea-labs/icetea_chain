@@ -1,12 +1,12 @@
 /* global jest describe test expect beforeAll afterAll */
 
-const { IceTeaWeb3 } = require('../tweb3')
-const { switchEncoding } = require('../tweb3/utils')
+const { IceTeaWeb3, utils } = require('iceteaweb3')
 const { randomAccountWithBalance } = require('./helper')
-const { TxOp, ContractMode } = require('../icetea/enum')
+const { TxOp, ContractMode } = require('icetea-common')
 
 jest.setTimeout(30000)
 
+const switchEncoding = utils.switchEncoding
 let tweb3
 let account10k // this key should have 10k of coins before running test suite
 beforeAll(async () => {

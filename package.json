@@ -31,7 +31,10 @@
       "**/example/"
     ]
   },
-  "pre-commit": ["fix", "jest"],
+  "pre-commit": [
+    "fix",
+    "jest"
+  ],
   "dependencies": {
     "@babel/plugin-proposal-class-properties": "7.3.0",
     "@babel/plugin-proposal-private-methods": "7.3.2",
@@ -47,6 +50,8 @@
     "express": "4.16.4",
     "halting-problem": "1.0.3",
     "handlebars": "4.0.12",
+    "icetea-common": "^0.1.4",
+    "iceteaweb3": "^0.1.0",
     "jquery": "3.3.1",
     "json-formatter-js": "2.2.1",
     "level": "^4.0.0",
