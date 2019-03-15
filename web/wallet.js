@@ -1,4 +1,7 @@
-import { generateKey, toPublicKey } from '../icetea/helper/ecc'
+import { ecc } from 'icetea-common'
+
+const generateKey = ecc.generateKey
+const toPublicKey = ecc.toPublicKey
 
 document.getElementById('generatePrivateKey').addEventListener('click', function () {
   generateKey().then(privateKey => {

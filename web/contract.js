@@ -1,6 +1,7 @@
 import $ from 'jquery'
 import * as helper from './helper'
-import utils from '../tweb3/utils'
+// import utils from '../tweb3/utils'
+import { utils } from 'iceteaweb3'
 import tweb3 from './tweb3'
 import { ContractMode } from '../icetea/enum'
 import handlebars from 'handlebars/dist/handlebars.min.js'
@@ -153,7 +154,7 @@ $(document).ready(function () {
     // submit tx
     try {
       var ct = tweb3.contract(address, privateKey)
-      var tx = await ct.methods.setValue.sendSync(name, params)
+      var tx = await ct.methods[name].sendSync(params)
       // console.log('tx',tx);
       window.location.href = '/tx.html?hash=' + tx.hash
     } catch (error) {

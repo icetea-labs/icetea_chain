@@ -1,4 +1,4 @@
-const { IceTeaWeb3 } = require('../tweb3')
+const { IceTeaWeb3 } = require('iceteaweb3')
 
 const tweb3 = new IceTeaWeb3('ws://localhost:26657/websocket')
 

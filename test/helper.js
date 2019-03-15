@@ -1,4 +1,4 @@
-const ecc = require('../icetea/helper/ecc')
+const { ecc } = require('icetea-common')
 
 exports.randomAccountWithBalance = async (tweb3, intialBalance) => {
   // This is the only key which has initial balance as defined in config.
