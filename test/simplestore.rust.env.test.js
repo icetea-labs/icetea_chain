@@ -1,7 +1,7 @@
 /* global jest describe test expect beforeAll afterAll */
 
 const fs = require('fs')
-const { IceTeaWeb3 } = require('iceteaweb3')
+const { IceTeaWeb3 } = require('icetea-web3')
 const { randomAccountWithBalance } = require('./helper')
 const { TxOp, ContractMode } = require('icetea-common')
 

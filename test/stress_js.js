@@ -1,4 +1,4 @@
-const { IceTeaWeb3, utils } = require('iceteaweb3')
+const { IceTeaWeb3, utils } = require('icetea-web3')
 const { TxOp, ContractMode } = require('icetea-common')
 
 const switchEncoding = utils.switchEncoding

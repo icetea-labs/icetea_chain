@@ -1,6 +1,6 @@
 // import ecc from '../icetea/helper/ecc'
 import { ecc } from 'icetea-common'
-import { utils } from 'iceteaweb3'
+import { utils } from 'icetea-web3'
 import tweb3 from './tweb3'
 
 const switchEncoding = utils.switchEncoding

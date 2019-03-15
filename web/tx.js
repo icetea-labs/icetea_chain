@@ -1,5 +1,5 @@
 import handlebars from 'handlebars/dist/handlebars.min.js'
-import { utils } from 'iceteaweb3'
+import { utils } from 'icetea-web3'
 import tweb3 from './tweb3'
 import Prism from 'prismjs'
 
