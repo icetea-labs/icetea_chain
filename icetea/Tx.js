@@ -1,6 +1,5 @@
 const { TxOp } = require('icetea-common')
-const { sha256 } = require('../icetea/helper/codec')
-
+const { sha256 } = require('icetea-common')
 module.exports = class {
   // create contract
   // data = {

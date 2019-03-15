@@ -6,7 +6,7 @@
 // const merk = require('merk')
 
 const db = require('./db')
-const { sha256 } = require('./codec')
+const { sha256 } = require('icetea-common')
 
 // Store everything under one key
 const KEY = 'key'
