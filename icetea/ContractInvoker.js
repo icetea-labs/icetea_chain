@@ -1,6 +1,8 @@
 const utils = require('./helper/utils')
 const sysContracts = require('./system')
 const { getRunner, getContext, getGuard } = require('./vm')
+const { ContractMode } = require('./enum')
+const metering = require('wasm-metering')
 
 class ContractInvoker {
   /**
@@ -98,7 +100,15 @@ class ContractInvoker {
     const src = Buffer.from(tx.data.src, 'base64')
     const deployedBy = tx.from
     const vm = getRunner(mode)
-    const compiledSrc = vm.compile(src)
+    let compiledSrc = vm.compile(src)
+
+    // metering
+    if (mode === ContractMode.WASM) {
+      compiledSrc = metering.meterWASM(compiledSrc, {
+        meterType: 'i32'
+      })
+    }
+
     const meta = vm.analyze(compiledSrc) // linter & halt-problem checking included
 
     // save contract src and data to state

@@ -1,3 +1,5 @@
+let gasUsed = 0
+
 /*eslint-disable*/
 const wasm_bindgen = function ({ log, importTableName, get_sender, get_address, now, get_block_hash, get_block_number, get_msg_value, load, save, read_contract, write_contract, emit_event }) {
   var wasm
@@ -664,7 +666,14 @@ const wasm_bindgen = function ({ log, importTableName, get_sender, get_address, 
 
     // Instantiate the Wasm module SYNC
     // Consider: cache the module or the instance for reuse later
-    const instance = new WebAssembly.Instance(new WebAssembly.Module(buffer), { [importTableName]: __exports })
+    const instance = new WebAssembly.Instance(new WebAssembly.Module(buffer), { 
+      [importTableName]: __exports,
+      'metering': {
+        'usegas': (gas) => {
+          gasUsed += gas
+        }
+      }
+    })
     wasm = init.wasm = instance.exports
   };
 
@@ -675,6 +684,9 @@ module.exports = (wasmBuffer) => {
   return (ctx) => {
     var bindgen = wasm_bindgen(ctx)
     bindgen(wasmBuffer)
-    return bindgen.main(ctx.get_msg_name(), ctx.get_msg_param())
+    gasUsed = 0
+    const result = bindgen.main(ctx.get_msg_name(), ctx.get_msg_param())
+    console.log({gasUsed})
+    return result
   }
 }

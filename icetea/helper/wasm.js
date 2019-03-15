@@ -19,7 +19,9 @@ exports.parseMetadata = (buffer) => {
       if (!importTableName) {
         importTableName = path.node.module
       } else if (importTableName !== path.node.module) {
-        throw new Error('Ivalid Rust wasm_bindgen WASM module: inconsistent import module name.')
+        if (path.node.module !== 'metering') {
+          throw new Error('Ivalid Rust wasm_bindgen WASM module: inconsistent import module name.')
+        }
       }
     }
   })
