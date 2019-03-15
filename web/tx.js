@@ -1,7 +1,11 @@
 import handlebars from 'handlebars/dist/handlebars.min.js'
-import { decodeTX, switchEncoding, tryParseJson } from '../tweb3/utils'
+import { utils } from 'iceteaweb3'
 import tweb3 from './tweb3'
 import Prism from 'prismjs'
+
+const decodeTX = utils.decodeTX
+const switchEncoding = utils.switchEncoding
+const tryParseJson = utils.tryParseJson
 
 var AU = require('ansi_up')
 var ansi_up = new AU.default() // eslint-disable-line

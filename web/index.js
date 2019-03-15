@@ -1,8 +1,9 @@
 import JSONFormatter from 'json-formatter-js'
 import handlebars from 'handlebars/dist/handlebars.min.js'
-import { decodeTX } from '../tweb3/utils'
+import { utils } from 'iceteaweb3'
 import tweb3 from './tweb3'
 
+const decodeTX = utils.decodeTX
 const blockTemplate = handlebars.compile(document.getElementById('blockTemplate').innerHTML)
 const txTemplate = handlebars.compile(document.getElementById('txTemplate').innerHTML)
 
