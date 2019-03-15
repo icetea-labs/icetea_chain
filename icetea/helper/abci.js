@@ -1,5 +1,4 @@
-const Tx = require('../Tx')
-const { codec } = require('icetea-common')
+const { codec, Tx } = require('icetea-common')
 
 function getBlock (req) {
   const hash = req.hash.toString('hex')
