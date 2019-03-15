@@ -1,4 +1,4 @@
-const { TxOp } = require('./enum')
+const { TxOp } = require('icetea-common')
 const { sha256 } = require('../icetea/helper/codec')
 
 module.exports = class {

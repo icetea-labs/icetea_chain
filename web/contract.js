@@ -3,7 +3,7 @@ import * as helper from './helper'
 // import utils from '../tweb3/utils'
 import { utils } from 'iceteaweb3'
 import tweb3 from './tweb3'
-import { ContractMode } from '../icetea/enum'
+import { ContractMode } from 'icetea-common'
 import handlebars from 'handlebars/dist/handlebars.min.js'
 window.$ = $
 
