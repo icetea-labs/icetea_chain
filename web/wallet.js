@@ -1,16 +1,15 @@
 import { ecc } from 'icetea-common'
 
-const generateKey = ecc.generateKey
-const toPublicKey = ecc.toPublicKey
+const newKeyPairWithAddress = ecc.newKeyPairWithAddress
+const toPubKeyAndAddress = ecc.toPubKeyAndAddress
 
 document.getElementById('generatePrivateKey').addEventListener('click', function () {
-  generateKey().then(privateKey => {
-    document.getElementById('generated_private_key').value = privateKey
-    document.getElementById('generated_public_key').value = toPublicKey(privateKey)
-  })
+  var keyInfo = newKeyPairWithAddress()
+  document.getElementById('generated_private_key').value = keyInfo.privateKey
+  document.getElementById('generated_public_key').value = keyInfo.address
 })
 
 document.getElementById('seePublicKey').addEventListener('click', function () {
   var privateKey = document.getElementById('your_private_key').value.trim()
-  document.getElementById('your_public_key').value = toPublicKey(privateKey)
+  document.getElementById('your_public_key').value = toPubKeyAndAddress(privateKey).address
 })
