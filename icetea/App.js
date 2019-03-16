@@ -1,4 +1,4 @@
-const { ecc } = require('icetea-common')
+const { verifyTxSignature } = require('icetea-common/src/utils')
 const utils = require('./helper/utils')
 const sysContracts = require('./system')
 
@@ -44,7 +44,7 @@ class App {
     // Check TX should not modify state
     // This way, we could avoid make a copy of state
 
-    ecc.verifyTxSignature(tx)
+    verifyTxSignature(tx)
 
     // Check balance
     if (tx.value + tx.fee > stateManager.balanceOf(tx.from)) {

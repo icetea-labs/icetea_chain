@@ -19,7 +19,8 @@ afterAll(() => {
 })
 
 async function testSimpleStore (mode, src) {
-  const { key, address: from } = account10k
+  const { privateKey, address: from } = account10k
+  console.log(from, await tweb3.getBalance(from))
 
   const fromBalance = (await tweb3.getBalance(from)).balance
   expect(fromBalance).toBeGreaterThan(1000)
@@ -33,7 +34,7 @@ async function testSimpleStore (mode, src) {
     src: switchEncoding(src, 'utf8', 'base64')
   }
 
-  const result = await tweb3.sendTransactionCommit({ from, value, fee, data }, key)
+  const result = await tweb3.sendTransactionCommit({ value, fee, data }, privateKey)
   expect(result.deliver_tx.code).toBeFalsy()
 
   // tags must be correct
@@ -84,7 +85,7 @@ async function testSimpleStore (mode, src) {
     params: [value2Set]
   }
 
-  const result2 = await tweb3.sendTransactionCommit({ from, to, data: data2 }, key)
+  const result2 = await tweb3.sendTransactionCommit({ to, data: data2 }, privateKey)
   expect(result2.deliver_tx.code).toBeFalsy()
 
   // Check ValueChanged event was emit

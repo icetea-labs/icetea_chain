@@ -5,8 +5,7 @@ const switchEncoding = utils.switchEncoding
 const tweb3 = new IceTeaWeb3('ws://localhost:26657/websocket')
 
 async function testSimpleStore (mode, src, times = 10) {
-  const key = '5K4kMyGz839wEsG7a9xvPNXCmtgFE5He2Q8y9eurEQ4uNgpSRq7'
-  const from = '617BFqg1QhNtsJiNiWz9jGpsm5iAJKqWQBhhk36KjvUFqNkh47'
+  const key = '/FyrD4CM92XGLyMbS8PRYWfw8h4EXQ1BGPqC+DDzsJU='
 
   const data = {
     op: TxOp.DEPLOY_CONTRACT,
@@ -14,7 +13,7 @@ async function testSimpleStore (mode, src, times = 10) {
     src: switchEncoding(src, 'utf8', 'base64')
   }
 
-  const result = await tweb3.sendTransactionCommit({ from, data }, key)
+  const result = await tweb3.sendTransactionCommit({ data }, key)
   const tags = tweb3.utils.decodeTags(result)
   const to = tags['tx.to']
 
@@ -27,7 +26,7 @@ async function testSimpleStore (mode, src, times = 10) {
 
   const promises = []
   for (let i = 0; i < times; i++) {
-    promises.push(tweb3.sendTransactionCommit({ from, to, data: data2 }, key))
+    promises.push(tweb3.sendTransactionCommit({ to, data: data2 }, key))
   }
 
   console.log('DONE!!!', await Promise.all(promises))

@@ -6,8 +6,8 @@
 // const merk = require('merk')
 
 const db = require('./db')
-const { codec } = require('icetea-common')
-const sha256 = codec.sha256
+const { ecc } = require('icetea-common')
+const stableHashObject = ecc.stableHashObject
 
 // Store everything under one key
 const KEY = 'key'
@@ -37,4 +37,4 @@ exports.save = (data) => {
   })
 }
 
-exports.getHash = (message) => sha256(message)
+exports.getHash = (message) => stableHashObject(message)
