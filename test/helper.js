@@ -4,7 +4,7 @@ exports.randomAccountWithBalance = async (tweb3, intialBalance = 10000) => {
   // This is the only key which has initial balance as defined in config.
   // However, because test suites run in parallel, we won't use this key
   // directly in tests, otherwise balance checks might fail
-  const configKey = '/FyrD4CM92XGLyMbS8PRYWfw8h4EXQ1BGPqC+DDzsJU='
+  const configKey = 'CJUPdD38vwc2wMC3hDsySB7YQ6AFLGuU6QYQYaiSeBsK'
 
   const keyInfo = await ecc.newKeyPairWithAddress()
 

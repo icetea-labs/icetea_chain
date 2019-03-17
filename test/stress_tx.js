@@ -3,9 +3,9 @@ const { IceTeaWeb3 } = require('icetea-web3')
 const tweb3 = new IceTeaWeb3('ws://localhost:26657/websocket')
 
 async function testSimpleStore (times = 10) {
-  const key = '/FyrD4CM92XGLyMbS8PRYWfw8h4EXQ1BGPqC+DDzsJU='
+  const key = 'CJUPdD38vwc2wMC3hDsySB7YQ6AFLGuU6QYQYaiSeBsK'
 
-  const to = '717BFqg1QhNtsJiNiWz9jGpsm5iAJKqWQBhhk36KjvUFqNkh48'
+  const to = 'tea_Ngw22YNUDuxi7Q9fHCDSUGnuosR'
 
   const promises = []
   for (let i = 0; i < times; i++) {

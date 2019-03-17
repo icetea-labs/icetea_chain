@@ -20,7 +20,6 @@ afterAll(() => {
 
 async function testSimpleStore (mode, src) {
   const { privateKey, address: from } = account10k
-  console.log(from, await tweb3.getBalance(from))
 
   const fromBalance = (await tweb3.getBalance(from)).balance
   expect(fromBalance).toBeGreaterThan(1000)
