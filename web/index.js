@@ -2,6 +2,7 @@ import JSONFormatter from 'json-formatter-js'
 import handlebars from 'handlebars/dist/handlebars.min.js'
 import { utils } from 'icetea-web3'
 import tweb3 from './tweb3'
+import { ecc } from 'icetea-common'
 
 const decodeTX = utils.decodeTX
 const blockTemplate = handlebars.compile(document.getElementById('blockTemplate').innerHTML)
@@ -21,7 +22,7 @@ function fmtHex (hex, c) {
 function fmtBlocks (blocks) {
   return blocks.map(b => ({
     height: b.header.height,
-    shash: fmtHex(b.block_id.hash, 6),
+    shash: fmtHex(b.block_id.hash, 10),
     timestamp: fmtTime(b.header.time),
     txCount: b.header.num_txs
   }))
@@ -35,8 +36,8 @@ function fmtTxs (txs) {
 
     const data = decodeTX(t.tx)
 
-    t.from = fmtHex(data.from)
-    t.to = fmtHex(data.to)
+    t.from = fmtHex(ecc.toAddress(data.publicKey), 6)
+    t.to = fmtHex(data.to, 6)
     t.value = data.value
     t.fee = data.fee
 
