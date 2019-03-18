@@ -1,17 +1,20 @@
 const { verifyTxSignature } = require('icetea-common/src/utils')
 const utils = require('./helper/utils')
 const sysContracts = require('./system')
-
-const {
-  queryMetadata,
-  prepareContract,
-  invokeView,
-  invokePure,
-  invokeUpdate,
-  invokeTx
-} = require('./ContractInvoker')
+const ALIAS_ADDR = 'system.alias'
+const alias = sysContracts.get(ALIAS_ADDR)
+const invoker = require('./ContractInvoker')
 
 const stateManager = require('./StateManager')
+
+function _ensureAddress (addr) {
+  // resolve alias
+  if (addr && addr.includes('.')) {
+    return alias.ensureAddress(addr, stateManager.getAccountState(ALIAS_ADDR).storage)
+  }
+
+  return addr
+}
 
 class App {
   constructor () {
@@ -53,20 +56,29 @@ class App {
   }
 
   invokeView (contractAddress, methodName, methodParams, options = {}) {
+    // resolve alias
+    contractAddress = _ensureAddress(contractAddress)
+
     const { stateAccess, tools } = stateManager.produceDraft()
     options.stateAccess = stateAccess
     options.tools = tools
     options.block = stateManager.getBlock()
-    return invokeView(contractAddress, methodName, methodParams, options)
+    return invoker.invokeView(contractAddress, methodName, methodParams, options)
   }
 
   invokePure (contractAddress, methodName, methodParams, options = {}) {
+    // resolve alias
+    contractAddress = _ensureAddress(contractAddress)
+
     const { tools } = stateManager.produceDraft()
     options.tools = tools
-    return invokePure(contractAddress, methodName, methodParams, options)
+    return invoker.invokePure(contractAddress, methodName, methodParams, options)
   }
 
   getMetadata (addr) {
+    // resolve alias
+    addr = _ensureAddress(addr)
+
     const { system, src, meta } = stateManager.getAccountState(addr)
     if (!src && !system) {
       throw new Error('Address is not a valid contract.')
@@ -76,7 +88,7 @@ class App {
       return utils.unifyMetadata(meta.operations)
     }
 
-    const info = queryMetadata(addr, stateManager.getMetaProxy(addr))
+    const info = invoker.queryMetadata(addr, stateManager.getMetaProxy(addr))
 
     if (!info) return utils.unifyMetadata()
 
@@ -92,6 +104,9 @@ class App {
   }
 
   execTx (tx) {
+    // resolve alias
+    tx.to = _ensureAddress(tx.to)
+
     stateManager.beginCheckpoint()
 
     const needState = willCallContract(tx)
@@ -132,7 +147,7 @@ function doExecTx (options) {
 
   if (tx.isContractCreation()) {
     // analyze & save contract state
-    const contractState = prepareContract(tx)
+    const contractState = invoker.prepareContract(tx)
     tx.to = tools.deployContract(tx.from, contractState)
   }
 
@@ -141,7 +156,7 @@ function doExecTx (options) {
 
   if (tx.isContractCreation()) {
     // call constructor
-    result = invokeUpdate(
+    result = invoker.invokeUpdate(
       tx.to,
       '__on_deployed',
       tx.data.params,
@@ -153,12 +168,12 @@ function doExecTx (options) {
     if (['constructor', '__on_received', '__on_deployed', 'getState', 'setState', 'getEnv'].includes(tx.data.name)) {
       throw new Error('Calling this method directly is not allowed')
     }
-    result = invokeTx(options)
+    result = invoker.invokeTx(options)
   }
 
   // call __on_received
   if (tx.value && stateManager.isRegularContract(tx.to) && !tx.isContractCreation() && !tx.isContractCall()) {
-    result = invokeUpdate(tx.to, '__on_received', tx.data.params, options)
+    result = invoker.invokeUpdate(tx.to, '__on_received', tx.data.params, options)
   }
 
   // emit Transferred event

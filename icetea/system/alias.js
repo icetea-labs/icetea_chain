@@ -1,16 +1,22 @@
 /**
- * A registry mapping aliases to addresses.
+ * A registry mapping aliases (domains) to addresses.
+ *
+ * SIMPLE VERSION - WILL IMPROVE LATER
+ *
+ * Current version only allows register alias for your owned account/contract.
+ * No support for UPDATE nor DELETE
  */
 
 const { checkMsg } = require('../helper/types')
+const { validateAddress } = require('icetea-common').ecc
 
 const METADATA = {
   'query': {
     decorators: ['view'],
     params: [
-      { name: 'textOrRegEx', type: ['string', 'object'] }
+      { name: 'textOrRegEx', type: ['string', 'RegEx'] }
     ],
-    returnType: 'array'
+    returnType: ['object', 'Array']
   },
   'resolve': {
     decorators: ['view'],
@@ -22,26 +28,86 @@ const METADATA = {
   'register': {
     decorators: ['transaction'],
     params: [
-      { name: 'address', type: 'string' },
-      { name: 'alias', type: 'string' }
+      { name: 'alias', type: 'string' },
+      { name: 'address', type: 'string' }
     ],
-    returnType: 'undefined'
+    returnType: 'string'
   }
 }
 
+const ALIAS_KEY = 'alias'
+
+const getAliases = (context) => {
+  return context.getState(ALIAS_KEY, {})
+}
+
+const saveAliases = (context, aliases) => {
+  return context.setState(ALIAS_KEY, aliases)
+}
+
 // standard contract interface
-exports.run = (context) => {
-  const { msg } = context.getEnv()
+exports.run = (context, options) => {
+  const { msg, block } = context.getEnv()
   checkMsg(msg, METADATA)
 
   const contract = {
-    query () {
+    query (textOrRegEx) {
+      const aliases = getAliases(context)
+      if (typeof textOrRegEx === 'string') {
+        return aliases[textOrRegEx]
+      }
+
+      return Object.keys(aliases).reduce((prev, alias) => {
+        if (textOrRegEx.test(alias)) {
+          prev[alias] = aliases[alias]
+        }
+        return prev
+      }, {})
     },
 
-    request () {
+    resolve (alias) {
+      const aliases = getAliases(context)
+      return (aliases[alias] || {}).address
     },
 
-    withdraw () {
+    register (alias, address) {
+      alias = alias.trim().toLowerCase()
+      if (alias.startsWith('system.')) {
+        throw new Error("Alias cannot start with 'system.'.")
+      }
+
+      validateAddress(address)
+
+      const isOwnedAccount = msg.sender === address
+      if (!isOwnedAccount) {
+        let deployedBy
+        try {
+          deployedBy = options.tools.getCode(address).deployedBy
+        } catch (e) {
+          throw new Error('The specified address is neither your own account nor a smart contract you deployed.')
+        }
+        if (deployedBy !== msg.senser) {
+          throw new Error('You cannot register for the address you do not own.')
+        }
+      }
+
+      const prefix = isOwnedAccount ? 'account.' : 'contract.'
+      const fullAlias = prefix + alias
+
+      const aliases = getAliases(context)
+      if (aliases.hasOwnProperty(fullAlias)) {
+        throw new Error(`Alias ${fullAlias} already registered.`)
+      }
+
+      aliases[fullAlias] = {
+        address,
+        by: msg.senser,
+        blockNumber: block.number
+      }
+
+      saveAliases(context, aliases)
+
+      return fullAlias
     }
   }
 
@@ -50,4 +116,9 @@ exports.run = (context) => {
   } else {
     return contract[msg.name].apply(context, msg.params)
   }
+}
+
+exports.ensureAddress = (aliasOrAddress, storage) => {
+  const aliases = (storage || {})[ALIAS_KEY] || {}
+  return (aliases[aliasOrAddress] || {}).address || aliasOrAddress
 }

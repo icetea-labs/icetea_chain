@@ -48,6 +48,7 @@ const _srcFor = (contractAddress, { stateTable, deployedContracts }) => {
 
   return {
     deployedBy: state.deployedBy,
+    system: !!state.system,
     mode: state.mode || 0,
     src: state.src,
     meta: state.meta

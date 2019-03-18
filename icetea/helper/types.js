@@ -28,7 +28,38 @@ function check (o, t, errorMessage = 'Incompatible type') {
 }
 
 function checkTypes (o, types) {
-  Array.isArray(types) ? types.forEach(t => check(o, t)) : check(o, types)
+  if (Array.isArray(types)) {
+    if (!types.length) {
+      return
+    } else if (types.length === 1) {
+      // to keep regular error with stack trace
+      return check(o, types)
+    }
+
+    // Check OR, not AND
+
+    let errors = []
+    const ok = types.some(t => {
+      try {
+        check(o, t)
+        return true // one type pass, stop here no need check other types
+      } catch (e) {
+        errors.push(e)
+      }
+    })
+
+    if (!ok) {
+      const errorMsg = errors.reduce((prev, e) => {
+        prev.push(e.message)
+        return prev
+      }, []).join('; ')
+      const newError = new Error(errorMsg)
+      newError.errors = errors
+      throw newError
+    }
+  } else {
+    check(o, types)
+  }
 }
 
 function checkMsg ({ name, callType, params = [] }, spec, {
