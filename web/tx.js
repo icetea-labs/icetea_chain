@@ -1,7 +1,11 @@
 import handlebars from 'handlebars/dist/handlebars.min.js'
-import { decodeTX, switchEncoding, tryParseJson } from '../tweb3/utils'
+import { utils } from 'icetea-web3'
 import tweb3 from './tweb3'
 import Prism from 'prismjs'
+
+const decodeTX = utils.decodeTX
+const switchEncoding = utils.switchEncoding
+const tryParseJson = utils.tryParseJson
 
 var AU = require('ansi_up')
 var ansi_up = new AU.default() // eslint-disable-line
@@ -40,7 +44,6 @@ async function fetchTxDetails (template, hash) {
     tx.status = tx.tx_result.code ? 'Error' : 'Success'
 
     const data = decodeTX(tx.tx)
-    tx.from = data.from
     tx.to = data.to
     tx.value = data.value
     tx.fee = data.fee
@@ -57,7 +60,9 @@ async function fetchTxDetails (template, hash) {
 
     tx.data = formatContractData(data.data, tx.to)
     tx.events = JSON.stringify(tweb3.utils.decodeEventData(tx), null, 2)
-    tx.tags = JSON.stringify(tweb3.utils.decodeTags(tx), null, 2)
+    const tags = tweb3.utils.decodeTags(tx)
+    tx.tags = JSON.stringify(tags, null, 2)
+    tx.from = tags['tx.from']
 
     // Do some formating
 

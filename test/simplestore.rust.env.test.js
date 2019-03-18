@@ -1,9 +1,9 @@
 /* global jest describe test expect beforeAll afterAll */
 
 const fs = require('fs')
-const { IceTeaWeb3 } = require('../tweb3')
+const { IceTeaWeb3 } = require('icetea-web3')
 const { randomAccountWithBalance } = require('./helper')
-const { TxOp, ContractMode } = require('../icetea/enum')
+const { TxOp, ContractMode } = require('icetea-common')
 
 jest.setTimeout(30000)
 
@@ -20,7 +20,7 @@ afterAll(() => {
 })
 
 async function testSimpleStore (mode, contractPath) {
-  const { key, address: from } = account10k
+  const { privateKey: key, address: from } = account10k
 
   const fromBalance = (await tweb3.getBalance(from)).balance
   expect(fromBalance).toBeGreaterThan(1000)
@@ -35,7 +35,7 @@ async function testSimpleStore (mode, contractPath) {
     src
   }
 
-  const result = await tweb3.sendTransactionCommit({ from, value, fee, data }, key)
+  const result = await tweb3.sendTransactionCommit({ value, fee, data }, key)
   expect(result.deliver_tx.code).toBeFalsy()
 
   // tags must be correct
@@ -84,7 +84,7 @@ async function testSimpleStore (mode, contractPath) {
     params: [value2Set]
   }
 
-  const result2 = await tweb3.sendTransactionCommit({ from, to, data: data2 }, key)
+  const result2 = await tweb3.sendTransactionCommit({ to, data: data2 }, key)
   expect(result2.deliver_tx.code).toBeFalsy()
 
   // Check ValueChanged event was emit

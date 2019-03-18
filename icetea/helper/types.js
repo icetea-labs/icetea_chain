@@ -53,13 +53,14 @@ function checkMsg ({ name, callType, params = [] }, spec, {
 
   // check call type: transaction, view, pure, metadata
   let specDecos
-  if (!spec.decorators || !spec.decorators.length) {
+  if (!spec[name].decorators || !spec[name].decorators.length) {
     if (strict) {
       specDecos = ['view']
     }
   } else {
-    specDecos = spec.decorators
+    specDecos = spec[name].decorators
   }
+
   if (specDecos && !specDecos.includes(callType)) {
     throw new Error(`Invalid call type, expect '${specDecos.join(', ')}', got '${callType}'.`)
   }

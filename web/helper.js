@@ -1,6 +1,11 @@
-import ecc from '../icetea/helper/ecc'
-import { switchEncoding, replaceAll, tryParseJson } from '../tweb3/utils'
+// import ecc from '../icetea/helper/ecc'
+import { ecc } from 'icetea-common'
+import { utils } from 'icetea-web3'
 import tweb3 from './tweb3'
+
+const switchEncoding = utils.switchEncoding
+const replaceAll = utils.replaceAll
+const tryParseJson = utils.tryParseJson
 
 export function fieldToBase64 (selector) {
   return switchEncoding(document.querySelector(selector).value.trim(), 'utf8', 'base64')

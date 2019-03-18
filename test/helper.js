@@ -1,17 +1,23 @@
-const ecc = require('../icetea/helper/ecc')
+const { ecc } = require('icetea-common')
 
-exports.randomAccountWithBalance = async (tweb3, intialBalance) => {
+exports.randomAccountWithBalance = async (tweb3, intialBalance = 10000) => {
   // This is the only key which has initial balance as defined in config.
   // However, because test suites run in parallel, we won't use this key
   // directly in tests, otherwise balance checks might fail
-  const configKey = '5K4kMyGz839wEsG7a9xvPNXCmtgFE5He2Q8y9eurEQ4uNgpSRq7'
-  const from = ecc.toPublicKey(configKey)
+  const configKey = 'CJUPdD38vwc2wMC3hDsySB7YQ6AFLGuU6QYQYaiSeBsK'
 
-  const newKey = await ecc.generateKey()
-  const to = ecc.toPublicKey(newKey)
+  const keyInfo = await ecc.newKeyPairWithAddress()
 
   // send money from configKey to newKey
-  await tweb3.sendTransactionCommit({ from, to, value: intialBalance }, configKey)
+  const result = await tweb3.sendTransactionCommit({ to: keyInfo.address, value: intialBalance }, configKey)
 
-  return { key: newKey, address: to }
+  if (result.check_tx.code) {
+    throw new Error('check_tx: ' + result.check_tx.code + ' - ' + result.check_tx.log)
+  }
+
+  if (result.deliver_tx.code) {
+    throw new Error('deliver_tx: ' + result.deliver_tx.code + ' - ' + result.deliver_tx.log)
+  }
+
+  return keyInfo
 }

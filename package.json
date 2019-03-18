@@ -8,10 +8,6 @@
     "fix": "standard --fix",
     "jest": "jest",
     "start": "standard --fix && node icetea",
-    "dev": "standard --fix && tendermint node && node icetea && webpack-dev-server --open",
-    "dev2": "standard --fix && tendermint node && node icetea && webpack-dev-server",
-    "dev3": "standard --fix && node icetea && webpack-dev-server",
-    "server": "standard --fix && tendermint node && node icetea",
     "app": "standard --fix && webpack-dev-server --open",
     "web": "standard --fix && webpack-dev-server",
     "reset": "tendermint unsafe_reset_all && node ./scripts/destroy.js",
@@ -31,7 +27,10 @@
       "**/example/"
     ]
   },
-  "pre-commit": ["fix", "jest"],
+  "pre-commit": [
+    "fix",
+    "jest"
+  ],
   "dependencies": {
     "@babel/plugin-proposal-class-properties": "7.3.0",
     "@babel/plugin-proposal-private-methods": "7.3.2",
@@ -43,34 +42,30 @@
     "body-parser": "1.18.3",
     "chalk": "2.4.2",
     "dotenv": "6.2.0",
-    "eosjs-ecc": "4.0.4",
     "express": "4.16.4",
     "halting-problem": "1.0.3",
     "handlebars": "4.0.12",
+    "icetea-common": "github:TradaTech/icetea-common",
+    "icetea-web3": "github:TradaTech/icetea-web3",
     "jquery": "3.3.1",
     "json-formatter-js": "2.2.1",
     "level": "4.0.0",
     "lodash": "4.17.11",
     "merk": "1.3.4",
-    "msgpack-lite": "0.1.26",
-    "node-fetch": "2.3.0",
     "npx": "10.2.0",
-    "prismjs": "1.15.0",
-    "wasm-metering": "0.2.1",
-    "websocket": "1.0.28",
-    "websocket-as-promised": "0.9.0"
+    "prismjs": "1.15.0"
   },
   "devDependencies": {
     "@babel/core": "7.2.2",
     "@babel/preset-env": "7.3.1",
     "babel-loader": "8.0.5",
     "copy-webpack-plugin": "4.6.0",
-    "jest": "24.1.0",
+    "jest": "24.5.0",
     "nodemon": "1.18.9",
     "pre-commit": "1.2.2",
     "standard": "12.0.1",
     "webpack": "4.29.3",
-    "webpack-cli": "3.2.0",
+    "webpack-cli": "3.3.0",
     "webpack-dev-server": "3.2.1"
   }
 }

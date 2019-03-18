@@ -1,11 +1,13 @@
 let gasUsed = 0
 
 /*eslint-disable*/
+const util = require('util');
+
 const wasm_bindgen = function ({ log, importTableName, get_sender, get_address, now, get_block_hash, get_block_number, get_msg_value, load, save, read_contract, write_contract, emit_event }) {
   var wasm
   const __exports = {}
 
-  let cachedTextDecoder = new TextDecoder('utf-8')
+  let cachedTextDecoder = new util.TextDecoder('utf-8')
 
   let cachegetUint8Memory = null
   function getUint8Memory() {
@@ -29,7 +31,7 @@ const wasm_bindgen = function ({ log, importTableName, get_sender, get_address, 
     }
   }
 
-  let cachedTextEncoder = new TextEncoder('utf-8')
+  let cachedTextEncoder = new util.TextEncoder('utf-8')
 
   let WASM_VECTOR_LEN = 0
 

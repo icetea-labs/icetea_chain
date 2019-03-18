@@ -1,9 +1,9 @@
 module.exports = {
   abciServerPort: 26658,
-  feeCollector: '617BFqg1QhNtsJiNiWz9jGpsm5iAJKqWQBhhk36KjvUFqNkh47',
+  feeCollector: 'tea_3M76NHiZ4ipvMmTVBVJ1Wj378RLJ',
   initialBalances: [
     {
-      address: '617BFqg1QhNtsJiNiWz9jGpsm5iAJKqWQBhhk36KjvUFqNkh47',
+      address: 'tea_3M76NHiZ4ipvMmTVBVJ1Wj378RLJ',
       balance: 1000000000000
     },
     {
