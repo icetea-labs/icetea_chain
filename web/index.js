@@ -46,10 +46,10 @@ function fmtTxs (txs) {
     t.txType = 'transfer'
     data.data = JSON.parse(data.data) || {}
     if (data.data.op === 0) {
-      t.txType = 'create contract'
+      t.txType = 'deploy'
       // t.to = fmtHex(t.tx_result.data);
     } else if (data.data.op === 1) {
-      t.txType = 'call contract'
+      t.txType = 'call'
     }
   })
   return txs.reverse()
