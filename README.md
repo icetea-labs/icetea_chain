@@ -41,7 +41,9 @@ create_empty_blocks = false
 ## Setup
 1. clone repo
 2. `npm install`
-3. `npm run dev`
+3. `tendermint node`
+4. Open another terminal window and `npm start` -> this starts the icetea server
+5. Open another terminal window and `npm run app` -> this starts an sample block explorer and wallet
 
 This will start a tendermint node, the icetea server, and open a sample web client to access blockchain features.
 
