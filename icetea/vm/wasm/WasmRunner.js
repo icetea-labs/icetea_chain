@@ -1,18 +1,36 @@
+/** @module wasm */
 const Runner = require('../Runner')
 const patch = require('./patch')
 const { parseMetadata } = require('../../helper/wasm')
 
-module.exports = class extends Runner {
+/** Class wasm runner */
+class WasmRunner extends Runner {
+  /**
+   * patch a wasm buffer.
+   * @param {string} wasmBuffer - wasm buffer.
+   * @returns {object} patch
+   */
   patch (wasmBuffer) {
     return patch(wasmBuffer)
   }
 
+  /**
+   * do run with context.
+   * @param {object} patcher - patcher.
+   * @param {object} options - options.
+   */
   doRun (patcher, { context }) {
     return patcher(context)
   }
 
+  /**
+   * analyze wasm buffer.
+   * @param {string} src - wasm source.
+   */
   analyze (src) {
     super.analyze(src)
     return parseMetadata(src)
   }
 }
+
+module.exports = WasmRunner

@@ -1,11 +1,16 @@
-let gasUsed = 0
-
+/** @module wasm/patch */
 /*eslint-disable*/
 const util = require('util');
 
-const wasm_bindgen = function ({ log, importTableName, get_sender, get_address, now, get_block_hash, get_block_number, get_msg_value, load, save, read_contract, write_contract, emit_event }) {
+const wasm_bindgen = function ({ log, importTableName, get_sender, get_address, now, get_block_hash, get_block_number, get_msg_value, get_msg_fee, load, save, read_contract, write_contract, emit_event }) {
   var wasm
   const __exports = {}
+  let gasLimit = 1e9 // mocking, change this depend on bussiness (gas price)
+  let isTx = false
+  if(get_msg_fee) {
+    gasLimit += get_msg_fee()
+    isTx = true
+  }
 
   let cachedTextDecoder = new util.TextDecoder('utf-8')
 
@@ -668,11 +673,14 @@ const wasm_bindgen = function ({ log, importTableName, get_sender, get_address, 
 
     // Instantiate the Wasm module SYNC
     // Consider: cache the module or the instance for reuse later
-    const instance = new WebAssembly.Instance(new WebAssembly.Module(buffer), { 
+    const instance = new WebAssembly.Instance(new WebAssembly.Module(buffer), {
       [importTableName]: __exports,
       'metering': {
         'usegas': (gas) => {
-          gasUsed += gas
+          gasLimit -= gas
+          if (isTx && gasLimit < 0) {
+            throw new Error("Out of gas!")
+          }
         }
       }
     })
@@ -682,13 +690,17 @@ const wasm_bindgen = function ({ log, importTableName, get_sender, get_address, 
   return Object.assign(init, __exports)
 }
 
+/**
+ * Wasm contract endpoint
+ * @function
+ * @param {string} wasmBuffer - wasm buffer.
+ * @returns {object} wasm object
+ */
 module.exports = (wasmBuffer) => {
   return (ctx) => {
     var bindgen = wasm_bindgen(ctx)
     bindgen(wasmBuffer)
-    gasUsed = 0
     const result = bindgen.main(ctx.get_msg_name(), ctx.get_msg_param())
-    console.log({gasUsed})
     return result
   }
 }

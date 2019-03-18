@@ -1,7 +1,7 @@
 const utils = require('./helper/utils')
 const sysContracts = require('./system')
 const { getRunner, getContext, getGuard } = require('./vm')
-const { ContractMode } = require('./enum')
+const { ContractMode } = require('icetea-common')
 const metering = require('wasm-metering')
 
 class ContractInvoker {
