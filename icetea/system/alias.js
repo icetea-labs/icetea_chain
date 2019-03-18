@@ -45,6 +45,16 @@ const saveAliases = (context, aliases) => {
   return context.setState(ALIAS_KEY, aliases)
 }
 
+const isSatisfied = (text, condition) => {
+  if (typeof condition.test === 'function') {
+    return !!condition.test(text)
+  } else if (typeof text.includes === 'function') {
+    return !!text.includes(condition)
+  }
+
+  return text == condition // eslint-disable-line
+}
+
 // standard contract interface
 exports.run = (context, options) => {
   const { msg, block } = context.getEnv()
@@ -53,12 +63,9 @@ exports.run = (context, options) => {
   const contract = {
     query (textOrRegEx) {
       const aliases = getAliases(context)
-      if (typeof textOrRegEx === 'string') {
-        return aliases[textOrRegEx]
-      }
 
       return Object.keys(aliases).reduce((prev, alias) => {
-        if (textOrRegEx.test(alias)) {
+        if (isSatisfied(alias, textOrRegEx)) {
           prev[alias] = aliases[alias]
         }
         return prev
