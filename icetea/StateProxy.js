@@ -33,7 +33,7 @@ const _generateContractAddress = (deployedBy, stateTable) => {
   // TODO: change this
 
   const count = Object.keys(stateTable).reduce((t, k) => (
-    (stateTable[k].src && k.endsWith(deployedBy)) ? (t + 1) : t
+    (stateTable[k].src && stateTable[k].deployedBy === deployedBy) ? (t + 1) : t
   ), 0)
 
   return String(count).padStart(3, '0') + '_' + deployedBy.split('_', 2)[1]
