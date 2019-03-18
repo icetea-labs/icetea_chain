@@ -3,7 +3,6 @@ import { utils } from 'icetea-web3'
 import tweb3 from './tweb3'
 import Prism from 'prismjs'
 
-const decodeTX = utils.decodeTX
 const switchEncoding = utils.switchEncoding
 const tryParseJson = utils.tryParseJson
 
@@ -43,7 +42,7 @@ async function fetchTxDetails (template, hash) {
 
     tx.status = tx.tx_result.code ? 'Error' : 'Success'
 
-    const data = tx.tx//decodeTX(tx.tx)
+    const data = tx.tx // decodeTX(tx.tx)
     tx.to = data.to
     tx.value = data.value
     tx.fee = data.fee
@@ -59,7 +58,7 @@ async function fetchTxDetails (template, hash) {
     }
 
     tx.data = formatContractData(data.data, tx.to)
-    tx.events = JSON.stringify(tx.events, null, 2)//tweb3.utils.decodeEventData(tx), null, 2)
+    tx.events = JSON.stringify(tx.events, null, 2) // tweb3.utils.decodeEventData(tx), null, 2)
     // const tags = tweb3.utils.decodeTags(tx)
     tx.from = tx.tags['tx.from']
     tx.tags = JSON.stringify(tx.tags, null, 2)
