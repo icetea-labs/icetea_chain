@@ -161,6 +161,11 @@ function doExecTx (options) {
     result = invokeUpdate(tx.to, '__on_received', tx.data.params, options)
   }
 
+  if (result && result.__gas_used && tools.refectTxValueAndFee) {
+    tools.refectTxValueAndFee({ from: tx.from, value: 0, fee: -(tx.fee - result.__gas_used) })
+    delete result.__gas_used
+  }
+
   // emit Transferred event
   if (tx.value > 0) {
     const emitTransferred = (tags) => {

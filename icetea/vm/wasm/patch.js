@@ -1,11 +1,13 @@
 /** @module wasm/patch */
 /*eslint-disable*/
 const util = require('util');
+const freeGasLimit = 1e9;
 
 const wasm_bindgen = function ({ log, importTableName, get_sender, get_address, now, get_block_hash, get_block_number, get_msg_value, get_msg_fee, load, save, read_contract, write_contract, emit_event }) {
   var wasm
   const __exports = {}
-  let gasLimit = 1e9 // mocking, change this depend on bussiness (gas price)
+  let gasLimit = freeGasLimit // mocking, change this depend on bussiness (gas price)
+  let gasUsed = 0
   let isTx = false
   if(get_msg_fee) {
     gasLimit += get_msg_fee()
@@ -664,6 +666,13 @@ const wasm_bindgen = function ({ log, importTableName, get_sender, get_address, 
     throw new Error(getStringFromWasm(ptr, len))
   }
 
+  __exports.__gas_used = function () {
+    if(!isTx) {
+      return 0
+    }
+    return (gasUsed - freeGasLimit) > 0 ? (gasUsed - freeGasLimit) : 0
+  }
+
   function init(buffer) {
     // console.log({ [importTableName]: __exports });
     // return global.WebAssembly.instantiate(buffer, { [importTableName]: __exports })
@@ -677,8 +686,8 @@ const wasm_bindgen = function ({ log, importTableName, get_sender, get_address, 
       [importTableName]: __exports,
       'metering': {
         'usegas': (gas) => {
-          gasLimit -= gas
-          if (isTx && gasLimit < 0) {
+          gasUsed += gas
+          if (isTx && gasUsed > gasLimit) {
             throw new Error("Out of gas!")
           }
         }
@@ -701,6 +710,7 @@ module.exports = (wasmBuffer) => {
     var bindgen = wasm_bindgen(ctx)
     bindgen(wasmBuffer)
     const result = bindgen.main(ctx.get_msg_name(), ctx.get_msg_param())
-    return result
+    const __gas_used = bindgen.__gas_used()
+    return Object.assign(result || {}, { __gas_used })
   }
 }
