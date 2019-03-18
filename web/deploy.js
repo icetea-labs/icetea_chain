@@ -1,4 +1,5 @@
 import $ from 'jquery'
+import * as helper from './helper'
 import tweb3 from './tweb3'
 window.$ = $
 
@@ -29,7 +30,8 @@ $('#form').submit(async function (e) {
   }
 
   try {
-    var tx = await tweb3.deploy(mode, src, privateKey)
+    var params = helper.parseParamsFromField('#params')
+    var tx = await tweb3.deploy(mode, src, privateKey, params)
     // console.log('tx',tx);
     window.location.href = '/tx.html?hash=' + tx.hash
   } catch (error) {
