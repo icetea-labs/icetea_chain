@@ -673,6 +673,9 @@ const wasm_bindgen = function ({ log, importTableName, get_sender, get_address, 
     return (gasUsed - freeGasLimit) > 0 ? (gasUsed - freeGasLimit) : 0
   }
 
+  const u32CvtShim = new Uint32Array(2);
+  const int64CvtShim = new BigInt64Array(u32CvtShim.buffer);
+
   function init(buffer) {
     // console.log({ [importTableName]: __exports });
     // return global.WebAssembly.instantiate(buffer, { [importTableName]: __exports })
@@ -685,7 +688,10 @@ const wasm_bindgen = function ({ log, importTableName, get_sender, get_address, 
     const instance = new WebAssembly.Instance(new WebAssembly.Module(buffer), {
       [importTableName]: __exports,
       'metering': {
-        'usegas': (gas) => {
+        'usegas': (arg0, arg1) => {
+          u32CvtShim[0] = arg0;
+          u32CvtShim[1] = arg1;
+          const gas = parseInt(int64CvtShim[0].toString(), 10); // BigInt cannot mixed with Number
           gasUsed += gas
           if (isTx && gasUsed > gasLimit) {
             throw new Error("Out of gas!")

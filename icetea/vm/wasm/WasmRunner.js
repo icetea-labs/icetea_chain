@@ -21,9 +21,7 @@ class WasmRunner extends Runner {
    * @returns {object} compiled source
    */
   compile (src) {
-    return metering.meterWASM(src, {
-      meterType: 'i32'
-    })
+    return metering.meterWASM(src)
   }
 
   /**
