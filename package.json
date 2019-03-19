@@ -26,7 +26,8 @@
     "ignore": [
       "**/tmp/",
       "**/example/",
-      "/web/botui.js"
+      "/web/botui.js",
+      "/web/lunar.js"
     ]
   },
   "pre-commit": [

@@ -25,6 +25,7 @@ body {
 }
 #menu a {
     padding-right: 1rem;
+    white-space: nowrap;
 }
 .disabled {
     background-color: lightgray;
@@ -48,6 +49,10 @@ td.Error {
 td pre {
     white-space: pre-line;
 }
+.table-form td {
+    border: none;
+    padding: 4px;
+}
 th {
     text-transform: uppercase;
     text-align: left;
@@ -66,4 +71,12 @@ code[class*="language-"] {
     font-size: 90%;
     background-color: #eee;
     padding: 2px 12px;
+}
+
+input {
+    padding: 4px 8px;
+}
+button {
+    padding: 5px 12px;
+    border-radius: 6px;
 }
