@@ -1,8 +1,6 @@
 const utils = require('./helper/utils')
 const sysContracts = require('./system')
 const { getRunner, getContext, getGuard } = require('./vm')
-const { ContractMode } = require('icetea-common')
-const metering = require('wasm-metering')
 
 class ContractInvoker {
   /**
@@ -101,13 +99,6 @@ class ContractInvoker {
     const deployedBy = tx.from
     const vm = getRunner(mode)
     let compiledSrc = vm.compile(src)
-
-    // metering
-    if (mode === ContractMode.WASM) {
-      compiledSrc = metering.meterWASM(compiledSrc, {
-        meterType: 'i32'
-      })
-    }
 
     const meta = vm.analyze(compiledSrc) // linter & halt-problem checking included
 

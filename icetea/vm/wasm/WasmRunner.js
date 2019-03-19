@@ -2,6 +2,7 @@
 const Runner = require('../Runner')
 const patch = require('./patch')
 const { parseMetadata } = require('../../helper/wasm')
+const metering = require('wasm-metering')
 
 /** Class wasm runner */
 class WasmRunner extends Runner {
@@ -12,6 +13,17 @@ class WasmRunner extends Runner {
    */
   patch (wasmBuffer) {
     return patch(wasmBuffer)
+  }
+
+  /**
+   * compile source.
+   * @param {string} src - source.
+   * @returns {object} compiled source
+   */
+  compile (src) {
+    return metering.meterWASM(src, {
+      meterType: 'i32'
+    })
   }
 
   /**
