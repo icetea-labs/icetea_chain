@@ -1,5 +1,12 @@
+/** @module */
 const babel = require('@babel/core')
 
+/**
+ * decorated runner class
+ * @function
+ * @param {string} mode - contract mode
+ * @returns {object} runner class
+ */
 module.exports = mode => {
   const JsRunner = require('./JsRunner')(mode)
   const contractPlugins = require('./babel')(mode)(babel)

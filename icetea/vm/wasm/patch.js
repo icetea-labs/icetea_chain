@@ -1,9 +1,18 @@
+/** @module */
 /*eslint-disable*/
 const util = require('util');
+const freeGasLimit = 1e9;
 
-const wasm_bindgen = function ({ log, importTableName, get_sender, get_address, now, get_block_hash, get_block_number, get_msg_value, load, save, call_contract, emit_event }) {
+const wasm_bindgen = function ({ log, importTableName, get_sender, get_address, now, get_block_hash, get_block_number, get_msg_value, get_msg_fee, load, save, read_contract, write_contract, emit_event }) {
   var wasm
   const __exports = {}
+  let gasLimit = freeGasLimit // mocking, change this depend on bussiness (gas price)
+  let gasUsed = 0
+  let isTx = false
+  if(get_msg_fee) {
+    gasLimit += get_msg_fee()
+    isTx = true
+  }
 
   let cachedTextDecoder = new util.TextDecoder('utf-8')
 
@@ -252,11 +261,22 @@ const wasm_bindgen = function ({ log, importTableName, get_sender, get_address, 
     }
   }
 
-  __exports.__wbg_callcontract_10799fb44e4114f5 = function (arg0, arg1, arg2, arg3, arg4) {
+  __exports.__wbg_readcontract_6393c1bec8f423f6 = function (arg0, arg1, arg2, arg3, arg4) {
     let varg0 = getStringFromWasm(arg0, arg1)
     let varg2 = getStringFromWasm(arg2, arg3)
     try {
-      return addHeapObject(call_contract(varg0, varg2, takeObject(arg4)))
+      return addHeapObject(read_contract(varg0, varg2, takeObject(arg4)))
+    } catch (e) {
+      console.error('wasm-bindgen: imported JS function that was not marked as `catch` threw an error:', e)
+      throw e
+    }
+  }
+
+  __exports.__wbg_writecontract_8e1552172eb8d491 = function (arg0, arg1, arg2, arg3, arg4) {
+    let varg0 = getStringFromWasm(arg0, arg1)
+    let varg2 = getStringFromWasm(arg2, arg3)
+    try {
+      return addHeapObject(write_contract(varg0, varg2, takeObject(arg4)))
     } catch (e) {
       console.error('wasm-bindgen: imported JS function that was not marked as `catch` threw an error:', e)
       throw e
@@ -403,6 +423,15 @@ const wasm_bindgen = function ({ log, importTableName, get_sender, get_address, 
   }
 
   __exports.__wbg_new_366f5eda217e0401 = function () {
+    try {
+      return addHeapObject(new Array())
+    } catch (e) {
+      console.error('wasm-bindgen: imported JS function that was not marked as `catch` threw an error:', e)
+      throw e
+    }
+  }
+
+  __exports.__wbg_new_eed4009beab03e81 = function () {
     try {
       return addHeapObject(new Array())
     } catch (e) {
@@ -637,6 +666,13 @@ const wasm_bindgen = function ({ log, importTableName, get_sender, get_address, 
     throw new Error(getStringFromWasm(ptr, len))
   }
 
+  __exports.__gas_used = function () {
+    if(!isTx) {
+      return 0
+    }
+    return (gasUsed - freeGasLimit) > 0 ? (gasUsed - freeGasLimit) : 0
+  }
+
   function init(buffer) {
     // console.log({ [importTableName]: __exports });
     // return global.WebAssembly.instantiate(buffer, { [importTableName]: __exports })
@@ -646,17 +682,35 @@ const wasm_bindgen = function ({ log, importTableName, get_sender, get_address, 
 
     // Instantiate the Wasm module SYNC
     // Consider: cache the module or the instance for reuse later
-    const instance = new WebAssembly.Instance(new WebAssembly.Module(buffer), { [importTableName]: __exports })
+    const instance = new WebAssembly.Instance(new WebAssembly.Module(buffer), {
+      [importTableName]: __exports,
+      'metering': {
+        'usegas': (gas) => {
+          gasUsed += gas
+          if (isTx && gasUsed > gasLimit) {
+            throw new Error("Out of gas!")
+          }
+        }
+      }
+    })
     wasm = init.wasm = instance.exports
   };
 
   return Object.assign(init, __exports)
 }
 
+/**
+ * Wasm contract endpoint
+ * @function
+ * @param {string} wasmBuffer - wasm buffer.
+ * @returns {object} wasm object
+ */
 module.exports = (wasmBuffer) => {
   return (ctx) => {
     var bindgen = wasm_bindgen(ctx)
     bindgen(wasmBuffer)
-    return bindgen.main(ctx.get_msg_name(), ctx.get_msg_param())
+    const result = bindgen.main(ctx.get_msg_name(), ctx.get_msg_param())
+    const __gas_used = bindgen.__gas_used()
+    return Object.assign(result || {}, { __gas_used })
   }
 }

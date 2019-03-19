@@ -1,6 +1,17 @@
+/** @module */
 const { emitEvent } = require('../../helper/utils')
 const invoker = require('../../ContractInvoker')
 
+/**
+ * context for (with invoke type)
+ * @function
+ * @param {string} invokeType - invoke type
+ * @param {string} contractAddress - contract address.
+ * @param {string} methodName - method name.
+ * @param {Array.<string|number>} methodParams - parameters.
+ * @param {object} options - method option.
+ * @returns {object} context
+ */
 exports.for = (invokeType, contractAddress, methodName, methodParams, options) => {
   const map = {
     transaction: exports.forTransaction,
@@ -12,6 +23,15 @@ exports.for = (invokeType, contractAddress, methodName, methodParams, options) =
   return typeof fn === 'function' ? fn(contractAddress, methodName, methodParams, options) : fn
 }
 
+/**
+ * context for transaction
+ * @function
+ * @param {string} address - contract address.
+ * @param {string} fname - method name.
+ * @param {Array.<string|number>} fparams - parameters.
+ * @param {object} options - method option.
+ * @returns {object} context
+ */
 exports.forTransaction = (address, fname, fparams = [], options) => {
   const { tx, block, stateAccess, tools } = options
   const { balanceOf, getCode } = tools
@@ -36,11 +56,15 @@ exports.forTransaction = (address, fname, fparams = [], options) => {
     get_msg_name: () => fname,
     get_msg_param: () => fparams.map(x => typeof x === 'number' ? x.toString() : x),
     get_msg_value: () => tx.value,
+    get_msg_fee: () => tx.fee,
     get_sender: () => tx.from || '',
     now: () => block.timestamp,
     get_block_hash: () => block.hash,
     get_block_number: () => block.number,
-    call_contract: (to, method, params) => {
+    read_contract: (to, method, params) => {
+      return invoker.invokeView(to, method, params, { ...options, from: address })
+    },
+    write_contract: (to, method, params) => {
       return invoker.invokeUpdate(to, method, params, options)
     },
     has_state: hasState,
@@ -56,6 +80,15 @@ exports.forTransaction = (address, fname, fparams = [], options) => {
   return ctx
 }
 
+/**
+ * context for view
+ * @function
+ * @param {string} address - contract address.
+ * @param {string} name - method name.
+ * @param {Array.<string|number>} params - parameters.
+ * @param {object} option - method option.
+ * @returns {object} context
+ */
 exports.forView = (address, name, params = [], options) => {
   const { from = '', block, stateAccess, tools } = options
   const { balanceOf, getCode } = tools
@@ -81,8 +114,11 @@ exports.forView = (address, name, params = [], options) => {
     now: () => block.timestamp,
     get_block_hash: () => block.hash,
     get_block_number: () => block.number,
-    call_contract: (addr, method, params) => {
-      return invoker.invokeView(addr, method, params, { ...options, from: address })
+    read_contract: (to, method, params) => {
+      return invoker.invokeView(to, method, params, { ...options, from: address })
+    },
+    write_contract: (to, method, params) => {
+      throw new Error('Cannot write_contract inside a view function')
     },
     has_state: hasState,
     load: key => getState(key, ''),
@@ -94,6 +130,15 @@ exports.forView = (address, name, params = [], options) => {
   return ctx
 }
 
+/**
+ * context for pure
+ * @function
+ * @param {string} address - contract address.
+ * @param {string} name - method name.
+ * @param {Array.<string|number>} params - parameters.
+ * @param {object} option - method option.
+ * @returns {object} context
+ */
 exports.forPure = (address, name, params = [], { from = '' }) => {
   const ctx = {
     address,
@@ -106,6 +151,9 @@ exports.forPure = (address, name, params = [], { from = '' }) => {
   return ctx
 }
 
+/**
+ * metadata for unlisted invoke type
+ */
 exports.forMetadata = {
   log: console.log,
   get_msg_name: () => '__metadata',

@@ -1,8 +1,15 @@
+/** @module */
 const halts = require('halting-problem')
 const Runner = require('../Runner')
 const babel = require('@babel/core')
 const { codeFrameColumns } = require('@babel/code-frame')
 
+/**
+ * js runner
+ * @function
+ * @param {string} mode - contract type.
+ * @returns {object} runner class
+ */
 module.exports = mode => {
   const patch = require('./patch')(mode)
   return class extends Runner {

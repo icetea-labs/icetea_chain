@@ -1,0 +1,17 @@
+{
+  "plugins": ["plugins/markdown"],
+  "source": {
+    "includePattern": ".+\\.js(doc|x)?$",
+    "excludePattern": "(^|\\/|\\\\)_",
+    "include": "icetea/vm",
+    "exclude": [
+      "node_modules",
+      "docs"
+    ]
+  },
+  "opts": {
+    "destination": "./docs/",
+    "recurse": true,
+    "private": true
+  }
+}

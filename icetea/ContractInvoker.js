@@ -98,7 +98,8 @@ class ContractInvoker {
     const src = Buffer.from(tx.data.src, 'base64')
     const deployedBy = tx.from
     const vm = getRunner(mode)
-    const compiledSrc = vm.compile(src)
+    let compiledSrc = vm.compile(src)
+
     const meta = vm.analyze(compiledSrc) // linter & halt-problem checking included
 
     // save contract src and data to state
