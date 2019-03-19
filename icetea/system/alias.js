@@ -14,7 +14,7 @@ const METADATA = {
   'query': {
     decorators: ['view'],
     params: [
-      { name: 'textOrRegEx', type: ['string', 'RegEx'] }
+      { name: 'textOrRegEx', type: ['string', 'RegExp'] }
     ],
     returnType: ['object', 'Array']
   },

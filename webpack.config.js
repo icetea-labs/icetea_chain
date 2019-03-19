@@ -13,11 +13,18 @@ module.exports = {
     contract: './web/contract.js',
     wallet: './web/wallet.js',
     tx: './web/tx.js',
+    bot: './web/bot.js',
     test: './web/playground.js'
   },
   output: {
     path: path.resolve(__dirname, 'web_dist'),
     filename: '[name].js'
+  },
+
+  resolve: {
+    alias: {
+      vue: 'vue/dist/vue.js'
+    }
   },
 
   plugins: [

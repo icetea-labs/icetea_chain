@@ -1,0 +1,29 @@
+<html>
+<head>
+    <title>icetea - bot zoo</title>
+    <link rel="stylesheet" href="botui.min.css" />
+    <link rel="stylesheet" href="botui-theme-default.css" />
+    <link rel="stylesheet" type="text/css" href="style.css">
+</head>
+<body>
+    <div id="content">
+        <nav id="menu">
+            <a href="/">Scan</a>
+            <a href="/transfer.html">Transfer</a>
+            <a href="/deploy.html">Deploy Contract</a>
+            <a href="/contract.html">Read/Write Contract</a>
+            <a href="/wallet.html">Wallet</a>
+            <a href="/bot.html">Bot Zoo</a>
+        </nav>
+        <h1>Bot Zoo</h1>
+        <p><label>You: </label><input type="text" id="private_key" size="68" value="CJUPdD38vwc2wMC3hDsySB7YQ6AFLGuU6QYQYaiSeBsK"><p>
+        <p><label>Bot: </label><input type="text" id="bot_address" size="32" value="tuvi">
+        <button>Connect</button></p><br>
+        <div id="my-botui-app">
+            <bot-ui></bot-ui>
+        </div>
+    </div>
+    <script src="bot.js"></script>
+</body>
+
+</html>
