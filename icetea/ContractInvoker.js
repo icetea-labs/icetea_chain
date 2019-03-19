@@ -33,7 +33,7 @@ class ContractInvoker {
 
     const sysContract = sysContracts.get(contractAddress)
     if (sysContract) {
-      result = sysContract.run(context)
+      result = sysContract.run(context, options)
     } else {
       const vm = getRunner(mode)
       const guard = getGuard(mode)(src)

@@ -1,11 +1,18 @@
 import $ from 'jquery'
 import * as helper from './helper'
-// import utils from '../tweb3/utils'
-import { utils } from 'icetea-web3'
 import tweb3 from './tweb3'
 import { ContractMode } from 'icetea-common'
 import handlebars from 'handlebars/dist/handlebars.min.js'
+import Prism from 'prismjs'
 window.$ = $
+
+function tryStringifyJson (p) {
+  try {
+    return JSON.stringify(p, undefined, 2)
+  } catch (e) {
+    return String(p)
+  }
+}
 
 async function fillContracts () {
   try {
@@ -83,6 +90,7 @@ function fillSignature () {
   if (!fn) return
 
   document.getElementById('funcInfo').textContent = signatures[fn]
+  Prism.highlightElement(document.getElementById('funcInfo'))
 }
 
 async function fillFuncs () {
@@ -183,12 +191,13 @@ $(document).ready(function () {
       // var ct = tweb3.contract(address, privateKey)
       // var result = await ct.methods[name].call(name, params)
       if (result.success) {
-        document.getElementById('resultJson').textContent = utils.tryStringifyJson(result.data)
+        document.getElementById('resultJson').textContent = tryStringifyJson(result.data)
       } else {
-        document.getElementById('resultJson').textContent = utils.tryStringifyJson(result.error)
+        document.getElementById('resultJson').textContent = tryStringifyJson(result.error)
       }
     } catch (error) {
-      document.getElementById('resultJson').textContent = utils.tryStringifyJson(error)
+      document.getElementById('resultJson').textContent = tryStringifyJson(error)
     }
+    Prism.highlightElement(document.getElementById('resultJson'))
   })
 })
