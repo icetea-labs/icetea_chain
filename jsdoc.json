@@ -3,13 +3,15 @@
   "source": {
     "includePattern": ".+\\.js(doc|x)?$",
     "excludePattern": "(^|\\/|\\\\)_",
-    "include": "icetea/vm/wasm",
+    "include": "icetea/vm",
     "exclude": [
       "node_modules",
       "docs"
     ]
   },
   "opts": {
-    "destination": "./docs/"
+    "destination": "./docs/",
+    "recurse": true,
+    "private": true
   }
 }

@@ -1,3 +1,4 @@
+/** @module */
 const utils = require('../../helper/utils')
 const invoker = require('../../ContractInvoker')
 
@@ -22,6 +23,16 @@ function _makeInvokableMethod (invokerTypes, destContract, method, options) {
   }, {})
 }
 
+/**
+ * context for (with invoke type)
+ * @function
+ * @param {string} invokeType - invoke type
+ * @param {string} contractAddress - contract address.
+ * @param {string} methodName - method name.
+ * @param {Array.<string|number>} methodParams - parameters.
+ * @param {object} options - method option.
+ * @returns {object} context
+ */
 exports.for = (invokeType, contractAddress, methodName, methodParams, options) => {
   const map = {
     transaction: exports.forTransaction,
@@ -33,6 +44,15 @@ exports.for = (invokeType, contractAddress, methodName, methodParams, options) =
   return typeof fn === 'function' ? fn(contractAddress, methodName, methodParams, options) : fn
 }
 
+/**
+ * context for transaction
+ * @function
+ * @param {string} address - contract address.
+ * @param {string} fname - method name.
+ * @param {Array.<string|number>} fparams - parameters.
+ * @param {object} options - method option.
+ * @returns {object} context
+ */
 exports.forTransaction = (contractAddress, methodName, methodParams, options) => {
   const { tx, block, stateAccess, tools } = options
 
@@ -70,6 +90,15 @@ exports.forTransaction = (contractAddress, methodName, methodParams, options) =>
   return Object.freeze(ctx) // prevent from changing address, balance, etc.
 }
 
+/**
+ * context for view
+ * @function
+ * @param {string} address - contract address.
+ * @param {string} name - method name.
+ * @param {Array.<string|number>} params - parameters.
+ * @param {object} option - method option.
+ * @returns {object} context
+ */
 exports.forView = (contractAddress, name, params, options) => {
   const { from, block, stateAccess, tools } = options
 
@@ -105,6 +134,15 @@ exports.forView = (contractAddress, name, params, options) => {
   return Object.freeze(ctx)
 }
 
+/**
+ * context for pure
+ * @function
+ * @param {string} address - contract address.
+ * @param {string} name - method name.
+ * @param {Array.<string|number>} params - parameters.
+ * @param {object} option - method option.
+ * @returns {object} context
+ */
 exports.forPure = (address, name, params, { from }) => {
   const ctx = {
     address,
@@ -114,6 +152,9 @@ exports.forPure = (address, name, params, { from }) => {
   return utils.deepFreeze(ctx)
 }
 
+/**
+ * metadata for unlisted invoke type
+ */
 exports.forMetadata = {
   getEnv: () => ({ msg: { callType: 'metadata', name: '__metadata' }, block: {} })
 }

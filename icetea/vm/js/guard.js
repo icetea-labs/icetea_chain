@@ -1,3 +1,4 @@
+/** @module */
 const { codeFrameColumns } = require('@babel/code-frame')
 
 const MAX_LOOP_ENTRIES = 100000
@@ -9,6 +10,11 @@ function makeCodeFrame (src, line, ch) {
   })
 }
 
+/**
+ * guard - define two many loop or functions
+ * @function
+ * @returns {object} guard
+ */
 module.exports = () => src => {
   const loopEntries = {}
   const funcEntries = {}

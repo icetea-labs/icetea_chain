@@ -1,4 +1,4 @@
-/** @module wasm/patch */
+/** @module */
 /*eslint-disable*/
 const util = require('util');
 const freeGasLimit = 1e9;

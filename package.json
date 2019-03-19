@@ -12,7 +12,8 @@
     "web": "standard --fix && webpack-dev-server",
     "reset": "tendermint unsafe_reset_all && node ./scripts/destroy.js",
     "dump": "node ./scripts/dump.js",
-    "show": "sudo lsof -i tcp:26657"
+    "show": "sudo lsof -i tcp:26657",
+    "docs:build": "jsdoc -c jsdoc.json"
   },
   "keywords": [
     "icetea",

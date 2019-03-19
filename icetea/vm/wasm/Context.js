@@ -1,4 +1,4 @@
-/** @module wasm/Context */
+/** @module */
 const { emitEvent } = require('../../helper/utils')
 const invoker = require('../../ContractInvoker')
 
@@ -151,6 +151,9 @@ exports.forPure = (address, name, params = [], { from = '' }) => {
   return ctx
 }
 
+/**
+ * metadata for unlisted invoke type
+ */
 exports.forMetadata = {
   log: console.log,
   get_msg_name: () => '__metadata',

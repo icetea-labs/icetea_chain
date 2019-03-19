@@ -1,4 +1,4 @@
-/** @module wasm */
+/** @module */
 const Runner = require('../Runner')
 const patch = require('./patch')
 const { parseMetadata } = require('../../helper/wasm')
