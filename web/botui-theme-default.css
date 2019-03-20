@@ -35,7 +35,7 @@
     border-radius:5px
 }
 .botui-message-content-link{
-    color: #12796b;
+    color: #fff;
 }
 .botui-actions-text-input{
     border:0;
@@ -138,3 +138,8 @@
     }
 }
 
+.bot-intro .botui-message-content {
+    line-height: 1.8;
+    padding: 12px 24px;
+    background-color: beige;
+}

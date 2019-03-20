@@ -33,7 +33,7 @@ function checkTypes (o, types) {
       return
     } else if (types.length === 1) {
       // to keep regular error with stack trace
-      return check(o, types)
+      return check(o, types[0])
     }
 
     // Check OR, not AND

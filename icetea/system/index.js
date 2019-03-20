@@ -1,4 +1,5 @@
 const systemContracts = {
+  'system.echo_bot': require('./echobot'),
   'system.alias': require('./alias'),
   'system.faucet': require('./faucet')
 }
