@@ -1,108 +1,248 @@
 
-/*
-
-send([
-    { type: 'text', content: 'hello'},
-    { type: button, content: [{text: 'x', value: 'y'}]},
-    { type: input, content: 'place holder' },
-    { type: select, content: }
-])
-
-*/
-
 @contract class MasterMangCut {
 
-    #STAGE = {
-        UNSTARTED: 'Unstarted', // did not talk to each other
-        STARTED: 'Started', // started, next: show them terms
-        ACCEPTED: 'Terms', // term accepted, next: ask for name
-        HAD_NAME: 'Name', // had name, next: ask for gender
-        HAD_GENDER: 'Gender', // had gender, next: ask for dob
-        HAD_DOB: 'Dob', // had dob, next: ask hour
-        HAD_HOUR: 'Hour', // had hour, next: show them result
-        SHOWN_RESULT: 'Result' // result shown, should show Restart button
-    }
-
-    #map = {
-        [this.#STAGE.STARTED]: {
-            ask() {
-
-            }
-        }
+    botInfo = {
+        name: 'Thầy Măng Cụt',
+        description: 'Thầy Măng Cụt biết nhiều thứ, nhưng ông chỉ nói đủ.',
+        ontext_type: 'transaction'
     }
 
     @state #conversations = {}
-
-    #askTerms() {
-
-    }
-    
-    #askName() {
-
-    }
-
-    #collectName(text) {
-        this.name = text
-    }
-
-    #askGender() {
-
-    }
-
-    #collectGender(state, text) {
-        export(['male', 'female'].includes(text), "Gender must be either 'male' or 'female'.")
-        state.gender = (text === 'male')
-    }
-
-    #askDob() {
-
-    }
-
-    #collectDoB(state, text) {
-
-    }
-
-    #askHour() {
-
-    }
-
-    #showResult() {
-
-    }
-
-    #stateMap = {
-        [STAGE.UNSTARTED]: this.#showTerms,
-
-    }
-
-    #proceed(state, text) {
-
-        // set collect data to state
-        const currentStage = state.stage
-        state[stage] = text
-
-        // 
-
-        return this.#stateMap[state]call(this, text)
-    }
-
-    info() {
-        return {
-            spec_version: '1.0', // version of the bot spec
-            bot_version: '1.0', // the version of this bot
-            name: 'Thầy Măng Cụt',
-            description: 'Thầy Măng Cụt biết nhiều thứ, nhưng ông chỉ nói đủ.'
-        }
-    }
 
     @transaction ontext(text: string) {
         const who = msg.sender
         const cons = this.#conversations
         if (!cons[who]) {
             cons[who] = {
-                stage: STATE.STARTED
+                stage: this.#STEP.STARTED
             }
         }
-        this.#proceed(cons[who].stage, text)
+        const result = this.#proceed(text, cons[who])
+
+        // save state back
+        this.#conversations = cons
+
+        return result
+    }
+
+    #proceed(text, state) {
+
+        const { collect, succeed, fail } = this.#map[state.stage] || {}
+        let collected
+        if (collect) {
+            collected = collect.call(this, text, state)
+        }
+
+        if (!collected || !collected.failed) {
+            if ( succeed ) {
+                if (state.stage === this.#STEP.HAD_HOUR) {
+                    state.stage = this.#STEP.STARTED
+                } else {
+                    state.stage++
+                }
+                
+                return succeed.call(this, collected && collected.data, state)
+            }
+        } else {
+            if ( fail ) {
+                return fail.call(this, text, state)
+            }
+        }
+    }
+
+    #STEP = {
+        STARTED: 0, // started, next: show them terms
+        ACCEPTED: 1, // term accepted, next: ask for name
+        HAD_NAME: 2, // had name, next: ask for gender
+        HAD_GENDER: 3, // had gender, next: ask for dob
+        HAD_DOB: 4, // had dob, next: ask hour
+        HAD_HOUR: 5, // had hour, next: show them result
+    }
+
+    #map = {
+        [this.#STEP.STARTED]: {
+            succeed() {
+                return new Message('Kính chào quý khách. Tôi là <i>Thầy Măng Cụt</i>,' + 
+                    ' chuyên hành nghề bói Tử Vi trên Icetea blockchain.', 'html')
+                    .text('Nếu bạn muốn xem thì bấm nút phía dưới. Không muốn thì thôi.')
+                    .button('Tôi là người Việt và sinh ở Việt Nam', 'start')
+                    .done()
+            }
+        },
+        [this.#STEP.ACCEPTED]: {
+            succeed() {
+                return new Message('Tốt quá. Vì tôi không biết xem cho người nước ngoài hoặc sinh ở nước ngoài.')
+                    .text('Đầu tiên, hãy cho biết tên (bao gồm cả tên lót nếu nó là riêng của bạn)')
+                    .input('Ngọc Trinh')
+                    .done()
+            }
+        },
+        [this.#STEP.HAD_NAME]: {
+            collect(name, state) {
+                state.name = this.#toTitleCase(name)
+                return { data: state.name }
+            },
+            succeed(name) {
+                return new Message(`OK ${name}. Còn giới tính?`)
+                    .buttonRow()
+                    .button('Name', 'male')
+                    .button('Nữ', 'female')
+                    .endRow()
+                    .done()
+            }
+        },
+        [this.#STEP.HAD_GENDER]: {
+            collect(genderText, state) {
+                state.gender = (genderText === 'male')
+                return { data: state.gender }
+            },
+            succeed(name) {
+                return new Message('Tiếp tục.')
+                    .text('Ngày tháng năm sinh theo dạng ngày/tháng/năm.')
+                    .input('dd/mm/yyyy')
+                    .done()
+            }
+        },
+        [this.#STEP.HAD_DOB]: {
+            collect(dateString, state) {
+                const dt = this.#parseDate(dateString)
+                const failed = (dt === undefined)
+                if (failed) {
+                    return { failed }
+                } else {
+                    state.dob = dt
+                    return { data: dt }
+                }
+            },
+            succeed(dt) {
+                return new Message('Date OK. TODO: hour!')
+                    .done()
+            },
+            fail(dateString) {
+                return new Message('Ngày nhập sai định dạng.')
+                    .text('Ví dụ nhập đúng: 23/8/2001')
+                    .input('dd/mm/yyyy')
+                    .done()
+            }
+        }
+    }
+
+    #toTitleCase (str) {
+        return str.replace(/\w\S*/g, function (txt) {
+          return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase()
+        })
+    }
+
+    #daysInMonth (m, y) {
+        switch (m) {
+            case 1 :
+                return (y % 4 == 0 && y % 100) || y % 400 == 0 ? 29 : 28;
+            case 8 : case 3 : case 5 : case 10 :
+                return 30;
+            default :
+                return 31
+        }
+    }
+
+    #isValidDate (d, m, y) {
+        m = parseInt(m, 10) - 1;
+        return m >= 0 && m < 12 && d > 0 && d <= this.#daysInMonth(m, y);
+    }
+
+    #parseDate(text) {
+        const parts = text.trim().split('/')
+        if (parts.length !== 3) {
+          return undefined
+        }
+        const day = parseInt(parts[0])
+        const month = parseInt(parts[1])
+        let year = parseInt(parts[2])
+      
+        if (!this.#isValidDate(day ,month - 1, year)) {
+            return undefined
+        }
+      
+        return { day, month, year }
+    }
+}
+
+
+// Helper class for handle return chat message
+class Message {
+    constructor(text, t = 'text') {
+        this.messages = []
+        text && this[t] && this[t](text)
+    }
+    done() {
+        return this.messages
+    }
+
+    push(message) {
+        this.messages.push(message)
+        return this
+    }
+
+    text(content, options = {}) {
+        return this.push({
+            type: 'text',
+            content,
+            ...options
+        })
+    }
+
+    html(content, options = {}) {
+        return this.push({
+            type: 'html',
+            content,
+            ...options
+        })
+    }
+
+    buttonRow() {
+        const self = this
+        const m = []
+        const t = {
+            button(text, value, options) {
+                m.push({
+                    text,
+                    value,
+                    ...options
+                })
+                return t
+            },
+            endRow() {
+                return self.push({
+                    type: 'button',
+                    content: m
+                })
+            }
+        }
+
+        return t
+    }
+
+    button(text, value, options = {}) {
+        return this.push({
+            type: 'button',
+            content: [{
+                text,
+                value,
+                ...options
+            }]
+        })
+    }
+
+    input(placeholder, options = {}) {
+        return this.push({
+            type: 'input',
+            content: {
+                placeholder,
+                ...options
+            }
+        })
+    }
+
+    select() {
+        return this
     }
 }

@@ -89,12 +89,19 @@ document.getElementById('connect').addEventListener('click', async function () {
   const contract = tweb3.contract(botAddr, privKey)
 
   // get bot info
-  const resInfo = await contract.methods.info.callPure()
+  const resInfo = await contract.methods.botInfo.callPure()
   if (!resInfo.success) {
     return window.alert(json(resInfo.error))
   }
   const botInfo = resInfo.data
-  botInfo.ontext_type = botInfo.ontext_type || 'view'
+  if (!botInfo.ontext_type) {
+    const meta = await tweb3.getMetadata(botAddr)
+    if (meta && meta.ontext && meta.ontext.decorators && meta.ontext.decorators.length > 0) {
+      botInfo.ontext_type = meta.ontext.decorators[0]
+    } else {
+      botInfo.ontext_type = 'view'
+    }
+  }
 
   botui.message.removeAll()
 
@@ -104,7 +111,7 @@ document.getElementById('connect').addEventListener('click', async function () {
   // display Start button
   let result = await sayButton({ text: botInfo.startText || 'Start', value: 'start' })
 
-  while (result) {
+  while (result && result.value) {
     // send lastValue to bot
     const callResult = await callContract(contract.methods.ontext, botInfo.ontext_type, result.value)
 

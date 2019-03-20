@@ -1,8 +1,8 @@
 /** @module */
-const halts = require('halting-problem')
+// const halts = require('halting-problem')
 const Runner = require('../Runner')
 const babel = require('@babel/core')
-const { codeFrameColumns } = require('@babel/code-frame')
+// const { codeFrameColumns } = require('@babel/code-frame')
 
 /**
  * js runner
@@ -37,19 +37,19 @@ module.exports = mode => {
 
     analyze (src) {
       super.analyze(src)
-      try {
-        halts(src)
-      } catch (err) {
-        if (err.node && err.node.start && err.node.end) {
-          const lines = src.substring(err.node.start, err.node.end)
-          const cols = codeFrameColumns(lines, { start: { line: 1, column: 1 } }, {
-            highlightCode: true,
-            message: 'Fix this loop'
-          })
-          throw new Error(`Invalid or infinite loop detected.\n${cols}`)
-        }
-        throw err
-      }
+      // try {
+      //   halts(src)
+      // } catch (err) {
+      //   if (err.node && err.node.start && err.node.end) {
+      //     const lines = src.substring(err.node.start, err.node.end)
+      //     const cols = codeFrameColumns(lines, { start: { line: 1, column: 1 } }, {
+      //       highlightCode: true,
+      //       message: 'Fix this loop'
+      //     })
+      //     throw new Error(`Invalid or infinite loop detected.\n${cols}`)
+      //   }
+      //   throw err
+      // }
     }
 
     patch (compiledSrc) {

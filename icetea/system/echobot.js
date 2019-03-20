@@ -5,7 +5,7 @@
 const { checkMsg } = require('../helper/types')
 
 const METADATA = {
-  'info': {
+  'botInfo': {
     decorators: ['pure'],
     params: [],
     returnType: 'object'
@@ -25,7 +25,7 @@ exports.run = (context) => {
   checkMsg(msg, METADATA)
 
   const contract = {
-    info () {
+    botInfo () {
       return {
         spec_version: '1.0', // version of the bot spec
         bot_version: '1.0', // the version of this bot
