@@ -99,7 +99,7 @@ document.getElementById('connect').addEventListener('click', async function () {
   botui.message.removeAll()
 
   // display bot info
-  await say(`<b>${botInfo.name}</b><br>${botInfo.description}`, { type: 'html', cssClass: 'bot-intro'})
+  await say(`<b>${botInfo.name}</b><br>${botInfo.description}`, { type: 'html', cssClass: 'bot-intro' })
 
   // display Start button
   let result = await sayButton({ text: botInfo.startText || 'Start', value: 'start' })
