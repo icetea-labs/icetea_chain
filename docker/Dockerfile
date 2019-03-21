@@ -1,15 +1,10 @@
 FROM ubuntu:18.04
 
 RUN apt-get update && apt-get install -y \
-    build-essential git
+    build-essential git wget curl unzip
 
-RUN apt-get install -y curl && curl -sL https://deb.nodesource.com/setup_11.x | bash - && apt-get install -y nodejs
-
-RUN apt-get update && apt-get install -y \
-    wget
+RUN curl -sL https://deb.nodesource.com/setup_11.x | bash - && apt-get install -y nodejs
 RUN wget https://github.com/tendermint/tendermint/releases/download/v0.31.0/tendermint_0.31.0_linux_amd64.zip
-RUN apt-get update && apt-get install -y \
-    unzip
 RUN unzip tendermint_0.31.0_linux_amd64.zip
 RUN chmod +x tendermint
 RUN mv tendermint /usr/local/bin
