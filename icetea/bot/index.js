@@ -150,8 +150,8 @@ exports.InputCollectionSteps = class {
   }
 
   getStep (address) {
-      const chats = this.getChats()
-      return ((chats || {})[address] || {})._step || 0
+    const chats = this.getChats()
+    return ((chats || {})[address] || {})._step || 0
   }
 
   ontext (text) {
@@ -160,7 +160,7 @@ exports.InputCollectionSteps = class {
       const chats = this.getChats()
       if (!chats[who]) {
         chats[who] = {
-            _step: 0
+          _step: 0
         }
       }
       const result = this.proceed(String(text), chats[who])

@@ -59,12 +59,11 @@ const { calendar } = require('https://github.com/TradaTech/icetea/example/astrob
 
     collectDob(dateString, collector) {
         collector.dob = helper.parseDate(dateString)
-        collector.lunar = calendar.toLunar(collector.dob)
         return collector.dob
     }
 
-    succeedDob(value, colector) {
-        return Message.text('Đó là ' + helper.toLunarString(colector.lunar))
+    succeedDob(value) {
+        return Message.text('Đó là ' + helper.toLunarString(calendar.toLunar(value)))
             .text('Hãy chọn giờ sinh theo múi giờ GMT+7. Nhớ là múi giờ GMT+7.')
             .select('Chọn giờ sinh')
             .add([

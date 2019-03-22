@@ -151,7 +151,8 @@ function getLeapMonthOffset (a11, timeZone) {
 function convertSolar2Lunar (dd, mm, yy, timeZone) {
   var k, dayNumber, monthStart, a11, b11, lunarDay, lunarMonth, lunarYear, lunarLeap, diff, leapMonthDiff
   if (typeof timeZone !== 'number') {
-    timeZone = -(new Date().getTimezoneOffset()) / 60
+    // timeZone = -(new Date().getTimezoneOffset()) / 60
+    timeZone = 7
   }
   dayNumber = jdFromDate(dd, mm, yy)
   k = INT((dayNumber - 2415021.076998695) / 29.530588853)
@@ -205,7 +206,8 @@ function convertSolar2Lunar (dd, mm, yy, timeZone) {
 function convertLunar2Solar (lunarDay, lunarMonth, lunarYear, lunarLeap, timeZone) {
   var k, a11, b11, off, leapOff, leapMonth, monthStart
   if (typeof timeZone !== 'number') {
-    timeZone = -(new Date().getTimezoneOffset()) / 60
+    // timeZone = -(new Date().getTimezoneOffset()) / 60
+    timeZone = 7
   }
   if (lunarMonth < 11) {
     a11 = getLunarMonth11(lunarYear - 1, timeZone)
