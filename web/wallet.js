@@ -1,7 +1,7 @@
 import $ from 'jquery'
 import { ecc } from 'icetea-common'
 import tweb3 from './tweb3'
-import { functionTypeAnnotation } from '@babel/types';
+// import { functionTypeAnnotation } from '@babel/types'
 
 const newKeyPairWithAddress = ecc.newKeyPairWithAddress
 const toPubKeyAndAddress = ecc.toPubKeyAndAddress
@@ -19,10 +19,10 @@ document.getElementById('seePublicKey').addEventListener('click', function () {
   document.getElementById('your_public_key').value = toPubKeyAndAddress(privateKey).address
 })
 
-function fillWallet() {
+function fillWallet () {
   var wallets = tweb3.wallet.accounts
   var select = document.getElementById('wallet')
-  $("#wallet").empty();
+  $('#wallet').empty()
   wallets.forEach(item => {
     let option = document.createElement('option')
     option.value = item.address

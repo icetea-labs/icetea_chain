@@ -32,7 +32,7 @@ $('#form').submit(async function (e) {
 
   try {
     var params = helper.parseParamsFromField('#params')
-    var tx = await resolveImports(src).then(src => tweb3.deploy(mode, src, params, { from: 'tea_3M76NHiZ4ipvMmTVBVJ1Wj378RLJ' }))
+    var tx = await resolveImports(src).then(src => tweb3.deploy(mode, src, params))
     // console.log('tx',tx);
     window.location.href = '/tx.html?hash=' + tx.hash
   } catch (error) {
