@@ -58,7 +58,7 @@ ${src}
     if (typeof __c.instance[__name] === "function") {
         // Check stateMutablitity
         const isValidCallType = (d) => {
-            if (["__on_deployed", "__on_received"].includes(__name)) return true; // FIXME
+            if (["__on_deployed", "__on_received"].includes(__name) || !__metadata[__name]) return true; // FIXME
             if (!__metadata[__name].decorators) {
                 return false;
             }

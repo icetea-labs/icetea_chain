@@ -149,12 +149,19 @@ exports.InputCollectionSteps = class {
     return this.setState(this.getStorageKey(), chats)
   }
 
+  getStep (address) {
+      const chats = this.getChats()
+      return ((chats || {})[address] || {})._step || 0
+  }
+
   ontext (text) {
     try {
       const who = this.getEnv().msg.sender
       const chats = this.getChats()
       if (!chats[who]) {
-        chats[who] = {}
+        chats[who] = {
+            _step: 0
+        }
       }
       const result = this.proceed(String(text), chats[who])
 
@@ -167,7 +174,7 @@ exports.InputCollectionSteps = class {
     }
   }
 
-  proceed (data, collector, stepKey = 'step') {
+  proceed (data, collector) {
     if (!collector) {
       throw new Error('Collector is required.')
     }
@@ -175,19 +182,19 @@ exports.InputCollectionSteps = class {
     if (!steps || !steps.length) {
       throw new Error('Steps is required.')
     }
-    const step = collector[stepKey] || 0
-    if (step < 0 || step >= steps.length) {
+
+    if (collector._step < 0 || collector._step >= steps.length) {
       throw new Error('Invalid step.')
     }
-    const stepName = String(steps[step])
+    const stepName = String(steps[collector._step])
 
     let value
     try {
       value = this.collect(data, collector, stepName)
-      if (collector[stepKey] === steps.length - 1) {
-        collector[stepKey] = 0
+      if (collector._step === steps.length - 1) {
+        collector._step = 0
       } else {
-        collector[stepKey]++
+        collector._step++
       }
     } catch (error) {
       return this.fail(data, collector, error, stepName)
