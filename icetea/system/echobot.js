@@ -10,6 +10,11 @@ const METADATA = {
     params: [],
     returnType: 'object'
   },
+  'onstart': {
+    decorators: ['pure'],
+    params: [],
+    returnType: 'object'
+  },
   'ontext': {
     decorators: ['pure'],
     params: [
@@ -29,10 +34,14 @@ exports.run = (context) => {
       return {
         spec_version: '1.0', // version of the bot spec
         bot_version: '1.0', // the version of this bot
-        ontext_type: 'pure',
+        state_access: 'none',
         name: 'Echo bot',
         description: 'It just echoes what you say, like a parrot.'
       }
+    },
+
+    onstart () {
+      return contract.ontext('Start')
     },
 
     ontext (content) {

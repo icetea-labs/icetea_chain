@@ -27,12 +27,11 @@
     "ignore": [
       "**/tmp/",
       "**/example/",
-      "/web/botui.js",
-      "/web/lunar.js"
+      "/web/botui.js"
     ]
   },
   "pre-commit": [
-    "fix"
+    "test"
   ],
   "dependencies": {
     "@babel/plugin-proposal-class-properties": "7.3.0",

@@ -101,5 +101,6 @@ const { toLunar } = require('https://github.com/TradaTech/icetea/example/astrobo
     succeedHour(hour, collector) {
         return Message.text('Đợi thầy tí.')
             .text('Phần luận giải thầy lại chưa code :(', { loading: true, delay: 1000 })
+            .done()
     }
 }

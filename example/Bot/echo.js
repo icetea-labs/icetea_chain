@@ -1,10 +1,12 @@
 @contract class EchoBot {
-    info = {
-        spec_version: '1.0', // version of the bot spec
-        bot_version: '1.0', // the version of this bot
-        ontext_type: 'pure',
+    botInfo = {
         name: 'Echo bot',
-        description: 'It just echoes what you say, like a parrot.'
+        description: 'It just echoes what you say, like a parrot.',
+        state_access: 'none'
+    }
+
+    @pure onstart() {
+        return this.ontext('Start')
     }
 
     @pure ontext(content: string) {

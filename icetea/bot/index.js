@@ -80,8 +80,8 @@ class Message {
         placeholder,
         multipleselect: false,
         button: {
-            icon: 'check',
-            label: 'OK'
+          icon: 'check',
+          label: 'OK'
         },
         options: [],
         ...options
@@ -129,7 +129,7 @@ exports.SurveyBot = class {
     return {
       name: this.getName(),
       description: typeof this.getDescription === 'function' ? this.getDescription() : '',
-      ontext_type: 'transaction'
+      state_access: 'write'
     }
   }
 
@@ -156,6 +156,15 @@ exports.SurveyBot = class {
   getStep (address) {
     const chats = this.getChats()
     return ((chats || {})[address] || {})._step || 0
+  }
+
+  onstart () {
+    const who = this.getEnv().msg.sender
+    const chats = this.getChats()
+    if (chats[who]) {
+      chats[who]._step = 0
+    }
+    return this.ontext()
   }
 
   ontext (text) {
@@ -195,13 +204,14 @@ exports.SurveyBot = class {
     let value
     try {
       value = this.collect(data, collector, stepName)
-      if (collector._step === steps.length - 1) {
-        collector._step = 0
-      } else {
-        collector._step++
-      }
     } catch (error) {
       return this.fail(data, collector, error, stepName)
+    }
+
+    if (collector._step >= steps.length - 1) {
+      collector._step = 0
+    } else {
+      collector._step++
     }
     return this.succeed(value, collector, stepName)
   }
