@@ -63,7 +63,7 @@ const { calendar } = require('https://github.com/TradaTech/icetea/example/astrob
     }
 
     succeedDob(value) {
-        return Message.text('Đó là ' + helper.toLunarString(calendar.toLunar(value)))
+        return Message.text('Đó là ' + helper.toLunarString(calendar.toLunar(value.day, value.month, value.year)))
             .text('Hãy chọn giờ sinh theo múi giờ GMT+7. Nhớ là múi giờ GMT+7.')
             .select('Chọn giờ sinh')
             .add([
@@ -81,6 +81,7 @@ const { calendar } = require('https://github.com/TradaTech/icetea/example/astrob
                 '9pm ~ 11pm',
                 '11pm ~ 12pm'
             ])
+            .endSelect()
             .done()
     }
 
