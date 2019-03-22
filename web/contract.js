@@ -162,7 +162,7 @@ $(document).ready(function () {
     // submit tx
     try {
       var ct = tweb3.contract(address)
-      var tx = await ct.methods[name](params).sendSync({ from: 'tea_3M76NHiZ4ipvMmTVBVJ1Wj378RLJ' })
+      var tx = await ct.methods[name](...params).sendSync({ from: 'tea_3M76NHiZ4ipvMmTVBVJ1Wj378RLJ' })
       // console.log('tx',tx);
       window.location.href = '/tx.html?hash=' + tx.hash
     } catch (error) {
