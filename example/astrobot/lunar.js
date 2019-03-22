@@ -148,7 +148,7 @@ function getLeapMonthOffset (a11, timeZone) {
 }
 
 /* Convert solar date dd/mm/yyyy to the corresponding lunar date */
-export function convertSolar2Lunar (dd, mm, yy, timeZone) {
+function convertSolar2Lunar (dd, mm, yy, timeZone) {
   var k, dayNumber, monthStart, a11, b11, lunarDay, lunarMonth, lunarYear, lunarLeap, diff, leapMonthDiff
   if (typeof timeZone !== 'number') {
     timeZone = -(new Date().getTimezoneOffset()) / 60

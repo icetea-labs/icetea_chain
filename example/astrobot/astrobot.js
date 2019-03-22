@@ -1,4 +1,4 @@
-const { InputCollectionSteps, Message } = require('https://github.com/TradaTech/icetea/icetea/bot/Message.js')
+const { InputCollectionSteps, Message } = require('https://github.com/TradaTech/icetea/icetea/bot/index.js')
 const helper = require('https://github.com/TradaTech/icetea/example/astrobot/helper.js')
 const { calendar } = require('https://github.com/TradaTech/icetea/example/astrobot/lunar.js')
 
