@@ -50,7 +50,7 @@ function resolveImports (src) {
 
 function resolveRequires (src) {
   return resolveRegEx(src, REQUIRE_REGEX, function (src) {
-    return '(function(){const module={exports:{}};const exports=module.exports;' + src + ';return module;}).call(global)'
+    return '(function(){const module={exports:{}};const exports=module.exports;' + src + ';return module.exports;}).call(global)'
   })
 }
 

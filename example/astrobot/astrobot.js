@@ -2,35 +2,18 @@ const { InputCollectionSteps, Message } = require('https://github.com/TradaTech/
 const helper = require('https://github.com/TradaTech/icetea/example/astrobot/helper.js')
 const { calendar } = require('https://github.com/TradaTech/icetea/example/astrobot/lunar.js')
 
-
 @contract class AstroBot extends InputCollectionSteps {
 
-    botInfo = {
-        name: 'Thầy Măng Cụt',
-        description: 'Thầy Măng Cụt biết nhiều thứ, nhưng ông chỉ nói đủ.',
-        ontext_type: 'transaction'
+    @pure getName() {
+        return 'Thầy Măng Cụt'
     }
 
-    getSteps() {
+    @pure getDescription() {
+        return 'Thầy Măng Cụt biết nhiều thứ, nhưng ông chỉ nói đủ.'
+    }
+
+    @pure getSteps() {
         return ['Boarding', 'Terms', 'Name', 'Gender', 'Dob', 'Hour']
-    }
-
-    @state #conversations = {}
-
-    @transaction ontext(text: string) {
-        const who = msg.sender
-        const cons = this.#conversations
-        if (!cons[who]) {
-            cons[who] = {
-                step: 0
-            }
-        }
-        const result = this.proceed(text, cons[who])
-
-        // save state back
-        this.#conversations = cons
-
-        return result
     }
 
     succeedBoarding() {
@@ -76,11 +59,13 @@ const { calendar } = require('https://github.com/TradaTech/icetea/example/astrob
 
     collectDob(dateString, collector) {
         collector.dob = helper.parseDate(dateString)
+        collector.lunar = calendar.toLunar(collector.dob)
         return collector.dob
     }
 
-    succeedDob(value) {
-        return Message.text('Hãy chọn giờ sinh theo múi giờ GMT+7. Nhớ là múi giờ GMT+7.')
+    succeedDob(value, colector) {
+        return Message.text('Đó là ' + helper.toLunarString(colector.lunar))
+            .text('Hãy chọn giờ sinh theo múi giờ GMT+7. Nhớ là múi giờ GMT+7.')
             .select('Chọn giờ sinh')
             .add([
                 '0am ~ 1am',
@@ -100,7 +85,8 @@ const { calendar } = require('https://github.com/TradaTech/icetea/example/astrob
             .done()
     }
 
-    failDob() {
+    failDob(data, collector, error) {
+        console.log(data, collector, error)
         return Message.text('Ngày nhập sai định dạng.')
             .text('Ví dụ nhập đúng: 23/8/2001')
             .input('dd/mm/yyyy')

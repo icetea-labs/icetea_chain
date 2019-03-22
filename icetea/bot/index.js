@@ -90,7 +90,7 @@ class Message {
         }
         items.forEach((item, index) => {
           if (typeof item === 'string') {
-            m.options.push({ text: item, value: index })
+            m.content.options.push({ text: item, value: index })
           } else {
             m.options.push(item)
           }
@@ -121,25 +121,78 @@ Message.create = function () {
 exports.Message = Message
 
 exports.InputCollectionSteps = class {
+  botInfo () {
+    return {
+      name: this.getName(),
+      description: typeof this.getDescription === 'function' ? this.getDescription() : '',
+      ontext_type: 'transaction'
+    }
+  }
+
+  getName () {
+    throw new Error('Bot has to implement getName')
+  }
+
   getSteps () {
-    throw new Error('Not implemented')
+    throw new Error('Bot has to implement getSteps')
+  }
+
+  getStorageKey () {
+    return 'chats'
+  }
+
+  getChats () {
+    return this.getState(this.getStorageKey(), {})
+  }
+
+  setChats (chats) {
+    return this.setState(this.getStorageKey(), chats)
+  }
+
+  ontext (text) {
+    try {
+      const who = this.getEnv().msg.sender
+      const chats = this.getChats()
+      if (!chats[who]) {
+        chats[who] = {}
+      }
+      const result = this.proceed(String(text), chats[who])
+
+      // save state back
+      this.setChats(chats)
+
+      return result
+    } catch (err) {
+      return this.onError(err)
+    }
   }
 
   proceed (data, collector, stepKey = 'step') {
+    if (!collector) {
+      throw new Error('Collector is required.')
+    }
     const steps = this.getSteps()
-    const stepName = steps[collector[stepKey]]
+    if (!steps || !steps.length) {
+      throw new Error('Steps is required.')
+    }
+    const step = collector[stepKey] || 0
+    if (step < 0 || step >= steps.length) {
+      throw new Error('Invalid step.')
+    }
+    const stepName = String(steps[step])
 
+    let value
     try {
-      const value = this.collect(data, collector, stepName)
+      value = this.collect(data, collector, stepName)
       if (collector[stepKey] === steps.length - 1) {
         collector[stepKey] = 0
       } else {
         collector[stepKey]++
       }
-      return this.succeed(value, collector, stepName)
     } catch (error) {
       return this.fail(data, collector, error, stepName)
     }
+    return this.succeed(value, collector, stepName)
   }
 
   collect (data, collector, stepName) {
@@ -161,5 +214,9 @@ exports.InputCollectionSteps = class {
     if (this[methodName]) {
       return this[methodName](data, collector, error)
     }
+  }
+
+  onError (err) {
+    throw err
   }
 }
