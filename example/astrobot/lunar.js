@@ -202,7 +202,7 @@ export function convertSolar2Lunar (dd, mm, yy, timeZone) {
 }
 
 /* Convert a lunar date to the corresponding solar date */
-export function convertLunar2Solar (lunarDay, lunarMonth, lunarYear, lunarLeap, timeZone) {
+function convertLunar2Solar (lunarDay, lunarMonth, lunarYear, lunarLeap, timeZone) {
   var k, a11, b11, off, leapOff, leapMonth, monthStart
   if (typeof timeZone !== 'number') {
     timeZone = -(new Date().getTimezoneOffset()) / 60
@@ -240,4 +240,7 @@ export function convertLunar2Solar (lunarDay, lunarMonth, lunarYear, lunarLeap, 
   }
 }
 
-
+exports.calendar = {
+  toSolar: convertLunar2Solar,
+  toLunar: convertLunar2Solar
+}
