@@ -17,6 +17,10 @@ const sayButton = (action) => {
   return botui.action.button({ action })
 }
 
+const saySelect = (action) => {
+  return botui.action.select( {action} )
+}
+
 const speak = items => {
   if (!items) return
   if (!Array.isArray(items)) {
@@ -38,9 +42,10 @@ const speak = items => {
         return botui.action.text({
           action: item.content
         })
-      case 'button': {
+      case 'button':
         return sayButton(item.content)
-      }
+      case 'select':
+        return saySelect(item.content)
     }
   }, undefined)
 }

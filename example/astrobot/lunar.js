@@ -242,7 +242,7 @@ function convertLunar2Solar (lunarDay, lunarMonth, lunarYear, lunarLeap, timeZon
   }
 }
 
-exports.calendar = {
+module.exports = {
   toSolar: convertLunar2Solar,
   toLunar: convertLunar2Solar
 }

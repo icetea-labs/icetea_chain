@@ -1,8 +1,8 @@
-const { InputCollectionSteps, Message } = require('https://github.com/TradaTech/icetea/icetea/bot/index.js')
+const { SurveyBot, Message } = require('https://github.com/TradaTech/icetea/icetea/bot/index.js')
 const helper = require('https://github.com/TradaTech/icetea/example/astrobot/helper.js')
-const { calendar } = require('https://github.com/TradaTech/icetea/example/astrobot/lunar.js')
+const { toLunar } = require('https://github.com/TradaTech/icetea/example/astrobot/lunar.js')
 
-@contract class AstroBot extends InputCollectionSteps {
+@contract class AstroBot extends SurveyBot {
 
     @pure getName() {
         return 'Thầy Măng Cụt'
@@ -39,7 +39,7 @@ const { calendar } = require('https://github.com/TradaTech/icetea/example/astrob
     succeedName(name) {
         return Message.text(`OK ${name}. Còn giới tính?`)
             .buttonRow()
-            .button('Name', 'male')
+            .button('Nam', 'male')
             .button('Nữ', 'female')
             .endRow()
             .done()
@@ -62,8 +62,8 @@ const { calendar } = require('https://github.com/TradaTech/icetea/example/astrob
         return collector.dob
     }
 
-    succeedDob(value) {
-        return Message.text('Đó là ' + helper.toLunarString(calendar.toLunar(value.day, value.month, value.year)))
+    succeedDob({ day, month, year}) {
+        return Message.text('Đó là ' + helper.toLunarString(toLunar(day, month, year)))
             .text('Hãy chọn giờ sinh theo múi giờ GMT+7. Nhớ là múi giờ GMT+7.')
             .select('Chọn giờ sinh')
             .add([
@@ -91,5 +91,15 @@ const { calendar } = require('https://github.com/TradaTech/icetea/example/astrob
             .text('Ví dụ nhập đúng: 23/8/2001')
             .input('dd/mm/yyyy')
             .done()
+    }
+
+    collectHour(hour, collector) {
+        collector.hour = hour
+        return hour
+    }
+
+    succeedHour(hour, collector) {
+        return Message.text('Đợi thầy tí.')
+            .text('Phần luận giải thầy lại chưa code :(', { loading: true, delay: 1000 })
     }
 }

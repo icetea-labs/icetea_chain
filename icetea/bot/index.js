@@ -79,6 +79,10 @@ class Message {
       content: {
         placeholder,
         multipleselect: false,
+        button: {
+            icon: 'check',
+            label: 'OK'
+        },
         options: [],
         ...options
       }
@@ -120,7 +124,7 @@ Message.create = function () {
 
 exports.Message = Message
 
-exports.InputCollectionSteps = class {
+exports.SurveyBot = class {
   botInfo () {
     return {
       name: this.getName(),
