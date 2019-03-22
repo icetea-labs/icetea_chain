@@ -31,8 +31,7 @@
     ]
   },
   "pre-commit": [
-    "fix",
-    "jest"
+    "fix"
   ],
   "dependencies": {
     "@babel/plugin-proposal-class-properties": "7.3.0",
