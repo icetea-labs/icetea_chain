@@ -78,6 +78,7 @@ class Message {
       type: 'select',
       content: {
         placeholder,
+        searchselect: false,
         multipleselect: false,
         button: {
           icon: 'check',

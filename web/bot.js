@@ -62,7 +62,7 @@ function json (o) {
   }
 }
 
-async function callContract (method, type = 'view', ...params) {
+async function callContract (method, type = 'read', ...params) {
   const map = {
     'none': 'callPure',
     'read': 'call',
@@ -71,7 +71,7 @@ async function callContract (method, type = 'view', ...params) {
 
   const result = await method[map[type]](params)
 
-  if (type === 'transaction') {
+  if (type === 'write') {
     if (result.check_tx.code || result.deliver_tx.code) {
       return {
         success: false,
@@ -96,6 +96,7 @@ document.getElementById('connect').addEventListener('click', async function () {
   // get bot info
   const resInfo = await contract.methods.botInfo.callPure()
   if (!resInfo.success) {
+    console.error(resInfo)
     return window.alert(json(resInfo.error))
   }
   const botInfo = resInfo.data
@@ -138,6 +139,7 @@ document.getElementById('connect').addEventListener('click', async function () {
 
     // if bot has error, say so and stop things
     if (!callResult.success) {
+      console.error(callResult)
       return window.alert(json(callResult.error))
     }
 

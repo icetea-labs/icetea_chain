@@ -244,5 +244,5 @@ function convertLunar2Solar (lunarDay, lunarMonth, lunarYear, lunarLeap, timeZon
 
 module.exports = {
   toSolar: convertLunar2Solar,
-  toLunar: convertLunar2Solar
+  toLunar: convertSolar2Lunar
 }

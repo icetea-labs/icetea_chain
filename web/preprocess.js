@@ -39,18 +39,19 @@ function resolveRegEx (src, regex, wrapFn) {
     return src.replace(regex, function (match, group) {
       return map[group]
     })
-  })
+  }).then(src => resolveRegEx(src, regex, wrapFn))
 }
 
 function resolveImports (src) {
   return resolveRegEx(src, PLAIN_IMPORT_REGEX, function (src) {
-    return '(function(){' + src + '}).call(global)'
+    // return '(function(){\n' + src.trim() + '\n}).call(global)'
+    return src // for import, include as is
   })
 }
 
 function resolveRequires (src) {
   return resolveRegEx(src, REQUIRE_REGEX, function (src) {
-    return '(function(){const module={exports:{}};const exports=module.exports;' + src + ';return module.exports;}).call(global)'
+    return '(function(){const module={exports:{}};const exports=module.exports;\n' + src.trim() + ';\nreturn module.exports}).call(global)'
   })
 }
 
