@@ -13,7 +13,8 @@
     "reset": "tendermint unsafe_reset_all && node ./scripts/destroy.js",
     "dump": "node ./scripts/dump.js",
     "show": "sudo lsof -i tcp:26657",
-    "docs:build": "jsdoc -c jsdoc.json"
+    "docs:build": "jsdoc -c jsdoc.json",
+    "blockchain": "tendermint node & node icetea"
   },
   "keywords": [
     "icetea",
