@@ -1,3 +1,11 @@
+/** @module */
+
+/**
+ * conver js to js contract
+ * @function
+ * @param {string} src - src
+ * @returns {string} generated code
+ */
 module.exports = src => `
 'use strict';
 const global = {}, globalThis = {}, process = void 0, Date = void 0, Math = void 0,

@@ -1,6 +1,13 @@
+/** @module */
 const { decode } = require('@webassemblyjs/wasm-parser')
 const { traverse } = require('@webassemblyjs/ast')
 
+/**
+ * parse metadate for a wasm file
+ * @function
+ * @param {string} buffer wasm buffer
+ * @returns {object} import table name and operations
+ */
 exports.parseMetadata = (buffer) => {
   let importTableName
   let mainFnFound

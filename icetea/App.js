@@ -141,15 +141,23 @@ class App {
 }
 
 /**
+ * validate tx op and tx.to source
  * @private
+ * @function
+ * @param {object} tx - transation
+ * @return {boolean} is right to execute
  */
 function willCallContract (tx) {
   return tx.isContractCreation() || tx.isContractCall() || (tx.value > 0 && stateManager.isContract(tx.to))
 }
 
 /**
-   * @private
-   */
+ * execute tx logic
+ * @private
+ * @function
+ * @param {object} options - options
+ * @return {object} result
+ */
 function doExecTx (options) {
   const { tx, tools = {} } = options
   let result

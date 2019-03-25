@@ -1,3 +1,5 @@
+/** @module */
+
 // protect loops from infinite or too-many re-entries
 // Based on jsbin loop protect (https://github.com/jsbin/loop-protect)
 
@@ -47,6 +49,12 @@ const protect = t => path => {
   body.unshiftContainer('body', inside)
 }
 
+/**
+ * loop entry guard
+ * @function
+ * @param {object} options - options
+ * @returns {object} loop entry guard
+ */
 module.exports = ({ types: t }) => {
   return {
     name: 'loop-entry-guard',

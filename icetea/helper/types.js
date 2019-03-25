@@ -1,5 +1,15 @@
+/** @module */
+
 module.exports = { check, checkTypes, checkMsg }
 
+/**
+ * whether an object is expected type
+ * @private
+ * @function
+ * @param {object} o object
+ * @param {string} t type
+ * @param {string} [errorMessage = 'Incompatible type'] error message
+ */
 function check (o, t, errorMessage = 'Incompatible type') {
   if (!t || t === 'any') {
     return
@@ -27,6 +37,13 @@ function check (o, t, errorMessage = 'Incompatible type') {
   }
 }
 
+/**
+ * whether an object is in expected types
+ * @private
+ * @function
+ * @param {object} o object
+ * @param {Array.<string>} types types
+ */
 function checkTypes (o, types) {
   if (Array.isArray(types)) {
     if (!types.length) {
@@ -62,6 +79,14 @@ function checkTypes (o, types) {
   }
 }
 
+/**
+ * whether suitable message
+ * @private
+ * @function
+ * @param {object} msg message
+ * @param {opject} spec specification
+ * @param {object} options options
+ */
 function checkMsg ({ name, callType, params = [] }, spec, {
   strict = true,
   whitelist = ['address', 'balance', 'deployedBy', '__metadata']
