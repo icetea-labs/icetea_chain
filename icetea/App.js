@@ -1,8 +1,8 @@
 const { verifyTxSignature } = require('icetea-common/src/utils')
 const utils = require('./helper/utils')
 const sysContracts = require('./system')
-const ALIAS_ADDR = 'system.alias'
-const alias = sysContracts.get(ALIAS_ADDR)
+const BotNames = require('./system/BotNames')
+const alias = sysContracts.get(BotNames.Alias)
 const invoker = require('./ContractInvoker')
 
 const stateManager = require('./StateManager')
@@ -10,7 +10,7 @@ const stateManager = require('./StateManager')
 function _ensureAddress (addr) {
   // resolve alias
   if (addr && addr.includes('.')) {
-    return alias.ensureAddress(addr, stateManager.getAccountState(ALIAS_ADDR).storage)
+    return alias.ensureAddress(addr)
   }
 
   return addr
@@ -31,11 +31,20 @@ class App {
 
   async activate () {
     await stateManager.load()
-    return stateManager.getLastState()
+    const lastState = stateManager.getLastState()
+    console.log('Last state loaded', { height: lastState.lastBlockHeight, appHash: lastState.lastBlockAppHash.toString('hex').toUpperCase() })
+    return lastState
   }
 
   installSystemContracts () {
-    sysContracts.all().forEach(stateManager.installSystemContract)
+    sysContracts.all().forEach(key => {
+      const state = stateManager.installSystemContract(key)
+      const contract = sysContracts.get(key)
+      contract.unsafeStateManager = () => stateManager
+      if (typeof contract.ondeploy === 'function') {
+        contract.ondeploy(state)
+      }
+    })
   }
 
   addStateObserver ({ beforeTx, afterTx }) {
@@ -110,7 +119,7 @@ class App {
     stateManager.beginCheckpoint()
 
     const needState = willCallContract(tx)
-    const { stateAccess, patch, tools } = needState ? stateManager.produceDraft(tx) : {}
+    const { stateAccess, patch, tools } = needState ? stateManager.produceDraft() : {}
 
     const result = doExecTx({
       tx,

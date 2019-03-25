@@ -65,10 +65,11 @@ const _stateforAddress = (contractAddress, readonly, {
   if (!storage) {
     const contractStorage = (stateTable[contractAddress] || {}).storage
     if (contractStorage) {
-      storage = _.cloneDeep(contractStorage) // consider using immer to improve performance
+      // consider using immer instead of cloneDeep to improve performance
+      storage = contractStorage.system ? contractStorage : _.cloneDeep(contractStorage)
       storages[contractAddress] = storage
     }
-    if (readonly && storage) {
+    if (readonly && storage && !storage.system) {
       deepFreeze(storage) // this is a trade-off, dev (debug) over user (performance)
     }
   }

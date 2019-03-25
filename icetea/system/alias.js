@@ -7,6 +7,7 @@
  * No support for UPDATE nor DELETE
  */
 
+const { Alias: ALIAS_ADDR } = require('./BotNames')
 const { checkMsg } = require('../helper/types')
 const { validateAddress } = require('icetea-common').ecc
 
@@ -37,7 +38,7 @@ const METADATA = {
 
 const ALIAS_KEY = 'alias'
 
-const getAliases = (context) => {
+const loadAliases = (context) => {
   return context.getState(ALIAS_KEY, {})
 }
 
@@ -62,7 +63,7 @@ exports.run = (context, options) => {
 
   const contract = {
     query (textOrRegEx) {
-      const aliases = getAliases(context)
+      const aliases = loadAliases(context)
 
       return Object.keys(aliases).reduce((prev, alias) => {
         if (isSatisfied(alias, textOrRegEx)) {
@@ -73,7 +74,7 @@ exports.run = (context, options) => {
     },
 
     resolve (alias) {
-      const aliases = getAliases(context)
+      const aliases = loadAliases(context)
       return (aliases[alias] || {}).address
     },
 
@@ -93,7 +94,8 @@ exports.run = (context, options) => {
         } catch (e) {
           throw new Error('The specified address is neither your own account nor a smart contract you deployed.')
         }
-        if (deployedBy !== msg.senser) {
+
+        if (deployedBy !== msg.sender) {
           throw new Error('You cannot register for the address you do not own.')
         }
       }
@@ -101,14 +103,14 @@ exports.run = (context, options) => {
       const prefix = isOwnedAccount ? 'account.' : 'contract.'
       const fullAlias = prefix + alias
 
-      const aliases = getAliases(context)
+      const aliases = loadAliases(context)
       if (aliases.hasOwnProperty(fullAlias)) {
         throw new Error(`Alias ${fullAlias} already registered.`)
       }
 
       aliases[fullAlias] = {
         address,
-        by: msg.senser,
+        by: msg.sender,
         blockNumber: block.number
       }
 
@@ -125,7 +127,12 @@ exports.run = (context, options) => {
   }
 }
 
-exports.ensureAddress = (aliasOrAddress, storage) => {
-  const aliases = (storage || {})[ALIAS_KEY] || {}
-  return (aliases[aliasOrAddress] || {}).address || aliasOrAddress
+exports.resolve = function (alias) {
+  const storage = this.unsafeStateManager().getAccountState(ALIAS_ADDR).storage || {}
+  const aliases = storage[ALIAS_KEY] || {}
+  return (aliases[alias] || {}).address
+}
+
+exports.ensureAddress = function (aliasOrAddress) {
+  return exports.resolve(aliasOrAddress) || aliasOrAddress
 }

@@ -39,6 +39,8 @@ class StateManager extends EventEmitter {
       return Buffer.alloc(0)
     }
     const appHash = merkle.getHash(stateTable)
+    console.log(`height ${lastBlock.number}, appHash ${appHash.toString('hex').toUpperCase()}`)
+
     merkle.save({
       block: lastBlock,
       state: stateTable
@@ -82,6 +84,8 @@ class StateManager extends EventEmitter {
       system: true,
       deployedBy: 'system'
     })
+
+    return stateTable[address]
   }
 
   // Utility function to get state

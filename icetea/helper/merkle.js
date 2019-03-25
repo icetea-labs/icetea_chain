@@ -37,4 +37,4 @@ exports.save = (data) => {
   })
 }
 
-exports.getHash = (message) => stableHashObject(message)
+exports.getHash = (message) => stableHashObject(message, false)

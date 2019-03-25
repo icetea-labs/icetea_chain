@@ -1,3 +1,5 @@
+/* global fetch */
+
 const PLAIN_IMPORT_REGEX = /^[ \t]*import\s+["'](https?:\/\/.+)["'][ \t]*$/gm
 const REQUIRE_REGEX = /\brequire\s*\(\s*["'](https?:\/\/.+)["']\s*\)/g
 
@@ -18,7 +20,7 @@ function preparePromises (src, regex, map) {
   let e = regex.exec(src)
   while (e) {
     const p = e[1]
-    const content = window.fetch(changeGithubPath(p)).then(resp => resp.text())
+    const content = fetch(changeGithubPath(p)).then(resp => resp.text())
     map[p] = content
 
     e = regex.exec(src)

@@ -1,8 +1,9 @@
-const systemContracts = {
-  'system.echo_bot': require('./echobot'),
-  'system.alias': require('./alias'),
-  'system.faucet': require('./faucet')
-}
+const BotNames = require('./BotNames')
+
+const systemContracts = Object.keys(BotNames).reduce((prev, key) => {
+  prev[BotNames[key]] = require('./' + key)
+  return prev
+}, {})
 
 exports.all = () => Object.keys(systemContracts)
 exports.get = key => systemContracts[key]
