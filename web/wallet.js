@@ -42,4 +42,15 @@ $(document).ready(function () {
       window.alert(String(error))
     }
   })
+
+  $('#importAccount').on('click', async () => {
+    try {
+      var privateKey = $('#your_private_key_account').val()
+      var account = tweb3.wallet.importAccount(privateKey)
+      window.alert("Import sucess!\nYour address: " + account.address)
+    } catch (error) {
+      console.log(error)
+      window.alert(String(error))
+    }
+  })
 })
