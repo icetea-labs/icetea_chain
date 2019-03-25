@@ -25,7 +25,7 @@ async function deploy () {
   await alias.methods.register.sendCommit(['astrobot', astrobot.address])
 
   // register astrobot with botstore
-  await botstore.methods.register.sendCommit(['contract.astrobot', 0])
+  await botstore.methods.register.sendCommit(['contract.astrobot', 0, 'https://mangcut.vn/img/mangcut.svg'])
 }
 
 (async function () {

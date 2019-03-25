@@ -7,7 +7,7 @@
     "test": "standard",
     "fix": "standard --fix",
     "jest": "jest",
-    "start": "standard --fix && node icetea",
+    "start": "standard --fix && node ./scripts/start.js",
     "app": "standard --fix && webpack-dev-server --open",
     "web": "standard --fix && webpack-dev-server",
     "reset": "tendermint unsafe_reset_all && node ./scripts/destroy.js",
