@@ -146,8 +146,8 @@ describe('SimpleStore', () => {
             getOwner() { return this.#owner }
             getValue() { return this.#value }
             @transaction setValue(value) {
-                require(this.#owner == msg.sender, 'Only contract owner can set value')
-                require(value, 'Invalid value')
+                expect(this.#owner == msg.sender, 'Only contract owner can set value')
+                expect(value, 'Invalid value')
                 this.#value = value
                 this.emitEvent("ValueChanged", {value: this.#value})
             }

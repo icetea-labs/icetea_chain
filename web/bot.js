@@ -17,6 +17,10 @@ const sayButton = (action) => {
   return botui.action.button({ action })
 }
 
+const saySelect = (action) => {
+  return botui.action.select({ action })
+}
+
 const speak = items => {
   if (!items) return
   if (!Array.isArray(items)) {
@@ -38,9 +42,10 @@ const speak = items => {
         return botui.action.text({
           action: item.content
         })
-      case 'button': {
+      case 'button':
         return sayButton(item.content)
-      }
+      case 'select':
+        return saySelect(item.content)
     }
   }, undefined)
 }
@@ -57,16 +62,16 @@ function json (o) {
   }
 }
 
-async function callContract (method, type = 'view', ...params) {
+async function callContract (method, type = 'read', ...params) {
   const map = {
-    'pure': 'callPure',
-    'view': 'call',
-    'transaction': 'sendCommit'
+    'none': 'callPure',
+    'read': 'call',
+    'write': 'sendCommit'
   }
 
   const result = await method[map[type]](params)
 
-  if (type === 'transaction') {
+  if (type === 'write') {
     if (result.check_tx.code || result.deliver_tx.code) {
       return {
         success: false,
@@ -91,17 +96,31 @@ document.getElementById('connect').addEventListener('click', async function () {
   // get bot info
   const resInfo = await contract.methods.botInfo.callPure()
   if (!resInfo.success) {
+    console.error(resInfo)
     return window.alert(json(resInfo.error))
   }
   const botInfo = resInfo.data
-  if (!botInfo.ontext_type) {
+  if (!botInfo.state_access) {
     const meta = await tweb3.getMetadata(botAddr)
     if (meta && meta.ontext && meta.ontext.decorators && meta.ontext.decorators.length > 0) {
-      botInfo.ontext_type = meta.ontext.decorators[0]
+      const deco = meta.ontext.decorators[0]
+      if (deco === 'transaction' || deco === 'payable') {
+        botInfo.state_access = 'write'
+      } else if (deco === 'pure') {
+        botInfo.state_access = 'none'
+      } else {
+        botInfo.state_access = 'read'
+      }
     } else {
-      botInfo.ontext_type = 'view'
+      botInfo.state_access = 'read'
     }
+  } else if (!['read', 'write', 'none'].includes(botInfo.state_access)) {
+    window.alert('Cannot connect to this bot. It has an invalid state access specifier.')
+    return
   }
+
+  !botInfo.name && (botInfo.name = botAddr)
+  !botInfo.description && (botInfo.description = 'N/A')
 
   botui.message.removeAll()
 
@@ -109,14 +128,18 @@ document.getElementById('connect').addEventListener('click', async function () {
   await say(`<b>${botInfo.name}</b><br>${botInfo.description}`, { type: 'html', cssClass: 'bot-intro' })
 
   // display Start button
-  let result = await sayButton({ text: botInfo.startText || 'Start', value: 'start' })
-
+  let result = await sayButton({ text: botInfo.start_button || 'Start', value: 'start' })
+  let isFirst = true
   while (result && result.value) {
     // send lastValue to bot
-    const callResult = await callContract(contract.methods.ontext, botInfo.ontext_type, result.value)
+    const callResult = isFirst
+      ? await callContract(contract.methods.onstart, botInfo.state_access)
+      : await callContract(contract.methods.ontext, botInfo.state_access, result.value)
+    isFirst = false
 
     // if bot has error, say so and stop things
     if (!callResult.success) {
+      console.error(callResult)
       return window.alert(json(callResult.error))
     }
 

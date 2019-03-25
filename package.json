@@ -13,7 +13,8 @@
     "reset": "tendermint unsafe_reset_all && node ./scripts/destroy.js",
     "dump": "node ./scripts/dump.js",
     "show": "sudo lsof -i tcp:26657",
-    "docs:build": "jsdoc -c jsdoc.json"
+    "docs:build": "node_modules/.bin/jsdoc --configure jsdoc.json --verbose",
+    "blockchain": "tendermint node & node icetea"
   },
   "keywords": [
     "icetea",
@@ -26,26 +27,24 @@
     "ignore": [
       "**/tmp/",
       "**/example/",
-      "/web/botui.js",
-      "/web/lunar.js"
+      "/web/botui.js"
     ]
   },
   "pre-commit": [
-    "fix",
-    "jest"
+    "test"
   ],
   "dependencies": {
     "@babel/plugin-proposal-class-properties": "7.3.0",
     "@babel/plugin-proposal-private-methods": "7.3.2",
-    "@babel/plugin-transform-flow-strip-types": "^7.3.4",
-    "@webassemblyjs/ast": "^1.8.5",
-    "@webassemblyjs/wasm-parser": "^1.8.5",
+    "@babel/plugin-transform-flow-strip-types": "7.3.4",
+    "@webassemblyjs/ast": "1.8.5",
+    "@webassemblyjs/wasm-parser": "1.8.5",
     "abci": "5.0.1",
     "ansi_up": "3.0.0",
     "body-parser": "1.18.3",
-    "botui": "^0.3.8",
-    "chalk": "^2.4.2",
-    "dotenv": "^6.2.0",
+    "botui": "0.3.8",
+    "chalk": "2.4.2",
+    "dotenv": "6.2.0",
     "express": "4.16.4",
     "halting-problem": "1.0.3",
     "handlebars": "4.0.12",
@@ -53,13 +52,13 @@
     "icetea-web3": "github:TradaTech/icetea-web3",
     "jquery": "3.3.1",
     "json-formatter-js": "2.2.1",
-    "level": "^4.0.0",
+    "level": "4.0.0",
     "lodash": "4.17.11",
-    "merk": "^1.3.4",
+    "merk": "1.3.4",
     "npx": "10.2.0",
-    "prismjs": "^1.15.0",
-    "vue": "^2.6.9",
-    "wasm-metering": "^0.2.1"
+    "prismjs": "1.15.0",
+    "vue": "2.6.9",
+    "wasm-metering": "0.2.1"
   },
   "devDependencies": {
     "@babel/core": "7.2.2",
@@ -72,6 +71,8 @@
     "standard": "^12.0.1",
     "webpack": "4.29.3",
     "webpack-cli": "^3.3.0",
-    "webpack-dev-server": "^3.2.1"
+    "webpack-dev-server": "^3.2.1",
+    "jsdoc": "3.5.5",
+    "jsdoc-template": "git+https://github.com/braintree/jsdoc-template.git"
   }
 }

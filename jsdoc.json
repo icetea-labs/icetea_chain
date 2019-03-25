@@ -3,15 +3,26 @@
   "source": {
     "includePattern": ".+\\.js(doc|x)?$",
     "excludePattern": "(^|\\/|\\\\)_",
-    "include": "icetea/vm",
+    "include": "icetea",
     "exclude": [
       "node_modules",
       "docs"
     ]
   },
+  "templates": {
+    "referenceTitle": "IceTea Doc",
+    "disableSort": false,
+    "collapse": true
+  },
+  "tags": {
+    "allowUnknownTags": true,
+    "dictionaries": ["jsdoc"]
+  },
   "opts": {
     "destination": "./docs/",
+    "encoding": "utf8",
+    "private": true,
     "recurse": true,
-    "private": true
+    "template": "./node_modules/jsdoc-template"
   }
 }

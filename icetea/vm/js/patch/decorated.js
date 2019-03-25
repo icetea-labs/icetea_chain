@@ -1,17 +1,30 @@
+/** @module */
+
+/**
+ * conver decorated js to js
+ * @function
+ * @param {string} src - src
+ * @returns {string} generated code
+ */
 module.exports = src => `
 'use strict';
-const global = void 0, globalThis = void 0, process = void 0, Date = void 0, Math = void 0,
+const global = {}, globalThis = {}, process = void 0, Date = void 0,
     setInterval = void 0, setTimeout = void 0, setImmediate = void 0;
 const revert = text => {throw new Error(text || "Transaction reverted.")};
-const require = (condition, text) => {if (!condition) revert(text)}
-const assert = require;
-const expect = require;
+const expect = (condition, text) => {if (!condition) revert(text)}
+const assert = expect;
+const require = void 0;
 
 const {msg, block, tags: __tags, balanceOf, loadContract} = this.getEnv();
 const now = block ? block.timestamp : 0;
 
+Math.random = function() {
+    assert (block && block.hash, 'No block available.')
+    return parseInt(block.hash.substr(-16), 16) / 18446744073709552000
+}
+
 assert(typeof msg !== "undefined" && msg, "Invalid or corrupt transaction data.");
-require(msg.name, "Method name not specified.");
+expect(msg.name, "Method name not specified.");
 
 const __guard = __g;
 
@@ -24,7 +37,7 @@ ${src}
         // call event methods but contract does not have one
         return;
     }
-    require(["__metadata", "address", "balance", "deployedBy"].includes(__name) || 
+    expect(["__metadata", "address", "balance", "deployedBy"].includes(__name) || 
         (__name in __contract && !__name.startsWith('#')), "Method " + __name + " is private or does not exist.");
 
     Object.defineProperties(__contract, Object.getOwnPropertyDescriptors(this));
@@ -53,7 +66,7 @@ ${src}
     if (typeof __c.instance[__name] === "function") {
         // Check stateMutablitity
         const isValidCallType = (d) => {
-            if (["__on_deployed", "__on_received"].includes(__name)) return true; // FIXME
+            if (["__on_deployed", "__on_received"].includes(__name) || !__metadata[__name]) return true; // FIXME
             if (!__metadata[__name].decorators) {
                 return false;
             }

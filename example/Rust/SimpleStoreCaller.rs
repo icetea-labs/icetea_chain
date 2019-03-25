@@ -1,5 +1,6 @@
 extern crate wasm_bindgen;
 extern crate icetea_wasm;
+extern crate js_sys;
 
 use wasm_bindgen::prelude::*;
 use icetea_wasm::*;
