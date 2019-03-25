@@ -19,6 +19,6 @@ exports.randomAccountWithBalance = async (tweb3, intialBalance = 10000) => {
   if (result.deliver_tx.code) {
     throw new Error('deliver_tx: ' + result.deliver_tx.code + ' - ' + result.deliver_tx.log)
   }
-  
+
   return keyInfo
 }

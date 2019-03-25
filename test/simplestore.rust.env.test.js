@@ -20,7 +20,7 @@ afterAll(() => {
 })
 
 async function testSimpleStore (mode, contractPath) {
-  const { privateKey: privateKey, address: from } = account10k
+  const { privateKey, address: from } = account10k
   tweb3.wallet.importAccount(privateKey)
 
   const fromBalance = (await tweb3.getBalance(from)).balance
@@ -36,7 +36,7 @@ async function testSimpleStore (mode, contractPath) {
     src
   }
 
-  const result = await tweb3.sendTransactionCommit({from:account10k.address, value, fee, data })
+  const result = await tweb3.sendTransactionCommit({ from: account10k.address, value, fee, data })
   expect(result.deliver_tx.code).toBeFalsy()
 
   // tags must be correct
@@ -85,7 +85,7 @@ async function testSimpleStore (mode, contractPath) {
     params: [value2Set]
   }
 
-  const result2 = await tweb3.sendTransactionCommit({from: account10k.address, to, data: data2 })
+  const result2 = await tweb3.sendTransactionCommit({ from: account10k.address, to, data: data2 })
   expect(result2.deliver_tx.code).toBeFalsy()
 
   // Check ValueChanged event was emit

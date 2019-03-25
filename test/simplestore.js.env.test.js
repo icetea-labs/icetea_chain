@@ -33,8 +33,8 @@ async function testSimpleStore (mode, src) {
     mode,
     src: switchEncoding(src, 'utf8', 'base64')
   }
-  
-  const result = await tweb3.sendTransactionCommit({from: account10k.address, value, fee, data })
+
+  const result = await tweb3.sendTransactionCommit({ from: account10k.address, value, fee, data })
   expect(result.deliver_tx.code).toBeFalsy()
 
   // tags must be correct
@@ -85,7 +85,7 @@ async function testSimpleStore (mode, src) {
     params: [value2Set]
   }
 
-  const result2 = await tweb3.sendTransactionCommit({from: account10k.address, to, data: data2 })
+  const result2 = await tweb3.sendTransactionCommit({ from: account10k.address, to, data: data2 })
   expect(result2.deliver_tx.code).toBeFalsy()
 
   // Check ValueChanged event was emit
