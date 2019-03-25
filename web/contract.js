@@ -161,6 +161,7 @@ $(document).ready(function () {
     const params = helper.parseParamsFromField('#params')
     // submit tx
     try {
+      tweb3.wallet.loadFromStorage()
       var ct = tweb3.contract(address)
       var tx = await ct.methods[name](...params).sendSync()
       // console.log('tx',tx);

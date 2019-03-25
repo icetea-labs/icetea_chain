@@ -19,10 +19,12 @@
             <a href="/bot.html">Bot Zoo</a>
         </nav>
         <h1>Transfer</h1>
-        <h2>Your private key used to sign tx</h2>
-        <input type="text" id="private_key" value="CJUPdD38vwc2wMC3hDsySB7YQ6AFLGuU6QYQYaiSeBsK">
+        <!-- <h2>Your private key used to sign tx</h2> -->
+        <!-- <input type="text" id="private_key" value="CJUPdD38vwc2wMC3hDsySB7YQ6AFLGuU6QYQYaiSeBsK"> -->
         <h2>Transfer Info</h2>
         <form id="form">
+            <p><label>From: <input type="text" value="tea_3M76NHiZ4ipvMmTVBVJ1Wj378RLJ" id="from" name="from" required></label></p>
+            <div id="addressInfo" class="info-box">Please input address !</div>
             <p><label>To: <input type="text" value="tea_3v2c3gizFkUi15SPSMbK5T2sxH84" name="to" required></label></p>
             <p><label>Value: <input type="number" value="100" name="value" required></label></p>
             <p><label>Tip (fee): <input type="number" value="0" name="fee"></label></p>
@@ -31,6 +33,12 @@
             <p><button type="submit" style="padding: 8px 32px">Send</button>
         </form>
     </div>
+    <script id="infoTemplate" type="text/x-handlebars-template">
+        <div>
+            <p>Address: <i>{{address}}</i></p>
+            <p>Balance: <i>{{balanceLocale}}</i></p>
+        <div>
+    </script>
     <script src="transfer.js"></script>
 </body>
 

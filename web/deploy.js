@@ -32,6 +32,7 @@ $('#form').submit(async function (e) {
 
   try {
     var params = helper.parseParamsFromField('#params')
+    tweb3.wallet.loadFromStorage()
     var tx = await resolveImports(src).then(src => tweb3.deploy(mode, src, params))
     // console.log('tx',tx);
     window.location.href = '/tx.html?hash=' + tx.hash

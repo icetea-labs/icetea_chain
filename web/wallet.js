@@ -11,6 +11,7 @@ document.getElementById('generatePrivateKey').addEventListener('click', function
   document.getElementById('generated_private_key').value = keyInfo.privateKey
   document.getElementById('generated_public_key').value = keyInfo.address
   tweb3.wallet.importAccount(keyInfo.privateKey)
+  tweb3.wallet.saveToStorage()
   fillWallet()
 })
 
@@ -20,6 +21,7 @@ document.getElementById('seePublicKey').addEventListener('click', function () {
 })
 
 function fillWallet () {
+  tweb3.wallet.loadFromStorage()
   var wallets = tweb3.wallet.accounts
   var select = document.getElementById('wallet')
   $('#wallet').empty()
@@ -37,6 +39,7 @@ $(document).ready(function () {
     try {
       var contract = document.getElementById('wallet').value
       tweb3.wallet.defaultAccount = contract
+      tweb3.wallet.saveToStorage()
     } catch (error) {
       console.log(error)
       window.alert(String(error))
@@ -47,6 +50,7 @@ $(document).ready(function () {
     try {
       var privateKey = $('#your_private_key_account').val()
       var account = tweb3.wallet.importAccount(privateKey)
+      tweb3.wallet.saveToStorage()
       window.alert('Import sucess!\nYour address: ' + account.address)
     } catch (error) {
       console.log(error)
