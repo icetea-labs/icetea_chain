@@ -10,8 +10,8 @@ const { codec, ecc, Tx } = require('icetea-common')
  */
 function getBlock (req) {
   const hash = req.hash.toString('hex')
-  const number = req.header.height
-  const timestamp = req.header.time.seconds
+  const number = typeof req.header.height === 'number' ? req.header.height : req.header.height.toNumber()
+  const timestamp = typeof req.header.time.seconds === 'number' ? req.header.time.seconds : req.header.time.seconds.toNumber()
   return { hash, number, timestamp }
 }
 
