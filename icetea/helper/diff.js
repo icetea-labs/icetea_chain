@@ -1,3 +1,4 @@
+/** @module */
 // Credit: https://github.com/odo-network/immuta/blob/master/src/utils/print-difference.js
 
 const chalk = require('chalk')
@@ -226,10 +227,20 @@ function yellow (message) {
 }
 
 let oldStateTable
+/**
+ * cache before tx state
+ * @function
+ * @param {object} stateTable - state table
+ */
 exports.beforeTx = (stateTable) => {
   oldStateTable = _.cloneDeep(stateTable)
 }
 
+/**
+ * display the state different
+ * @function
+ * @param {object} stateTable - state table
+ */
 exports.afterTx = (stateTable) => {
   yellow('--- STATE DIFF ---')
   let noDiff = true

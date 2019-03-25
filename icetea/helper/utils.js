@@ -1,5 +1,13 @@
+/** @module */
+
 const _ = require('lodash')
 
+/**
+ * get all property name of an object
+ * @function
+ * @param {object} object - object
+ * @returns {Array.<string>} property names
+ */
 exports.getAllPropertyNames = function (obj) {
   var props = []
   if (!obj) return props
@@ -16,6 +24,16 @@ exports.getAllPropertyNames = function (obj) {
   return props
 }
 
+/**
+ * emit events
+ * @function
+ * @param {object} emitter - emmitter
+ * @param {Array.<string>} tags - event tag
+ * @param {string} eventName - event name
+ * @param {object} eventData - event data
+ * @param {Array.<string>} [indexes=[]] - index key in event data
+ * @returns {Array.<string>} tags
+ */
 exports.emitEvent = function (emitter, tags, eventName, eventData, indexes = []) {
   emitter = emitter || 'system'
   tags = tags || {}
@@ -46,10 +64,27 @@ exports.emitEvent = function (emitter, tags, eventName, eventData, indexes = [])
   return tags
 }
 
+/**
+ * emit transfered events
+ * @function
+ * @param {object} emitter - emmitter
+ * @param {Array.<string>} tags - event tag
+ * @param {string} from - from address
+ * @param {string} to - to address
+ * @param {number} value - transfer value
+ * @returns {Array.<string>} tags
+ */
 exports.emitTransferred = (emitter, tags, from, to, value) => {
   return exports.emitEvent(emitter, tags, 'Transferred', { from, to, value }, ['from', 'to'])
 }
 
+/**
+ * merge blockchain state and excuted state
+ * @function
+ * @param {object} t1 - first state
+ * @param {object} t2 - second state
+ * @returns {object} merged state
+ */
 exports.mergeStateTables = (t1, t2) => {
   Object.keys(t2).forEach(addr => {
     let account1 = t1[addr]
@@ -81,6 +116,12 @@ exports.mergeStateTables = (t1, t2) => {
   return t1
 }
 
+/**
+ * unify metadata
+ * @function
+ * @param {object} meta - metadata
+ * @returns {object} unified metadata
+ */
 exports.unifyMetadata = meta => {
   const DEF_PROPS = {
     /*
@@ -129,6 +170,12 @@ exports.unifyMetadata = meta => {
   return Object.assign(meta, DEF_PROPS)
 }
 
+/**
+ * create a non-editable object
+ * @function
+ * @param {object} object - object
+ * @returns {object} freezed object
+ */
 // Credit: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/freeze
 exports.deepFreeze = (object) => {
   // Retrieve the property names defined on object
@@ -146,6 +193,12 @@ exports.deepFreeze = (object) => {
   return Object.freeze(object)
 }
 
+/**
+ * bind all function to original object
+ * @function
+ * @param {object} obj - object
+ * @returns {object} bind-all object
+ */
 exports.bindAll = obj => {
   Object.getOwnPropertyNames(obj).forEach(p => {
     if (p !== 'constructor' && typeof obj[p] === 'function') {
@@ -155,6 +208,13 @@ exports.bindAll = obj => {
   return obj
 }
 
+/**
+ * create object and bind all
+ * @function
+ * @param {function} SomeClass - js class
+ * @param {...object} params - params for constuctor
+ * @returns {object} bind-all object
+ */
 exports.newAndBind = (SomeClass, ...params) => {
   const instance = new SomeClass(params)
   exports.bindAll(Object.getPrototypeOf(instance))

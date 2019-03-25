@@ -13,7 +13,7 @@
     "reset": "tendermint unsafe_reset_all && node ./scripts/destroy.js",
     "dump": "node ./scripts/dump.js",
     "show": "sudo lsof -i tcp:26657",
-    "docs:build": "jsdoc -c jsdoc.json",
+    "docs:build": "node_modules/.bin/jsdoc --configure jsdoc.json --verbose",
     "blockchain": "tendermint node & node icetea"
   },
   "keywords": [
@@ -71,6 +71,8 @@
     "standard": "^12.0.1",
     "webpack": "4.29.3",
     "webpack-cli": "^3.3.0",
-    "webpack-dev-server": "^3.2.1"
+    "webpack-dev-server": "^3.2.1",
+    "jsdoc": "3.5.5",
+    "jsdoc-template": "git+https://github.com/braintree/jsdoc-template.git"
   }
 }
