@@ -34,7 +34,12 @@ function fillWallet () {
 $(document).ready(function () {
   fillWallet()
   $('#setDefaultAcc').on('click', () => {
-    var contract = document.getElementById('wallet').value
-    tweb3.wallet.defaultAccount = contract
+    try {
+      var contract = document.getElementById('wallet').value
+      tweb3.wallet.defaultAccount = contract
+    } catch (error) {
+      console.log(error)
+      window.alert(String(error))
+    }
   })
 })
