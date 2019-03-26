@@ -67,13 +67,13 @@
     "babel-loader": "8.0.5",
     "copy-webpack-plugin": "4.6.0",
     "jest": "^24.5.0",
+    "jsdoc": "3.5.5",
+    "jsdoc-template": "git+https://github.com/braintree/jsdoc-template.git",
     "nodemon": "1.18.9",
     "pre-commit": "^1.2.2",
     "standard": "^12.0.1",
     "webpack": "4.29.3",
     "webpack-cli": "^3.3.0",
-    "webpack-dev-server": "^3.2.1",
-    "jsdoc": "3.5.5",
-    "jsdoc-template": "git+https://github.com/braintree/jsdoc-template.git"
+    "webpack-dev-server": "^3.2.1"
   }
 }

@@ -13,7 +13,8 @@ async function testSimpleStore (mode, src, times = 10) {
     src: switchEncoding(src, 'utf8', 'base64')
   }
 
-  const result = await tweb3.sendTransactionCommit({ data }, key)
+  tweb3.wallet.importAccount(key)
+  const result = await tweb3.sendTransactionCommit({ data })
   const tags = tweb3.utils.decodeTags(result)
   const to = tags['tx.to']
 
@@ -26,7 +27,7 @@ async function testSimpleStore (mode, src, times = 10) {
 
   const promises = []
   for (let i = 0; i < times; i++) {
-    promises.push(tweb3.sendTransactionCommit({ to, data: data2 }, key))
+    promises.push(tweb3.sendTransactionCommit({ to, data: data2 }))
   }
 
   console.log('DONE!!!', await Promise.all(promises))
@@ -40,8 +41,8 @@ async function test (times) {
             getOwner() { return this.#owner }
             getValue() { return this.#value }
             @transaction setValue(value) {
-                require(this.#owner == msg.sender, 'Only contract owner can set value')
-                require(value, 'Invalid value')
+                expect(this.#owner == msg.sender, 'Only contract owner can set value')
+                expect(value, 'Invalid value')
                 this.#value = value
                 this.emitEvent("ValueChanged", {value: this.#value})
             }

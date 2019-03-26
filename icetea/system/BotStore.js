@@ -73,7 +73,7 @@ exports.run = (context, options) => {
     },
 
     register (name, category, icon) {
-      const alias = this.systemContracts().Alias
+      const alias = exports.systemContracts().Alias
       const address = alias.resolve(name)
 
       if (!address) {

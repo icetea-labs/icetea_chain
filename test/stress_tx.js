@@ -4,12 +4,13 @@ const tweb3 = new IceTeaWeb3('ws://localhost:26657/websocket')
 
 async function testSimpleStore (times = 10) {
   const key = 'CJUPdD38vwc2wMC3hDsySB7YQ6AFLGuU6QYQYaiSeBsK'
+  tweb3.wallet.importAccount(key)
 
   const to = 'tea_Ngw22YNUDuxi7Q9fHCDSUGnuosR'
 
   const promises = []
   for (let i = 0; i < times; i++) {
-    promises.push(tweb3.sendTransactionCommit({ to }, key))
+    promises.push(tweb3.sendTransactionCommit({ to }))
   }
 
   console.log('DONE!!!', await Promise.all(promises))
