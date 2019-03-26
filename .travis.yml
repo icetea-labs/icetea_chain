@@ -5,7 +5,7 @@ services:
   - docker
 before_install:
 - docker build -t icetea -f docker/Dockerfile .
-- docker run -d --rm -p 26656:26656 -p 26657:26657 -p 3001:3001 icetea
+- docker run -d --rm -p 26656:26656 -p 26657:26657 -p 26658:26658 -p 3001:3001 icetea
 - docker ps -a
 script:
 - npx jest
