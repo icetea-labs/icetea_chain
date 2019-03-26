@@ -31,11 +31,16 @@
             </p>
         </div>
         <h2>
-            Import your account
+            Generate account by mnemonic
         </h2>
         <div>
-            <textarea id="your_private_key_account"  placeholder="your private key" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">CJUPdD38vwc2wMC3hDsySB7YQ6AFLGuU6QYQYaiSeBsK</textarea>
-            <br/><button id="importAccount">Import</button>
+            <button id="generateMnemonic">Generate</button>
+            <h3>Your seed word</h3>
+            <textarea disabled id="generated_seed_word" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></textarea>
+            <h3>Your private key</h3>
+            <textarea disabled id="generated_private_key_seed" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></textarea>
+            <h3>Your account address</h3>
+            <textarea disabled id="generated_public_key_seed" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></textarea>
         </div>
         <h2>
             Generate account
@@ -47,7 +52,13 @@
             <h3>Your account address</h3>
             <textarea disabled id="generated_public_key" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></textarea>
         </div>
-
+        <h2>
+            Import your account
+        </h2>
+        <div>
+            <textarea id="your_private_key_account"  placeholder="your private key" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">CJUPdD38vwc2wMC3hDsySB7YQ6AFLGuU6QYQYaiSeBsK</textarea>
+            <br/><button id="importAccount">Import</button>
+        </div>
         <h2>
             Reveal account address
         </h2>

@@ -1,7 +1,9 @@
 import $ from 'jquery'
-import { ecc } from 'icetea-common'
+import { ecc, codec } from 'icetea-common'
 import tweb3 from './tweb3'
 // import { functionTypeAnnotation } from '@babel/types'
+import bip39 from 'bip39'
+import HDKey from 'hdkey'
 
 const newKeyPairWithAddress = ecc.newKeyPairWithAddress
 const toPubKeyAndAddress = ecc.toPubKeyAndAddress
@@ -52,6 +54,26 @@ $(document).ready(function () {
       var account = tweb3.wallet.importAccount(privateKey)
       tweb3.wallet.saveToStorage()
       window.alert('Import sucess!\nYour address: ' + account.address)
+      fillWallet()
+    } catch (error) {
+      console.log(error)
+      window.alert(String(error))
+    }
+  })
+
+  $('#generateMnemonic').on('click', async () => {
+    try {
+      var mnemonic = bip39.generateMnemonic()
+      $('#generated_seed_word').val(mnemonic)
+      // var seed = bip39.mnemonicToSeedHex(mnemonic)
+      var seed = bip39.mnemonicToSeed(mnemonic)
+      var hdkey = HDKey.fromMasterSeed(seed)
+      // console.log(hdkey.privateKey)
+      var account = tweb3.wallet.importAccount(hdkey.privateKey)
+      $('#generated_private_key_seed').val(codec.toString(account.privateKey, 'base58'))
+      $('#generated_public_key_seed').val(account.address)
+      tweb3.wallet.saveToStorage()
+      fillWallet()
     } catch (error) {
       console.log(error)
       window.alert(String(error))
