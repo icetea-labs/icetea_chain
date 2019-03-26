@@ -10,7 +10,7 @@ const switchEncoding = utils.switchEncoding
 let tweb3
 let account10k // this key should have 10k of coins before running test suite
 beforeAll(async () => {
-  tweb3 = new IceTeaWeb3('ws://localhost:26657/websocket')
+  tweb3 = new IceTeaWeb3('http://localhost:3001/api')
   account10k = await randomAccountWithBalance(tweb3, 10000)
 })
 
