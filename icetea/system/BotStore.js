@@ -10,7 +10,7 @@
  */
 
 const { checkMsg } = require('../helper/types')
-const alias = require('./Alias')
+const BotNames = require('./BotNames')
 const { initialBotStore } = require('../config')
 
 const METADATA = {
@@ -74,8 +74,9 @@ exports.run = (context, options) => {
     },
 
     register (name, category, icon) {
+      const alias = this.systemContracts().get(BotNames.Alias)
       const address = alias.resolve(name)
-      console.log(address)
+
       if (!address) {
         throw new Error('Require a bot alias. You must register an alias for your bot first.')
       }

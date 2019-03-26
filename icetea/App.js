@@ -30,6 +30,7 @@ class App {
   }
 
   async activate () {
+    this.initSystemContracts()
     await stateManager.load()
     const lastState = stateManager.getLastState()
     console.log('Last state loaded', { height: lastState.lastBlockHeight, appHash: lastState.lastBlockAppHash.toString('hex').toUpperCase() })
@@ -40,10 +41,17 @@ class App {
     sysContracts.all().forEach(key => {
       const state = stateManager.installSystemContract(key)
       const contract = sysContracts.get(key)
-      contract.unsafeStateManager = () => stateManager
       if (typeof contract.ondeploy === 'function') {
         contract.ondeploy(state)
       }
+    })
+  }
+
+  initSystemContracts () {
+    sysContracts.all().forEach(key => {
+      const contract = sysContracts.get(key)
+      contract.systemContracts = () => sysContracts
+      contract.unsafeStateManager = () => stateManager
     })
   }
 
