@@ -1,8 +1,6 @@
 const { verifyTxSignature } = require('icetea-common/src/utils')
 const utils = require('./helper/utils')
 const sysContracts = require('./system')
-const BotNames = require('./system/BotNames')
-const alias = sysContracts.get(BotNames.Alias)
 const invoker = require('./ContractInvoker')
 
 const stateManager = require('./StateManager')
@@ -10,7 +8,7 @@ const stateManager = require('./StateManager')
 function _ensureAddress (addr) {
   // resolve alias
   if (addr && addr.includes('.')) {
-    return alias.ensureAddress(addr)
+    return sysContracts.Alias.ensureAddress(addr)
   }
 
   return addr
@@ -24,7 +22,6 @@ class App {
       loadState: stateManager.load.bind(stateManager),
       persistState: stateManager.persist.bind(stateManager),
       balanceOf: stateManager.balanceOf.bind(stateManager),
-      getContractAddresses: stateManager.getContractAddresses.bind(stateManager),
       debugState: stateManager.debugState.bind(stateManager)
     })
   }
@@ -53,6 +50,24 @@ class App {
       contract.systemContracts = () => sysContracts
       contract.unsafeStateManager = () => stateManager
     })
+  }
+
+  getContractAddresses (preferAlias) {
+    const addreses = stateManager.getContractAddresses()
+    if (!preferAlias || !addreses.length) return addreses
+
+    const aliases = sysContracts.Alias.getAliases()
+    const aliasKeys = Object.keys(aliases)
+    if (!aliasKeys.length) return addreses
+
+    const address2Alias = aliasKeys.reduce((prev, alias) => {
+      console.log(prev, alias)
+      const address = aliases[alias].address
+      prev[address] = alias
+      return prev
+    }, {})
+
+    return addreses.map(addr => (address2Alias.hasOwnProperty(addr) ? address2Alias[addr] : addr))
   }
 
   addStateObserver ({ beforeTx, afterTx }) {
@@ -116,6 +131,7 @@ class App {
   }
 
   getAccountInfo (addr) {
+    addr = _ensureAddress(addr)
     const { balance = 0, system, mode, src, deployedBy } = stateManager.getAccountState(addr)
     return { balance, system, mode, hasSrc: !!src, deployedBy }
   }

@@ -136,3 +136,8 @@ exports.resolve = function (alias) {
 exports.ensureAddress = function (aliasOrAddress) {
   return exports.resolve(aliasOrAddress) || aliasOrAddress
 }
+
+exports.getAliases = function () {
+  const storage = this.unsafeStateManager().getAccountState(ALIAS_ADDR).storage || {}
+  return storage[ALIAS_KEY] || {}
+}

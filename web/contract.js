@@ -16,7 +16,7 @@ function tryStringifyJson (p) {
 
 async function fillContracts () {
   try {
-    const contracts = await tweb3.getContracts()
+    const contracts = await tweb3.getContracts(true)
 
     if (!contracts.length) return
 
