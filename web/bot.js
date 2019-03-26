@@ -69,7 +69,7 @@ async function callContract (method, type = 'read', ...params) {
     'write': 'sendCommit'
   }
 
-  const result = await method[map[type]](params)
+  const result = await method(...params)[map[type]]()
 
   if (type === 'write') {
     if (result.check_tx.code || result.deliver_tx.code) {
@@ -94,7 +94,7 @@ document.getElementById('connect').addEventListener('click', async function () {
   const contract = tweb3.contract(botAddr, privKey)
 
   // get bot info
-  const resInfo = await contract.methods.botInfo.callPure()
+  const resInfo = await contract.methods.botInfo().callPure()
   if (!resInfo.success) {
     console.error(resInfo)
     return window.alert(json(resInfo.error))
