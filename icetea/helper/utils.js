@@ -179,7 +179,7 @@ exports.unifyMetadata = meta => {
 // Credit: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/freeze
 exports.deepFreeze = (object) => {
   // Retrieve the property names defined on object
-  var propNames = Object.getOwnPropertyNames(object)
+  const propNames = Object.getOwnPropertyNames(object)
 
   // Freeze properties before freezing self
 
@@ -191,6 +191,35 @@ exports.deepFreeze = (object) => {
   }
 
   return Object.freeze(object)
+}
+
+exports.checkUnsupportTypes = o => {
+  if (o == null) return null
+  if (Buffer.isBuffer(o)) return o
+  const t = typeof o
+
+  if (t === 'bigint' || t === 'function' ||
+    o instanceof RegExp ||
+    o instanceof Date ||
+    o instanceof Map ||
+    o instanceof Set ||
+    o instanceof WeakMap) {
+    throw new Error('State contains unsupported type.')
+  }
+
+  if (t === 'object') {
+    const propNames = Object.getOwnPropertyNames(o)
+    for (let name of propNames) {
+      const value = o[name]
+      if (typeof value === 'undefined') {
+        delete o[name]
+      } else {
+        o[name] = exports.checkUnsupportTypes(o[name])
+      }
+    }
+  }
+
+  return o
 }
 
 /**
