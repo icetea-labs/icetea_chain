@@ -54,7 +54,9 @@ function fmtTxs (txs) {
   })
   return txs.reverse()
 }
-
+function init () {
+  tweb3.wallet.importAccount('CJUPdD38vwc2wMC3hDsySB7YQ6AFLGuU6QYQYaiSeBsK')
+}
 function showMessage () {
   // parse message to show
   var parts = window.location.href.split('?')
@@ -64,7 +66,6 @@ function showMessage () {
       document.getElementById('info').textContent = ''
     }, 4000)
   }
-
   // tweb3.subscribe('NewBlock',{}, message => {
   //   console.log("message: ", JSON.parse(message));
   // });
@@ -109,6 +110,7 @@ async function loadData () {
 }
 
 (() => {
+  init()
   showMessage()
   loadData()
   setInterval(loadData, 3500)

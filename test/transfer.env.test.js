@@ -20,6 +20,7 @@ afterAll(() => {
 describe('transfer', () => {
   test('transfer with enough balance', async () => {
     const { privateKey, address: from } = account10k
+    tweb3.wallet.importAccount(privateKey)
 
     const fromBalance = (await tweb3.getBalance(from)).balance
     expect(fromBalance).toBeGreaterThan(100)
@@ -31,7 +32,7 @@ describe('transfer', () => {
     const value = 1.5
     const fee = 0.1
 
-    const result = await tweb3.sendTransactionCommit({ to, value, fee }, privateKey)
+    const result = await tweb3.sendTransactionCommit({ from: account10k.address, to, value, fee })
     expect(result.deliver_tx.code).toBeFalsy()
     expect(typeof result.hash).toBe('string')
 
@@ -65,6 +66,7 @@ describe('transfer', () => {
 
   test('transfer with zero balance', async () => {
     const privateKey = await ecc.generateKey()
+    tweb3.wallet.importAccount(privateKey)
 
     const from = ecc.toPublicKey(privateKey)
     const fromBalance = (await tweb3.getBalance(from)).balance
@@ -75,19 +77,19 @@ describe('transfer', () => {
     let value
     let fee = 0.000001
 
-    let result = await tweb3.sendTransactionCommit({ to, value, fee }, privateKey)
+    let result = await tweb3.sendTransactionCommit({ from: from, to, value, fee })
     expect(result.check_tx.code).toBeTruthy()
 
     value = 0.0001
     fee = undefined
 
-    result = await tweb3.sendTransactionCommit({ to, value, fee }, privateKey)
+    result = await tweb3.sendTransactionCommit({ from: from, to, value, fee })
     expect(result.check_tx.code).toBeTruthy()
 
     value = undefined
     fee = undefined
 
-    result = await tweb3.sendTransactionCommit({ to, value, fee }, privateKey)
+    result = await tweb3.sendTransactionCommit({ from: from, to, value, fee })
     expect(result.deliver_tx.code).toBeFalsy()
   })
 })

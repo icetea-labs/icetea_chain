@@ -155,14 +155,15 @@ $(document).ready(function () {
 
   $('#form').submit(async function (e) {
     e.preventDefault()
-    const privateKey = window.$('#private_key').val().trim()
+    // const privateKey = window.$('#private_key').val().trim()
     const address = window.$('#to').val().trim()
     const name = document.getElementById('name').value
     const params = helper.parseParamsFromField('#params')
     // submit tx
     try {
-      var ct = tweb3.contract(address, privateKey)
-      var tx = await ct.methods[name].sendSync(params)
+      tweb3.wallet.loadFromStorage()
+      var ct = tweb3.contract(address)
+      var tx = await ct.methods[name](...params).sendSync()
       // console.log('tx',tx);
       window.location.href = '/tx.html?hash=' + tx.hash
     } catch (error) {
