@@ -15,5 +15,5 @@ COPY package.json .
 RUN npm install
 COPY . .
 
-EXPOSE 26656 26657 3001
+EXPOSE 26656 26657 26658 3001
 ENTRYPOINT ["npm", "run", "blockchain"]
