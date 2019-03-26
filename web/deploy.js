@@ -10,7 +10,7 @@ var wasmBuffer = null
 $('#form').submit(async function (e) {
   e.preventDefault()
   var mode = +document.getElementById('srcMode').value
-  const privateKey = window.$('#private_key').val().trim()
+  // const privateKey = window.$('#private_key').val().trim()
   var src
   if (mode === 100) {
     src = wasmBuffer
@@ -32,7 +32,8 @@ $('#form').submit(async function (e) {
 
   try {
     var params = helper.parseParamsFromField('#params')
-    var tx = await resolveExternal(src).then(src => tweb3.deploy(mode, src, privateKey, params))
+    tweb3.wallet.loadFromStorage()
+    var tx = await resolveExternal(src).then(src => tweb3.deploy(mode, src, params))
     // console.log('tx',tx);
     window.location.href = '/tx.html?hash=' + tx.hash
   } catch (error) {

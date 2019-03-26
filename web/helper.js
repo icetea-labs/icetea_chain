@@ -1,5 +1,5 @@
 // import ecc from '../icetea/helper/ecc'
-import { ecc } from 'icetea-common'
+// import { ecc } from 'icetea-common'
 import { utils } from 'icetea-web3'
 import tweb3 from './tweb3'
 
@@ -40,13 +40,14 @@ export function registerTxForm ($form, txData) {
 
     // console.log(txData)
     formData.data = txData
-    const privateKey = window.$('#private_key').val().trim()
-    formData.from = ecc.toPublicKey(privateKey)
+    // const privateKey = window.$('#private_key').val().trim()
+    // formData.from = window.$('#private_key').val().trim()
 
     // submit tx
     try {
       // Should send sync to catch check_tx error
-      var result = await tweb3.sendTransactionSync(formData, privateKey)
+      tweb3.wallet.loadFromStorage()
+      var result = await tweb3.sendTransactionSync(formData)
       window.location.href = '/tx.html?hash=' + result.hash
     } catch (error) {
       console.log(error)
