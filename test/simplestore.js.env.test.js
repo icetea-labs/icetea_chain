@@ -19,7 +19,7 @@ afterAll(() => {
 })
 
 async function testSimpleStore (mode, src) {
-  // const { privateKey, address: from } = account10k
+  const { address: from } = account10k
   tweb3.wallet.importAccount(account10k.privateKey)
 
   const fromBalance = (await tweb3.getBalance(from)).balance
