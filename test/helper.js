@@ -1,3 +1,4 @@
+require('dotenv').config()
 const { ecc } = require('icetea-common')
 const { IceTeaWeb3, utils } = require('icetea-web3')
 
@@ -25,7 +26,7 @@ exports.randomAccountWithBalance = async (tweb3, intialBalance = 10000) => {
   // This is the only key which has initial balance as defined in config.
   // However, because test suites run in parallel, we won't use this key
   // directly in tests, otherwise balance checks might fail
-  const configKey = 'CJUPdD38vwc2wMC3hDsySB7YQ6AFLGuU6QYQYaiSeBsK'
+  const configKey = process.env.BANK_KEY
   const account = await tweb3.wallet.importAccount(configKey)
   const from = account.address
   const keyInfo = await ecc.newKeyPairWithAddress()

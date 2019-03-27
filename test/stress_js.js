@@ -1,11 +1,11 @@
+require('dotenv').config()
 const { web3, switchEncoding } = require('./helper')
-
 const { TxOp, ContractMode } = require('icetea-common')
 
 const tweb3 = web3.default()
 
 async function testSimpleStore (mode, src, times = 10) {
-  const key = 'CJUPdD38vwc2wMC3hDsySB7YQ6AFLGuU6QYQYaiSeBsK'
+  const key = process.env.BANK_KEY
 
   const data = {
     op: TxOp.DEPLOY_CONTRACT,
