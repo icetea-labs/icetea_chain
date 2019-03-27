@@ -1,33 +1,25 @@
 <html>
 <head>
     <title>icetea - deploy contract</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" type="text/css" href="style.css">
-    <style>
-            input{
-                width: 400px;
-            }
-            textarea{
-                width: 400px;
-            }
-        </style>
 </head>
 <body>
     <div id="content">
+        <section class="notice">This is Icetea kitchen sink, for testing purpose.</section>
         <nav id="menu">
             <a href="/">Scan</a>
             <a href="/transfer.html">Transfer</a>
             <a href="/deploy.html">Deploy Contract</a>
-            <a href="/contract.html">Read/Write Contract</a>
+            <a href="/contract.html">Call Contract</a>
             <a href="/wallet.html">Wallet</a>
             <a href="/bot.html">Bot Zoo</a>
         </nav>
         <h1>Deploy contract</h1>
-        <!-- <h2>Your private key used to sign tx</h2> -->
-        <!-- <input type="text" id="private_key" value="CJUPdD38vwc2wMC3hDsySB7YQ6AFLGuU6QYQYaiSeBsK"> -->
 
         <form id="form">
-            <p><label>Value: <input type="number" value="0" name="value"></label></p>
-            <p><label>Fee: <input type="number" value="0" name="fee"></label></p>
+            <p class="input-row"><input placeholder="Value" type="number" name="value">
+                <input placeholder="Fee" type="number" name="fee"></p>
             <p><label>Contract source mode:
                 <select id="srcMode">
                     <option value="0">Raw JS</option>
@@ -38,7 +30,7 @@
             <p data-modes="100" class="hide"><label>Wasm file: <input type="file" id="wasmFile" accept=".wasm"></label></p>
             <section data-modes="0;1">
             <p><label>JS source:</label></p>
-            <p><textarea id="src" style="width: 600px;height: 280px;" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">@contract class NumberStore  {
+            <p><textarea id="src" style="height: 280px;" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">@contract class NumberStore  {
     @state value: ?number // same as number | undefined | null
     @transaction setValue (value: number): void {
         this.value = value
@@ -47,7 +39,7 @@
 }</textarea></p>
 </section>
             <p><label>Params (each param 1 row, JSON accepted, use " to denote string)</label></p>
-            <p><textarea id="params" style="width: 600px;height: 60px;" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></textarea></p>
+            <p><textarea id="params" style="height: 60px;" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></textarea></p>
             <p><button type="submit" style="padding: 8px 32px" id="submit_btn">Send</button>
         </form>
     </div>
