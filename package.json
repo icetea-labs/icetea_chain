@@ -67,6 +67,7 @@
     "@babel/preset-env": "7.3.1",
     "babel-loader": "8.0.5",
     "copy-webpack-plugin": "4.6.0",
+    "dotenv-webpack": "^1.7.0",
     "jest": "^24.5.0",
     "jsdoc": "3.5.5",
     "jsdoc-template": "git+https://github.com/braintree/jsdoc-template.git",
