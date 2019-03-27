@@ -97,7 +97,6 @@ const _stateforAddress = (contractAddress, readonly, {
     [transfer, setState, deleteState] = _makeNotAllowed(['transfer', 'setState', 'deleteState'])
   } else {
     setState = (key, value) => {
-      console.log('setState', key, value)
       if (!key || typeof key !== 'string') {
         throw new Error(`Expect key to be an non-empty string, but got ${key}`)
       }

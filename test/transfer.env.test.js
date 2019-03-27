@@ -1,15 +1,14 @@
 /* global jest describe test expect beforeAll afterAll */
 
-const { IceTeaWeb3 } = require('icetea-web3')
 const { ecc } = require('icetea-common')
-const { randomAccountWithBalance } = require('./helper')
+const { web3, randomAccountWithBalance } = require('./helper')
 
 jest.setTimeout(30000)
 
 let tweb3
 let account10k // this key should have 10k of coins before running test suite
 beforeAll(async () => {
-  tweb3 = new IceTeaWeb3('ws://localhost:26657/websocket')
+  tweb3 = web3.default()
   account10k = await randomAccountWithBalance(tweb3, 10000).catch(console.error)
 })
 

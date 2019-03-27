@@ -1,28 +1,30 @@
 <html>
 <head>
     <title>icetea - bot zoo</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="botui.min.css" />
     <link rel="stylesheet" href="botui-theme-default.css" />
     <link rel="stylesheet" type="text/css" href="style.css">
 </head>
 <body>
     <div id="content">
+        <section class="notice">This is Icetea kitchen sink, for testing purpose.</section>
         <nav id="menu">
             <a href="/">Scan</a>
             <a href="/transfer.html">Transfer</a>
             <a href="/deploy.html">Deploy Contract</a>
-            <a href="/contract.html">Read/Write Contract</a>
+            <a href="/contract.html">Call Contract</a>
             <a href="/wallet.html">Wallet</a>
             <a href="/bot.html">Bot Zoo</a>
         </nav>
         <h1>Bot Zoo</h1>
         <table class='table-form'>
             <tr>
-                <td>You</td>
-                <td><input type="text" id="private_key" size="68" value="CJUPdD38vwc2wMC3hDsySB7YQ6AFLGuU6QYQYaiSeBsK"></td>
+                <td style="width: 36px">You</td>
+                <td><span id="address"></span></td>
             </tr>
             <tr>
-                <td>Bot</td>
+                <td style="width: 36px">Bot</td>
                 <td><select id="bot_address">
                         <option value="system.echo_bot" selected>Echo Bot</option>
                         <option value="contract.astrobot">Astro Bot</option>

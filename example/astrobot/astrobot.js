@@ -86,7 +86,6 @@ const { toLunar } = require('https://github.com/TradaTech/icetea/example/astrobo
     }
 
     failDob(data, collector, error) {
-        console.log(data, collector, error)
         return Message.text('Ngày nhập sai định dạng.')
             .text('Ví dụ nhập đúng: 23/8/2001')
             .input('dd/mm/yyyy')

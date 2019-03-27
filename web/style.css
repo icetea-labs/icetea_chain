@@ -1,11 +1,17 @@
 body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-    background-color: #fafafa
+    background-color: #fafafa;
+    margin: 8px 16px;
 }
 #content {
     max-width: 800px;
     width:100%;
-    margin: 2rem auto
+    margin: 0 auto
+}
+.notice {
+    padding: 12px;
+    background-color: gold;
+    margin-bottom: 16px;
 }
 #info:empty {
     display: none;
@@ -75,8 +81,21 @@ code[class*="language-"] {
 
 input {
     padding: 4px 8px;
+    max-width: 360px;
 }
 button {
     padding: 5px 12px;
     border-radius: 6px;
+}
+
+.w100 {
+    width: 100%;
+}
+
+#form input, textarea {
+    width: 100%
+}
+
+.input-row input {
+    margin-bottom: 8px
 }
