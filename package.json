@@ -8,13 +8,14 @@
     "fix": "standard --fix",
     "jest": "jest",
     "start": "standard --fix && node ./scripts/start.js",
-    "app": "standard --fix && webpack-dev-server --open",
-    "web": "standard --fix && webpack-dev-server",
+    "app": "standard --fix && webpack-dev-server --open --config webpack.dev.js",
+    "web": "standard --fix && webpack-dev-server --config webpack.dev.js",
     "reset": "tendermint unsafe_reset_all && node ./scripts/destroy.js",
     "dump": "node ./scripts/dump.js",
     "show": "sudo lsof -i tcp:26657",
     "docs:build": "node_modules/.bin/jsdoc --configure jsdoc.json --verbose",
-    "blockchain": "tendermint node & node icetea"
+    "blockchain": "tendermint node & node icetea",
+    "build": "webpack --config webpack.prod.js"
   },
   "keywords": [
     "icetea",
@@ -74,6 +75,7 @@
     "standard": "^12.0.1",
     "webpack": "4.29.3",
     "webpack-cli": "^3.3.0",
-    "webpack-dev-server": "^3.2.1"
+    "webpack-dev-server": "^3.2.1",
+    "webpack-merge": "^4.2.1"
   }
 }

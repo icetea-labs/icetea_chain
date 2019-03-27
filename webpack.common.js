@@ -5,7 +5,6 @@ const path = require('path')
 const CopyWebpackPlugin = require('copy-webpack-plugin')
 
 module.exports = {
-  mode: 'development',
   entry: {
     index: './web/index.js',
     transfer: './web/transfer.js',
@@ -29,19 +28,5 @@ module.exports = {
 
   plugins: [
     new CopyWebpackPlugin([{ from: 'web', ignore: [ '*.js' ] }])
-  ],
-
-  devServer: {
-    contentBase: 'web',
-    port: 3001,
-    overlay: true,
-    proxy: {
-      '/api': {
-        target: 'http://localhost:26657',
-        pathRewrite: { '^/api': '' },
-        secure: false,
-        changeOrigin: true
-      }
-    }
-  }
+  ]
 }
