@@ -2,7 +2,7 @@ import Vue from 'vue'
 import BotUI from 'botui'
 import tweb3 from './tweb3'
 
-const initWeb3 = () => {
+const initWeb3 = (showAlert = true) => {
   try {
     tweb3.wallet.loadFromStorage()
     byId('address').textContent = tweb3.wallet.defaultAccount
@@ -11,11 +11,11 @@ const initWeb3 = () => {
     console.error(error)
     const err = 'Please go to Wallet tab to create or import one first.'
     byId('address').textContent = err
-    window.alert(err)
+    showAlert && window.alert(err)
     return false
   }
 }
-let web3Inited = initWeb3()
+let web3Inited = initWeb3(false)
 
 const botui = BotUI('my-botui-app', {
   vue: Vue
