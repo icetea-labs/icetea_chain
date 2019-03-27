@@ -40,8 +40,6 @@ export function registerTxForm ($form, txData) {
 
     // console.log(txData)
     formData.data = txData
-    // const privateKey = window.$('#private_key').val().trim()
-    // formData.from = window.$('#private_key').val().trim()
 
     // submit tx
     try {

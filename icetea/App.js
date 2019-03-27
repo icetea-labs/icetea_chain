@@ -61,7 +61,6 @@ class App {
     if (!aliasKeys.length) return addreses
 
     const address2Alias = aliasKeys.reduce((prev, alias) => {
-      console.log(prev, alias)
       const address = aliases[alias].address
       prev[address] = alias
       return prev

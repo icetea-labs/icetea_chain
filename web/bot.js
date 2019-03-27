@@ -2,6 +2,21 @@ import Vue from 'vue'
 import BotUI from 'botui'
 import tweb3 from './tweb3'
 
+const initWeb3 = () => {
+  try {
+    tweb3.wallet.loadFromStorage()
+    byId('address').textContent = tweb3.wallet.defaultAccount
+    return true
+  } catch (error) {
+    console.error(error)
+    const err = 'Please go to Wallet tab to create or import one first.'
+    byId('address').textContent = err
+    window.alert(err)
+    return false
+  }
+}
+let web3Inited = initWeb3()
+
 const botui = BotUI('my-botui-app', {
   vue: Vue
 })
@@ -89,9 +104,13 @@ async function callContract (method, type = 'read', ...params) {
 }
 
 document.getElementById('connect').addEventListener('click', async function () {
+  if (!web3Inited) {
+    web3Inited = initWeb3()
+  }
+  if (!web3Inited) return
+
   const botAddr = byId('bot_address').value.trim()
-  const privKey = byId('private_key').value.trim()
-  const contract = tweb3.contract(botAddr, privKey)
+  const contract = tweb3.contract(botAddr)
 
   // get bot info
   const resInfo = await contract.methods.botInfo().callPure()
