@@ -1,6 +1,6 @@
-const { IceTeaWeb3 } = require('icetea-web3')
+const { web3 } = require('./helper')
 
-const tweb3 = new IceTeaWeb3('ws://localhost:26657/websocket')
+const tweb3 = web3.default()
 
 async function testSimpleStore (times = 10) {
   const key = 'CJUPdD38vwc2wMC3hDsySB7YQ6AFLGuU6QYQYaiSeBsK'

@@ -1,8 +1,8 @@
-const { IceTeaWeb3, utils } = require('icetea-web3')
+const { web3, switchEncoding } = require('./helper')
+
 const { TxOp, ContractMode } = require('icetea-common')
 
-const switchEncoding = utils.switchEncoding
-const tweb3 = new IceTeaWeb3('ws://localhost:26657/websocket')
+const tweb3 = web3.default()
 
 async function testSimpleStore (mode, src, times = 10) {
   const key = 'CJUPdD38vwc2wMC3hDsySB7YQ6AFLGuU6QYQYaiSeBsK'

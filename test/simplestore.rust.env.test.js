@@ -1,8 +1,7 @@
 /* global jest describe test expect beforeAll afterAll */
 
 const fs = require('fs')
-const { IceTeaWeb3 } = require('icetea-web3')
-const { randomAccountWithBalance } = require('./helper')
+const { web3, randomAccountWithBalance } = require('./helper')
 const { TxOp, ContractMode } = require('icetea-common')
 
 jest.setTimeout(30000)
@@ -11,7 +10,7 @@ const contractPath = './example/Rust/SimpleStore.wasm'
 let tweb3
 let account10k // this key should have 10k of coins before running test suite
 beforeAll(async () => {
-  tweb3 = new IceTeaWeb3('ws://localhost:26657/websocket')
+  tweb3 = web3.default()
   account10k = await randomAccountWithBalance(tweb3, 10000).catch(console.error)
 })
 
