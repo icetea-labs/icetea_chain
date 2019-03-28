@@ -14,7 +14,7 @@
     "dump": "node ./scripts/dump.js",
     "show": "sudo lsof -i tcp:26657",
     "docs:build": "node_modules/.bin/jsdoc --configure jsdoc.json --verbose",
-    "blockchain": "tendermint node & node icetea",
+    "blockchain": "tendermint node & node ./scripts/start.js",
     "build": "webpack --config webpack.prod.js"
   },
   "keywords": [
