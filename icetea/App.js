@@ -120,7 +120,6 @@ class App {
     }
 
     const info = invoker.queryMetadata(addr, stateManager.getMetaProxy(addr))
-
     if (!info) return utils.unifyMetadata()
 
     const props = info.meta ||
