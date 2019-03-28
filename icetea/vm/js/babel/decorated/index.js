@@ -32,7 +32,8 @@ function buildError (message, nodePath) {
   throw new SyntaxError(message)
 }
 
-const KNOWN_FLOW_TYPES = ['number', 'string', 'boolean', 'bigint', 'null', 'undefined']
+const SUPPORTED_TYPES = ['number', 'string', 'boolean', 'bigint', 'null', 'undefined',
+  'function', 'array', 'map', 'set', 'date', 'regexp']
 
 function concatUnique (a, b) {
   if (!Array.isArray(a)) {
@@ -44,7 +45,7 @@ function concatUnique (a, b) {
   const result = a.concat(b.filter(i => !a.includes(i)))
 
   for (let i = 0; i < result.length; i++) {
-    if (!KNOWN_FLOW_TYPES.includes(result[i])) {
+    if (!SUPPORTED_TYPES.includes(result[i])) {
       return 'any'
     }
   }
@@ -66,10 +67,12 @@ function getTypeName (node, insideUnion) {
   if (tn === 'Identifier') {
     result = ta.name
   } else if (!tn.endsWith('TypeAnnotation')) {
-    result = tn.toLowerCase()
+    result = tn
   } else {
-    result = tn.slice(0, tn.length - 14).toLowerCase()
+    result = tn.slice(0, tn.length - 14)
   }
+
+  result = result.toLowerCase()
 
   // sanitize result
 
@@ -78,7 +81,8 @@ function getTypeName (node, insideUnion) {
   } else if (result === 'nullliteral') {
     result = 'null'
   } else if (result === 'generic') {
-    result = ['undefined', 'bigint'].includes(ta.id.name) ? ta.id.name : 'any'
+    const t = ta.id.name.toLowerCase()
+    result = SUPPORTED_TYPES.includes(t) ? t : 'any'
   } else if (result === 'nullable') {
     result = concatUnique(['undefined', 'null'], getTypeName(ta))
   } else if (result === 'union') {
@@ -86,7 +90,7 @@ function getTypeName (node, insideUnion) {
     ta.types.forEach(ut => {
       result = concatUnique(result, getTypeName(ut, true))
     })
-  } else if (!KNOWN_FLOW_TYPES.includes(result)) {
+  } else if (!SUPPORTED_TYPES.includes(result)) {
     result = 'any'
   }
   return result !== 'any' && Array.isArray(result) ? result : [result]
@@ -95,11 +99,12 @@ function getTypeName (node, insideUnion) {
 function wrapState (t, item, memberMeta) {
   const name = item.node.key.name || ('#' + item.node.key.id.name)
   const initVal = item.node.value
+  const initValIsLiteral = initVal && t.isLiteral(initVal)
   const getState = t.identifier('getState')
   const thisExp = t.thisExpression()
   const memExp = t.memberExpression(thisExp, getState)
   const callExpParams = [t.stringLiteral(name)]
-  // if (initVal) callExpParams.push(initVal);
+  if (initVal) callExpParams.push(initVal)
   const callExp = t.callExpression(memExp, callExpParams)
   const getter = t.classMethod('get', t.identifier(name), [],
     t.blockStatement([t.returnStatement(callExp)]))
@@ -113,7 +118,7 @@ function wrapState (t, item, memberMeta) {
   item.replaceWithMultiple([getter, setter])
 
   // if there's initializer, move it into constructor
-  if (initVal) {
+  if (initVal && !initValIsLiteral) {
     let deployer = item.parent.body.find(p => p.key.name === '__on_deployed')
 
     // if no constructor, create one
