@@ -2,70 +2,100 @@
 // const halts = require('halting-problem')
 const Runner = require('../Runner')
 const babel = require('@babel/core')
-// const { codeFrameColumns } = require('@babel/code-frame')
+const wrapper = require('./wrapper/raw')
 
 /**
  * js runner
- * @function
- * @param {string} mode - contract type.
- * @returns {object} runner class
  */
-module.exports = mode => {
-  const patch = require('./patch')(mode)
-  return class extends Runner {
-    ensureES5 (src, wrap) {
-      // Even current Node 11.9 --harmony does not support private method
-      // (it supports private fields only).
+module.exports = class extends Runner {
+  getWrapper () {
+    return wrapper
+  }
 
-      // Would remove this method when such things are supported natively by Node
-      src = src.toString()
-      if (wrap) {
-        src = `(function(){${src}}).call(this);`
-      }
-      return babel.transformSync(src, {
+  loadPlugins (path) {
+    const plugins = require(path)(babel)
+    return Array.isArray(plugins) ? plugins : [plugins]
+  }
+
+  transpile (src, plugins, sourceFilename = 'Contract source') {
+    return babel.transformSync(src, {
+      parserOpts: {
+        sourceType: 'script',
+        strictMode: true,
+        sourceFilename,
+        allowReturnOutsideFunction: true,
+        allowAwaitOutsideFunction: true,
         plugins: [
-          '@babel/plugin-proposal-private-methods',
-          '@babel/plugin-proposal-class-properties',
-          '@babel/plugin-transform-flow-strip-types'
+          'asyncGenerators',
+          'bigInt',
+          'classPrivateMethods',
+          'classPrivateProperties',
+          'classProperties',
+          ['decorators', { decoratorsBeforeExport: false }],
+          'doExpressions',
+          // 'dynamicImport',
+          // 'exportDefaultFrom',
+          // 'exportNamespaceFrom',
+          'flow',
+          'flowComments',
+          'functionBind',
+          'functionSent',
+          // 'importMeta',
+          'jsx',
+          'logicalAssignment',
+          'nullishCoalescingOperator',
+          'numericSeparator',
+          'objectRestSpread',
+          'optionalCatchBinding',
+          'optionalChaining',
+          ['pipelineOperator', { proposal: 'minimal' }],
+          'throwExpressions'
         ]
-      }).code
-    }
+      },
+      retainLines: false,
+      minified: false,
+      sourceMaps: false,
+      plugins
+    }).code
+  }
 
-    compile (src) {
-      return this.ensureES5(src, true)
-    }
+  compile (src) {
+    src = `(function(){${src}}).call(this);`
 
-    analyze (src) {
-      super.analyze(src)
-      // try {
-      //   halts(src)
-      // } catch (err) {
-      //   if (err.node && err.node.start && err.node.end) {
-      //     const lines = src.substring(err.node.start, err.node.end)
-      //     const cols = codeFrameColumns(lines, { start: { line: 1, column: 1 } }, {
-      //       highlightCode: true,
-      //       message: 'Fix this loop'
-      //     })
-      //     throw new Error(`Invalid or infinite loop detected.\n${cols}`)
-      //   }
-      //   throw err
-      // }
-    }
+    // FIXME:
+    // Maybe we should find a way to combine these 2 transpiles
+    // Currently, split because of ordering problem
 
-    patch (compiledSrc) {
-      return patch(compiledSrc)
-    }
+    const plugins = this.loadPlugins('./babel/raw')
+    src = 'return ' + this.transpile(src, plugins)
 
-    doRun (patchedSrc, { context, guard, info }) {
-      if (process.env.NODE_ENV === 'development' &&
-       typeof patchedSrc === 'string' &&
-       context.getEnv().msg.name === '__on_deployed') {
-        const { EOL } = require('os')
-        const lines = patchedSrc.split(EOL).map((line, i) => (i + ': ' + line))
-        console.log(lines.join(EOL))
-      }
-      const f = new Function('__g', '__info', patchedSrc) // eslint-disable-line
-      return f.call(context, guard, info)
+    return this.transpile(src, [
+      '@babel/plugin-proposal-private-methods',
+      '@babel/plugin-proposal-class-properties',
+      '@babel/plugin-transform-flow-strip-types' // FIXME: this should be move into decorated-class plugins
+    ])
+  }
+
+  /**
+   * Returns a runable wrapper for compiled source.
+   * @param {string|Buffer} compiledSrc source ready for being wrapped.
+   */
+  wrap (compiledSrc) {
+    return wrapper(compiledSrc)
+  }
+
+  doRun (srcWrapper, { context, guard, info }) {
+    // Print source with line number - for debug
+    if (process.env.NODE_ENV === 'development' &&
+      typeof srcWrapper === 'string' &&
+      context.getEnv().msg.name === '__on_deployed') {
+      const { EOL } = require('os')
+      const delta = 3
+      const lines = srcWrapper.split(EOL).map((line, i) => ((i + delta) + ': ' + line))
+      console.log(lines.join(EOL))
     }
+    // TODO: change to use NodeJS's vm module
+    const f = new Function('__g', '__info', srcWrapper) // eslint-disable-line
+    return f.call(context, guard, info)
   }
 }

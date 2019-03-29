@@ -1,56 +1,32 @@
 /** @module */
-const babel = require('@babel/core')
+
+const JsRunner = require('./JsRunner')
+const wrapper = require('./wrapper/decorated')
 
 /**
- * decorated runner class
- * @function
- * @param {string} mode - contract mode
- * @returns {object} runner class
+ * Decorated runner class.
  */
-module.exports = mode => {
-  const JsRunner = require('./JsRunner')(mode)
-  const contractPlugins = require('./babel')(mode)(babel)
+module.exports = class extends JsRunner {
+  compile (src) {
+    // load babel plugins
+    const decoratedPlugins = this.loadPlugins('./babel/decorated')
 
-  return class extends JsRunner {
-    compile (src) {
-      src = src.toString() + ';const __contract = new __contract_name();const __metadata = {};'
-      var result = babel.transformSync(src, {
-        parserOpts: {
-          plugins: [
-            'asyncGenerators',
-            'bigInt',
-            'classPrivateMethods',
-            'classPrivateProperties',
-            'classProperties',
-            ['decorators', { decoratorsBeforeExport: false }],
-            'doExpressions',
-            // 'dynamicImport',
-            // 'exportDefaultFrom',
-            // 'exportNamespaceFrom',
-            'flow',
-            'flowComments',
-            'functionBind',
-            'functionSent',
-            // 'importMeta',
-            'jsx',
-            'logicalAssignment',
-            'nullishCoalescingOperator',
-            'numericSeparator',
-            'objectRestSpread',
-            'optionalCatchBinding',
-            'optionalChaining',
-            ['pipelineOperator', { proposal: 'minimal' }],
-            'throwExpressions'
-          ]
-        },
-        retainLines: false,
-        minified: false,
-        plugins: contractPlugins,
-        sourceMaps: false
-      })
+    // The decorated plugins should append this, but for now we add here to simplify
+    src = src.toString() + ';const __contract = new __contract_name();const __metadata = {};'
 
-      // console.log(result.code);
-      return this.ensureES5(result.code)
-    }
+    // Now transpile decorated class to raw
+    src = this.transpile(src, decoratedPlugins)
+
+    // wrap the src in the 'decorated wrapper'
+    src = wrapper(src)
+
+    // Then run it through the raw compiler
+    return super.compile(src)
+  }
+
+  run (compiledSrc, ...args) {
+    // wrap it in raw wrapper, because we already wrap in the 'decorated wrapper'
+    const wrapper = super.wrap(compiledSrc)
+    return this.doRun(wrapper, ...args)
   }
 }

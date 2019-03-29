@@ -35,7 +35,6 @@ class ContractInvoker {
     } else {
       const vm = getRunner(mode)
       const guard = getGuard(mode)(src)
-
       result = vm.run(src, { context, guard })
     }
 

@@ -1,3 +1,4 @@
+require('dotenv').config()
 const { ContractMode } = require('icetea-common')
 const { resolveExternal } = require('../web/preprocess')
 const fs = require('fs')
@@ -8,7 +9,7 @@ const { IceTeaWeb3 } = require('icetea-web3')
 const tweb3 = new IceTeaWeb3('ws://localhost:26657/websocket')
 
 async function deploy () {
-  const key = 'CJUPdD38vwc2wMC3hDsySB7YQ6AFLGuU6QYQYaiSeBsK'
+  const key = process.env.BANK_KEY
   tweb3.wallet.importAccount(key)
   const botstore = tweb3.contract('system.botstore')
 

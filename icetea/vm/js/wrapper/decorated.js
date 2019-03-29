@@ -8,25 +8,15 @@
  */
 module.exports = src => `
 'use strict';
-const global = {}, globalThis = {}, process = void 0, Date = void 0,
-    setInterval = void 0, setTimeout = void 0, setImmediate = void 0;
 const revert = text => {throw new Error(text || "Transaction reverted.")};
 const expect = (condition, text) => {if (!condition) revert(text)}
 const assert = expect;
-const require = void 0;
 
 const {msg, block, tags: __tags, balanceOf, loadContract} = this.getEnv();
 const now = block ? block.timestamp : 0;
 
-Math.random = function() {
-    assert (block && block.hash, 'No block available.')
-    return parseInt(block.hash.substr(-16), 16) / 18446744073709552000
-}
-
 assert(typeof msg !== "undefined" && msg, "Invalid or corrupt transaction data.");
 expect(msg.name, "Method name not specified.");
-
-const __guard = __g;
 
 ${src}
 
@@ -54,7 +44,10 @@ ${src}
         if (!typeHolder) return value
         const types = typeHolder[typeProp]
         if (types && Array.isArray(types)) {
-            const valueType = value === null ? 'null' : typeof value;
+            let valueType = value === null ? 'null' : typeof value;
+            if (valueType === 'object') {
+                valueType = Object.prototype.toString.call(value).split(' ')[1].slice(0, -1).toLowerCase()
+            }
             if (!types.includes(valueType)) {
                 revert("Error executing '" + __name + "': wrong " + info + " type. Expect: " + 
                 types.join(" | ") + ". Got: " + valueType + ".");

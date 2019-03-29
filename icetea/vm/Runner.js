@@ -20,13 +20,17 @@ class Runner {
     return src
   }
 
+  getWrapper () {
+    return src => src
+  }
+
   /**
-   * patch a source.
-   * @param {string} compiledSrc - compiled source.
+   * Returns a runable wrapper for compiled JS source or Wasm Buffer.
+   * @param {string|Buffer} compiledSrc - compiled JS source or WasmBuffer.
    * @returns {object} compiled source
    */
-  patch (compiledSrc) {
-    return compiledSrc
+  wrap (compiledSrc) {
+    return this.getWrapper()(compiledSrc)
   }
 
   /**
@@ -36,17 +40,17 @@ class Runner {
    * @returns {object} result from execution
    */
   run (compiledSrc, ...args) {
-    const patchedSrc = this.patch(compiledSrc)
-    return this.doRun(patchedSrc, ...args)
+    const wrapper = this.wrap(compiledSrc)
+    return this.doRun(wrapper, ...args)
   }
 
   /**
    * execute contract source.
-   * @param {string} patchedSrc - patched source.
+   * @param {string} wrapper - Runable wrapper around JS source or Wasm Buffer.
    * @param {...object} args - args needed for execute.
    * @returns {object} result from execution
    */
-  doRun (patchedSrc, ...args) {
+  doRun (wrapper, ...args) {
     throw new Error('Not implemented')
   }
 

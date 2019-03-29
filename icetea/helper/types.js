@@ -29,7 +29,7 @@ function check (o, t, errorMessage = 'Incompatible type') {
   }
 
   if (ot === 'object') {
-    ot = Object.prototype.toString.call([]).split(' ')[1].slice(0, -1)
+    ot = Object.prototype.toString.call(o).split(' ')[1].slice(0, -1)
   }
 
   if (ot !== t) {

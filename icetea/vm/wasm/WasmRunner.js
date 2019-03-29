@@ -1,45 +1,40 @@
 /** @module */
 const Runner = require('../Runner')
-const patch = require('./patch')
+const wasmWrapper = require('./wrapper')
 const { parseMetadata } = require('../../helper/wasm')
 const metering = require('wasm-metering')
 
 /** Class wasm runner */
 class WasmRunner extends Runner {
-  /**
-   * patch a wasm buffer.
-   * @param {string} wasmBuffer - wasm buffer.
-   * @returns {object} patch
-   */
-  patch (wasmBuffer) {
-    return patch(wasmBuffer)
+  getWrapper () {
+    return wasmWrapper
   }
 
   /**
-   * compile source.
-   * @param {string} src - source.
+   * Transform Wasm buffer.
+   * @param {Buffer} wasmBuffer - source.
    * @returns {object} compiled source
    */
-  compile (src) {
-    return metering.meterWASM(src)
+  compile (wasmBuffer) {
+    return metering.meterWASM(wasmBuffer)
   }
 
   /**
    * do run with context.
-   * @param {object} patcher - patcher.
+   * @param {object} patcher - The JS wrapper around Wasm.
    * @param {object} options - options.
    */
-  doRun (patcher, { context }) {
-    return patcher(context)
+  doRun (wrapper, { context }) {
+    return wrapper(context)
   }
 
   /**
    * analyze wasm buffer.
-   * @param {string} src - wasm source.
+   * @param {Buffer} wasmBuffer - wasm source.
    */
-  analyze (src) {
-    super.analyze(src)
-    return parseMetadata(src)
+  analyze (wasmBuffer) {
+    super.analyze(wasmBuffer)
+    return parseMetadata(wasmBuffer)
   }
 }
 

@@ -1,6 +1,6 @@
 const _ = require('lodash')
 const config = require('./config')
-const { deepFreeze } = require('./helper/utils')
+const { deepFreeze, checkUnsupportTypes } = require('./helper/utils')
 
 // This class purpose is to improve performance
 // By reduce the amount of deepClone when state is large
@@ -100,6 +100,7 @@ const _stateforAddress = (contractAddress, readonly, {
       if (!key || typeof key !== 'string') {
         throw new Error(`Expect key to be an non-empty string, but got ${key}`)
       }
+      value = checkUnsupportTypes(value)
       if (!storage) {
         storage = { [key]: value }
         storages[contractAddress] = storage

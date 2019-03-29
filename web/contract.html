@@ -1,36 +1,36 @@
 <html>
 <head>
     <title>icetea - read/write contract</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/prismjs@1.15.0/themes/prism.css">
     <link rel="stylesheet" type="text/css" href="style.css">
 </head>
 <body>
     <div id="content">
+        <section class="notice">This is <a href="https://icetea.io" target="_blank">Icetea</a> kitchen sink, for testing purpose.</section>
         <nav id="menu">
             <a href="/">Scan</a>
             <a href="/transfer.html">Transfer</a>
             <a href="/deploy.html">Deploy Contract</a>
-            <a href="/contract.html">Read/Write Contract</a>
+            <a href="/contract.html">Call Contract</a>
             <a href="/wallet.html">Wallet</a>
             <a href="/bot.html">Bot Zoo</a>
         </nav>
         <h1>Read/write contract</h1>
-        <!-- <label>Private key: </label> -->
-        <!-- <input type="text" id="private_key" size="68" value="CJUPdD38vwc2wMC3hDsySB7YQ6AFLGuU6QYQYaiSeBsK"> -->
 
         <form id="form" action="/api/send_tx" method="POST">
-           <p><label><input placeholder="Value" type="number" name="value"></label>
-            <input placeholder="Fee" type="number" name="fee"></label></p>
+           <p class="input-row"><input placeholder="Value" type="number" name="value">
+            <input placeholder="Fee" type="number" name="fee"></p>
             <p><label>Contract address:</label> <select id="to" name="to" autofocus required></select></p>
             <div id="contractInfo" class="info-box">No contract available, try deploy one.</div>
-            <p>
+            <p class="input-row">
                 <label>Function name:</label>
                 <input id="name" name="name" size="16" autocomplete="off" list="funcs"></select>
                 <datalist id="funcs"></datalist>
                 <span class="info-box"><code id="funcInfo" class="language-js">function</code></span>
             </p>
             <p><label>Params (each param 1 row, JSON accepted, use " to denote string)</label></p>
-            <p><textarea id="params" style="width: 600px;height: 100px;" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></textarea></p>
+            <p><textarea id="params" style="height: 100px;" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></textarea></p>
             <p><button type="submit" style="padding: 8px 32px" id="submit_btn">Send (Write)</button>
         </form>
         <p><button id="read" style="padding: 8px 32px" >Call (View)</button>&nbsp;&nbsp;&nbsp;
