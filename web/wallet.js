@@ -13,7 +13,6 @@ document.getElementById('generatePrivateKey').addEventListener('click', function
   document.getElementById('generated_private_key').value = keyInfo.privateKey
   document.getElementById('generated_public_key').value = keyInfo.address
   tweb3.wallet.importAccount(keyInfo.privateKey)
-  tweb3.wallet.saveToStorage()
   fillWallet()
 })
 
@@ -23,8 +22,12 @@ document.getElementById('seePublicKey').addEventListener('click', function () {
 })
 
 function fillWallet () {
-  tweb3.wallet.loadFromStorage()
+  // const key = process.env.BANK_KEY
+  // tweb3.wallet.importAccount(key)
+  // $('#your_private_key_account').val(key)
+  // if(resp == 0 ) alert('Wallet storage empty! Please goto tap wallet create acount')
   var wallets = tweb3.wallet.accounts
+  $('#currentDefaultAcc').text(tweb3.wallet.defaultAccount)
   var select = document.getElementById('wallet')
   $('#wallet').empty()
   wallets.forEach(item => {
@@ -34,25 +37,40 @@ function fillWallet () {
     select.appendChild(option)
   })
 }
+function showMessage (text, time = 4000) {
+  // parse message to show
+  document.getElementById('info').textContent = text
+  setTimeout(() => {
+    document.getElementById('info').textContent = ''
+  }, time)
+}
 
 $(document).ready(function () {
+  tweb3.wallet.loadFromStorage('123')
   fillWallet()
   $('#setDefaultAcc').on('click', () => {
     try {
       var contract = document.getElementById('wallet').value
       tweb3.wallet.defaultAccount = contract
-      tweb3.wallet.saveToStorage()
+      $('#currentDefaultAcc').text(tweb3.wallet.defaultAccount)
+      tweb3.wallet.saveToStorage('123')
+      showMessage('Success', 2000)
     } catch (error) {
       console.log(error)
       window.alert(String(error))
     }
   })
 
+  $('#saveStorage').on('click', async () => {
+    // showMessage('Saving...')
+    tweb3.wallet.saveToStorage('123')
+    showMessage('Success', 2000)
+  })
+
   $('#importAccount').on('click', async () => {
     try {
       var privateKey = $('#your_private_key_account').val()
       var account = tweb3.wallet.importAccount(privateKey)
-      tweb3.wallet.saveToStorage()
       window.alert('Import sucess!\nYour address: ' + account.address)
       fillWallet()
     } catch (error) {
@@ -72,7 +90,6 @@ $(document).ready(function () {
       var account = tweb3.wallet.importAccount(hdkey.privateKey)
       $('#generated_private_key_seed').val(codec.toString(account.privateKey, 'base58'))
       $('#generated_public_key_seed').val(account.address)
-      tweb3.wallet.saveToStorage()
       fillWallet()
     } catch (error) {
       console.log(error)

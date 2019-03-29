@@ -8,6 +8,7 @@
 
 <body>
     <div id="content">
+        <section id="info"></section>
         <section class="notice">This is <a href="https://icetea.io" target="_blank">Icetea</a> kitchen sink, for testing purpose.</section>
         <nav id="menu">
             <a href="/">Scan</a>
@@ -19,16 +20,44 @@
         </nav>
         <h1>Wallet</h1>
         <h2>
-            Select default account
+            1.Select default account
         </h2>
         <div>
             <p>
+                <label>Default account:</label> <label id="currentDefaultAcc"></label>
+                <br>
+                <br>
                 <label>Wallet address:</label> <select id="wallet" name="wallet" autofocus required></select>
-                <button id="setDefaultAcc">Set default</button>
+                <button id="setDefaultAcc">Save default</button>
             </p>
         </div>
         <h2>
-            Generate account by mnemonic
+            2.Import your account
+        </h2>
+        <div>
+            <textarea id="your_private_key_account"  placeholder="your private key" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></textarea>
+            <br/><br/><button id="importAccount">Import</button>
+        </div>
+        <h2>
+            3.Save data into storage
+        </h2>
+        <div>
+            <p>
+                <button id="saveStorage">Save Storage</button>
+            </p>
+        </div>
+        <h2>
+            4.Generate account
+        </h2>
+        <div>
+            <button id="generatePrivateKey">Generate</button>
+            <h3>Your private key</h3>
+            <textarea disabled id="generated_private_key" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></textarea>
+            <h3>Your account address</h3>
+            <textarea disabled id="generated_public_key" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></textarea>
+        </div>
+        <h2>
+            5.Generate account by mnemonic
         </h2>
         <div>
             <button id="generateMnemonic">Generate</button>
@@ -40,24 +69,7 @@
             <textarea disabled id="generated_public_key_seed" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></textarea>
         </div>
         <h2>
-            Generate account
-        </h2>
-        <div>
-            <button id="generatePrivateKey">Generate</button>
-            <h3>Your private key</h3>
-            <textarea disabled id="generated_private_key" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></textarea>
-            <h3>Your account address</h3>
-            <textarea disabled id="generated_public_key" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></textarea>
-        </div>
-        <h2>
-            Import your account
-        </h2>
-        <div>
-            <textarea id="your_private_key_account"  placeholder="your private key" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">CJUPdD38vwc2wMC3hDsySB7YQ6AFLGuU6QYQYaiSeBsK</textarea>
-            <br/><button id="importAccount">Import</button>
-        </div>
-        <h2>
-            Reveal account address
+            6.Reveal account address
         </h2>
         <div>
             <h3>Enter your private key</h3>

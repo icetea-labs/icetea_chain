@@ -161,7 +161,11 @@ $(document).ready(function () {
     const params = helper.parseParamsFromField('#params')
     // submit tx
     try {
-      tweb3.wallet.loadFromStorage()
+      var resp = tweb3.wallet.loadFromStorage('123')
+      if (resp === 0) {
+        window.alert('Wallet empty! Please go to tap wallet create account')
+        return
+      }
       var ct = tweb3.contract(address)
       var tx = await ct.methods[name](...params).sendSync()
       // console.log('tx',tx);

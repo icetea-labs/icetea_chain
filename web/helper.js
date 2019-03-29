@@ -44,7 +44,11 @@ export function registerTxForm ($form, txData) {
     // submit tx
     try {
       // Should send sync to catch check_tx error
-      tweb3.wallet.loadFromStorage()
+      var resp = tweb3.wallet.loadFromStorage('123')
+      if (resp === 0) {
+        window.alert('Wallet empty! Please go to tap wallet create account')
+        return
+      }
       var result = await tweb3.sendTransactionSync(formData)
       window.location.href = '/tx.html?hash=' + result.hash
     } catch (error) {
