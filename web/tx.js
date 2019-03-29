@@ -2,6 +2,7 @@ import handlebars from 'handlebars/dist/handlebars.min.js'
 import { utils } from 'icetea-web3'
 import tweb3 from './tweb3'
 import Prism from 'prismjs'
+import { tryStringifyJson } from 'icetea-web3/src/utils'
 
 const switchEncoding = utils.switchEncoding
 const tryParseJson = utils.tryParseJson
@@ -66,7 +67,7 @@ async function fetchTxDetails (template, hash) {
     // Do some formating
 
     if (tx.error === 'null') tx.error = ''
-    tx.message = tx.tx_result.data
+    tx.message = tryStringifyJson(tx.tx_result.data)
 
     var html = template(tx)
     document.getElementById('tableContent').innerHTML = html

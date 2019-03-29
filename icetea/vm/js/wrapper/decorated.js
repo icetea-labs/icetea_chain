@@ -45,10 +45,11 @@ ${src}
         const types = typeHolder[typeProp]
         if (types && Array.isArray(types)) {
             let valueType = value === null ? 'null' : typeof value;
-            if (valueType === 'object') {
-                valueType = Object.prototype.toString.call(value).split(' ')[1].slice(0, -1).toLowerCase()
-            }
             if (!types.includes(valueType)) {
+                if (valueType === 'object') {
+                    valueType = Object.prototype.toString.call(value).split(' ')[1].slice(0, -1).toLowerCase()
+                    if (types.includes(valueType)) return value;
+                }
                 revert("Error executing '" + __name + "': wrong " + info + " type. Expect: " + 
                 types.join(" | ") + ". Got: " + valueType + ".");
             }
