@@ -34,7 +34,7 @@ $('#form').submit(async function (e) {
     var params = helper.parseParamsFromField('#params')
     var resp = tweb3.wallet.loadFromStorage('123')
     if (resp === 0) {
-      window.alert('Wallet empty! Please go to tap wallet create account')
+      window.alert('Wallet empty! Please go to Wallet tab to create account.')
       return
     }
     var tx = await resolveExternal(src).then(src => tweb3.deploy(mode, src, params))
