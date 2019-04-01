@@ -22,10 +22,6 @@ document.getElementById('seePublicKey').addEventListener('click', function () {
 })
 
 function fillWallet () {
-  // const key = process.env.BANK_KEY
-  // tweb3.wallet.importAccount(key)
-  // $('#your_private_key_account').val(key)
-  // if(resp == 0 ) alert('Wallet storage empty! Please goto tap wallet create acount')
   var wallets = tweb3.wallet.accounts
   $('#currentDefaultAcc').text(tweb3.wallet.defaultAccount)
   var select = document.getElementById('wallet')
