@@ -32,7 +32,11 @@ $('#form').submit(async function (e) {
 
   try {
     var params = helper.parseParamsFromField('#params')
-    tweb3.wallet.loadFromStorage()
+    var resp = tweb3.wallet.loadFromStorage('123')
+    if (resp === 0) {
+      window.alert('Wallet empty! Please go to Wallet tab to create account.')
+      return
+    }
     var tx = await resolveExternal(src).then(src => tweb3.deploy(mode, src, params))
     // console.log('tx',tx);
     window.location.href = '/tx.html?hash=' + tx.hash

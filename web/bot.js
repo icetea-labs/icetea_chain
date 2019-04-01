@@ -4,7 +4,11 @@ import tweb3 from './tweb3'
 
 const initWeb3 = (showAlert = true) => {
   try {
-    tweb3.wallet.loadFromStorage()
+    var resp = tweb3.wallet.loadFromStorage('123')
+    if (resp === 0) {
+      window.alert('Wallet empty! Please go to Wallet tab to create account.')
+      return
+    }
     byId('address').textContent = tweb3.wallet.defaultAccount
     return true
   } catch (error) {
