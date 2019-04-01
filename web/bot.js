@@ -6,7 +6,7 @@ const initWeb3 = (showAlert = true) => {
   try {
     var resp = tweb3.wallet.loadFromStorage('123')
     if (resp === 0) {
-      window.alert('Wallet empty! Please go to tap wallet create account')
+      window.alert('Wallet empty! Please go to Wallet tab to create account.')
       return
     }
     byId('address').textContent = tweb3.wallet.defaultAccount
