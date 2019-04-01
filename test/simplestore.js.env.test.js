@@ -33,6 +33,7 @@ async function testSimpleStore (mode, src) {
   }
 
   const result = await tweb3.sendTransactionCommit({ from: account10k.address, value, fee, data })
+  console.log('--', result.deliver_tx)
   expect(result.deliver_tx.code).toBeFalsy()
 
   // tags must be correct
