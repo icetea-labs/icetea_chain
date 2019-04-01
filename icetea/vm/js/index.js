@@ -1,7 +1,7 @@
 /** @module */
 const { ContractMode } = require('icetea-common')
 const DecoratedRunner = require('./DecoratedRunner')
-const JSRunner = require('./JSRunner')
+const JsRunner = require('./JsRunner')
 
 /**
  * Raw js or decorated js runner
@@ -14,5 +14,5 @@ module.exports = (mode = ContractMode.JS_DECORATED) => {
     return new DecoratedRunner()
   }
 
-  return new JSRunner()
+  return new JsRunner()
 }
