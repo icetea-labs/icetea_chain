@@ -99,3 +99,36 @@ button {
 .input-row input {
     margin-bottom: 8px
 }
+/* For Botstore */
+.row img {
+    width:50px;
+    height: 50px;
+}
+
+.row div.card {
+    border-radius: .6rem;
+    padding: 10px
+}
+.row div.shadow-sm {
+    border-radius: .6rem;
+}
+.row div.shadow-sm:hover, 
+.row div.shadow-sm:hover {
+    transform: translateY(-0.25em);
+    transition: 0.25s;
+}
+
+.row td {
+    padding: 5px;
+}
+.row .description {
+    border-bottom: none
+}
+
+.row .btn-sm {
+    margin-bottom: 1.5em;
+    margin-top: 0em;
+    border-radius: .6rem;
+    font-size: .700rem;
+    width: 4em;
+}

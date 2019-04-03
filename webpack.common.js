@@ -13,6 +13,7 @@ module.exports = {
     wallet: './web/wallet.js',
     tx: './web/tx.js',
     bot: './web/bot.js',
+    botstore: './web/botstore.js',
     test: './web/playground.js'
   },
   output: {
