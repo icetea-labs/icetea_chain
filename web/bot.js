@@ -1,6 +1,8 @@
 import Vue from 'vue'
 import BotUI from 'botui'
 import tweb3 from './tweb3'
+import $ from 'jquery'
+window.$ = $
 
 const initWeb3 = (showAlert = true) => {
   try {
@@ -107,13 +109,13 @@ async function callContract (method, type = 'read', ...params) {
   }
 }
 
-document.getElementById('connect').addEventListener('click', async function () {
+async function connectBot (botAddr) {
   if (!web3Inited) {
     web3Inited = initWeb3()
   }
   if (!web3Inited) return
 
-  const botAddr = byId('bot_address').value.trim()
+  if (!botAddr) botAddr = byId('bot_address').value.trim()
   const contract = tweb3.contract(botAddr)
 
   // get bot info
@@ -168,4 +170,30 @@ document.getElementById('connect').addEventListener('click', async function () {
 
     result = await speak(callResult.data)
   }
-}, false)
+}
+
+var getUrlParameter = function getUrlParameter (sParam) {
+  var sPageURL = window.location.search.substring(1)
+  var sURLVariables = sPageURL.split('&')
+  var sParameterName
+  var i
+
+  for (i = 0; i < sURLVariables.length; i++) {
+    sParameterName = sURLVariables[i].split('=')
+
+    if (sParameterName[0] === sParam) {
+      return sParameterName[1] === undefined ? true : decodeURIComponent(sParameterName[1])
+    }
+  }
+}
+
+$(document).ready(async function () {
+  var address = getUrlParameter('address')
+  if (address) {
+    await connectBot(address)
+  } else {
+    document.getElementById('connect').addEventListener('click', async function () {
+      await connectBot()
+    }, false)
+  }
+})
