@@ -12,9 +12,9 @@ const global = {}, globalThis = {}, process = void 0, Date = void 0,
     setInterval = void 0, setTimeout = void 0, setImmediate = void 0;
 const require = void 0;
 const Function = void 0;
-Math.random = function() {
+Math.random = (function() {
     return parseInt(this.getEnv().block.hash.substr(-16), 16) / 18446744073709552000
-}
+}).bind(this)
 const __guard = __g;
 ${src}
 `
