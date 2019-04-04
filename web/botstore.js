@@ -70,6 +70,7 @@ const store = {
       botInfo.category = bots[bot].category
       botInfo.icon = bots[bot].icon
       botInfo.name = info.data.name
+      botInfo.alias = bot.split('.', 2)[1]
       botInfo.description = info.data.description.substring(0, 36) + '…'
       resInfo.push(botInfo)
     }
