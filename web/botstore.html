@@ -20,9 +20,9 @@
             <a href="/botstore.html">Store</a>
         </nav>
         <h1>Bot store</h1>
-        <div>
+        <!--div>
             You: <span id="address"></span>
-        </div> 
+        </div--> 
         <label>Category:</label> <select id="category" name="category" autofocus required>
             <option value="9">All</option>
             <option value="0">Xem Bói</option>
@@ -47,11 +47,11 @@
                                     <table>
                                         <tr>
                                             <td><img class="float-left" src={{icon}} alt="Material Dashboard"></td>
-                                            <td> <h6>{{name}}</h6> </td>
+                                            <td><h6>{{name}}</h6></td>
                                             <td> <input type="button" id={{address}} onclick="connectBot(this)" class="btn btn-outline-success btn-sm float-right" value="Get" /></td>
                                         </tr>
                                         <tr>
-                                            <td colspan="3" class="description text-secondary font-weight-light">{{description}}</td>
+                                            <td colspan="3" class="description text-secondary font-weight-light"><div>{{description}}</div></td>
                                         </tr>
                                     </table> 
                                 </div>

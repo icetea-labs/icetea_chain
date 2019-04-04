@@ -112,17 +112,17 @@ button {
 .row div.shadow-sm {
     border-radius: .6rem;
 }
-.row div.shadow-sm:hover, 
-.row div.shadow-sm:hover {
-    transform: translateY(-0.25em);
-    transition: 0.25s;
-}
 
 .row td {
     padding: 5px;
 }
 .row .description {
     border-bottom: none
+}
+.row .description div {
+    height: 42px;
+    padding-top: 4px;
+    overflow: hidden;
 }
 
 .row .btn-sm {
@@ -131,4 +131,9 @@ button {
     border-radius: .6rem;
     font-size: .700rem;
     width: 4em;
+}
+.card h6 {
+    height: 44px;
+    overflow: hidden;
+    padding: 4px 0;
 }
