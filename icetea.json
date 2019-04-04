@@ -1,0 +1,26 @@
+{
+  "apps" : [
+    {
+      "name": "icetea",
+      "script": "scripts/start.js",
+      "watch": false
+    },
+    {
+      "name": "tendermint",
+      "script": "tendermint",
+      "args": "node",
+      "exec_interpreter": "none",
+      "exec_mode"  : "fork_mode",
+      "watch": false
+    },
+    {
+      "name": "pm2-monitor",
+      "script": "common/pm2-monitor.js",
+      "watch": false,
+      "env": {
+        "ICETEA_NAME": "icetea",
+        "TENDERMINT_NAME": "tendermint"
+      }
+    }
+  ]
+}
