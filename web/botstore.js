@@ -71,7 +71,10 @@ const store = {
       botInfo.icon = bots[bot].icon
       botInfo.name = info.data.name
       botInfo.alias = bot.split('.', 2)[1]
-      botInfo.description = info.data.description.substring(0, 36) + '…'
+      botInfo.description = info.data.description || ''
+      if (botInfo.description.length > 36) {
+        botInfo.description = botInfo.description.substring(0, 36) + '…'
+      }
       resInfo.push(botInfo)
     }
     return resInfo

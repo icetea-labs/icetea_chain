@@ -27,7 +27,7 @@ async function deploy () {
 
   // deploy the astrobot
   const src = await resolveExternal(fs.readFileSync(botFile, 'utf8'))
-  const astrobot = await tweb3.deploy(ContractMode.JS_DECORATED, src)
+  const theBot = await tweb3.deploy(ContractMode.JS_DECORATED, src, [], { value: 10000 })
 
   // add astrobot alias
   const alias = tweb3.contract('system.alias', key)
@@ -37,7 +37,7 @@ async function deploy () {
     botName = botName + '_' + Date.now().toString(36).substr(-4)
     console.log('Use new bot name: ' + botName)
   }
-  await alias.methods.register(botName, astrobot.address).sendCommit()
+  await alias.methods.register(botName, theBot.address).sendCommit()
 
   // register astrobot with botstore
   const { data: existed } = await botstore.methods.resolve('contract.' + botName).call()

@@ -1,8 +1,6 @@
 import Vue from 'vue'
 import BotUI from 'botui'
 import tweb3 from './tweb3'
-import $ from 'jquery'
-window.$ = $
 
 const initWeb3 = (showAlert = true) => {
   try {
@@ -83,14 +81,31 @@ function json (o) {
   }
 }
 
-async function callContract (method, type = 'read', ...params) {
+function fmtNum (n) {
+  return n.toLocaleString(undefined, {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 9
+  })
+}
+
+function confirmTransfer (amount) {
+  say(`ATTENTION: you are about to transfer <b>${fmtNum(amount)}</b> TEA to this bot.`, {
+    type: 'html', cssClass: 'bot-intro'
+  })
+  return sayButton([
+    { text: 'Let\'s transfer', value: 'transfer' },
+    { text: 'No way', value: 'no' }
+  ]).then(result => (result && result.value === 'transfer'))
+}
+
+async function callContract (method, type, value, ...params) {
   const map = {
     'none': 'callPure',
     'read': 'call',
     'write': 'sendCommit'
   }
 
-  const result = await method(...params)[map[type]]()
+  const result = await method(...params)[map[type]]({ value })
 
   if (type === 'write') {
     if (result.check_tx.code || result.deliver_tx.code) {
@@ -154,12 +169,23 @@ async function connectBot (botAddr) {
 
   // display Start button
   let result = await sayButton({ text: botInfo.start_button || 'Start', value: 'start' })
+  let callResult
   let isFirst = true
   while (result && result.value) {
+    let transferValue = 0
+    if (callResult && callResult.data && callResult.data.options && callResult.data.options.value) {
+      const ok = await confirmTransfer(callResult.data.options.value) // should confirm at wallet level
+      if (!ok) {
+        say('Transfer canceled. You could reconnect to this bot to start a new conversation.')
+        return
+      }
+      transferValue = callResult.data.options.value
+    }
+
     // send lastValue to bot
-    const callResult = isFirst
-      ? await callContract(contract.methods.onstart, botInfo.state_access)
-      : await callContract(contract.methods.ontext, botInfo.state_access, result.value)
+    callResult = isFirst
+      ? await callContract(contract.methods.onstart, botInfo.state_access, 0)
+      : await callContract(contract.methods.ontext, botInfo.state_access, transferValue, result.value)
     isFirst = false
 
     // if bot has error, say so and stop things
@@ -168,7 +194,11 @@ async function connectBot (botAddr) {
       return window.alert(json(callResult.error))
     }
 
-    result = await speak(callResult.data)
+    if (callResult && callResult.data && callResult.data.messages) {
+      result = await speak(callResult.data.messages)
+    } else {
+      result = undefined
+    }
   }
 }
 
@@ -187,7 +217,7 @@ var getUrlParameter = function getUrlParameter (sParam) {
   }
 }
 
-$(document).ready(async function () {
+;(async () => {
   var address = getUrlParameter('address')
   if (address) {
     await connectBot(address)
@@ -196,4 +226,4 @@ $(document).ready(async function () {
       await connectBot()
     }, false)
   }
-})
+})()

@@ -245,7 +245,7 @@ exports.bindAll = obj => {
  * @returns {object} bind-all object
  */
 exports.newAndBind = (SomeClass, ...params) => {
-  const instance = new SomeClass(params)
+  const instance = new SomeClass(...params)
   exports.bindAll(Object.getPrototypeOf(instance))
   return instance
 }

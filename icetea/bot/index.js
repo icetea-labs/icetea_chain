@@ -4,7 +4,21 @@ class Message {
     text && this[t] && this[t](text)
   }
   done () {
-    return this.messages
+    return {
+      options: this.opts,
+      messages: this.messages
+    }
+  }
+
+  option (opts) {
+    if (opts) {
+      this.opts = Object.assign(this.opts || {}, opts)
+    }
+    return this
+  }
+
+  requestTransfer (value) {
+    return this.option({ value })
   }
 
   push (message) {
@@ -32,11 +46,18 @@ class Message {
     const self = this
     const m = []
     const t = {
-      button (text, value, options) {
+      button (text, value, options = {}) {
+        if (!value) value = text
         m.push({
           text,
           value,
           ...options
+        })
+        return t
+      },
+      buttons (...values) {
+        values.forEach(v => {
+          m.push({ text: v, value: v })
         })
         return t
       },
@@ -52,6 +73,7 @@ class Message {
   }
 
   button (text, value, options = {}) {
+    if (!value) value = text
     return this.push({
       type: 'button',
       content: [{

@@ -111,6 +111,7 @@ button {
 }
 .row div.shadow-sm {
     border-radius: .6rem;
+    width: 100%;
 }
 
 .row td {
