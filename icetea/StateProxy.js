@@ -1,6 +1,9 @@
 const _ = require('lodash')
 const config = require('./config')
 const { deepFreeze, checkUnsupportTypes } = require('./helper/utils')
+const { createHash } = require('crypto')
+
+const { toAddress } = require('icetea-common').ecc
 
 // This class purpose is to improve performance
 // By reduce the amount of deepClone when state is large
@@ -36,7 +39,9 @@ const _generateContractAddress = (deployedBy, stateTable) => {
     (stateTable[k].src && stateTable[k].deployedBy === deployedBy) ? (t + 1) : t
   ), 0)
 
-  return String(count).padStart(3, '0') + '_' + deployedBy.split('_', 2)[1]
+  const id = count + '_' + deployedBy
+  const buf = createHash('sha256').update(id).digest()
+  return toAddress(buf)
 }
 
 const _srcFor = (contractAddress, { stateTable, deployedContracts }) => {
