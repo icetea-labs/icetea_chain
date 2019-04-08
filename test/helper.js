@@ -32,15 +32,7 @@ exports.randomAccountWithBalance = async (tweb3, intialBalance = 10000) => {
   const keyInfo = await ecc.newKeyPairWithAddress()
 
   // send money from configKey to newKey
-  const result = await tweb3.sendTransactionCommit({ from: from, to: keyInfo.address, value: intialBalance })
-
-  if (result.check_tx.code) {
-    throw new Error('check_tx: ' + result.check_tx.code + ' - ' + result.check_tx.log)
-  }
-
-  if (result.deliver_tx.code) {
-    throw new Error('deliver_tx: ' + result.deliver_tx.code + ' - ' + result.deliver_tx.log)
-  }
+  await tweb3.sendTransactionCommit({ from: from, to: keyInfo.address, value: intialBalance })
 
   return keyInfo
 }

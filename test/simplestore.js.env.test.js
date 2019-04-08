@@ -41,7 +41,7 @@ async function testSimpleStore (mode, src) {
   expect(typeof tags['tx.to']).toBe('string')
   const to = tags['tx.to']
 
-  expect(to).toBe(result.deliver_tx.data)
+  expect(to).toBe(result.result)
 
   // since value > 0, a system 'Transferred' event must be emitted
   const events = tweb3.utils.decodeEventData(result)
@@ -71,7 +71,7 @@ async function testSimpleStore (mode, src) {
   expect(meta.setValue.decorators[0]).toEqual('transaction')
 
   // check owner
-  const owner = (await tweb3.callReadonlyContractMethod(to, 'getOwner')).data
+  const owner = await tweb3.callReadonlyContractMethod(to, 'getOwner')
   expect(owner).toBe(from)
 
   const value2Set = 100
@@ -96,7 +96,7 @@ async function testSimpleStore (mode, src) {
   })
 
   // Get the value after check
-  const valueCheck = (await tweb3.callReadonlyContractMethod(to, 'getValue')).data
+  const valueCheck = await tweb3.callReadonlyContractMethod(to, 'getValue')
   expect(valueCheck).toBe(value2Set)
 }
 

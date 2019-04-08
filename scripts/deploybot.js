@@ -31,7 +31,7 @@ async function deploy () {
 
   // add astrobot alias
   const alias = tweb3.contract('system.alias', key)
-  const { data: oldBot } = await alias.methods.resolve('contract.' + botName).call()
+  const oldBot = await alias.methods.resolve('contract.' + botName).call()
   if (oldBot) {
     console.log(`${botName} already registed to point to ${oldBot}`)
     botName = botName + '_' + Date.now().toString(36).substr(-4)
@@ -40,7 +40,7 @@ async function deploy () {
   await alias.methods.register(botName, theBot.address).sendCommit()
 
   // register astrobot with botstore
-  const { data: existed } = await botstore.methods.resolve('contract.' + botName).call()
+  const existed = await botstore.methods.resolve('contract.' + botName).call()
   if (!existed) {
     const avatar = 'http://i.pravatar.cc/150?img=' + (Date.now() % 70 + 1)
     await botstore.methods.register('contract.' + botName, 0, avatar).sendCommit()

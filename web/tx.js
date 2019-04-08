@@ -2,7 +2,6 @@ import handlebars from 'handlebars/dist/handlebars.min.js'
 import { utils } from 'icetea-web3'
 import tweb3 from './tweb3'
 import Prism from 'prismjs'
-import { tryStringifyJson } from 'icetea-web3/src/utils'
 
 const switchEncoding = utils.switchEncoding
 const tryParseJson = utils.tryParseJson
@@ -52,7 +51,7 @@ async function fetchTxDetails (template, hash) {
     data.data = JSON.parse(data.data) || {}
     if (data.data.op === 0) {
       tx.txType = 'deploy'
-      tx.to = tx.tx_result.data
+      tx.to = tx.result
       tx.metadata = JSON.stringify(await tweb3.getMetadata(tx.to), null, 2)
     } else if (data.data.op === 1) {
       tx.txType = 'call'
@@ -67,7 +66,6 @@ async function fetchTxDetails (template, hash) {
     // Do some formating
 
     if (tx.error === 'null') tx.error = ''
-    tx.message = tryStringifyJson(tx.tx_result.data)
 
     var html = template(tx)
     document.getElementById('tableContent').innerHTML = html

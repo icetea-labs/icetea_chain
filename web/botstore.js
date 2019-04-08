@@ -56,8 +56,7 @@ const store = {
     var address = 'system.botstore'
     const contract = tweb3.contract(address)
     const arrbots = await contract.methods.query().call()
-    // console.log(resInfo)
-    return arrbots.data
+    return arrbots
   },
   getBotInfo: async function (bots) {
     var resInfo = []
@@ -69,9 +68,9 @@ const store = {
       botInfo.address = bot
       botInfo.category = bots[bot].category
       botInfo.icon = bots[bot].icon
-      botInfo.name = info.data.name
+      botInfo.name = info.name
       botInfo.alias = bot.split('.', 2)[1]
-      botInfo.description = info.data.description || ''
+      botInfo.description = info.description || ''
       if (botInfo.description.length > 36) {
         botInfo.description = botInfo.description.substring(0, 36) + '…'
       }

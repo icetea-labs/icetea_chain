@@ -75,19 +75,20 @@ describe('transfer', () => {
     let value
     let fee = 0.000001
 
-    let result = await tweb3.sendTransactionCommit({ from: from, to, value, fee })
-    expect(result.check_tx.code).toBeTruthy()
+    const transfer = () => {
+      return tweb3.sendTransactionCommit({ from: from, to, value, fee })
+    }
+
+    await expect(transfer()).rejects.toThrowError('balance')
 
     value = 0.0001
     fee = undefined
-
-    result = await tweb3.sendTransactionCommit({ from: from, to, value, fee })
-    expect(result.check_tx.code).toBeTruthy()
+    await expect(transfer()).rejects.toThrowError('balance')
 
     value = undefined
     fee = undefined
 
-    result = await tweb3.sendTransactionCommit({ from: from, to, value, fee })
+    const result = await tweb3.sendTransactionCommit({ from: from, to, value, fee })
     expect(result.deliver_tx.code).toBeFalsy()
   })
 })

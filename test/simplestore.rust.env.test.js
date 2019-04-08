@@ -72,7 +72,7 @@ async function testSimpleStore (mode, contractPath) {
   // expect(meta.setValue.decorators[0]).toEqual('transaction')
 
   // check owner
-  const owner = (await tweb3.callReadonlyContractMethod(to, 'get_owner')).data
+  const owner = await tweb3.callReadonlyContractMethod(to, 'get_owner')
   expect(owner).toBe(from)
 
   const value2Set = 100
@@ -97,7 +97,7 @@ async function testSimpleStore (mode, contractPath) {
   })
 
   // Get the value after check
-  const valueCheck = (await tweb3.callReadonlyContractMethod(to, 'get_value')).data
+  const valueCheck = await tweb3.callReadonlyContractMethod(to, 'get_value')
   expect(valueCheck).toBe(value2Set.toString()) // for u128
 }
 

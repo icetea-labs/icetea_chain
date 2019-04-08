@@ -14,7 +14,7 @@ async function deploy () {
   const botstore = tweb3.contract('system.botstore')
 
   const check = await botstore.methods.resolve('contract.astrobot').call()
-  if (!check || !check.success || check.data) return
+  if (check) return
 
   // deploy the astrobot
   const src = await resolveExternal(fs.readFileSync('./example/astrobot/astrobot.js', 'utf8'))

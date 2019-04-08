@@ -73,13 +73,13 @@ function byId (id) {
   return document.getElementById(id)
 }
 
-function json (o) {
-  try {
-    return JSON.stringify(o)
-  } catch (e) {
-    return String(o)
-  }
-}
+// function json (o) {
+//   try {
+//     return JSON.stringify(o)
+//   } catch (e) {
+//     return String(o)
+//   }
+// }
 
 function fmtNum (n) {
   return n.toLocaleString(undefined, {
@@ -108,17 +108,7 @@ async function callContract (method, type, value, ...params) {
   const result = await method(...params)[map[type]]({ value })
 
   if (type === 'write') {
-    if (result.check_tx.code || result.deliver_tx.code) {
-      return {
-        success: false,
-        error: result.check_tx.log || result.deliver_tx.log
-      }
-    } else {
-      return {
-        success: true,
-        data: result.deliver_tx.data
-      }
-    }
+    return result.result
   } else {
     return result
   }
@@ -130,16 +120,12 @@ async function connectBot (botAddr) {
   }
   if (!web3Inited) return
 
-  if (!botAddr) botAddr = byId('bot_address').value.trim()
+  // if (!botAddr) botAddr = byId('bot_address').value.trim()
   const contract = tweb3.contract(botAddr)
 
   // get bot info
-  const resInfo = await contract.methods.botInfo().callPure()
-  if (!resInfo.success) {
-    console.error(resInfo)
-    return window.alert(json(resInfo.error))
-  }
-  const botInfo = resInfo.data
+  const botInfo = await contract.methods.botInfo().callPure()
+
   if (!botInfo.state_access) {
     const meta = await tweb3.getMetadata(botAddr)
     if (meta && meta.ontext && meta.ontext.decorators && meta.ontext.decorators.length > 0) {
@@ -173,13 +159,13 @@ async function connectBot (botAddr) {
   let isFirst = true
   while (result && result.value) {
     let transferValue = 0
-    if (callResult && callResult.data && callResult.data.options && callResult.data.options.value) {
-      const ok = await confirmTransfer(callResult.data.options.value) // should confirm at wallet level
+    if (callResult && callResult.options && callResult.options.value) {
+      const ok = await confirmTransfer(callResult.options.value) // should confirm at wallet level
       if (!ok) {
         say('Transfer canceled. You could reconnect to this bot to start a new conversation.')
         return
       }
-      transferValue = callResult.data.options.value
+      transferValue = callResult.options.value
     }
 
     // send lastValue to bot
@@ -188,14 +174,10 @@ async function connectBot (botAddr) {
       : await callContract(contract.methods.ontext, botInfo.state_access, transferValue, result.value)
     isFirst = false
 
-    // if bot has error, say so and stop things
-    if (!callResult.success) {
-      console.error(callResult)
-      return window.alert(json(callResult.error))
-    }
-
-    if (callResult && callResult.data && callResult.data.messages) {
-      result = await speak(callResult.data.messages)
+    console.log(callResult)
+    if (callResult) {
+      result = await speak(callResult.messages || callResult)
+      console.log(result)
     } else {
       result = undefined
     }
@@ -220,10 +202,13 @@ var getUrlParameter = function getUrlParameter (sParam) {
 ;(async () => {
   var address = getUrlParameter('address')
   if (address) {
-    await connectBot(address)
+    try {
+      await connectBot(address)
+    } catch (error) {
+      console.log(error)
+      window.alert(String(error))
+    }
   } else {
-    document.getElementById('connect').addEventListener('click', async function () {
-      await connectBot()
-    }, false)
+    window.alert('No bot to connect!')
   }
 })()

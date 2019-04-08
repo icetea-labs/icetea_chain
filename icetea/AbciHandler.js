@@ -104,26 +104,15 @@ const handler = {
         }
         case 'invokeView':
         case 'invokePure': {
-          try {
-            const options = JSON.parse(data)
-            const result = app[path](options.address, options.name, options.params, options.options)
-            return replyQuery({
-              success: true,
-              data: result
-            })
-          } catch (error) {
-            console.log(error)
-            return replyQuery({
-              success: false,
-              error: String(error)
-            })
-          }
+          const options = JSON.parse(data)
+          const result = app[path](options.address, options.name, options.params, options.options)
+          return replyQuery(result)
         }
       }
 
       return { code: 1, info: 'Path not supported' }
     } catch (error) {
-      return { code: 2, info: String(error) }
+      return { code: 2, info: error }
     }
   }
 }
