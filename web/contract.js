@@ -196,9 +196,9 @@ $(document).ready(function () {
       // var ct = tweb3.contract(address, privateKey)
       // var result = await ct.methods[name].call(name, params)
       // if (result.success) {
-        document.getElementById('resultJson').textContent = tryStringifyJson(result)
+      document.getElementById('resultJson').textContent = tryStringifyJson(result)
       // } else {
-        // document.getElementById('resultJson').textContent = tryStringifyJson(result.error)
+      // document.getElementById('resultJson').textContent = tryStringifyJson(result.error)
       // }
     } catch (error) {
       document.getElementById('resultJson').textContent = tryStringifyJson(error)
