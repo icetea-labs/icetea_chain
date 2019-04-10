@@ -5,8 +5,8 @@ const fs = require('fs')
 
 global.fetch = require('node-fetch')
 
-let botName = 'astrobot'
-let botFile = 'astrobot/astrobot.js'
+let botName = 'dice'
+let botFile = 'dice.js'
 if (process.argv.length > 2) {
   botName = process.argv[2]
   if (process.argv.length > 3) {
@@ -15,7 +15,7 @@ if (process.argv.length > 2) {
     botFile = botName + '.js'
   }
 }
-botFile = './example/Bot/' + botFile
+botFile = './example/bot/' + botFile
 
 const { IceTeaWeb3 } = require('icetea-web3')
 const tweb3 = new IceTeaWeb3('ws://localhost:26657/websocket')

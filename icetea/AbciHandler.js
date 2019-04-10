@@ -1,5 +1,5 @@
 const { getBlock, getTx, replyQuery } = require('./helper/abci')
-const app = require('./App')
+const app = require('./app')
 
 // turn on debug logging
 require('debug').enable('abci*')

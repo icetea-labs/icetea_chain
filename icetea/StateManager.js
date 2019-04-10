@@ -1,7 +1,7 @@
 const config = require('./config')
 const merkle = require('./helper/merkle')
 const EventEmitter = require('events')
-const stateProxy = require('./StateProxy')
+const stateProxy = require('./stateproxy')
 
 // Declare outside class to ensure private
 let stateTable, lastBlock

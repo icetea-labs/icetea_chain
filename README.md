@@ -15,7 +15,7 @@ Tendermint-based blockchain which is developer-friendly and support Javascript a
 
 ## Presequisite
 1. NodeJS lastest LTS version
-2. [Tendermint latest release](https://tendermint.com/docs/introduction/install.html)
+2. [Tendermint latest release](https://github.com/tendermint/tendermint/releases)
 3. `tendermint init`
 
 Open `~/.tendermint/config/config.toml`.

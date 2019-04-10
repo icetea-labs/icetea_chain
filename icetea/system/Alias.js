@@ -7,7 +7,7 @@
  * No support for UPDATE nor DELETE
  */
 
-const { Alias: ALIAS_ADDR } = require('./BotNames')
+const { Alias: ALIAS_ADDR } = require('./botnames')
 const { checkMsg } = require('../helper/types')
 const { validateAddress } = require('icetea-common').ecc
 

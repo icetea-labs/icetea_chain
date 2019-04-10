@@ -17,7 +17,7 @@ async function deploy () {
   if (check) return
 
   // deploy the astrobot
-  const src = await resolveExternal(fs.readFileSync('./example/astrobot/astrobot.js', 'utf8'))
+  const src = await resolveExternal(fs.readFileSync('./example/bot/astrobot/astrobot.js', 'utf8'))
   const astrobot = await tweb3.deploy(ContractMode.JS_DECORATED, src)
 
   // add astrobot alias

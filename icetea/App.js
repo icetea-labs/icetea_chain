@@ -1,9 +1,9 @@
 const { verifyTxSignature } = require('icetea-common/src/utils')
 const utils = require('./helper/utils')
 const sysContracts = require('./system')
-const invoker = require('./ContractInvoker')
+const invoker = require('./contractinvoker')
 
-const stateManager = require('./StateManager')
+const stateManager = require('./statemanager')
 
 function _ensureAddress (addr) {
   // resolve alias
