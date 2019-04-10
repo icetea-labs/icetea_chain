@@ -1,5 +1,5 @@
 /** @module */
-const Runner = require('../Runner')
+const Runner = require('../runner')
 const wasmWrapper = require('./wrapper')
 const { parseMetadata } = require('../../helper/wasm')
 const metering = require('wasm-metering')

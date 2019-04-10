@@ -5,4 +5,4 @@
  * @function
  * @returns {object} wasm runner
  */
-module.exports = new (require('./WasmRunner'))()
+module.exports = new (require('./wasmrunner'))()

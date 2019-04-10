@@ -1,6 +1,6 @@
 /** @module */
 // const halts = require('halting-problem')
-const Runner = require('../Runner')
+const Runner = require('../runner')
 const babel = require('@babel/core')
 const wrapper = require('./wrapper/raw')
 

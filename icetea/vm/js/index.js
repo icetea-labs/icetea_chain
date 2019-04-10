@@ -1,7 +1,7 @@
 /** @module */
 const { ContractMode } = require('icetea-common')
-const DecoratedRunner = require('./DecoratedRunner')
-const JsRunner = require('./JsRunner')
+const DecoratedRunner = require('./decoratedrunner')
+const JsRunner = require('./jsrunner')
 
 /**
  * Raw js or decorated js runner

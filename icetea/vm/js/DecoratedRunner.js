@@ -1,6 +1,6 @@
 /** @module */
 
-const JsRunner = require('./JsRunner')
+const JsRunner = require('./jsrunner')
 const wrapper = require('./wrapper/decorated')
 
 /**
