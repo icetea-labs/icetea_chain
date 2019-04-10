@@ -14,7 +14,7 @@ exports.getRunner = mode => (mode === ContractMode.WASM ? require('./wasm') : re
  * @param {string} mode - contract mode
  * @returns {object} context
  */
-exports.getContext = mode => require(mode === ContractMode.WASM ? './wasm/Context' : './js/Context')
+exports.getContext = mode => require(mode === ContractMode.WASM ? './wasm/context' : './js/context')
 /**
  * get guard
  * @function
