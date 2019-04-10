@@ -192,14 +192,14 @@ $(document).ready(function () {
     // TODO: modify frontend, add from address
     try {
       const method = this.id === 'read' ? 'callReadonlyContractMethod' : 'callPureContractMethod'
-      const result = await tweb3[method](address, name, params, { from: '617BFqg1QhNtsJiNiWz9jGpsm5iAJKqWQBhhk36KjvUFqNkh47' })
+      const result = await tweb3[method](address, name, params)
       // var ct = tweb3.contract(address, privateKey)
       // var result = await ct.methods[name].call(name, params)
-      if (result.success) {
-        document.getElementById('resultJson').textContent = tryStringifyJson(result.data)
-      } else {
-        document.getElementById('resultJson').textContent = tryStringifyJson(result.error)
-      }
+      // if (result.success) {
+      document.getElementById('resultJson').textContent = tryStringifyJson(result)
+      // } else {
+      // document.getElementById('resultJson').textContent = tryStringifyJson(result.error)
+      // }
     } catch (error) {
       document.getElementById('resultJson').textContent = tryStringifyJson(error)
     }
