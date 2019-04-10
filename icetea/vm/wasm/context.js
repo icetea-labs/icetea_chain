@@ -1,6 +1,6 @@
 /** @module */
 const { emitEvent } = require('../../helper/utils')
-const invoker = require('../../ContractInvoker')
+const invoker = require('../../contractinvoker')
 
 /**
  * context for (with invoke type)
