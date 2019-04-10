@@ -1,6 +1,6 @@
 /** @module */
 const utils = require('../../helper/utils')
-const invoker = require('../../ContractInvoker')
+const invoker = require('../../contractinvoker')
 
 function _makeLoadContract (invokerTypes, srcContract, options) {
   return destContract => {
