@@ -1,6 +1,6 @@
 const { SurveyBot, Message } = require('https://github.com/TradaTech/icetea/icetea/bot/index.js')
-const helper = require('https://github.com/TradaTech/icetea/example/astrobot/helper.js')
-const { toLunar } = require('https://github.com/TradaTech/icetea/example/astrobot/lunar.js')
+const helper = require('https://github.com/TradaTech/icetea/example/bot/astrobot/helper.js')
+const { toLunar } = require('https://github.com/TradaTech/icetea/example/bot/astrobot/lunar.js')
 
 @contract class AstroBot extends SurveyBot {
 
