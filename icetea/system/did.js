@@ -6,6 +6,7 @@
  * - does not support anything else yet.
  */
 
+const { Did: DID_ADDR } = require('./botnames')
 const { checkMsg } = require('../helper/types')
 
 const METADATA = {
@@ -38,13 +39,13 @@ const METADATA = {
     decorators: ['view'],
     params: [
       { name: 'address', type: 'string' },
-      { name: 'signers', type: ['string', 'Array'] }
+      { name: 'signers', type: ['string', 'Array', 'undefined'] }
     ],
     returnType: 'undefined'
   }
 }
 
-function _check (owners, threshold) {
+function _checkValidity (owners, threshold) {
   if (threshold === undefined) {
     threshold = 1
   }
@@ -71,6 +72,21 @@ function _check (owners, threshold) {
   }
 }
 
+function _checkPerm (address, props, signers) {
+  if (!props || !props.owners || !props.owners.length) {
+    return signers.includes(address)
+  }
+  const threshold = props.threshold || 1
+  const signWeight = signers.reduce((prev, addr) => {
+    prev += (props.owners[addr] || 0)
+    return prev
+  }, 0)
+
+  if (signWeight < threshold) {
+    throw new Error('Permission denied.')
+  }
+}
+
 // standard contract interface
 exports.run = (context, options) => {
   const { msg } = context.getEnv()
@@ -89,7 +105,7 @@ exports.run = (context, options) => {
         throw new Error("This address is already registered. Call 'update' to update.")
       }
 
-      _check(owners, threshold)
+      _checkValidity(owners, threshold)
 
       const props = {}
       if (owners && owners.length) {
@@ -106,58 +122,48 @@ exports.run = (context, options) => {
     },
 
     checkPermission (address, signers) {
+      signers = signers || msg.signers
       if (typeof signers === 'string') {
         signers = [signers]
       }
       const props = this.getState(address)
-      if (!props || !props.owners || !props.owners.length) {
-        return signers.include(address)
-      }
-      const threshold = props.threshold || 1
-      const signWeight = signers.reduce((prev, addr) => {
-        prev += (props.owners[addr] || 0)
-        return prev
-      }, 0)
-
-      if (signWeight < threshold) {
-        throw new Error('Permission denied.')
-      }
+      _checkPerm(address, props, signers)
     },
 
     addOwner (address, owner, weight = 1) {
-      contract.checkPermission(address, msg.signers || msg.sender)
+      contract.checkPermission(address)
 
       const old = this.getState(address)
       if (!old) {
         contract.register(address, { owners: { [owner]: weight } })
       } else {
         old.owners[owner] = weight
+        _checkValidity(old.owners, old.threshold)
         this.setState(address, old)
       }
-
-      _check(old.owners, old.threshold)
     },
 
     setThreshold (address, threshold) {
-      contract.checkPermission(address, msg.signers || msg.sender)
+      contract.checkPermission(address)
 
       const old = this.getState(address)
       if (!old) {
-        if (threshold !== undefined && threshold !== 1) { contract.register(address, { threshold }) }
+        if (threshold !== undefined && threshold !== 1) {
+          contract.register(address, { threshold })
+        }
       } else {
         if (threshold === undefined || threshold === 1) {
           delete old.threshold
         } else {
           old.threshold = threshold
         }
+        _checkValidity(old.owners, old.threshold)
         this.setState(address, old)
       }
-
-      _check(old.owners, old.threshold)
     },
 
     setAttribute (address, name, value) {
-      contract.checkPermission(address, msg.signers || msg.sender)
+      contract.checkPermission(address)
 
       const v = (typeof value === 'undefined') ? name : { [name]: value }
       if (typeof v !== 'object') {
@@ -179,4 +185,10 @@ exports.run = (context, options) => {
   } else {
     return contract[msg.name].apply(context, msg.params)
   }
+}
+
+exports.checkPermission = function (address, signers) {
+  const storage = this.unsafeStateManager().getAccountState(DID_ADDR).storage || {}
+  const props = storage[address]
+  _checkPerm(address, props, signers)
 }

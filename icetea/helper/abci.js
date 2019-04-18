@@ -1,5 +1,5 @@
 /** @module */
-const { codec, ecc, Tx } = require('icetea-common')
+const { codec, Tx } = require('icetea-common')
 
 /**
  * get block
@@ -30,7 +30,7 @@ function getTx (req) {
     reqTx.fee,
     JSON.parse(reqTx.data || '{}'),
     reqTx.nonce).setEvidence(reqTx.evidence)
-  tx.from = reqTx.from || ecc.toAddress(reqTx.evidence.pubkey || reqTx.evidence[0].pubkey)
+  tx.from = reqTx.from
   return tx
 }
 
