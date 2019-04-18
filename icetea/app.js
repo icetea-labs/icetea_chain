@@ -2,6 +2,7 @@ const { verifyTxSignature } = require('icetea-common/src/utils')
 const utils = require('./helper/utils')
 const sysContracts = require('./system')
 const invoker = require('./contractinvoker')
+const did = require('./system/did')
 
 const stateManager = require('./statemanager')
 
@@ -80,6 +81,18 @@ class App {
 
     verifyTxSignature(tx)
 
+    if (tx.signers.length === 0) {
+      throw new Error('Must have at lease one signature.')
+    } else if (tx.signers.length === 1) {
+      if (tx.from === tx.signers[0]) {
+        throw new Error("No need to set 'from' to save blockchain data size.") // so strict!
+      }
+    } else if (!tx.from) {
+      throw new Error("Must explicitly set 'from' when there are more than 1 signer.")
+    }
+
+    tx.from = tx.from || tx.signers[0]
+    did.checkPermission(tx.from, tx.signers)
     // Check balance
     if (tx.value + tx.fee > stateManager.balanceOf(tx.from)) {
       throw new Error('Not enough balance')
@@ -135,6 +148,8 @@ class App {
   }
 
   execTx (tx) {
+    this.checkTx(tx)
+
     // resolve alias
     tx.to = _ensureAddress(tx.to)
 

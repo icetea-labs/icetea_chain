@@ -60,6 +60,7 @@ exports.forTransaction = (contractAddress, methodName, methodParams, options) =>
   msg.name = methodName
   msg.params = methodParams
   msg.sender = tx.from
+  msg.signers = tx.signers
   msg.value = tx.value
   msg.fee = tx.fee
   msg.callType = (msg.value > 0) ? 'payable' : 'transaction'
