@@ -29,9 +29,8 @@ function getTx (req) {
     reqTx.value,
     reqTx.fee,
     JSON.parse(reqTx.data || '{}'),
-    reqTx.nonce).setSignature(reqTx.signature)
-  tx.publicKey = reqTx.publicKey
-  tx.from = ecc.toAddress(reqTx.publicKey)
+    reqTx.nonce).setEvidence(reqTx.evidence)
+  tx.from = reqTx.from || ecc.toAddress(reqTx.evidence.pubkey || reqTx.evidence[0].pubkey)
   return tx
 }
 

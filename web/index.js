@@ -36,8 +36,12 @@ function fmtTxs (txs) {
     t.blockHeight = t.height
 
     const data = decodeTX(t.tx)
-
-    t.from = fmtHex(ecc.toAddress(data.publicKey), 6)
+    let from = data.from
+    if (!from) {
+      const pubkey = data.evidence.pubkey || data.evidence[0].pubkey
+      from = ecc.toAddress(pubkey)
+    }
+    t.from = fmtHex(from, 6)
     t.to = fmtHex(data.to, 6)
     t.value = data.value
     t.fee = data.fee
