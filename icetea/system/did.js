@@ -30,6 +30,14 @@ const METADATA = {
     decorators: ['transaction'],
     params: [
       { name: 'address', type: 'string' },
+      { name: 'owner', type: 'string' }
+    ],
+    returnType: 'undefined'
+  },
+  'removeOwner': {
+    decorators: ['transaction'],
+    params: [
+      { name: 'address', type: 'string' },
       { name: 'owner', type: 'string' },
       { name: 'weight', type: ['number', 'undefined'] }
     ],
@@ -124,7 +132,7 @@ exports.run = (context, options) => {
       address = _ensureAddress(address)
 
       if (context.getState(address)) {
-        throw new Error("This address is already registered. Call 'update' to update.")
+        throw new Error('This address is already registered.')
       }
 
       _checkValidity(owners, threshold)
@@ -168,6 +176,22 @@ exports.run = (context, options) => {
         _checkValidity(old.owners, old.threshold)
         context.setState(address, old)
       }
+    },
+
+    removeOwner (address, owner) {
+      address = _ensureAddress(address)
+
+      contract.checkPermission(address)
+
+      const old = context.getState(address)
+      if (!old || !old.owners || !old.owners[owner]) {
+        throw new Error(`${owner} is not an owner of ${address}.`)
+      }
+
+      delete old.owners[owner]
+
+      _checkValidity(old.owners, old.threshold)
+      context.setState(address, old)
     },
 
     setThreshold (address, threshold) {

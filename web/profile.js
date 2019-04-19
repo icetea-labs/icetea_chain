@@ -9,13 +9,11 @@ function byId (x) {
 function first (x) {
   return document.querySelector(x)
 }
-/*
 function text (x, t) {
   const e = byId(x)
   e.textContent = t
   return e
 }
-*/
 function textAll (x, t) {
   document.querySelectorAll(x).forEach(function (e) {
     e.textContent = t
@@ -71,7 +69,11 @@ function loadDid (targetAddress) {
         }
         if (owners && Object.keys(owners).length) {
           byId('ownerList').innerHTML = ownersTemplate(owners)
+        } else {
+          text('ownerList', '')
         }
+      } else {
+        text('ownerList', '')
       }
     })
 }
@@ -172,11 +174,46 @@ function registerAddOwnerEvent () {
   })
 }
 
+function registerRemoveOwnerEvent () {
+  const button = byId('ownerList')
+  button.addEventListener('click', function (e) {
+    e.preventDefault()
+
+    const address = byId('from').value
+    if (!address) {
+      window.alert('Please select "sign-in as" first.')
+      return
+    }
+
+    const target = e.target
+    if (target.tagName !== 'A') {
+      return
+    }
+
+    const owner = target.getAttribute('data-owner')
+
+    if (!window.confirm('Sure to delete ' + owner + '?')) {
+      return
+    }
+
+    tweb3.contract('system.did').methods.removeOwner(address, owner).sendCommit({ from: address })
+      .then(r => {
+        loadDid(address)
+        window.alert('Success.')
+      })
+      .catch(error => {
+        console.error(error)
+        window.alert(String(error))
+      })
+  })
+}
+
 function registerEvents () {
   registerFromEvent()
   registerUpdateAliasEvent()
   registerUpdateThresholdEvent()
   registerAddOwnerEvent()
+  registerRemoveOwnerEvent()
 }
 
 ; (function () {
