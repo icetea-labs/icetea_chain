@@ -92,7 +92,7 @@ button {
     width: 100%;
 }
 
-#form input, textarea {
+#form input:not([type=radio]), textarea {
     width: 100%
 }
 
@@ -143,4 +143,16 @@ button {
 }
 .card .alias {
     color: #6c757d!important;
+}
+
+#signinAddress, #ownerList {
+    font-size: 80%;
+    color: #6c757d;
+    word-break: break-all;
+}
+
+#ownerList a {
+    font-size: 130%;
+    padding: 8px;
+    text-decoration: none;
 }

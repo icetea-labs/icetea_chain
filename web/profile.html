@@ -1,0 +1,56 @@
+<html>
+<head>
+    <title>icetea - profile</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" type="text/css" href="style.css">
+</head>
+<body>
+    <div id="content">
+        <section class="notice">This is <a href="https://icetea.io" target="_blank">Icetea</a> kitchen sink, for testing purpose.</section>
+        <nav id="menu">
+            <a href="/">Scan</a>
+            <a href="/transfer.html">Transfer</a>
+            <a href="/deploy.html">Deploy Contract</a>
+            <a href="/contract.html">Call Contract</a>
+            <a href="/wallet.html">Wallet</a>
+            <a href="/botstore.html">Bot Store</a>
+            <a href="/profile.html">Profile</a>
+        </nav>
+        <h1>Profile</h1>
+        <section id="form">
+            <label>Sign-in as:</label> <select id="from" name="from" autofocus style='width: 290'>
+                <option value='' selected>(select one)</option>
+            </select>
+            <p>
+                <label>Set profile for:</label><br><br>
+                <label><input type="radio" checked name='whom' id='radioMe'> Signed-in address <span id='signinAddress' class="signinAddress"></span></label><br>
+                <label><input type="radio" disabled name='whom'>This address: <input type="text" id='settingFor' disabled placeholder='Address you own or contract you deployed'></label>
+            </p>
+
+            <section id='things' class='hide'>
+                <h3>Alias</h3>
+                <p><input type="text" placeholder="No alias" id='alias'> <button id='updateAlias'>Update</button></p>
+
+                <h3>Account settings</h3>
+                <p>Threshold <input type='number' id="threshold" value='1' style="width: 96px"> <button id="updateThreshold">Update</button></p>
+                <p>Owner list</p>
+                <div id="ownerList">
+                    <ul>
+                        <li><span class="signinAddress"></span> - weight: 1</li>
+                    </ul>
+                </div>
+                <input id="newOwner" placeholder='owner address or alias'> <input type='number' id="weight" placeholder='weight' style="width: 96px"> <button id="addOwner">Add</button>
+            </section>
+        </section>
+    </div>
+    <script id="ownersTemplate" type="text/x-handlebars-template">
+        <ul>
+            {{#each this}}
+            <li>{{@key}} - weight: {{this}} &nbsp;&nbsp;<a href="#" data-owner={{@key}}>&times;</a></li>
+            {{/each}}
+        </ul>
+    </script>
+    <script src="profile.js"></script>
+</body>
+
+</html>
