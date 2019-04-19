@@ -8,8 +8,16 @@
 
 const { Did: DID_ADDR } = require('./botnames')
 const { checkMsg } = require('../helper/types')
+const _ = require('lodash')
 
 const METADATA = {
+  'query': {
+    decorators: ['view'],
+    params: [
+      { name: 'address', type: 'string' }
+    ],
+    returnType: ['object', 'undefined']
+  },
   'register': {
     decorators: ['transaction'],
     params: [
@@ -23,7 +31,7 @@ const METADATA = {
     params: [
       { name: 'address', type: 'string' },
       { name: 'owner', type: 'string' },
-      { name: 'weight', type: ['string', 'undefined'] }
+      { name: 'weight', type: ['number', 'undefined'] }
     ],
     returnType: 'undefined'
   },
@@ -46,13 +54,15 @@ const METADATA = {
 }
 
 function _checkValidity (owners, threshold) {
+  console.log('hic', owners, threshold)
   if (threshold === undefined) {
     threshold = 1
   }
 
   let sum = 0
-  if (owners && owners.length) {
-    Object.keys(owners).forEach(addr => {
+  let keys
+  if (owners && ((keys = Object.keys(owners)) && keys.length)) {
+    keys.forEach(addr => {
       const v = owners[addr]
       if (typeof v !== 'number' || v <= 0) {
         throw new Error('Invalid weight for owner ' + addr)
@@ -68,6 +78,7 @@ function _checkValidity (owners, threshold) {
   }
 
   if (sum < threshold) {
+    console.log(sum, threshold)
     throw new Error('Threshold is bigger than sum of all owner weight.')
   }
 }
@@ -87,21 +98,32 @@ function _checkPerm (address, props, signers) {
   }
 }
 
+function _ensureAddress (address) {
+  const alias = exports.systemContracts().Alias
+  return alias.ensureAddress(address)
+}
+
 // standard contract interface
 exports.run = (context, options) => {
   const { msg } = context.getEnv()
   checkMsg(msg, METADATA)
 
   const contract = {
+    query (address) {
+      address = _ensureAddress(address)
+
+      const props = context.getState(address)
+      return props ? _.cloneDeep(props) : undefined
+    },
+
     register (address, { owners, threshold, attributes }) {
       if (!owners && !threshold && !attributes) {
         throw new Error('Nothing to register.')
       }
 
-      const alias = exports.systemContracts().Alias
-      address = alias.ensureAddress(address)
+      address = _ensureAddress(address)
 
-      if (this.getState(address)) {
+      if (context.getState(address)) {
         throw new Error("This address is already registered. Call 'update' to update.")
       }
 
@@ -118,35 +140,42 @@ exports.run = (context, options) => {
         props.attributes = attributes
       }
 
-      this.setState(address, props)
+      context.setState(address, props)
     },
 
     checkPermission (address, signers) {
+      address = _ensureAddress(address)
+
       signers = signers || msg.signers
       if (typeof signers === 'string') {
         signers = [signers]
       }
-      const props = this.getState(address)
+      const props = context.getState(address)
       _checkPerm(address, props, signers)
     },
 
     addOwner (address, owner, weight = 1) {
+      address = _ensureAddress(address)
+
       contract.checkPermission(address)
 
-      const old = this.getState(address)
+      const old = context.getState(address)
       if (!old) {
         contract.register(address, { owners: { [owner]: weight } })
       } else {
+        old.owners = old.owners || {}
         old.owners[owner] = weight
         _checkValidity(old.owners, old.threshold)
-        this.setState(address, old)
+        context.setState(address, old)
       }
     },
 
     setThreshold (address, threshold) {
+      address = _ensureAddress(address)
+
       contract.checkPermission(address)
 
-      const old = this.getState(address)
+      const old = context.getState(address)
       if (!old) {
         if (threshold !== undefined && threshold !== 1) {
           contract.register(address, { threshold })
@@ -158,11 +187,13 @@ exports.run = (context, options) => {
           old.threshold = threshold
         }
         _checkValidity(old.owners, old.threshold)
-        this.setState(address, old)
+        context.setState(address, old)
       }
     },
 
     setAttribute (address, name, value) {
+      address = _ensureAddress(address)
+
       contract.checkPermission(address)
 
       const v = (typeof value === 'undefined') ? name : { [name]: value }
@@ -170,12 +201,12 @@ exports.run = (context, options) => {
         throw new Error('Invalid attribute value.')
       }
 
-      const old = this.getState(address)
+      const old = context.getState(address)
       if (!old) {
         contract.register(address, { attributes: v })
       } else {
         Object.assign(old.attributes, v)
-        this.setState(address, old)
+        context.setState(address, old)
       }
     }
   }
@@ -188,6 +219,7 @@ exports.run = (context, options) => {
 }
 
 exports.checkPermission = function (address, signers) {
+  address = _ensureAddress(address)
   const storage = this.unsafeStateManager().getAccountState(DID_ADDR).storage || {}
   const props = storage[address]
   _checkPerm(address, props, signers)

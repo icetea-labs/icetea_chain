@@ -15,11 +15,18 @@ const METADATA = {
   'query': {
     decorators: ['view'],
     params: [
-      { name: 'textOrRegEx', type: ['string', 'RegExp'] }
+      { name: 'partOfAlias', type: ['string', 'RegExp'] }
     ],
     returnType: ['object', 'Array']
   },
   'resolve': {
+    decorators: ['view'],
+    params: [
+      { name: 'alias', type: 'string' }
+    ],
+    returnType: 'string'
+  },
+  'byAddress': {
     decorators: ['view'],
     params: [
       { name: 'address', type: 'string' }
@@ -56,6 +63,14 @@ const isSatisfied = (text, condition) => {
   return text == condition // eslint-disable-line
 }
 
+const sanitizeAlias = (alias) => {
+  alias = alias.trim().toLowerCase()
+  if (!/^[a-z0-9][a-z0-9-]{1,61}[a-z0-9](?:\.[a-z]{2,})*$/.test(alias)) {
+    throw new Error(`Invalid alias '${alias}', make sure it does not contain invalid characters and has appropriate length.`)
+  }
+  return alias
+}
+
 // standard contract interface
 exports.run = (context, options) => {
   const { msg, block } = context.getEnv()
@@ -78,10 +93,20 @@ exports.run = (context, options) => {
       return (aliases[alias] || {}).address
     },
 
+    byAddress (address) {
+      const aliases = loadAliases(context)
+      return Object.keys(aliases).find(a => {
+        return aliases[a].address === address
+      })
+    },
+
     register (alias, address) {
-      alias = alias.trim().toLowerCase()
+      alias = sanitizeAlias(alias)
       if (alias.startsWith('system.')) {
         throw new Error("Alias cannot start with 'system.'.")
+      }
+      if (alias.startsWith('account.') || alias.startsWith('contract.')) {
+        alias = alias.split('.', 2)[1]
       }
 
       validateAddress(address)
