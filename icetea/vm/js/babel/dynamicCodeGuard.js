@@ -3,10 +3,13 @@ module.exports = () => {
     name: 'dynamic-code-guard',
     visitor: {
       Identifier (path) {
-        if (path.node.name === 'constructor' && path.parent.type !== 'ClassMethod') {
+        const name = path.node.name
+        if (name === 'constructor' && path.parent.type !== 'ClassMethod') {
           throw path.buildCodeFrameError('Access to constructor is not supported.')
-        } else if (path.node.name === 'Function') {
+        } else if (name === 'Function') {
           throw path.buildCodeFrameError('Running dynamic code at global scope is restricted.')
+        } else if (['__sysdate', '__g'].includes(name)) {
+          throw path.buildCodeFrameError(`Access to reserved words ${name}`)
         }
       }
     }
