@@ -43,6 +43,15 @@ const METADATA = {
     ],
     returnType: 'undefined'
   },
+  'setTag': {
+    decorators: ['transaction'],
+    params: [
+      { name: 'address', type: 'string' },
+      { name: 'name', type: 'string' },
+      { name: 'value', type: 'any' }
+    ],
+    returnType: 'undefined'
+  },
   'checkPermission': {
     decorators: ['view'],
     params: [
@@ -116,8 +125,8 @@ exports.run = (context, options) => {
       return props ? _.cloneDeep(props) : undefined
     },
 
-    register (address, { owners, threshold, attributes }) {
-      if (!owners && !threshold && !attributes) {
+    register (address, { owners, threshold, tags, inheritance }) {
+      if (!owners && !threshold && !tags && !inheritance) {
         throw new Error('Nothing to register.')
       }
 
@@ -136,8 +145,11 @@ exports.run = (context, options) => {
       if (typeof threshold === 'number' && threshold > 0) {
         props.threshold = threshold
       }
-      if (attributes) {
-        props.attributes = attributes
+      if (tags) {
+        props.tags = tags
+      }
+      if (inheritance) {
+        props.inheritance = inheritance
       }
 
       context.setState(address, props)
@@ -191,21 +203,21 @@ exports.run = (context, options) => {
       }
     },
 
-    setAttribute (address, name, value) {
+    setTag (address, name, value) {
       address = _ensureAddress(address)
 
       contract.checkPermission(address)
 
       const v = (typeof value === 'undefined') ? name : { [name]: value }
       if (typeof v !== 'object') {
-        throw new Error('Invalid attribute value.')
+        throw new Error('Invalid tag value.')
       }
 
       const old = context.getState(address)
       if (!old) {
-        contract.register(address, { attributes: v })
+        contract.register(address, { tags: v })
       } else {
-        Object.assign(old.attributes, v)
+        Object.assign(old.tags, v)
         context.setState(address, old)
       }
     }
