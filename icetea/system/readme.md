@@ -15,4 +15,4 @@ System contract is a core feature exposed as a contract. It does not need to be 
 
 We will favor system contracts over adding more TxOp for alias, vote, etc.
 
-System contract must use raw JS. They are auto-deployed by 'system' when on blockchain init.
+System contract must use raw JS. They are auto-deployed by 'system' on blockchain init.
