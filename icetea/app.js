@@ -83,8 +83,14 @@ class App {
     verifyTxSignature(tx)
 
     // verify TO to avoid lost fund
-    tx.to = _ensureAddress(tx.to)
-    validateAddress(tx.to)
+    if (tx.to) {
+      tx.to = _ensureAddress(tx.to)
+      validateAddress(tx.to)
+    } else {
+      if (!tx.isContractCreation()) {
+        throw new Error('Transaction destination address is required.')
+      }
+    }
 
     // ensure valid signers
     if (tx.signers.length === 0) {

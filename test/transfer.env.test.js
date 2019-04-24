@@ -24,7 +24,7 @@ describe('transfer', () => {
     const fromBalance = (await tweb3.getBalance(from)).balance
     expect(fromBalance).toBeGreaterThan(100)
 
-    const to = ecc.toPublicKey(await ecc.generateKey())
+    const to = ecc.toPubKeyAndAddressBuffer(ecc.generateKey()).address
     const toBalance = (await tweb3.getBalance(to)).balance
     expect(toBalance).toBeGreaterThanOrEqual(0)
 
@@ -70,7 +70,7 @@ describe('transfer', () => {
     const fromBalance = (await tweb3.getBalance(from)).balance
     expect(fromBalance).toBe(0)
 
-    const to = ecc.toPublicKey(await ecc.generateKey())
+    const to = ecc.toPubKeyAndAddressBuffer(ecc.generateKey()).address
 
     let value
     let fee = 0.000001
