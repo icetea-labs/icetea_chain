@@ -4,8 +4,8 @@ module.exports = {
   },
   rawJs: {
     transpile: [
-      '@babel/plugin-proposal-private-methods', // no need since Node 12
-      '@babel/plugin-proposal-class-properties',
+      '@babel/plugin-proposal-private-methods',
+      '@babel/plugin-proposal-class-properties', // no need since Node 12
       '@babel/plugin-transform-flow-strip-types' // FIXME: this should be move into decorated-class plugins
     ]
   },

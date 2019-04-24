@@ -1,10 +1,10 @@
 /** @module */
 
 /**
- * convert js to js contract
+ * Wrap raw-js contract into a safe wrapper.
  * @function
- * @param {string} src - src
- * @returns {string} generated code
+ * @param {string} src - contract source.
+ * @returns {string} wrapper source.
  */
 module.exports = src => `
 'use strict'
