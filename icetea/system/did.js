@@ -101,7 +101,7 @@ function _checkValidity (owners, threshold) {
 }
 
 function _checkPerm (address, props, signers) {
-  if (!props || !props.owners || !props.owners.length) {
+  if (!props || !props.owners || !Object.keys(props.owners).length) {
     return signers.includes(address)
   }
   const threshold = props.threshold || 1
@@ -115,6 +115,21 @@ function _checkPerm (address, props, signers) {
   }
 }
 
+// function _checkInheritance (address, props, signers) {
+//   if (!props || !props.inheritors || !Object.keys(props.inheritors).length) {
+//     return signers.includes(address)
+//   }
+//   const threshold = props.threshold || 1
+//   const signWeight = signers.reduce((prev, addr) => {
+//     prev += (props.owners[addr] || 0)
+//     return prev
+//   }, 0)
+
+//   if (signWeight < threshold) {
+//     throw new Error('Permission denied.')
+//   }
+// }
+
 function _ensureAddress (address) {
   const alias = exports.systemContracts().Alias
   return alias.ensureAddress(address)
@@ -122,7 +137,7 @@ function _ensureAddress (address) {
 
 // standard contract interface
 exports.run = (context, options) => {
-  const { msg } = context.getEnv()
+  const { msg, block } = context.getEnv()
   checkMsg(msg, METADATA)
 
   const contract = {
@@ -133,8 +148,9 @@ exports.run = (context, options) => {
       return props ? _.cloneDeep(props) : undefined
     },
 
-    register (address, { owners, threshold, tags, inheritance }) {
-      if (!owners && !threshold && !tags && !inheritance) {
+    // FIXME: should validate inside (like ensure addresses), or make it private
+    register (address, { owners, threshold, tags, inheritors }) {
+      if (!owners && !threshold && !tags && !inheritors) {
         throw new Error('Nothing to register.')
       }
 
@@ -156,8 +172,8 @@ exports.run = (context, options) => {
       if (tags) {
         props.tags = tags
       }
-      if (inheritance) {
-        props.inheritance = inheritance
+      if (inheritors) {
+        props.inheritors = inheritors
       }
 
       context.setState(address, props)
@@ -176,6 +192,7 @@ exports.run = (context, options) => {
 
     addOwner (address, owner, weight = 1) {
       address = _ensureAddress(address)
+      owner = _ensureAddress(owner)
 
       contract.checkPermission(address)
 
@@ -192,6 +209,7 @@ exports.run = (context, options) => {
 
     removeOwner (address, owner) {
       address = _ensureAddress(address)
+      owner = _ensureAddress(owner)
 
       contract.checkPermission(address)
 
@@ -225,6 +243,140 @@ exports.run = (context, options) => {
         _checkValidity(old.owners, old.threshold)
         context.setState(address, old)
       }
+    },
+
+    addInheritor (address, inheritor, waitPeriod, lockPeriod) {
+      address = _ensureAddress(address)
+      inheritor = _ensureAddress(inheritor)
+
+      contract.checkPermission(address)
+
+      const old = context.getState(address)
+      if (!old) {
+        contract.register(address, {
+          inheritors: {
+            [inheritor]: { waitPeriod, lockPeriod }
+          }
+        })
+      } else {
+        old.inheritors = old.inheritors || {}
+        old.inheritors[inheritor] = Object.assign(old.inheritors[inheritor] || {}, { waitPeriod, lockPeriod })
+        context.setState(address, old)
+      }
+    },
+
+    removeInheritor (address, inheritor) {
+      address = _ensureAddress(address)
+      inheritor = _ensureAddress(inheritor)
+
+      contract.checkPermission(address)
+
+      const old = context.getState(address)
+      if (!old || !old.inheritors || !old.inheritors[inheritor]) {
+        throw new Error(`${inheritor} is not an inheritor of ${address}.`)
+      }
+
+      delete old.inheritors[inheritor]
+
+      context.setState(address, old)
+    },
+
+    claimInheritance (address, claimer) {
+      // resolve alias if needed
+      address = _ensureAddress(address)
+      claimer = _ensureAddress(claimer)
+
+      const did = context.getState(address)
+      if (!did || !did.inheritors || !did.inheritors.length) {
+        throw new Error('No inheritors configured for this account.')
+      }
+      const inheritors = did.inheritors
+
+      // ensure that claimer is an inheritor
+      const data = !inheritors[claimer]
+      if (!data || !data.waitPeriod || !data.lockPeriod) {
+        throw new Error(`${claimer} is not correctly configured as an inheritor for this account.`)
+      }
+
+      // ensure that claimer is not locked OR (already claim & not denied)
+      if (data.lastClaim && (!data.lastRejected || data.lastRejected < data.lastClaim)) {
+        // Does not matter last claim succeeded or not, you cannot claim again
+        throw new Error('Already claimed.')
+      }
+
+      if (data.lastRejected) {
+        const dt = new Date(data.lastRejected * 1000)
+        dt.setDate(dt.getDate() + data.lockPeriod)
+        const lockUntil = (dt.getTime() / 1000) | 0 // | 0 means floor()
+        if (lockUntil >= block.timestamp) {
+          throw new Error('Claim permission for this inheritor was locked, please wait until ' + dt.toGMTString())
+        }
+      }
+
+      // ensure that the account is idle for at least [minIdle] days
+      // THIS IS HARD, WE DO NOT STORE LAST TX ANYWARE INSIDE ICETEA
+      // SO MUST QUERY TENDERMINT!!!
+      // PENDING
+
+      // set last claim timestamp
+      data.lastClaim = block.timestamp
+      // save
+      context.setState(address, did)
+    },
+
+    rejectInheritanceClaim (address, claimer) {
+      // resolve alias if needed
+      address = _ensureAddress(address)
+      claimer = _ensureAddress(claimer)
+
+      // ensure only owners can call
+      contract.checkPermission(address)
+
+      const did = context.getState(address)
+      if (!did || !did.inheritors || !did.inheritors.length) {
+        throw new Error('No inheritors configured for this account.')
+      }
+      const inheritors = did.inheritors
+
+      // ensure that claimer is an inheritor
+      const data = !inheritors[claimer]
+      if (!data) {
+        throw new Error(`${claimer} is not correctly configured as an inheritor for this account.`)
+      }
+
+      // set last claim timestamp
+      data.lastRejected = block.timestamp
+      // save
+      context.setState(address, did)
+    },
+
+    isActiveInheritor (address, inheritor) {
+      address = _ensureAddress(address)
+      inheritor = _ensureAddress(inheritor)
+
+      const did = context.getState(address)
+      if (!did || !did.inheritors || !did.inheritors.length) {
+        return false
+      }
+      const inheritors = did.inheritors
+
+      const data = !inheritors[inheritor]
+      if (!data) {
+        return false
+      }
+
+      if (!data.lastClaim) {
+        return false
+      }
+
+      const claimDate = new Date(data.lastClaim * 1000)
+      claimDate.setDate(claimDate.getDate() + data.waitPeriod)
+      const waitUntil = (claimDate.getTime() / 1000) | 0 // | 0 means floor()
+      if (waitUntil >= block.timestamp) {
+        return false
+      }
+
+      return true
     },
 
     setTag (address, name, value) {
