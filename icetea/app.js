@@ -110,7 +110,7 @@ class App {
     }
 
     tx.from = tx.from || tx.signers[0]
-    did.checkPermission(tx.from, tx.signers)
+    did.checkPermission(tx.from, tx.signers, (stateManager.getBlock() || {}).timestamp || 0)
     // Check balance
     if (tx.value + tx.fee > stateManager.balanceOf(tx.from)) {
       throw new Error('Not enough balance')

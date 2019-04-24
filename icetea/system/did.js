@@ -3,12 +3,16 @@
  * First version:
  * - owners: list of owner together with weight, default to deployedBy with weight of 1
  * - threshold: default to 1
- * - does not support anything else yet.
+ * - inheritance
+ * - only support direct signature, does not recursive
  */
 
 const { Did: DID_ADDR } = require('./botnames')
 const { checkMsg } = require('../helper/types')
 const _ = require('lodash')
+
+const STATE_CLAIMING = 1
+const STATE_REJECTED = 2
 
 const METADATA = {
   'query': {
@@ -51,12 +55,62 @@ const METADATA = {
     ],
     returnType: 'undefined'
   },
+  'addInheritor': {
+    decorators: ['transaction'],
+    params: [
+      { name: 'address', type: 'string' },
+      { name: 'inheritor', type: 'string' },
+      { name: 'waitPeriod', type: 'number' },
+      { name: 'lockPeriod', type: 'number' }
+    ],
+    returnType: 'undefined'
+  },
+  'removeInheritor': {
+    decorators: ['transaction'],
+    params: [
+      { name: 'address', type: 'string' },
+      { name: 'inheritor', type: 'string' }
+    ],
+    returnType: 'undefined'
+  },
+  'claimInheritance': {
+    decorators: ['transaction'],
+    params: [
+      { name: 'address', type: 'string' },
+      { name: 'claimer', type: 'string' }
+    ],
+    returnType: 'undefined'
+  },
+  'rejectInheritanceClaim': {
+    decorators: ['transaction'],
+    params: [
+      { name: 'address', type: 'string' },
+      { name: 'claimer', type: 'string' }
+    ],
+    returnType: 'undefined'
+  },
+  'isActiveInheritor': {
+    decorators: ['transaction'],
+    params: [
+      { name: 'address', type: 'string' },
+      { name: 'inheritor', type: 'string' }
+    ],
+    returnType: 'undefined'
+  },
   'setTag': {
     decorators: ['transaction'],
     params: [
       { name: 'address', type: 'string' },
-      { name: 'name', type: 'string' },
+      { name: 'name', type: ['string', 'object'] },
       { name: 'value', type: 'any' }
+    ],
+    returnType: 'undefined'
+  },
+  'removeTag': {
+    decorators: ['transaction'],
+    params: [
+      { name: 'address', type: 'string' },
+      { name: 'name', type: 'string' }
     ],
     returnType: 'undefined'
   },
@@ -71,7 +125,6 @@ const METADATA = {
 }
 
 function _checkValidity (owners, threshold) {
-  console.log('hic', owners, threshold)
   if (threshold === undefined) {
     threshold = 1
   }
@@ -95,13 +148,18 @@ function _checkValidity (owners, threshold) {
   }
 
   if (sum < threshold) {
-    console.log(sum, threshold)
     throw new Error('Threshold is bigger than sum of all owner weight.')
   }
 }
 
-function _checkPerm (address, props, signers) {
-  if (!props || !props.owners || !props.owners.length) {
+function _checkPerm (address, props, signers, now) {
+  if (!_checkOwner(address, props, signers) && !_checkInheritance(props, signers, now)) {
+    throw new Error('Permission denied.')
+  }
+}
+
+function _checkOwner (address, props, signers) {
+  if (!props || !props.owners || !Object.keys(props.owners).length) {
     return signers.includes(address)
   }
   const threshold = props.threshold || 1
@@ -110,9 +168,31 @@ function _checkPerm (address, props, signers) {
     return prev
   }, 0)
 
-  if (signWeight < threshold) {
-    throw new Error('Permission denied.')
+  return signWeight >= threshold
+}
+
+function _checkInheritance (props, signers, now) {
+  if (!props || !props.inheritors || !Object.keys(props.inheritors).length) {
+    return false
   }
+
+  const inheritors = props.inheritors
+  return signers.some(s => _checkClaim(inheritors[s], now))
+}
+
+function _checkClaim (data, now) {
+  if (!data || data.state !== STATE_CLAIMING) {
+    return false
+  }
+
+  const claimDate = new Date(data.lastClaim * 1000)
+  claimDate.setDate(claimDate.getDate() + data.waitPeriod)
+  const waitUntil = (claimDate.getTime() / 1000) | 0 // | 0 means floor()
+  if (waitUntil >= now) {
+    return false
+  }
+
+  return true
 }
 
 function _ensureAddress (address) {
@@ -122,7 +202,7 @@ function _ensureAddress (address) {
 
 // standard contract interface
 exports.run = (context, options) => {
-  const { msg } = context.getEnv()
+  const { msg, block } = context.getEnv()
   checkMsg(msg, METADATA)
 
   const contract = {
@@ -133,8 +213,9 @@ exports.run = (context, options) => {
       return props ? _.cloneDeep(props) : undefined
     },
 
-    register (address, { owners, threshold, tags, inheritance }) {
-      if (!owners && !threshold && !tags && !inheritance) {
+    // FIXME: should validate inside (like ensure addresses), or make it private
+    register (address, { owners, threshold, tags, inheritors }) {
+      if (!owners && !threshold && !tags && !inheritors) {
         throw new Error('Nothing to register.')
       }
 
@@ -156,8 +237,8 @@ exports.run = (context, options) => {
       if (tags) {
         props.tags = tags
       }
-      if (inheritance) {
-        props.inheritance = inheritance
+      if (inheritors) {
+        props.inheritors = inheritors
       }
 
       context.setState(address, props)
@@ -171,11 +252,12 @@ exports.run = (context, options) => {
         signers = [signers]
       }
       const props = context.getState(address)
-      _checkPerm(address, props, signers)
+      _checkPerm(address, props, signers, block.timestamp)
     },
 
     addOwner (address, owner, weight = 1) {
       address = _ensureAddress(address)
+      owner = _ensureAddress(owner)
 
       contract.checkPermission(address)
 
@@ -192,6 +274,7 @@ exports.run = (context, options) => {
 
     removeOwner (address, owner) {
       address = _ensureAddress(address)
+      owner = _ensureAddress(owner)
 
       contract.checkPermission(address)
 
@@ -227,6 +310,129 @@ exports.run = (context, options) => {
       }
     },
 
+    addInheritor (address, inheritor, waitPeriod, lockPeriod) {
+      address = _ensureAddress(address)
+      inheritor = _ensureAddress(inheritor)
+
+      contract.checkPermission(address)
+
+      const old = context.getState(address)
+      if (!old) {
+        contract.register(address, {
+          inheritors: {
+            [inheritor]: { waitPeriod, lockPeriod }
+          }
+        })
+      } else {
+        old.inheritors = old.inheritors || {}
+        old.inheritors[inheritor] = Object.assign(old.inheritors[inheritor] || {}, { waitPeriod, lockPeriod })
+        context.setState(address, old)
+      }
+    },
+
+    removeInheritor (address, inheritor) {
+      address = _ensureAddress(address)
+      inheritor = _ensureAddress(inheritor)
+
+      contract.checkPermission(address)
+
+      const old = context.getState(address)
+      if (!old || !old.inheritors || !old.inheritors[inheritor]) {
+        throw new Error(`${inheritor} is not an inheritor of ${address}.`)
+      }
+
+      delete old.inheritors[inheritor]
+
+      context.setState(address, old)
+    },
+
+    claimInheritance (address, claimer) {
+      // resolve alias if needed
+      address = _ensureAddress(address)
+      claimer = _ensureAddress(claimer)
+
+      const did = context.getState(address)
+      if (!did || !did.inheritors || !did.inheritors.length) {
+        throw new Error('No inheritors configured for this account.')
+      }
+      const inheritors = did.inheritors
+
+      // ensure that claimer is an inheritor
+      const data = !inheritors[claimer]
+      if (!data || !data.waitPeriod || !data.lockPeriod) {
+        throw new Error(`${claimer} is not correctly configured as an inheritor for this account.`)
+      }
+
+      if (data.STATE === STATE_CLAIMING) {
+        throw new Error('Already claimed.')
+      }
+
+      if (data.lastRejected) {
+        const dt = new Date(data.lastRejected * 1000)
+        dt.setDate(dt.getDate() + data.lockPeriod)
+        const lockUntil = (dt.getTime() / 1000) | 0 // | 0 means floor()
+        if (lockUntil >= block.timestamp) {
+          throw new Error('Claim permission for this inheritor was locked, please wait until ' + dt.toGMTString())
+        }
+      }
+
+      // ensure that the account is idle for at least [minIdle] days
+      // THIS IS HARD, WE DO NOT STORE LAST TX ANYWARE INSIDE ICETEA
+      // SO MUST QUERY TENDERMINT!!!
+      // PENDING
+
+      // set last claim timestamp
+      data.state = STATE_CLAIMING
+      data.lastClaim = block.timestamp
+      // save
+      context.setState(address, did)
+    },
+
+    rejectInheritanceClaim (address, claimer) {
+      // resolve alias if needed
+      address = _ensureAddress(address)
+      claimer = _ensureAddress(claimer)
+
+      // ensure only owners can call
+      contract.checkPermission(address)
+
+      const did = context.getState(address)
+      if (!did || !did.inheritors || !did.inheritors.length) {
+        throw new Error('No inheritors configured for this account.')
+      }
+      const inheritors = did.inheritors
+
+      // ensure that claimer is an inheritor
+      const data = !inheritors[claimer]
+      if (!data) {
+        throw new Error(`${claimer} is not correctly configured as an inheritor for this account.`)
+      }
+
+      if (data.STATE !== STATE_CLAIMING) {
+        throw new Error(`${claimer} does not currently claim so no need to reject.`)
+      }
+
+      // set last claim timestamp
+      data.state = STATE_REJECTED
+      data.lastRejected = block.timestamp
+      // save
+      context.setState(address, did)
+    },
+
+    isActiveInheritor (address, inheritor) {
+      address = _ensureAddress(address)
+      inheritor = _ensureAddress(inheritor)
+
+      const did = context.getState(address)
+      if (!did || !did.inheritors || !Object.keys(did.inheritors).length) {
+        return false
+      }
+      const inheritors = did.inheritors
+
+      const data = inheritors[inheritor]
+      return _checkClaim(data, block.timestamp)
+    },
+
     setTag (address, name, value) {
       address = _ensureAddress(address)
 
@@ -244,6 +450,21 @@ exports.run = (context, options) => {
         Object.assign(old.tags, v)
         context.setState(address, old)
       }
+    },
+
+    removeTag (address, name) {
+      address = _ensureAddress(address)
+
+      contract.checkPermission(address)
+
+      const old = context.getState(address)
+      if (!old || !old.tags || !old.inheritors[name]) {
+        throw new Error(`${name} is not a tag of ${address}.`)
+      }
+
+      delete old.tags[name]
+
+      context.setState(address, old)
     }
   }
 
@@ -254,9 +475,9 @@ exports.run = (context, options) => {
   }
 }
 
-exports.checkPermission = function (address, signers) {
+exports.checkPermission = function (address, signers, now) {
   address = _ensureAddress(address)
   const storage = this.unsafeStateManager().getAccountState(DID_ADDR).storage || {}
   const props = storage[address]
-  _checkPerm(address, props, signers)
+  _checkPerm(address, props, signers, now)
 }
