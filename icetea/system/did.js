@@ -55,12 +55,62 @@ const METADATA = {
     ],
     returnType: 'undefined'
   },
+  'addInheritor': {
+    decorators: ['transaction'],
+    params: [
+      { name: 'address', type: 'string' },
+      { name: 'inheritor', type: 'string' },
+      { name: 'waitPeriod', type: 'number' },
+      { name: 'lockPeriod', type: 'number' }
+    ],
+    returnType: 'undefined'
+  },
+  'removeInheritor': {
+    decorators: ['transaction'],
+    params: [
+      { name: 'address', type: 'string' },
+      { name: 'inheritor', type: 'string' }
+    ],
+    returnType: 'undefined'
+  },
+  'claimInheritance': {
+    decorators: ['transaction'],
+    params: [
+      { name: 'address', type: 'string' },
+      { name: 'claimer', type: 'string' }
+    ],
+    returnType: 'undefined'
+  },
+  'rejectInheritanceClaim': {
+    decorators: ['transaction'],
+    params: [
+      { name: 'address', type: 'string' },
+      { name: 'claimer', type: 'string' }
+    ],
+    returnType: 'undefined'
+  },
+  'isActiveInheritor': {
+    decorators: ['transaction'],
+    params: [
+      { name: 'address', type: 'string' },
+      { name: 'inheritor', type: 'string' }
+    ],
+    returnType: 'undefined'
+  },
   'setTag': {
     decorators: ['transaction'],
     params: [
       { name: 'address', type: 'string' },
-      { name: 'name', type: 'string' },
+      { name: 'name', type: ['string', 'object'] },
       { name: 'value', type: 'any' }
+    ],
+    returnType: 'undefined'
+  },
+  'removeTag': {
+    decorators: ['transaction'],
+    params: [
+      { name: 'address', type: 'string' },
+      { name: 'name', type: 'string' }
     ],
     returnType: 'undefined'
   },
@@ -75,7 +125,6 @@ const METADATA = {
 }
 
 function _checkValidity (owners, threshold) {
-  console.log('hic', owners, threshold)
   if (threshold === undefined) {
     threshold = 1
   }
@@ -99,7 +148,6 @@ function _checkValidity (owners, threshold) {
   }
 
   if (sum < threshold) {
-    console.log(sum, threshold)
     throw new Error('Threshold is bigger than sum of all owner weight.')
   }
 }
@@ -129,19 +177,11 @@ function _checkInheritance (props, signers, now) {
   }
 
   const inheritors = props.inheritors
-
-  return signers.some(inheritor => {
-    const data = inheritors[inheritor]
-    if (!data) {
-      return false
-    }
-
-    return _checkClaim(data, now)
-  })
+  return signers.some(s => _checkClaim(inheritors[s], now))
 }
 
 function _checkClaim (data, now) {
-  if (data.state !== STATE_CLAIMING) {
+  if (!data || data.state !== STATE_CLAIMING) {
     return false
   }
 
@@ -323,9 +363,7 @@ exports.run = (context, options) => {
         throw new Error(`${claimer} is not correctly configured as an inheritor for this account.`)
       }
 
-      // ensure that claimer is not locked OR (already claim & not denied)
-      if (data.lastClaim && (!data.lastRejected || data.lastRejected < data.lastClaim)) {
-        // Does not matter last claim succeeded or not, you cannot claim again
+      if (data.STATE === STATE_CLAIMING) {
         throw new Error('Already claimed.')
       }
 
@@ -370,6 +408,10 @@ exports.run = (context, options) => {
         throw new Error(`${claimer} is not correctly configured as an inheritor for this account.`)
       }
 
+      if (data.STATE !== STATE_CLAIMING) {
+        throw new Error(`${claimer} does not currently claim so no need to reject.`)
+      }
+
       // set last claim timestamp
       data.state = STATE_REJECTED
       data.lastRejected = block.timestamp
@@ -388,22 +430,7 @@ exports.run = (context, options) => {
       const inheritors = did.inheritors
 
       const data = inheritors[inheritor]
-      if (!data) {
-        return false
-      }
-
-      if (!data.lastClaim) {
-        return false
-      }
-
-      const claimDate = new Date(data.lastClaim * 1000)
-      claimDate.setDate(claimDate.getDate() + data.waitPeriod)
-      const waitUntil = (claimDate.getTime() / 1000) | 0 // | 0 means floor()
-      if (waitUntil >= block.timestamp) {
-        return false
-      }
-
-      return true
+      return _checkClaim(data, block.timestamp)
     },
 
     setTag (address, name, value) {
@@ -423,6 +450,21 @@ exports.run = (context, options) => {
         Object.assign(old.tags, v)
         context.setState(address, old)
       }
+    },
+
+    removeTag (address, name) {
+      address = _ensureAddress(address)
+
+      contract.checkPermission(address)
+
+      const old = context.getState(address)
+      if (!old || !old.tags || !old.inheritors[name]) {
+        throw new Error(`${name} is not a tag of ${address}.`)
+      }
+
+      delete old.tags[name]
+
+      context.setState(address, old)
     }
   }
 
