@@ -3,6 +3,7 @@
 const Runner = require('../runner')
 const babel = require('@babel/core')
 const wrapper = require('./wrapper/raw')
+const transpilePlugins = require('../../config').rawJs.transpile
 
 /**
  * js runner
@@ -69,11 +70,11 @@ module.exports = class extends Runner {
     const plugins = this.loadPlugins('./babel/raw')
     src = 'return ' + this.transpile(src, plugins)
 
-    return this.transpile(src, [
-      '@babel/plugin-proposal-private-methods',
-      '@babel/plugin-proposal-class-properties',
-      '@babel/plugin-transform-flow-strip-types' // FIXME: this should be move into decorated-class plugins
-    ])
+    if (transpilePlugins && transpilePlugins.length) {
+      src = this.transpile(src, transpilePlugins)
+    }
+
+    return src
   }
 
   /**
