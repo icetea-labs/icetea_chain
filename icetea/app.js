@@ -86,7 +86,7 @@ class App {
     if (tx.to) {
       tx.to = _ensureAddress(tx.to)
       if (tx.to.includes('.')) {
-        if (!tx.to.startsWith('system.')) {
+        if (!sysContracts.has(tx.to)) {
           throw new Error(`Invalid destination alias ${tx.to}`)
         }
       } else {

@@ -14,13 +14,13 @@ Tendermint-based blockchain which is developer-friendly and support Javascript a
 > NOTE: this project is under active development. Don't use it for production.
 
 ## Presequisite
-1. NodeJS lastest LTS version
+1. NodeJS v11.8 or above
 2. [Tendermint latest release](https://github.com/tendermint/tendermint/releases)
 3. `tendermint init`
 
 Open `~/.tendermint/config/config.toml`.
 
-Search for `index_tags` and comment out that line.
+Search for `index_tags` and comment that line out (i.e. add # to the beginning of that line).
 
 ```
 # index_tags = ...
@@ -37,13 +37,13 @@ It is better to set `create_empty_blocks` to `false`, or you'll get ton of block
 create_empty_blocks = false
 ```
 
-
 ## Setup
 1. clone repo
-2. `npm install`
-3. `tendermint node`
-4. Open another terminal window and `npm start` -> this starts the icetea server
-5. Open another terminal window and `npm run app` -> this starts a sample block explorer and wallet
+2. Rename `.env.example` to `.env` and `.env.dev.example` to `.env.dev`
+3. `npm install`
+4. `tendermint node`
+5. Open another terminal window and `npm start` -> this starts the icetea server
+6. Open another terminal window and `npm run app` -> this starts a sample block explorer and wallet
 
 To reset tendermint (delete all blocks & state), use `npm run reset`.
 
