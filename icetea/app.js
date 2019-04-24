@@ -85,7 +85,13 @@ class App {
     // verify TO to avoid lost fund
     if (tx.to) {
       tx.to = _ensureAddress(tx.to)
-      validateAddress(tx.to)
+      if (tx.to.includes('.')) {
+        if (!sysContracts.has(tx.to)) {
+          throw new Error(`Invalid destination alias ${tx.to}`)
+        }
+      } else {
+        validateAddress(tx.to)
+      }
     } else {
       if (!tx.isContractCreation()) {
         throw new Error('Transaction destination address is required.')

@@ -1,4 +1,14 @@
 module.exports = {
+  versions: {
+    node: '>=11.8.0 <12.1.0'
+  },
+  rawJs: {
+    transpile: [
+      '@babel/plugin-proposal-private-methods',
+      '@babel/plugin-proposal-class-properties', // no need since Node 12
+      '@babel/plugin-transform-flow-strip-types' // FIXME: this should be move into decorated-class plugins
+    ]
+  },
   abciServerPort: 26658,
   feeCollector: 'tea1al54h8fy75h078syz54z6hke6l9x232zyk25cx',
   initialBalances: [

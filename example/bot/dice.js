@@ -85,11 +85,11 @@ const MAX_BET = 5
         .done() 
   }
 
-  #randomize() {
+  #randomize = () => {
     return parseInt(block.hash.substr(-16), 16) % MAX + 1
   }
 
-  #getMaxBet() {
+  #getMaxBet = () => {
     return Math.min(this.balance / (RATE - 1), MAX_BET)
   }
     
