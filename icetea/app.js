@@ -3,6 +3,7 @@ const utils = require('./helper/utils')
 const sysContracts = require('./system')
 const invoker = require('./contractinvoker')
 const did = require('./system/did')
+const { validateAddress } = require('icetea-common').ecc
 
 const stateManager = require('./statemanager')
 
@@ -76,11 +77,22 @@ class App {
   }
 
   checkTx (tx) {
-    // Check TX should not modify state
+    // CheckTX should not modify state
     // This way, we could avoid make a copy of state
 
     verifyTxSignature(tx)
 
+    // verify TO to avoid lost fund
+    if (tx.to) {
+      tx.to = _ensureAddress(tx.to)
+      validateAddress(tx.to)
+    } else {
+      if (!tx.isContractCreation()) {
+        throw new Error('Transaction destination address is required.')
+      }
+    }
+
+    // ensure valid signers
     if (tx.signers.length === 0) {
       throw new Error('Must have at lease one signature.')
     } else if (tx.signers.length === 1) {
@@ -150,8 +162,8 @@ class App {
   execTx (tx) {
     this.checkTx(tx)
 
-    // resolve alias
-    tx.to = _ensureAddress(tx.to)
+    // No need, already done inside checkTx above
+    // tx.to = _ensureAddress(tx.to)
 
     stateManager.beginCheckpoint()
 
