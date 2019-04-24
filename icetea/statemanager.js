@@ -39,7 +39,7 @@ class StateManager extends EventEmitter {
       return Buffer.alloc(0)
     }
     const appHash = merkle.getHash(stateTable)
-    console.log(`height ${lastBlock.number}, appHash ${appHash.toString('hex').toUpperCase()}`)
+    // console.log(`height ${lastBlock.number}, appHash ${appHash.toString('hex').toUpperCase()}`)
 
     merkle.save({
       block: lastBlock,

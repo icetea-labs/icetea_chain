@@ -2,7 +2,7 @@ const { getBlock, getTx, replyQuery } = require('./helper/abci')
 const app = require('./app')
 
 // turn on debug logging
-require('debug').enable('abci*')
+// require('debug').enable('abci*')
 
 // turn on logging state diff to console
 if (process.env.NODE_ENV === 'development' && process.env.PRINT_STATE_DIFF === '1') {
