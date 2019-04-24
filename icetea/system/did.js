@@ -3,12 +3,16 @@
  * First version:
  * - owners: list of owner together with weight, default to deployedBy with weight of 1
  * - threshold: default to 1
- * - does not support anything else yet.
+ * - inheritance
+ * - only support direct signature, does not recursive
  */
 
 const { Did: DID_ADDR } = require('./botnames')
 const { checkMsg } = require('../helper/types')
 const _ = require('lodash')
+
+const STATE_CLAIMING = 1
+const STATE_REJECTED = 2
 
 const METADATA = {
   'query': {
@@ -100,7 +104,13 @@ function _checkValidity (owners, threshold) {
   }
 }
 
-function _checkPerm (address, props, signers) {
+function _checkPerm (address, props, signers, now) {
+  if (!_checkOwner(address, props, signers) && !_checkInheritance(props, signers, now)) {
+    throw new Error('Permission denied.')
+  }
+}
+
+function _checkOwner (address, props, signers) {
   if (!props || !props.owners || !Object.keys(props.owners).length) {
     return signers.includes(address)
   }
@@ -110,25 +120,40 @@ function _checkPerm (address, props, signers) {
     return prev
   }, 0)
 
-  if (signWeight < threshold) {
-    throw new Error('Permission denied.')
-  }
+  return signWeight >= threshold
 }
 
-// function _checkInheritance (address, props, signers) {
-//   if (!props || !props.inheritors || !Object.keys(props.inheritors).length) {
-//     return signers.includes(address)
-//   }
-//   const threshold = props.threshold || 1
-//   const signWeight = signers.reduce((prev, addr) => {
-//     prev += (props.owners[addr] || 0)
-//     return prev
-//   }, 0)
+function _checkInheritance (props, signers, now) {
+  if (!props || !props.inheritors || !Object.keys(props.inheritors).length) {
+    return false
+  }
 
-//   if (signWeight < threshold) {
-//     throw new Error('Permission denied.')
-//   }
-// }
+  const inheritors = props.inheritors
+
+  return signers.some(inheritor => {
+    const data = inheritors[inheritor]
+    if (!data) {
+      return false
+    }
+
+    return _checkClaim(data, now)
+  })
+}
+
+function _checkClaim (data, now) {
+  if (data.state !== STATE_CLAIMING) {
+    return false
+  }
+
+  const claimDate = new Date(data.lastClaim * 1000)
+  claimDate.setDate(claimDate.getDate() + data.waitPeriod)
+  const waitUntil = (claimDate.getTime() / 1000) | 0 // | 0 means floor()
+  if (waitUntil >= now) {
+    return false
+  }
+
+  return true
+}
 
 function _ensureAddress (address) {
   const alias = exports.systemContracts().Alias
@@ -187,7 +212,7 @@ exports.run = (context, options) => {
         signers = [signers]
       }
       const props = context.getState(address)
-      _checkPerm(address, props, signers)
+      _checkPerm(address, props, signers, block.timestamp)
     },
 
     addOwner (address, owner, weight = 1) {
@@ -319,6 +344,7 @@ exports.run = (context, options) => {
       // PENDING
 
       // set last claim timestamp
+      data.state = STATE_CLAIMING
       data.lastClaim = block.timestamp
       // save
       context.setState(address, did)
@@ -345,6 +371,7 @@ exports.run = (context, options) => {
       }
 
       // set last claim timestamp
+      data.state = STATE_REJECTED
       data.lastRejected = block.timestamp
       // save
       context.setState(address, did)
@@ -355,12 +382,12 @@ exports.run = (context, options) => {
       inheritor = _ensureAddress(inheritor)
 
       const did = context.getState(address)
-      if (!did || !did.inheritors || !did.inheritors.length) {
+      if (!did || !did.inheritors || !Object.keys(did.inheritors).length) {
         return false
       }
       const inheritors = did.inheritors
 
-      const data = !inheritors[inheritor]
+      const data = inheritors[inheritor]
       if (!data) {
         return false
       }
@@ -406,9 +433,9 @@ exports.run = (context, options) => {
   }
 }
 
-exports.checkPermission = function (address, signers) {
+exports.checkPermission = function (address, signers, now) {
   address = _ensureAddress(address)
   const storage = this.unsafeStateManager().getAccountState(DID_ADDR).storage || {}
   const props = storage[address]
-  _checkPerm(address, props, signers)
+  _checkPerm(address, props, signers, now)
 }
