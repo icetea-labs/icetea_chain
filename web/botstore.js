@@ -21,11 +21,11 @@ const initWeb3 = (showAlert = true) => {
     return false
   }
 }
-let web3Inited = initWeb3(false)
+
+initWeb3(false)
 
 $(document).ready(function () {
   store.initStore()
-  console.log(web3Inited)
   document.getElementById('category').addEventListener('change', async function () {
     var arrFilter = store.bots
     var category = parseInt(document.getElementById('category').value)
@@ -95,3 +95,39 @@ function popupwindow (url, title, w, h) {
   var top = (window.screen.height / 2) - (h / 2)
   return window.open(url, title, 'toolbar=no, location=no, directories=no, status=no, menubar=no, scrollbars=no, resizable=no, copyhistory=no, width=' + w + ', height=' + h + ', top=' + top + ', left=' + left)
 }
+
+$('#rndImg').on('click', function (e) {
+  e.preventDefault()
+  const sampleUrl = 'http://i.pravatar.cc/150?img=' + (Date.now() % 70 + 1)
+  $('#iconUrl').val(sampleUrl)
+})
+
+$('#toggleRegForm').on('click', function (e) {
+  e.preventDefault()
+  $('#form').toggleClass('hide')
+})
+
+$('#botAddress').on('blur', function () {
+  const addr = $(this).val().trim()
+  if (!addr) return
+  tweb3.contract('system.alias').methods.byAddress(addr).call()
+    .then(alias => {
+      if (alias) {
+        $('#botAlias').val(alias)
+      }
+    })
+})
+
+$('#botAlias').on('blur', function () {
+  let alias = $(this).val().trim()
+  if (!alias) return
+  if (!alias.startsWith('contract.')) {
+    alias = 'contract.' + alias
+  }
+  tweb3.contract('system.alias').methods.resolve(alias).call()
+    .then(addr => {
+      if (addr) {
+        $('#botAddress').val(addr)
+      }
+    })
+})

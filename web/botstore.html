@@ -20,21 +20,43 @@
             <a href="/profile.html">Profile</a>
         </nav>
         <h1>Bot store</h1>
-        <!--div>
-            You: <span id="address"></span>
-        </div--> 
-        <label>Category:</label> <select id="category" name="category" autofocus required>
-            <option value="9">All</option>
-            <option value="0">Xem Bói</option>
-            <option value="1">Chat</option>
-            <option value="2">Game</option>
+        <label>Category:</label> 
+            <select id="category" name="category" autofocus required>
+                <option value=''>All</option>
+                <option value='0'>Entertainment</option>
+                <option value="1">Education</option>
+                <option value="2">Game</option>
+                <option value="3">Gamble</option>
             </select>
         <br/>
         <br/>
         <section id="store">No bot.</section>    
         <br>
         <div id="my-botui-app">
-            <!-- <bot-ui></bot-ui> -->
+            <hr>
+            <p><a href='#' id='toggleRegForm'>Register a new bot</a></p>
+            <form id="form" class='hide'>
+                <p>
+                    <input id="botAddress" placeholder="bot contract address" required>
+                </p>
+                <p>
+                    <input id='botAlias' placeholder="bot alias" required>
+                </p>
+                <p>
+                    <label>Category 
+                        <select>
+                            <option value='0' selected>Entertainment</option>
+                            <option value="1">Education</option>
+                            <option value="2">Game</option>
+                            <option value="3">Gamble</option>
+                        </select>
+                    </label>
+                </p>
+                <p>
+                    <label>Icon URL <input id="iconUrl" name='iconUrl' required placeholder="https://example.com/logo.png"></label><button type="button" id='rndImg'>Random Image</button>
+                </p>
+                <button id="registerBot">Register</button>
+            </form>
         </div>
 
         <script id="storeTemplate" type="text/x-handlebars-template">
