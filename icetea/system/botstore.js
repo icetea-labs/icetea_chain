@@ -11,6 +11,7 @@
 
 const { checkMsg } = require('../helper/types')
 const { initialBotStore } = require('../config')
+const _ = require('lodash')
 
 const METADATA = {
   'query': {
@@ -30,7 +31,8 @@ const METADATA = {
     params: [
       { name: 'name', type: 'string' },
       { name: 'category', type: 'number' },
-      { name: 'icon', type: ['string', 'undefined'] }
+      { name: 'icon', type: ['string', 'undefined'] },
+      { name: 'overwrite', type: ['boolean', 'undefined'] }
     ],
     returnType: 'string'
   }
@@ -64,15 +66,15 @@ exports.run = (context, options) => {
 
   const contract = {
     query () {
-      return getStore(context)
+      return _.cloneDeep(getStore(context))
     },
 
     resolve (name) {
       const store = getStore(context)
-      return store[name]
+      return _.cloneDeep(store[name])
     },
 
-    register (name, category, icon) {
+    register (name, category, icon, overwrite = false) {
       const alias = exports.systemContracts().Alias
       const address = alias.resolve(name)
 
@@ -95,7 +97,7 @@ exports.run = (context, options) => {
       }
 
       const store = getStore(context)
-      if (store.hasOwnProperty(name)) {
+      if (!overwrite && store.hasOwnProperty(name)) {
         throw new Error(`Bot ${name} already registered.`)
       }
 

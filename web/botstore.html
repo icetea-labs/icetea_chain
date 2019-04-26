@@ -34,17 +34,23 @@
         <br>
         <div id="my-botui-app">
             <hr>
-            <p><a href='#' id='toggleRegForm'>Register a new bot</a></p>
+            <p><a href='#' id='toggleRegForm'>Register/Edit chatbot</a></p>
             <form id="form" class='hide'>
                 <p>
-                    <input id="botAddress" placeholder="bot contract address" required>
+                    <label>Address:</label> <select id="botAddress" name='address' autofocus required>
+                        <option value=''>(select)</option>
+                    </select>
                 </p>
                 <p>
-                    <input id='botAlias' placeholder="bot alias" required>
+                    <div><span id='botName'></span></div>
+                    <div><span id='botDesc'></span></div>
+                </p>
+                <p>
+                    <input id='botAlias' name='alias' placeholder="bot alias" required>
                 </p>
                 <p>
                     <label>Category 
-                        <select>
+                        <select name='category' id='botCat'>
                             <option value='0' selected>Entertainment</option>
                             <option value="1">Education</option>
                             <option value="2">Game</option>
@@ -53,9 +59,9 @@
                     </label>
                 </p>
                 <p>
-                    <label>Icon URL <input id="iconUrl" name='iconUrl' required placeholder="https://example.com/logo.png"></label><button type="button" id='rndImg'>Random Image</button>
+                    <label>Icon URL <input id="iconUrl" name='icon' required placeholder="https://example.com/logo.png"></label><button type="button" id='rndImg'>Random Image</button>
                 </p>
-                <button id="registerBot">Register</button>
+                <button>Save</button>
             </form>
         </div>
 

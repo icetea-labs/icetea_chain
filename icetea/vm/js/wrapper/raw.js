@@ -32,11 +32,12 @@ Math.random = () => (
 )
 
 const __sysdate = Date
+const __systhis = this
 Date = class {
     constructor(...args) {
     let d
     if (args.length === 0) {
-        d = new __sysdate(this.getEnv().block.timestamp * 1000)
+        d = new __sysdate(__systhis.getEnv().block.timestamp * 1000)
     } else {
         d = new __sysdate(...args)
     }
@@ -48,7 +49,7 @@ Date = class {
     })
     }
 }
-Date.now = () => ( this.getEnv().block.timestamp * 1000 )
+Date.now = () => ( __systhis.getEnv().block.timestamp * 1000 )
     
 const __guard = __g;
 ${src}

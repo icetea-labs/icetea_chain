@@ -8,7 +8,7 @@ module.exports = () => {
           throw path.buildCodeFrameError('Access to constructor is not supported.')
         } else if (name === 'Function') {
           throw path.buildCodeFrameError('Running dynamic code at global scope is restricted.')
-        } else if (['__sysdate', '__g'].includes(name)) {
+        } else if (['__sysdate', '__systhis', '__g'].includes(name)) {
           throw path.buildCodeFrameError(`Access to reserved words ${name}`)
         }
       }

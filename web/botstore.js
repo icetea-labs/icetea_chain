@@ -30,13 +30,15 @@ $(document).ready(function () {
     var arrFilter = store.bots
     var category = parseInt(document.getElementById('category').value)
     // All = 9
-    if (category !== 9) {
+    if (category !== '') {
       arrFilter = arrFilter.filter(el => {
         return el.category === category
       })
     }
     store.render(arrFilter)
   }, false)
+
+  fillContracts()
 })
 var bots = {}
 const store = {
@@ -107,27 +109,77 @@ $('#toggleRegForm').on('click', function (e) {
   $('#form').toggleClass('hide')
 })
 
-$('#botAddress').on('blur', function () {
-  const addr = $(this).val().trim()
-  if (!addr) return
-  tweb3.contract('system.alias').methods.byAddress(addr).call()
-    .then(alias => {
-      if (alias) {
-        $('#botAlias').val(alias)
-      }
-    })
+$('#botAddress').on('change', async function () {
+  this.querySelector("option[value='']").remove()
+
+  const addr = $(this).val()
+  const $a = $('#botAlias')
+
+  if (addr.includes('.')) {
+    $a.val('').prop('disabled', true).prop('required', false)
+    const storeInfo = await tweb3.contract('system.botstore').methods.resolve(addr).call()
+    if (storeInfo) {
+      $('#botCat').val('' + (storeInfo.category || 0))
+      $('#iconUrl').val(storeInfo.icon || '')
+    }
+  } else {
+    $a.prop('disabled', false).prop('required', true)
+  }
+
+  const info = botCandidates[addr]
+  $('#botName').text(info.name)
+  $('#botDesc').text(info.description)
 })
 
-$('#botAlias').on('blur', function () {
-  let alias = $(this).val().trim()
-  if (!alias) return
-  if (!alias.startsWith('contract.')) {
-    alias = 'contract.' + alias
+$('#form').on('submit', async function (e) {
+  e.preventDefault()
+  const data = $(this).serializeArray()
+    .reduce(function (a, x) { a[x.name] = x.value.trim(); return a }, {})
+  data.category = +data.category
+
+  try {
+    if (data.address.includes('.')) {
+      data.alias = data.address
+    } else {
+      if (!data.alias.startsWith('contract.')) {
+        data.alias = 'contract.' + data.alias
+      }
+
+      // register the alias
+      await tweb3.contract('system.alias').methods.register(data.alias, data.address).sendCommit()
+    }
+
+    await tweb3.contract('system.botstore').methods.register(data.alias, data.category, data.icon, true).sendCommit()
+
+    window.location.reload()
+  } catch (err) {
+    window.alert(String(err))
   }
-  tweb3.contract('system.alias').methods.resolve(alias).call()
-    .then(addr => {
-      if (addr) {
-        $('#botAddress').val(addr)
+})
+
+const botCandidates = {}
+async function fillContracts () {
+  try {
+    const contracts = await tweb3.getContracts(true)
+
+    if (!contracts.length) return
+
+    var select = document.getElementById('botAddress')
+    contracts.forEach(item => {
+      if (!item.startsWith('system.')) {
+        tweb3.contract(item).methods.botInfo().callPure()
+          .then(info => {
+            botCandidates[item] = info
+            const option = document.createElement('option')
+            option.value = item
+            option.textContent = item
+            select.appendChild(option)
+          })
+          .catch(() => void 0)
       }
     })
-})
+  } catch (error) {
+    console.log(error)
+    window.alert(String(error))
+  }
+}

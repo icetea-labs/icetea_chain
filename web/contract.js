@@ -22,7 +22,7 @@ async function fillContracts () {
 
     var select = document.getElementById('to')
     contracts.forEach(item => {
-      let option = document.createElement('option')
+      const option = document.createElement('option')
       option.value = item
       option.textContent = item
       select.appendChild(option)
