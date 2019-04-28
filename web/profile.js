@@ -2,6 +2,8 @@ import tweb3 from './tweb3'
 import handlebars from 'handlebars/dist/handlebars.min.js'
 
 const ownersTemplate = handlebars.compile(document.getElementById('ownersTemplate').innerHTML)
+const inheritorsTemplate = handlebars.compile(document.getElementById('inheritorsTemplate').innerHTML)
+const tagsTemplate = handlebars.compile(document.getElementById('tagsTemplate').innerHTML)
 
 function byId (x) {
   return document.getElementById(x)
@@ -63,7 +65,7 @@ function loadDid (targetAddress) {
   tweb3.contract('system.did').methods.query(targetAddress).call()
     .then(props => {
       if (props) {
-        const { owners, threshold/*, attributes */ } = props // eslint-disable-line
+        const { owners, threshold, inheritors, tags } = props // eslint-disable-line
         if (threshold) {
           val('threshold', threshold || 1)
         }
@@ -72,8 +74,20 @@ function loadDid (targetAddress) {
         } else {
           text('ownerList', '')
         }
+        if (inheritors && Object.keys(inheritors).length) {
+          byId('inheList').innerHTML = inheritorsTemplate(inheritors)
+        } else {
+          text('inheList', '')
+        }
+        if (tags && Object.keys(tags).length) {
+          byId('tagList').innerHTML = tagsTemplate(tags)
+        } else {
+          text('tagList', '')
+        }
       } else {
         text('ownerList', '')
+        text('inheList', '')
+        text('tagList', '')
       }
     })
 }
@@ -86,7 +100,8 @@ function registerFromEvent () {
     if (address) {
       loadAlias(address)
       loadDid(address)
-      first("option[value='']").remove()
+      const nullOpt = first("option[value='']")
+      nullOpt && nullOpt.remove()
       byId('things').classList.remove('hide')
     } else {
       window.alert('Seems that something went wrong.')
@@ -228,6 +243,135 @@ function registerRemoveOwnerEvent () {
   })
 }
 
+function registerAddInheEvent () {
+  const button = byId('addInhe')
+  button.addEventListener('click', function () {
+    const address = byId('from').value
+    if (!address) {
+      window.alert('Please select "sign-in as" first.')
+      return
+    }
+
+    const inheritor = byId('newInhe').value.trim()
+    if (!inheritor) {
+      window.alert('Please enter inheritor.')
+      return
+    }
+    const wait = +byId('waitPeriod').value.trim()
+    const lock = +byId('lockPeriod').value.trim()
+    if (!wait || !lock) {
+      window.alert('Please enter both wait period and lock period.')
+      return
+    }
+
+    tweb3.contract('system.did').methods.addInheritor(address, inheritor, wait, lock).sendCommit({ from: address })
+      .then(r => {
+        loadDid(address)
+        window.alert('Success.')
+      })
+      .catch(error => {
+        console.error(error)
+        window.alert(String(error))
+      })
+  })
+}
+
+function registerRemoveInheEvent () {
+  const button = byId('inheList')
+  button.addEventListener('click', function (e) {
+    e.preventDefault()
+
+    const address = byId('from').value
+    if (!address) {
+      window.alert('Please select "sign-in as" first.')
+      return
+    }
+
+    const target = e.target
+    if (target.tagName !== 'A') {
+      return
+    }
+
+    const inheritor = target.getAttribute('data-inheritor')
+
+    if (!window.confirm('Sure to delete ' + inheritor + '?')) {
+      return
+    }
+
+    tweb3.contract('system.did').methods.removeInheritor(address, inheritor).sendCommit({ from: address })
+      .then(r => {
+        loadDid(address)
+        window.alert('Success.')
+      })
+      .catch(error => {
+        console.error(error)
+        window.alert(String(error))
+      })
+  })
+}
+
+function registerAddTagEvent () {
+  const button = byId('addTag')
+  button.addEventListener('click', function () {
+    const address = byId('from').value
+    if (!address) {
+      window.alert('Please select "sign-in as" first.')
+      return
+    }
+
+    const name = byId('tagName').value.trim()
+    if (!name) {
+      window.alert('Please enter tag name.')
+      return
+    }
+    const value = byId('tagValue').value.trim()
+    if (!value) {
+      window.alert('Please enter tag value.')
+      return
+    }
+
+    tweb3.contract('system.did').methods.setTag(address, name, value).sendCommit({ from: address })
+      .then(r => {
+        loadDid(address)
+        window.alert('Success.')
+      })
+      .catch(error => {
+        console.error(error)
+        window.alert(String(error))
+      })
+  })
+}
+
+function registerRemoveTagEvent () {
+  const button = byId('tagList')
+  button.addEventListener('click', function (e) {
+    e.preventDefault()
+
+    const address = byId('from').value
+    if (!address) {
+      window.alert('Please select "sign-in as" first.')
+      return
+    }
+
+    const target = e.target
+    if (target.tagName !== 'A') {
+      return
+    }
+
+    const tag = target.getAttribute('data-tag')
+
+    tweb3.contract('system.did').methods.removeTag(address, tag).sendCommit({ from: address })
+      .then(r => {
+        loadDid(address)
+        window.alert('Success.')
+      })
+      .catch(error => {
+        console.error(error)
+        window.alert(String(error))
+      })
+  })
+}
+
 function registerEvents () {
   registerFromEvent()
   registerFaucetEvent()
@@ -235,6 +379,10 @@ function registerEvents () {
   registerUpdateThresholdEvent()
   registerAddOwnerEvent()
   registerRemoveOwnerEvent()
+  registerAddInheEvent()
+  registerRemoveInheEvent()
+  registerAddTagEvent()
+  registerRemoveTagEvent()
 }
 
 ; (function () {
