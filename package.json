@@ -7,7 +7,7 @@
     "test": "standard",
     "fix": "standard --fix",
     "jest": "jest",
-    "start": "standard --fix && node ./scripts/start.js",
+    "start": "standard --fix && node icetea/index.js",
     "app": "standard --fix && webpack-dev-server --open --config webpack.dev.js",
     "web": "standard --fix && webpack-dev-server --config webpack.dev.js",
     "reset": "tendermint unsafe_reset_all && node ./scripts/destroy.js",
@@ -15,7 +15,7 @@
     "show": "sudo lsof -i tcp:26657",
     "deploybot": "node scripts/deploybot",
     "docs:build": "node_modules/.bin/jsdoc --configure jsdoc.json --verbose",
-    "blockchain": "tendermint node & node ./scripts/start.js",
+    "blockchain": "tendermint node & node icetea/index.js",
     "build": "webpack --config webpack.prod.js"
   },
   "keywords": [

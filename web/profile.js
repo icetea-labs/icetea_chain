@@ -94,6 +94,26 @@ function registerFromEvent () {
   })
 }
 
+function registerFaucetEvent () {
+  const button = byId('btnFaucet')
+  button.addEventListener('click', function () {
+    const address = byId('from').value
+    if (!address) {
+      window.alert('Please select "sign-in as" first.')
+      return
+    }
+
+    tweb3.contract('system.faucet').methods.request(/* address */).sendCommit({ from: address })
+      .then(r => {
+        window.alert('Success.')
+      })
+      .catch(error => {
+        console.error(error)
+        window.alert(String(error))
+      })
+  })
+}
+
 function registerUpdateAliasEvent () {
   const button = byId('updateAlias')
   button.addEventListener('click', function () {
@@ -210,6 +230,7 @@ function registerRemoveOwnerEvent () {
 
 function registerEvents () {
   registerFromEvent()
+  registerFaucetEvent()
   registerUpdateAliasEvent()
   registerUpdateThresholdEvent()
   registerAddOwnerEvent()
@@ -219,4 +240,8 @@ function registerEvents () {
 ; (function () {
   window.setTimeout(loadWallet, 300)
   registerEvents()
+  tweb3.contract('system.faucet').methods.getAmount().call()
+    .then(n => {
+      text('faucetAmount', n)
+    })
 })()
