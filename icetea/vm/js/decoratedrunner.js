@@ -17,6 +17,9 @@ module.exports = class extends JsRunner {
     // Now transpile decorated class to raw
     src = this.transpile(src, decoratedPlugins)
 
+    // Remove flow types
+    src = this.transpile(src, ['@babel/plugin-transform-flow-strip-types'])
+
     // wrap the src in the 'decorated wrapper'
     src = wrapper(src)
 

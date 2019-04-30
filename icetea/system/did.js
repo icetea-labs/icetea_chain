@@ -447,7 +447,7 @@ exports.run = (context, options) => {
       if (!old) {
         contract.register(address, { tags: v })
       } else {
-        Object.assign(old.tags, v)
+        old.tags = Object.assign(old.tags || {}, v)
         context.setState(address, old)
       }
     },
@@ -458,7 +458,7 @@ exports.run = (context, options) => {
       contract.checkPermission(address)
 
       const old = context.getState(address)
-      if (!old || !old.tags || !old.inheritors[name]) {
+      if (!old || !old.tags || !old.tags[name]) {
         throw new Error(`${name} is not a tag of ${address}.`)
       }
 

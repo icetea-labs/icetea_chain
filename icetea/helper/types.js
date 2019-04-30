@@ -123,7 +123,7 @@ function checkMsg ({ name, callType, params = [] }, spec, {
 
   const specParams = spec[name].params || []
 
-  if (strict && params.length > specParams) {
+  if (strict && params.length > specParams.length) {
     throw new Error(`Wrong number of parameter for '${name}'. Expect '${specParams.length}'. Got '${params.length}'.`)
   }
 

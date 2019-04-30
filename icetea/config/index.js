@@ -1,12 +1,11 @@
 module.exports = {
   versions: {
-    node: '>=11.8.0 <12.1.0'
+    node: '>=12.0.0 <12.1.0'
   },
   rawJs: {
     transpile: [
       '@babel/plugin-proposal-private-methods',
-      '@babel/plugin-proposal-class-properties', // no need since Node 12
-      '@babel/plugin-transform-flow-strip-types' // FIXME: this should be move into decorated-class plugins
+      '@babel/plugin-proposal-class-properties'
     ]
   },
   abciServerPort: 26658,
