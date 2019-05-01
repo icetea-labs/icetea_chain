@@ -1,6 +1,6 @@
 language: node_js
 node_js:
-  - "12.0.0"
+  - "11"
 services:
   - docker
 before_install:
