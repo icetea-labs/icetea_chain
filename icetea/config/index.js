@@ -1,6 +1,6 @@
 module.exports = {
   versions: {
-    node: '>=12.0.0 <13.0.0'
+    node: '>=11.8.0 <13.0.0'
   },
   rawJs: {
     transpile: [
