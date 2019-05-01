@@ -34,7 +34,8 @@ const METADATA = {
     decorators: ['transaction'],
     params: [
       { name: 'address', type: 'string' },
-      { name: 'owner', type: 'string' }
+      { name: 'owner', type: 'string' },
+      { name: 'weight', type: ['number', 'undefined'] }
     ],
     returnType: 'undefined'
   },
@@ -44,6 +45,13 @@ const METADATA = {
       { name: 'address', type: 'string' },
       { name: 'owner', type: 'string' },
       { name: 'weight', type: ['number', 'undefined'] }
+    ],
+    returnType: 'undefined'
+  },
+  'clearOwnership': {
+    decorators: ['transaction'],
+    params: [
+      { name: 'address', type: 'string' }
     ],
     returnType: 'undefined'
   },
@@ -283,9 +291,31 @@ exports.run = (context, options) => {
         throw new Error(`${owner} is not an owner of ${address}.`)
       }
 
+      if (Object.keys(old.owners).length === 1 && owner !== address) {
+        throw new Error('Cannot remove the only owner.')
+      }
+
       delete old.owners[owner]
 
+      if (Object.keys(old.owners).length === 0) {
+        delete old.owners
+      }
+
       _checkValidity(old.owners, old.threshold)
+      context.setState(address, old)
+    },
+
+    clearOwnership (address) {
+      address = _ensureAddress(address)
+      contract.checkPermission(address)
+
+      const old = context.getState(address)
+      if (!old) {
+        return
+      }
+
+      delete old.threshold
+      delete old.owners
       context.setState(address, old)
     },
 
@@ -311,6 +341,12 @@ exports.run = (context, options) => {
     },
 
     addInheritor (address, inheritor, waitPeriod, lockPeriod) {
+      waitPeriod = parseInt(waitPeriod)
+      lockPeriod = parseInt(lockPeriod)
+      if (!waitPeriod || waitPeriod <= 0 || !lockPeriod || lockPeriod <= 0) {
+        throw new Error('waitPeriod and lockPeriod must be positive number of days.')
+      }
+
       address = _ensureAddress(address)
       inheritor = _ensureAddress(inheritor)
 
@@ -352,18 +388,18 @@ exports.run = (context, options) => {
       claimer = _ensureAddress(claimer)
 
       const did = context.getState(address)
-      if (!did || !did.inheritors || !did.inheritors.length) {
+      if (!did || !did.inheritors || !Object.keys(did.inheritors).length) {
         throw new Error('No inheritors configured for this account.')
       }
       const inheritors = did.inheritors
 
       // ensure that claimer is an inheritor
-      const data = !inheritors[claimer]
+      const data = inheritors[claimer]
       if (!data || !data.waitPeriod || !data.lockPeriod) {
         throw new Error(`${claimer} is not correctly configured as an inheritor for this account.`)
       }
 
-      if (data.STATE === STATE_CLAIMING) {
+      if (data.state === STATE_CLAIMING) {
         throw new Error('Already claimed.')
       }
 
@@ -397,18 +433,18 @@ exports.run = (context, options) => {
       contract.checkPermission(address)
 
       const did = context.getState(address)
-      if (!did || !did.inheritors || !did.inheritors.length) {
+      if (!did || !did.inheritors || !Object.keys(did.inheritors).length) {
         throw new Error('No inheritors configured for this account.')
       }
       const inheritors = did.inheritors
 
       // ensure that claimer is an inheritor
-      const data = !inheritors[claimer]
+      const data = inheritors[claimer]
       if (!data) {
         throw new Error(`${claimer} is not correctly configured as an inheritor for this account.`)
       }
 
-      if (data.STATE !== STATE_CLAIMING) {
+      if (data.state !== STATE_CLAIMING) {
         throw new Error(`${claimer} does not currently claim so no need to reject.`)
       }
 
@@ -463,8 +499,14 @@ exports.run = (context, options) => {
       }
 
       delete old.tags[name]
-
-      context.setState(address, old)
+      if (Object.keys(old.tags).length === 0) {
+        delete old.tags // save some space
+      }
+      if (Object.keys(old).length === 0) {
+        context.deleteState(address)
+      } else {
+        context.setState(address, old)
+      }
     }
   }
 

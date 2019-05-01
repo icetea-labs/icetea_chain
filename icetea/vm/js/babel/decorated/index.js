@@ -283,7 +283,6 @@ module.exports = function ({ types: t }) {
                 delete memberMeta[key].mp
                 if (!isMethod(mp.node)) {
                   if (stateDeco.length) {
-                    console.log(key)
                     throw buildError('State mutability decorators cannot be attached to variables', mp)
                   } else {
                     if (memberMeta[key].decorators.includes('state')) {

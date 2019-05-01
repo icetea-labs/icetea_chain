@@ -1,6 +1,6 @@
 /* global jest describe test expect beforeAll afterAll */
 
-// const { ecc } = require('icetea-common')
+const { ecc } = require('icetea-common')
 const { web3, randomAccountWithBalance } = require('./helper')
 
 jest.setTimeout(30000)
@@ -17,7 +17,7 @@ afterAll(() => {
 })
 
 describe('did', () => {
-  test('set tag remove tag', async () => {
+  test('did test', async () => {
     const { privateKey, address: from } = account10k
     tweb3.wallet.importAccount(privateKey)
 
@@ -35,5 +35,142 @@ describe('did', () => {
         testName: 'testValue'
       }
     })
+
+    // then remove it
+    await ms.removeTag(from, 'testName').sendCommit({ from })
+    did = await ms.query(from).call({ from })
+    expect(did).toBe(undefined)
+
+    // add again, using object
+    await ms.setTag(from, { testName: 'testValue' }).sendCommit({ from })
+    did = await ms.query(from).call({ from })
+    expect(did).toEqual({
+      tags: {
+        testName: 'testValue'
+      }
+    })
+
+    // change value
+    await ms.setTag(from, { testName: 'testValue2' }).sendCommit({ from })
+    did = await ms.query(from).call({ from })
+    expect(did).toEqual({
+      tags: {
+        testName: 'testValue2'
+      }
+    })
+
+    // test no right
+    const newAccount = ecc.newKeyPairWithAddress()
+    tweb3.wallet.importAccount(newAccount.privateKey)
+
+    const setFromNewAccount = () => {
+      return ms.setTag(from, { testName: 'testValue3' }).sendCommit({ from: newAccount.address })
+    }
+    await expect(setFromNewAccount()).rejects.toThrowError('Permission denied')
+
+    const transferFromNewAccount = () => {
+      return tweb3.transfer('system.faucet', 100, { from, signers: newAccount.address })
+    }
+    await expect(transferFromNewAccount()).rejects.toThrowError('Permission denied')
+
+    // now we add owner
+    await ms.addOwner(from, newAccount.address).sendCommit({ from })
+    did = await ms.query(from).call({ from })
+    expect(did).toEqual({
+      owners: {
+        [newAccount.address]: 1
+      },
+      tags: {
+        testName: 'testValue2'
+      }
+    })
+
+    // set tag again
+    await setFromNewAccount()
+    did = await ms.query(from).call({ from })
+    expect(did).toEqual({
+      owners: {
+        [newAccount.address]: 1
+      },
+      tags: {
+        testName: 'testValue3'
+      }
+    })
+
+    // transfer now, should ok (no exception)
+    await transferFromNewAccount()
+
+    // now add self
+    await ms.addOwner(from, from, 2).sendCommit({ from: newAccount.address })
+    did = await ms.query(from).call({ from })
+    expect(did).toEqual({
+      owners: {
+        [newAccount.address]: 1,
+        [from]: 2
+      },
+      tags: {
+        testName: 'testValue3'
+      }
+    })
+
+    // remove owner
+    await ms.clearOwnership(from).sendCommit({ from: newAccount.address })
+    did = await ms.query(from).call({ from })
+    expect(did).toEqual({
+      tags: {
+        testName: 'testValue3'
+      }
+    })
+
+    // just to confirm no ownership now
+    await expect(transferFromNewAccount()).rejects.toThrowError('Permission denied')
+
+    // remove the tag for short code
+    await ms.removeTag(from, 'testName').sendCommit({ from })
+    did = await ms.query(from).call({ from })
+    expect(did).toBe(undefined)
+
+    const claimFromNewAccount = () => {
+      return ms.claimInheritance(from, newAccount.address).sendCommit({ from })
+    }
+
+    // claim while you are not an inheritor
+    await expect(claimFromNewAccount()).rejects.toThrowError('No inheritors')
+
+    // then, let's add an inheritance
+    await ms.addInheritor(from, newAccount.address, 1, 2).sendCommit({ from })
+    did = await ms.query(from).call({ from })
+    expect(did).toEqual({
+      inheritors: {
+        [newAccount.address]: {
+          waitPeriod: 1,
+          lockPeriod: 2
+        }
+      }
+    })
+
+    await claimFromNewAccount()
+
+    did = await ms.query(from).call({ from })
+    expect(did.inheritors[newAccount.address].state).toBe(1)
+
+    // inheritor has to wait
+    await expect(transferFromNewAccount()).rejects.toThrowError('Permission denied')
+
+    // reclaim
+    await expect(claimFromNewAccount()).rejects.toThrowError('Already claimed')
+
+    const rejectClaim = () => {
+      return ms.rejectInheritanceClaim(from, newAccount.address).sendCommit({ from })
+    }
+    await rejectClaim()
+    did = await ms.query(from).call({ from })
+    expect(did.inheritors[newAccount.address].state).toBe(2)
+
+    // reject again
+    await expect(rejectClaim()).rejects.toThrowError('does not currently claim')
+
+    // reclaim - should be locked
+    await expect(claimFromNewAccount()).rejects.toThrowError('locked')
   })
 })
