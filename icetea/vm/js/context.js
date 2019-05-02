@@ -2,22 +2,28 @@
 const utils = require('../../helper/utils')
 const invoker = require('../../contractinvoker')
 
-function _makeLoadContract (invokerTypes, srcContract, options) {
+function _makeLoadContract (invokerTypes, srcContract, options, tags) {
   return destContract => {
     return new Proxy({}, {
       get (obj, method) {
         const tx = { from: srcContract }
         const newOpts = { ...options, tx, ...tx }
-        return _makeInvokableMethod(invokerTypes, destContract, method, newOpts)
+        return _makeInvokableMethod(invokerTypes, destContract, method, newOpts, tags)
       }
     })
   }
 }
 
-function _makeInvokableMethod (invokerTypes, destContract, method, options) {
+function _makeInvokableMethod (invokerTypes, destContract, method, options, tags) {
   return invokerTypes.reduce((obj, t) => {
     obj[t] = (...params) => {
-      return invoker[t](destContract, method, params, options)
+      const r = invoker[t](destContract, method, params, options)
+      if (t === 'invokeUpdate') {
+        Object.assign(tags, r[1])
+        return r[0]
+      } else {
+        return r
+      }
     }
     return obj
   }, {})
@@ -81,7 +87,7 @@ exports.forTransaction = (contractAddress, methodName, methodParams, options) =>
       msg,
       block,
       tags,
-      loadContract: _makeLoadContract(['invokeUpdate', 'invokeView', 'invokePure'], contractAddress, options)
+      loadContract: _makeLoadContract(['invokeUpdate', 'invokeView', 'invokePure'], contractAddress, options, tags)
     }),
     emitEvent: (eventName, eventData, indexes = []) => {
       utils.emitEvent(contractAddress, tags, eventName, eventData, indexes)
