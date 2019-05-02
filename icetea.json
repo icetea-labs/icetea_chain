@@ -21,11 +21,6 @@
         "ICETEA_NAME": "icetea",
         "TENDERMINT_NAME": "tendermint"
       }
-    },
-    {
-      "name": "gate",
-      "script": "gate/index.js",
-      "watch": false
     }
   ]
 }

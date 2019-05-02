@@ -76,6 +76,16 @@ async function fetchTxDetails (template, hash) {
       document.getElementById('result').innerHTML = ansi_up.ansi_to_html(tx.tx_result.log)
     }
 
+    if (data.data.op === 0) {
+      document.getElementById('resultTd').textContent = 'Address'
+      const btn = document.getElementById('call')
+      btn.classList.remove('hide')
+      btn.addEventListener('click', function (e) {
+        e.preventDefault()
+        window.location.href = '/contract.html?address=' + tx.to
+      })
+    }
+
     Prism.highlightAll()
 
     return tx.status !== 'Pending'

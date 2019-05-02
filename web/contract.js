@@ -20,10 +20,14 @@ async function fillContracts () {
 
     if (!contracts.length) return
 
+    const address = (new URL(document.location)).searchParams.get('address')
     var select = document.getElementById('to')
     contracts.forEach(item => {
       const option = document.createElement('option')
       option.value = item
+      if (item === address) {
+        option.selected = true
+      }
       option.textContent = item
       select.appendChild(option)
     })
@@ -42,7 +46,6 @@ async function fillContractInfo () {
     if (!contract) return
 
     const info = await tweb3.getAccountInfo(contract)
-    console.log(info)
 
     info.address = contract
     const isSystemContract = !!info.system
@@ -99,7 +102,6 @@ async function fillFuncs () {
     if (!contract) return
 
     const funcs = await tweb3.getMetadata(contract)
-    console.log(funcs)
     var select = document.getElementById('funcs')
     select.innerHTML = ''
     signatures = {}
@@ -140,9 +142,8 @@ async function fillFuncs () {
 
 $(document).ready(function () {
   fillContracts()
-  // helper.registerTxForm($('#form'), buildData);
-
-  document.getElementById('to').addEventListener('change', function () {
+  const contractBox = document.getElementById('to')
+  contractBox.addEventListener('change', function () {
     fillContractInfo()
     fillFuncs()
     document.getElementById('name').value = ''

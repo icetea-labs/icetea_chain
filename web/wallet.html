@@ -20,65 +20,68 @@
             <a href="/profile.html">Profile</a>
         </nav>
         <h1>Wallet</h1>
-        <h2>
-            1.Select default account
-        </h2>
+        <!--h2>
+            1. Set default account
+        </h2-->
         <div>
             <p>
                 <label>Default account:</label> <label id="currentDefaultAcc"></label>
                 <br>
                 <br>
-                <label>Wallet address:</label> <select id="wallet" name="wallet" autofocus required></select>
-                <button id="setDefaultAcc">Save default</button>
+                <label>Accounts:</label> <select id="wallet" name="wallet" autofocus required></select>
+                <button id="setDefaultAcc">Set default</button>
+                <p>More than 2 accounts will make loading slow. <button id='clear'>Clear accounts</button></p>
             </p>
         </div>
         <h2>
-            2.Import your account
+            2. Generate new account
         </h2>
         <div>
-            <textarea id="your_private_key_account"  placeholder="your private key" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></textarea>
-            <br/><br/><button id="importAccount">Import</button>
+            <button id="generatePrivateKey">Generate</button>
+            <p><b>Private key:</b> <span id="generated_private_key"></span></p>
+            <p><b>Account address:</b> <span id="generated_public_key"></span></p>
+            <p><i>After generation, you could go to <a href='/profile.html'>Profile</a> tab to get some coins from Faucet.</i></p>
         </div>
         <h2>
-            3.Save data into storage
+            3. Import private key
+        </h2>
+        <div>
+            <textarea id="your_private_key_account"  placeholder="private key (base58)" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></textarea>
+            <br/><br/><button id="importAccount">Import</button>
+        </div>
+        <!--h2>
+            3. Save data into storage
         </h2>
         <div>
             <p>
                 <button id="saveStorage">Save Storage</button>
             </p>
-        </div>
+        </div-->
+
+        <!--
         <h2>
-            4.Generate account
-        </h2>
-        <div>
-            <button id="generatePrivateKey">Generate</button>
-            <h3>Your private key</h3>
-            <textarea disabled id="generated_private_key" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></textarea>
-            <h3>Your account address</h3>
-            <textarea disabled id="generated_public_key" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></textarea>
-        </div>
-        <h2>
-            5.Generate account by mnemonic
+            4. Generate account by seed phrases
         </h2>
         <div>
             <button id="generateMnemonic">Generate</button>
-            <h3>Your seed word</h3>
+            <h3>Seed phrases</h3>
             <textarea disabled id="generated_seed_word" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></textarea>
-            <h3>Your private key</h3>
+            <h3>Private key</h3>
             <textarea disabled id="generated_private_key_seed" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></textarea>
-            <h3>Your account address</h3>
+            <h3>Account address</h3>
             <textarea disabled id="generated_public_key_seed" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></textarea>
         </div>
         <h2>
-            6.Reveal account address
+            5. Reveal account address
         </h2>
         <div>
-            <h3>Enter your private key</h3>
+            <h3>Enter private key</h3>
             <textarea id="your_private_key" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></textarea>
             <br><button id="seePublicKey">Reveal</button>
-            <h3>Your account address</h3>
+            <h3>Account address</h3>
             <textarea disabled id="your_public_key" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></textarea>
         </div>
+        -->
     </div>
     <script src="wallet.js"></script>
 </body>
