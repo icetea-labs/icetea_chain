@@ -37,7 +37,8 @@ const METADATA = {
     decorators: ['transaction'],
     params: [
       { name: 'alias', type: 'string' },
-      { name: 'address', type: 'string' }
+      { name: 'address', type: 'string' },
+      { name: 'overwrite', type: ['boolean', 'undefined'] }
     ],
     returnType: 'string'
   }
@@ -100,7 +101,7 @@ exports.run = (context, options) => {
       })
     },
 
-    register (alias, address) {
+    register (alias, address, overwrite = false) {
       alias = sanitizeAlias(alias)
       if (alias.startsWith('system.')) {
         throw new Error("Alias cannot start with 'system.'.")
@@ -129,7 +130,7 @@ exports.run = (context, options) => {
       const fullAlias = prefix + alias
 
       const aliases = loadAliases(context)
-      if (aliases.hasOwnProperty(fullAlias)) {
+      if (!overwrite && aliases.hasOwnProperty(fullAlias)) {
         throw new Error(`Alias ${fullAlias} already registered.`)
       }
 

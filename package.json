@@ -15,7 +15,7 @@
     "show": "sudo lsof -i tcp:26657",
     "deploybot": "node scripts/deploybot",
     "docs:build": "node_modules/.bin/jsdoc --configure jsdoc.json --verbose",
-    "blockchain": "tendermint node & node icetea/index.js",
+    "blockchain": "tendermint node & node icetea/index.js & node gate/index.js",
     "build": "webpack --config webpack.prod.js"
   },
   "keywords": [

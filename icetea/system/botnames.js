@@ -1,7 +1,8 @@
 module.exports = Object.freeze({
-  EchoBot: 'system.echo_bot',
-  BotStore: 'system.botstore',
   Alias: 'system.alias',
+  Did: 'system.did',
+  BotStore: 'system.botstore',
+  Gate: 'system.gate',
   Faucet: 'system.faucet',
-  Did: 'system.did'
+  EchoBot: 'system.echo_bot'
 })

@@ -35,20 +35,28 @@ exports.getAllPropertyNames = function (obj) {
  * @returns {Array.<string>} tags
  */
 exports.emitEvent = function (emitter, tags, eventName, eventData, indexes = []) {
+  const EVENTNAMES_SEP = '|'
+  const EMITTER_EVENTNAME_SEP = '%'
+  const EVENTNAME_INDEX_SEP = '~'
+
   emitter = emitter || 'system'
   tags = tags || {}
 
+  if (typeof eventData !== 'object') {
+    throw new Error('eventData must be an object.')
+  }
   if (eventName === 'EventNames' || eventName === 'tx') {
     throw new Error("Event name cannot be 'EventNames' or 'tx'")
   }
-  if (eventName.includes('|')) {
-    throw new Error("Event name cannot contain '|' character")
+  if (eventName.includes(EVENTNAMES_SEP) || eventName.includes(EMITTER_EVENTNAME_SEP) || eventName.includes(EVENTNAME_INDEX_SEP)) {
+    throw new Error(`Event name cannot contain ${EVENTNAMES_SEP}, ${EMITTER_EVENTNAME_SEP}, or ${EVENTNAME_INDEX_SEP} characters.`)
   }
-  if (!tags.EventNames) tags.EventNames = '|'
-  if (tags.EventNames.includes('|' + eventName + '|')) {
+
+  if (!tags.EventNames) tags.EventNames = EVENTNAMES_SEP
+  if (tags.EventNames.includes(EVENTNAMES_SEP + eventName + EVENTNAMES_SEP)) {
     throw new Error('Event ' + eventName + ' was already emit')
   }
-  tags.EventNames += emitter + '.' + eventName + '|'
+  tags.EventNames += emitter + EMITTER_EVENTNAME_SEP + eventName + EVENTNAMES_SEP
   indexes.forEach(indexedKey => {
     if (typeof indexedKey !== 'string') {
       throw new Error("Event's indexed key must be string")
@@ -56,7 +64,7 @@ exports.emitEvent = function (emitter, tags, eventName, eventData, indexes = [])
     // if (typeof eventData[indexedKey] === "undefined") {
     //    throw new Error("Event's indexed value is not provided");
     // }
-    tags[eventName + '.' + indexedKey] = String(JSON.stringify(eventData[indexedKey]))
+    tags[eventName + EVENTNAME_INDEX_SEP + indexedKey] = String(JSON.stringify(eventData[indexedKey]))
     delete eventData[indexedKey]
   })
   tags[eventName] = String(JSON.stringify(eventData))
