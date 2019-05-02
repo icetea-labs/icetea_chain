@@ -2,7 +2,7 @@
   "apps" : [
     {
       "name": "icetea",
-      "script": "scripts/start.js",
+      "script": "icetea/index.js",
       "watch": false
     },
     {
@@ -21,6 +21,11 @@
         "ICETEA_NAME": "icetea",
         "TENDERMINT_NAME": "tendermint"
       }
+    },
+    {
+      "name": "gate",
+      "script": "gate/index.js",
+      "watch": false
     }
   ]
 }
