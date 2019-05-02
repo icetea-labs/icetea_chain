@@ -99,9 +99,21 @@ function fillSignature () {
 async function fillFuncs () {
   try {
     var contract = document.getElementById('to').value
-    if (!contract) return
+    if (!contract) {
+      $('#lookLikeBot').hide()
+      return
+    }
 
     const funcs = await tweb3.getMetadata(contract)
+
+    const lookLikeBot = funcs.botInfo ||
+      (funcs.getName && funcs.getDescription)
+    if (lookLikeBot) {
+      $('#lookLikeBot').show()
+    } else {
+      $('#lookLikeBot').hide()
+    }
+
     var select = document.getElementById('funcs')
     select.innerHTML = ''
     signatures = {}
@@ -156,8 +168,8 @@ $(document).ready(function () {
 
   $('#form').submit(async function (e) {
     e.preventDefault()
-    // const privateKey = window.$('#private_key').val().trim()
-    const address = window.$('#to').val().trim()
+
+    const address = window.$('#to').val()
     const name = document.getElementById('name').value
     const params = helper.parseParamsFromField('#params')
     // submit tx
@@ -175,6 +187,19 @@ $(document).ready(function () {
       console.log(error)
       window.alert(String(error))
     }
+  })
+
+  function popupwindow (url, title, w, h) {
+    var left = (window.screen.width / 2) - (w / 2)
+    var top = (window.screen.height / 2) - (h / 2)
+    return window.open(url, title, 'toolbar=no, location=no, directories=no, status=no, menubar=no, scrollbars=no, resizable=no, copyhistory=no, width=' + w + ', height=' + h + ', top=' + top + ', left=' + left)
+  }
+
+  $('#lookLikeBot').on('click', function (e) {
+    e.preventDefault()
+
+    const url = '/botpoup.html' + '?address=' + $('#to').val()
+    popupwindow(url, 'title', 800, 600)
   })
 
   $('#read, #pure').on('click', async function (e) {
