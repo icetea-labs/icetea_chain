@@ -150,10 +150,10 @@ exports.forView = (contractAddress, name, params, options) => {
  * @param {object} option - method option.
  * @returns {object} context
  */
-exports.forPure = (address, name, params, { from }) => {
+exports.forPure = (address, name, params, { from, block }) => {
   const ctx = {
     address,
-    getEnv: () => ({ msg: { sender: from, name, params, callType: 'pure' } })
+    getEnv: () => ({ msg: { sender: from, name, params, callType: 'pure' }, block })
   }
 
   return utils.deepFreeze(ctx)

@@ -134,6 +134,7 @@ class App {
 
     const { tools } = stateManager.produceDraft()
     options.tools = tools
+    options.block = stateManager.getBlock()
     return invoker.invokePure(contractAddress, methodName, methodParams, options)
   }
 

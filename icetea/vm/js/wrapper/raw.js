@@ -37,7 +37,11 @@ Date = class {
     constructor(...args) {
     let d
     if (args.length === 0) {
-        d = new __sysdate(__systhis.getEnv().block.timestamp * 1000)
+        const bl = __systhis.getEnv().block
+        if (!bl) {
+            throw new Error('Cannot call new Date() in this context.')
+        }
+        d = new __sysdate(bl.timestamp * 1000)
     } else {
         d = new __sysdate(...args)
     }
@@ -49,7 +53,13 @@ Date = class {
     })
     }
 }
-Date.now = () => ( __systhis.getEnv().block.timestamp * 1000 )
+Date.now = () => {
+    const bl = __systhis.getEnv().block
+    if (!bl) {
+        throw new Error('Cannot call Date.now() in this context.')
+    }
+    return bl.timestamp * 1000
+}
     
 const __guard = __g;
 ${src}
