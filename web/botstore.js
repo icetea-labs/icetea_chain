@@ -74,7 +74,7 @@ const store = {
       botInfo.alias = bot.split('.', 2)[1]
       botInfo.description = info.description || ''
       if (botInfo.description.length > 36) {
-        botInfo.description = botInfo.description.substring(0, 36) + '…'
+        botInfo.description = botInfo.description.substring(0, 36) + '...'
       }
       resInfo.push(botInfo)
     }

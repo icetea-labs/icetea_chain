@@ -17,7 +17,7 @@ function fmtHex (hex, c) {
   if (!hex || hex.length < c * 2 + 4) return hex
   if (hex.indexOf('.') >= 0) return hex
   c = c || 4
-  return hex.substr(0, c) + '…' + hex.substr(-c)
+  return hex.substr(0, c) + '...' + hex.substr(-c)
 }
 
 function fmtBlocks (blocks) {
