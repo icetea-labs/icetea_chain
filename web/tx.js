@@ -46,9 +46,9 @@ async function fetchTxDetails (template, hash) {
     tx.to = data.to
     tx.value = data.value
     tx.fee = data.fee
-    if (typeof tx.result === 'object') {
-      document.getElementById('result').classList.add('language-js')
-    }
+
+    const resultIsObj = typeof tx.result === 'object'
+
     tx.result = tryStringifyJson(tx.result, undefined, 2)
 
     tx.txType = 'transfer'
@@ -90,6 +90,9 @@ async function fetchTxDetails (template, hash) {
       })
     }
 
+    if (resultIsObj) {
+      document.getElementById('result').classList.add('language-js')
+    }
     Prism.highlightAll()
 
     return tx.status !== 'Pending'

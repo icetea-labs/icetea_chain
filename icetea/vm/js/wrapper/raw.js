@@ -29,7 +29,7 @@ let require = name => {
     throw new Error('Module ' + name + " is not whitelisted and then cannot be used with 'require'.")
 }
 
-const Math = new Proxy(__sysmath, {
+let Math = new Proxy(__sysmath, {
     get(obj, prop) {
         if (prop === 'random') {
             return () => {
@@ -45,7 +45,7 @@ const Math = new Proxy(__sysmath, {
     }
 })
 
-const Date = class {
+let Date = class {
     constructor(...args) {
         let d
         if (args.length === 0) {
