@@ -8,7 +8,9 @@
  */
 module.exports = src => `
 'use strict'
-
+const __systhis = this
+const __sysmath = Math
+const __sysdate = Date
 if (['production', 'mainnet'].includes(process.env.NODE_ENV)) {
     console = new Proxy({}, {
         get(obj, prop) {
@@ -18,7 +20,6 @@ if (['production', 'mainnet'].includes(process.env.NODE_ENV)) {
 }
 
 { // block to scope let/const and avoid hoisting (could use IIFE instead)
-
 let global = {}, globalThis = {}, process = void 0, Function = void 0,
     setInterval = void 0, setTimeout = void 0, setImmediate = void 0,
     clearImmediate = void 0, clearTimeout = void 0, clearInterval = void 0,
@@ -27,38 +28,48 @@ let global = {}, globalThis = {}, process = void 0, Function = void 0,
 let require = name => {
     throw new Error('Module ' + name + " is not whitelisted and then cannot be used with 'require'.")
 }
-Math.random = () => (
-    parseInt(this.getEnv().block.hash.substr(-16), 16) / 18446744073709552000
-)
 
-const __sysdate = Date
-const __systhis = this
-Date = class {
-    constructor(...args) {
-    let d
-    if (args.length === 0) {
-        const bl = __systhis.getEnv().block || {}
-        // if (!bl) {
-        //     throw new Error('Cannot call new Date() in this context.')
-        // }
-        d = new __sysdate((bl.timestamp * 1000) || 0)
-    } else {
-        d = new __sysdate(...args)
-    }
-    
-    return new Proxy(d, {
-        get(obj, prop) {
-        return Reflect.get(obj, prop).bind(obj)
+const Math = new Proxy(__sysmath, {
+    get(obj, prop) {
+        if (prop === 'random') {
+            return () => {
+                const bl = __systhis.getEnv().block
+                if (!bl) {
+                    throw new Error('Cannot call Math.random() in this context.')
+                }
+                return parseInt(bl.hash.substr(-16), 16) / 18446744073709552000
+            }
         }
-    })
+        return Reflect.get(obj, prop).bind(obj)
+    }
+})
+
+const Date = class {
+    constructor(...args) {
+        let d
+        if (args.length === 0) {
+            const bl = __systhis.getEnv().block
+            if (!bl) {
+                throw new Error('Cannot call new Date() in this context.')
+            }
+            d = new __sysdate(bl.timestamp * 1000)
+        } else {
+            d = new __sysdate(...args)
+        }
+        
+        return new Proxy(d, {
+            get(obj, prop) {
+                return Reflect.get(obj, prop).bind(obj)
+            }
+        })
     }
 }
 Date.now = () => {
-    const bl = __systhis.getEnv().block || {}
-    // if (!bl) {
-    //     throw new Error('Cannot call Date.now() in this context.')
-    // }
-    return (bl.timestamp * 1000) || 0
+    const bl = __systhis.getEnv().block
+    if (!bl) {
+        throw new Error('Cannot call Date.now() in this context.')
+    }
+    return bl.timestamp * 1000
 }
     
 const __guard = __g;

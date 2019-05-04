@@ -6,13 +6,7 @@ import handlebars from 'handlebars/dist/handlebars.min.js'
 import Prism from 'prismjs'
 window.$ = $
 
-function tryStringifyJson (p) {
-  try {
-    return JSON.stringify(p, undefined, 2)
-  } catch (e) {
-    return String(p)
-  }
-}
+const tryStringifyJson = helper.tryStringifyJson
 
 async function fillContracts () {
   try {

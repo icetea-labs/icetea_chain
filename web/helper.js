@@ -70,3 +70,14 @@ export function detectCallType (decorators) {
 
   return 'view'
 }
+
+export function tryStringifyJson (p, replacer, space) {
+  if (typeof p === 'string') {
+    return p
+  }
+  try {
+    return JSON.stringify(p, replacer, space)
+  } catch (e) {
+    return String(p)
+  }
+}

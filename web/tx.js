@@ -2,6 +2,7 @@ import handlebars from 'handlebars/dist/handlebars.min.js'
 import { utils } from 'icetea-web3'
 import tweb3 from './tweb3'
 import Prism from 'prismjs'
+import { tryStringifyJson } from './helper'
 
 const switchEncoding = utils.switchEncoding
 const tryParseJson = utils.tryParseJson
@@ -38,7 +39,6 @@ function formatContractData (data, contract) {
 async function fetchTxDetails (template, hash) {
   try {
     const tx = await tweb3.getTransaction(hash)
-    console.log(tx)
 
     tx.status = tx.tx_result.code ? 'Error' : 'Success'
 
@@ -46,6 +46,10 @@ async function fetchTxDetails (template, hash) {
     tx.to = data.to
     tx.value = data.value
     tx.fee = data.fee
+    if (typeof tx.result === 'object') {
+      document.getElementById('result').classList.add('language-js')
+    }
+    tx.result = tryStringifyJson(tx.result, undefined, 2)
 
     tx.txType = 'transfer'
     data.data = JSON.parse(data.data) || {}
@@ -53,17 +57,17 @@ async function fetchTxDetails (template, hash) {
       tx.txType = 'deploy'
       tx.to = tx.result
       if (tx.to) {
-        tx.metadata = JSON.stringify(await tweb3.getMetadata(tx.to), null, 2)
+        tx.metadata = tryStringifyJson(await tweb3.getMetadata(tx.to), null, 2)
       }
     } else if (data.data.op === 1) {
       tx.txType = 'call'
     }
 
     tx.data = formatContractData(data.data, tx.to)
-    tx.events = JSON.stringify(tx.events, null, 2) // tweb3.utils.decodeEventData(tx), null, 2)
+    tx.events = tryStringifyJson(tx.events, null, 2) // tweb3.utils.decodeEventData(tx), null, 2)
     // const tags = tweb3.utils.decodeTags(tx)
     tx.from = tx.tags['tx.from']
-    tx.tags = JSON.stringify(tx.tags, null, 2)
+    tx.tags = tryStringifyJson(tx.tags, null, 2)
 
     // Do some formating
 
@@ -76,7 +80,7 @@ async function fetchTxDetails (template, hash) {
       document.getElementById('result').innerHTML = ansi_up.ansi_to_html(tx.tx_result.log)
     }
 
-    if (data.data.op === 0) {
+    if (data.data.op === 0 && tx.to) {
       document.getElementById('resultTd').textContent = 'Address'
       const btn = document.getElementById('call')
       btn.classList.remove('hide')
@@ -90,7 +94,7 @@ async function fetchTxDetails (template, hash) {
 
     return tx.status !== 'Pending'
   } catch (err) {
-    console.log(err)
+    console.log(err, err.info)
     return false
   }
 }
