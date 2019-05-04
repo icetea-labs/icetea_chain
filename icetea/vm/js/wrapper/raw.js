@@ -40,7 +40,8 @@ const Math = new Proxy(__sysmath, {
                 return parseInt(bl.hash.substr(-16), 16) / 18446744073709552000
             }
         }
-        return Reflect.get(obj, prop).bind(obj)
+        const fn = Reflect.get(obj, prop)
+        return typeof fn === 'function' ? fn.bind(obj) : fn
     }
 })
 
@@ -59,7 +60,8 @@ const Date = class {
         
         return new Proxy(d, {
             get(obj, prop) {
-                return Reflect.get(obj, prop).bind(obj)
+                const fn = Reflect.get(obj, prop)
+                return typeof fn === 'function' ? fn.bind(obj) : fn
             }
         })
     }
