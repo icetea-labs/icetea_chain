@@ -53,6 +53,9 @@ const lastBlock = () => {
 exports.load = async () => {
   const trie = await patricia()
   const [state, block] = await Promise.all([dump(trie), lastBlock()])
+  if (!block) {
+    return null
+  }
   return { state, block }
 }
 
