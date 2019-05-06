@@ -1,5 +1,6 @@
 const config = require('./config')
-const merkle = require('./helper/merkle')
+// const merkle = require('./helper/merkle')
+const patricia = require('./helper/patricia')
 const EventEmitter = require('events')
 const stateProxy = require('./stateproxy')
 
@@ -8,7 +9,7 @@ let stateTable, lastBlock
 
 class StateManager extends EventEmitter {
   async load () {
-    const storedData = (await merkle.load()) || {
+    const storedData = (await patricia.load()) || {
       state: initStateTable()
     }
 
@@ -16,11 +17,11 @@ class StateManager extends EventEmitter {
     lastBlock = storedData.block
   }
 
-  getLastState () {
+  async getLastState () {
     if (lastBlock && lastBlock.number > 1) {
       return {
         lastBlockHeight: lastBlock.number,
-        lastBlockAppHash: merkle.getHash(stateTable)
+        lastBlockAppHash: await patricia.root()
       }
     } else {
       return {
@@ -34,14 +35,14 @@ class StateManager extends EventEmitter {
     lastBlock = Object.freeze(block)
   }
 
-  persist () {
+  async persist () {
     if (!lastBlock || lastBlock.number <= 1) {
       return Buffer.alloc(0)
     }
-    const appHash = merkle.getHash(stateTable)
+    // const appHash = await patricia.getHash(stateTable)
     // console.log(`height ${lastBlock.number}, appHash ${appHash.toString('hex').toUpperCase()}`)
 
-    merkle.save({
+    const appHash = await patricia.save({
       block: lastBlock,
       state: stateTable
     })
