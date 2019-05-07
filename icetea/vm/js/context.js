@@ -2,6 +2,20 @@
 const utils = require('../../helper/utils')
 const invoker = require('../../contractinvoker')
 
+function _require (name) {
+  const whitelist = [
+    'lodash', 'moment', 'bn.js', '@hapi/joi', 'validator', 'cheerio', '@icetea/botutils', '@icetea/polyfill',
+    'assert', 'buffer', 'console', 'constants', 'crypto', 'querystring', 'stream', 'string_decoder', 'url', 'util'
+  ]
+  const ok = whitelist.some(element => {
+    return name === element || name.startsWith(`${element}/`)
+  })
+  if (!ok) {
+    throw new Error(`${name} is not supported now`)
+  }
+  return require(name)
+}
+
 function _makeLoadContract (invokerTypes, srcContract, options, tags) {
   return destContract => {
     return new Proxy({}, {
@@ -87,7 +101,8 @@ exports.forTransaction = (contractAddress, methodName, methodParams, options) =>
       msg,
       block,
       tags,
-      loadContract: _makeLoadContract(['invokeUpdate', 'invokeView', 'invokePure'], contractAddress, options, tags)
+      loadContract: _makeLoadContract(['invokeUpdate', 'invokeView', 'invokePure'], contractAddress, options, tags),
+      require: _require
     }),
     emitEvent: (eventName, eventData, indexes = []) => {
       utils.emitEvent(contractAddress, tags, eventName, eventData, indexes)
@@ -134,7 +149,8 @@ exports.forView = (contractAddress, name, params, options) => {
     getEnv: () => ({
       msg,
       block,
-      loadContract: _makeLoadContract(['invokeView', 'invokePure'], contractAddress, options)
+      loadContract: _makeLoadContract(['invokeView', 'invokePure'], contractAddress, options),
+      require: _require
     })
   }
 
@@ -153,7 +169,7 @@ exports.forView = (contractAddress, name, params, options) => {
 exports.forPure = (address, name, params, { from, block }) => {
   const ctx = {
     address,
-    getEnv: () => ({ msg: { sender: from, name, params, callType: 'pure' }, block })
+    getEnv: () => ({ msg: { sender: from, name, params, callType: 'pure' }, block, require: _require })
   }
 
   return utils.deepFreeze(ctx)
@@ -163,5 +179,5 @@ exports.forPure = (address, name, params, { from, block }) => {
  * metadata for unlisted invoke type
  */
 exports.forMetadata = {
-  getEnv: () => ({ msg: { callType: 'metadata', name: '__metadata' }, block: {} })
+  getEnv: () => ({ msg: { callType: 'metadata', name: '__metadata' }, block: {}, require: _require })
 }
