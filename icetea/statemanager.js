@@ -7,6 +7,9 @@ const stateProxy = require('./stateproxy')
 // Declare outside class to ensure private
 let stateTable, lastBlock
 
+// address key need to commit on write opts
+const needCommitKeys = new Set()
+
 class StateManager extends EventEmitter {
   async load () {
     const storedData = (await patricia.load()) || {
@@ -44,8 +47,10 @@ class StateManager extends EventEmitter {
 
     const appHash = await patricia.save({
       block: lastBlock,
-      state: stateTable
+      state: stateTable,
+      commitKeys: needCommitKeys
     })
+    needCommitKeys.clear()
 
     // return, no need to wait for save to finish
     return appHash
@@ -64,6 +69,9 @@ class StateManager extends EventEmitter {
 
   applyDraft (patch) {
     // utils.mergeStateTables(stateTable, draft)
+    Object.keys(patch.storages).map(key => needCommitKeys.add(key))
+    Object.keys(patch.balances).map(key => needCommitKeys.add(key))
+    Object.keys(patch.deployedContracts).map(key => needCommitKeys.add(key))
     stateProxy.applyChanges(stateTable, patch)
     return this
   }
@@ -85,6 +93,7 @@ class StateManager extends EventEmitter {
       system: true,
       deployedBy: 'system'
     })
+    needCommitKeys.add(address)
 
     return stateTable[address]
   }
@@ -151,6 +160,7 @@ function initStateTable () {
     stateTable[item.address] = {
       balance: item.balance
     }
+    needCommitKeys.add(item.address)
 
     return stateTable
   }, {})
@@ -164,6 +174,8 @@ function incBalance (addr, delta) {
     throw new Error('Not enough balance')
   }
   state.balance = balance + delta
+  // TODO: review it, maybe it called from state proxy
+  needCommitKeys.add(addr)
 }
 
 function decBalance (addr, delta) {

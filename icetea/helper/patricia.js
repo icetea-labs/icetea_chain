@@ -84,10 +84,10 @@ exports.getHash = (stateTable) => {
   })
 }
 
-exports.save = async ({ block, state }) => {
+exports.save = async ({ block, state, commitKeys }) => {
   const trie = await patricia()
   const opts = []
-  Object.keys(state).map(key => {
+  commitKeys.forEach(key => {
     opts.push({
       type: 'put',
       key,
