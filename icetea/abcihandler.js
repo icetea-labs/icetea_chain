@@ -72,8 +72,9 @@ const handler = {
     }
   },
 
-  commit () {
-    return { data: app.persistState() } // return the block stateRoot
+  async commit () {
+    const data = await app.persistState()
+    return { data } // return the block stateRoot
   },
 
   query (req) {

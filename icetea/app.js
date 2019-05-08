@@ -31,7 +31,7 @@ class App {
   async activate () {
     this.initSystemContracts()
     await stateManager.load()
-    const lastState = stateManager.getLastState()
+    const lastState = await stateManager.getLastState()
     console.log('Last state loaded', { height: lastState.lastBlockHeight, appHash: lastState.lastBlockAppHash.toString('hex').toUpperCase() })
     return lastState
   }
