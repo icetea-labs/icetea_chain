@@ -25,9 +25,7 @@ let global = {}, globalThis = {}, process = void 0, Function = void 0,
     clearImmediate = void 0, clearTimeout = void 0, clearInterval = void 0,
     queueMicrotask = void 0, WebAssembly = void 0, Console = void 0
 
-let require = name => {
-    throw new Error('Module ' + name + " is not whitelisted and then cannot be used with 'require'.")
-}
+const { require } = this.getEnv()
 
 let Math = new Proxy(__sysmath, {
     get(obj, prop) {
