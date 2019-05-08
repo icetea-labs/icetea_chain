@@ -25,6 +25,8 @@ let global = {}, globalThis = {}, process = void 0, Function = void 0,
     clearImmediate = void 0, clearTimeout = void 0, clearInterval = void 0,
     queueMicrotask = void 0, WebAssembly = void 0, Console = void 0
 
+const { require } = this.getEnv()
+
 let Math = new Proxy(__sysmath, {
     get(obj, prop) {
         if (prop === 'random') {

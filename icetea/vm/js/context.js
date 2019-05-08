@@ -13,7 +13,14 @@ function _require (name) {
   if (!ok) {
     throw new Error(`${name} is not supported now`)
   }
-  return require(name)
+  let module = require(name)
+
+  // filter bad functions should not used in blockchain
+  if (name === 'crypto') {
+    module = { createHash: module.createHash }
+  }
+
+  return module
 }
 
 function _makeLoadContract (invokerTypes, srcContract, options, tags) {
