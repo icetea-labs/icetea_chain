@@ -21,15 +21,15 @@ describe('transfer', () => {
     const { privateKey, address: from } = account10k
     tweb3.wallet.importAccount(privateKey)
 
-    const fromBalance = (await tweb3.getBalance(from)).balance
+    const fromBalance = Number((await tweb3.getBalance(from)).balance)
     expect(fromBalance).toBeGreaterThan(100)
 
     const to = ecc.toPubKeyAndAddressBuffer(ecc.generateKey()).address
     const toBalance = (await tweb3.getBalance(to)).balance
     expect(toBalance).toBeGreaterThanOrEqual(0)
 
-    const value = 1.5
-    const fee = 0.1
+    const value = 2
+    const fee = 1
 
     const result = await tweb3.sendTransactionCommit({ from: account10k.address, to, value, fee })
     expect(result.deliver_tx.code).toBeFalsy()
@@ -51,15 +51,15 @@ describe('transfer', () => {
     expect(events[0]).toEqual({
       emitter: 'system',
       eventName: 'Transferred',
-      eventData: { from, to, value }
+      eventData: { from, to, value: value.toString() }
     })
 
     // Verify balance changes after TX
 
-    const newFromBalance = (await tweb3.getBalance(from)).balance
+    const newFromBalance = Number((await tweb3.getBalance(from)).balance)
     expect(newFromBalance).toBe(fromBalance - value - fee)
 
-    const newToBalance = (await tweb3.getBalance(to)).balance
+    const newToBalance = Number((await tweb3.getBalance(to)).balance)
     expect(newToBalance).toBe(toBalance + value)
   })
 
@@ -67,13 +67,13 @@ describe('transfer', () => {
     const privateKey = await ecc.generateKey()
     var account = tweb3.wallet.importAccount(privateKey)
     const from = account.address // ecc.toPublicKey(privateKey)
-    const fromBalance = (await tweb3.getBalance(from)).balance
+    const fromBalance = Number((await tweb3.getBalance(from)).balance)
     expect(fromBalance).toBe(0)
 
     const to = ecc.toPubKeyAndAddressBuffer(ecc.generateKey()).address
 
     let value
-    let fee = 0.000001
+    let fee = 1
 
     const transfer = () => {
       return tweb3.sendTransactionCommit({ from: from, to, value, fee })
@@ -81,7 +81,7 @@ describe('transfer', () => {
 
     await expect(transfer()).rejects.toThrowError('balance')
 
-    value = 0.0001
+    value = 1
     fee = undefined
     await expect(transfer()).rejects.toThrowError('balance')
 

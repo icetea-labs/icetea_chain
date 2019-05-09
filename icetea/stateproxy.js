@@ -149,8 +149,8 @@ const getStateProxy = (stateTable) => {
   const deployedContracts = {}
 
   const _incBalance = (addr, value) => {
-    value = parseFloat(value)
     if (!value) return
+    value = BigInt(value)
 
     if (balances.hasOwnProperty(addr)) {
       balances[addr] += value
@@ -163,7 +163,7 @@ const getStateProxy = (stateTable) => {
     if (balances.hasOwnProperty(addr)) {
       return balances[addr]
     }
-    return (deployedContracts[addr] || stateTable[addr] || {}).balance || 0
+    return (deployedContracts[addr] || stateTable[addr] || {}).balance || 0n
   }
 
   const deployContract = (deployedBy, state) => {

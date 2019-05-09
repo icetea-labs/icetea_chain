@@ -67,7 +67,7 @@ exports.emitEvent = function (emitter, tags, eventName, eventData, indexes = [])
     tags[eventName + EVENTNAME_INDEX_SEP + indexedKey] = String(JSON.stringify(eventData[indexedKey]))
     delete eventData[indexedKey]
   })
-  tags[eventName] = String(JSON.stringify(eventData))
+  tags[eventName] = String(exports.serialize(eventData))
 
   return tags
 }
@@ -256,4 +256,13 @@ exports.newAndBind = (SomeClass, ...params) => {
   const instance = new SomeClass(...params)
   exports.bindAll(Object.getPrototypeOf(instance))
   return instance
+}
+
+exports.serialize = (obj) => {
+  return JSON.stringify(obj, (key, value) => {
+    if (typeof value === 'bigint') { // eslint-disable-line
+      return value.toString()
+    }
+    return value
+  })
 }

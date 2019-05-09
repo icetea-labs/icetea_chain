@@ -1,5 +1,6 @@
 /** @module */
 const { codec, Tx } = require('icetea-common')
+const { serialize } = require('./utils')
 
 /**
  * get block
@@ -31,6 +32,11 @@ function getTx (req) {
     JSON.parse(reqTx.data || '{}'),
     reqTx.nonce).setEvidence(reqTx.evidence)
   tx.from = reqTx.from
+
+  // TODO: should move this change to icetea-common
+  tx.value = BigInt(tx.value)
+  tx.fee = BigInt(tx.fee)
+
   return tx
 }
 
@@ -42,7 +48,7 @@ function getTx (req) {
  * @returns {object} response object
  */
 function replyQuery (data) {
-  return { code: 0, info: JSON.stringify(data) }
+  return { code: 0, info: serialize(data) }
 }
 
 module.exports = { getBlock, getTx, replyQuery }

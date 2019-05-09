@@ -20,11 +20,11 @@ async function testSimpleStore (mode, src) {
   const { privateKey, address: from } = account10k
   tweb3.wallet.importAccount(privateKey)
 
-  const fromBalance = (await tweb3.getBalance(from)).balance
+  const fromBalance = Number((await tweb3.getBalance(from)).balance)
   expect(fromBalance).toBeGreaterThan(1000)
 
-  const value = 1.5
-  const fee = 0.1
+  const value = 2
+  const fee = 1
 
   const data = {
     op: TxOp.DEPLOY_CONTRACT,
@@ -49,16 +49,16 @@ async function testSimpleStore (mode, src) {
   expect(events[0]).toEqual({
     emitter: 'system',
     eventName: 'Transferred',
-    eventData: { from, to, value }
+    eventData: { from, to, value: value.toString() }
   })
 
   // Verify balance changes after TX
 
   const newFromBalance = await tweb3.getBalance(from)
-  expect(newFromBalance.balance).toBe(fromBalance - value - fee)
+  expect(Number(newFromBalance.balance)).toBe(fromBalance - value - fee)
 
   const newToBalance = await tweb3.getBalance(to)
-  expect(newToBalance.balance).toBe(value)
+  expect(Number(newToBalance.balance)).toBe(value)
 
   // Verify getContracts
   const contracts = await tweb3.getContracts()

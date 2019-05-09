@@ -1,6 +1,7 @@
 const Trie = require('merkle-patricia-tree')
 const async = require('async')
 const db = require('./db')
+const { serialize } = require('./utils')
 const rootKey = 'rootKey'
 const lastBlockKey = 'lastBlockKey'
 
@@ -18,17 +19,23 @@ const patricia = () => {
   })
 }
 
+const getState = (stateString) => {
+  const state = JSON.parse(stateString)
+  if (state.src && state.src.type === 'Buffer') {
+    state.src = Buffer.from(state.src.data)
+  }
+  if (state.balance) {
+    state.balance = BigInt(state.balance)
+  }
+  return state
+}
+
 const dump = (trie) => {
   return new Promise((resolve, reject) => {
     const state = {}
     const stream = trie.createReadStream()
     stream.on('data', function (d) {
-      const key = d.key.toString()
-      let value = JSON.parse(d.value.toString())
-      if (value.src && value.src.type === 'Buffer') {
-        value.src = Buffer.from(value.src.data)
-      }
-      state[key] = value
+      state[d.key.toString()] = getState(d.value.toString())
     })
     stream.on('end', function () {
       resolve(state)
@@ -71,7 +78,7 @@ exports.getHash = (stateTable) => {
     opts.push({
       type: 'put',
       key,
-      value: JSON.stringify(stateTable[key])
+      value: serialize(stateTable[key])
     })
   })
   return new Promise((resolve, reject) => {
@@ -91,7 +98,7 @@ exports.save = async ({ block, state, commitKeys }) => {
     opts.push({
       type: 'put',
       key,
-      value: JSON.stringify(state[key])
+      value: serialize(state[key])
     })
   })
   return new Promise((resolve, reject) => {
@@ -107,7 +114,7 @@ exports.save = async ({ block, state, commitKeys }) => {
         db.put(rootKey, trie.root.toString('hex'), next)
       },
       (next) => {
-        db.put(lastBlockKey, JSON.stringify(block), next)
+        db.put(lastBlockKey, serialize(block), next)
       }
     ], (err, ret) => {
       if (err) {
