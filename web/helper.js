@@ -2,6 +2,7 @@
 // import { ecc } from 'icetea-common'
 import { utils } from 'icetea-web3'
 import tweb3 from './tweb3'
+import { toUNIT } from './common'
 
 const switchEncoding = utils.switchEncoding
 const replaceAll = utils.replaceAll
@@ -40,6 +41,10 @@ export function registerTxForm ($form, txData) {
 
     // console.log(txData)
     formData.data = txData
+
+    // value and fee in unit
+    formData.value = toUNIT(parseFloat(formData.value))
+    formData.fee = toUNIT(parseFloat(formData.unit))
 
     // submit tx
     try {

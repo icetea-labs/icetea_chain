@@ -2,6 +2,7 @@ import $ from 'jquery'
 import handlebars from 'handlebars/dist/handlebars.min.js'
 import { parseParamsFromField, registerTxForm } from './helper'
 import tweb3 from './tweb3'
+import { toTEA } from './common'
 window.$ = $
 
 function buildData () {
@@ -49,7 +50,7 @@ async function fillAddressInfo () {
     const info = await tweb3.getAccountInfo(contract)
     console.log(info)
     info.address = contract
-    info.balanceLocale = info.balance.toLocaleString()
+    info.balanceLocale = toTEA(info.balance).toString()
     const source = document.getElementById('infoTemplate').innerHTML
     const template = handlebars.compile(source)
     var html = template(info)
