@@ -65,7 +65,9 @@ exports.forTransaction = (address, fname, fparams = [], options) => {
       return invoker.invokeView(to, method, params, { ...options, from: address })
     },
     write_contract: (to, method, params) => {
-      return invoker.invokeUpdate(to, method, params, options)
+      const r = invoker.invokeUpdate(to, method, params, options)
+      Object.assign(tags, r[1])
+      return r[0]
     },
     has_state: hasState,
     load: key => getState(key, ''),

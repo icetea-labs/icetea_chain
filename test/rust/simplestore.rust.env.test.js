@@ -1,7 +1,7 @@
 /* global jest describe test expect beforeAll afterAll */
 
 const fs = require('fs')
-const { web3, randomAccountWithBalance } = require('./helper')
+const { web3, randomAccountWithBalance } = require('../helper')
 const { TxOp, ContractMode } = require('icetea-common')
 
 jest.setTimeout(30000)
