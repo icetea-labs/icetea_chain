@@ -2,6 +2,7 @@ import $ from 'jquery'
 import * as helper from './helper'
 import tweb3 from './tweb3'
 import { resolveExternal } from './preprocess'
+import { toUNIT } from './common'
 window.$ = $
 
 var wasmBuffer = null
@@ -37,7 +38,14 @@ $('#form').submit(async function (e) {
       window.alert('Wallet empty! Please go to Wallet tab to create account.')
       return
     }
-    var tx = await resolveExternal(src).then(src => tweb3.deploy(mode, src, params))
+
+    const value = document.getElementById('value').value
+    const fee = document.getElementById('fee').value
+
+    var tx = await resolveExternal(src).then(src => tweb3.deploy(mode, src, params, {
+      value: toUNIT(parseFloat(value)),
+      fee: toUNIT(parseFloat(fee))
+    }))
     // console.log('tx',tx);
     window.location.href = '/tx.html?hash=' + tx.hash
   } catch (error) {

@@ -4,6 +4,7 @@ import tweb3 from './tweb3'
 import { ContractMode } from 'icetea-common'
 import handlebars from 'handlebars/dist/handlebars.min.js'
 import Prism from 'prismjs'
+import { toUNIT, toTEA } from './common'
 window.$ = $
 
 const tryStringifyJson = helper.tryStringifyJson
@@ -57,7 +58,7 @@ async function fillContractInfo () {
         info.modeName = 'WebAssembly'
       }
     }
-    info.balanceLocale = info.balance.toLocaleString()
+    info.balanceLocale = toTEA(info.balance).toString()
 
     const source = document.getElementById('infoTemplate').innerHTML
     const template = handlebars.compile(source)
@@ -166,6 +167,10 @@ $(document).ready(function () {
     const address = window.$('#to').val()
     const name = document.getElementById('name').value
     const params = helper.parseParamsFromField('#params')
+
+    const value = document.getElementById('value').value
+    const fee = document.getElementById('fee').value
+
     // submit tx
     try {
       var resp = tweb3.wallet.loadFromStorage('123')
@@ -174,7 +179,10 @@ $(document).ready(function () {
         return
       }
       var ct = tweb3.contract(address)
-      var tx = await ct.methods[name](...params).sendSync()
+      var tx = await ct.methods[name](...params).sendSync({
+        value: toUNIT(parseFloat(value)),
+        fee: toUNIT(parseFloat(fee))
+      })
       // console.log('tx',tx);
       window.location.href = '/tx.html?hash=' + tx.hash
     } catch (error) {

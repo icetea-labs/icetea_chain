@@ -1,5 +1,6 @@
 import tweb3 from './tweb3'
 import handlebars from 'handlebars/dist/handlebars.min.js'
+import { toTEA } from './common'
 
 const ownersTemplate = handlebars.compile(document.getElementById('ownersTemplate').innerHTML)
 const inheritorsTemplate = handlebars.compile(document.getElementById('inheritorsTemplate').innerHTML)
@@ -390,6 +391,7 @@ function registerEvents () {
   registerEvents()
   tweb3.contract('system.faucet').methods.getAmount().call()
     .then(n => {
-      text('faucetAmount', n)
+      const tea = toTEA(n)
+      text('faucetAmount', tea)
     })
 })()

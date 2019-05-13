@@ -1,7 +1,7 @@
 /** @module */
 /*eslint-disable*/
 const util = require('util');
-const freeGasLimit = 1e9;
+const freeGasLimit = BigInt(1e9);
 
 const wasm_bindgen = function ({ log, importTableName, get_sender, get_address, now, get_block_hash, get_block_number, get_msg_value, get_msg_fee, load, save, read_contract, write_contract, emit_event }) {
   var wasm
@@ -668,9 +668,10 @@ const wasm_bindgen = function ({ log, importTableName, get_sender, get_address, 
 
   __exports.__gas_used = function () {
     if(!isTx) {
-      return 0
+      return 0n
     }
-    return (gasUsed - freeGasLimit) > 0 ? (gasUsed - freeGasLimit) : 0
+    bigGasUsed = BigInt(gasUsed)
+    return (bigGasUsed - freeGasLimit) > 0n ? (bigGasUsed - freeGasLimit) : 0n
   }
 
   const u32CvtShim = new Uint32Array(2);

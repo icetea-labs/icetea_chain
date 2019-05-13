@@ -24,7 +24,7 @@ const METADATA = {
   }
 }
 
-const REQUEST_AMOUNT = 10
+const REQUEST_AMOUNT = 10e6
 
 // standard contract interface
 exports.run = (context) => {

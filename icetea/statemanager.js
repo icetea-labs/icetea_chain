@@ -158,7 +158,7 @@ class StateManager extends EventEmitter {
 function initStateTable () {
   return config.initialBalances.reduce((stateTable, item) => {
     stateTable[item.address] = {
-      balance: item.balance
+      balance: BigInt(item.balance)
     }
     needCommitKeys.add(item.address)
 
@@ -167,10 +167,11 @@ function initStateTable () {
 }
 
 function incBalance (addr, delta) {
-  delta = parseFloat(delta) || 0
+  // delta = parseFloat(delta) || 0
+  delta = BigInt(delta)
   const state = stateTable[addr] || (stateTable[addr] = {})
-  const balance = state.balance || 0
-  if (balance + delta < 0) {
+  const balance = state.balance || 0n
+  if (balance + delta < 0n) {
     throw new Error('Not enough balance')
   }
   state.balance = balance + delta

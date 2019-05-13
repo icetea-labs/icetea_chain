@@ -1,7 +1,7 @@
 /* global jest describe test expect beforeAll afterAll */
 
 const fs = require('fs')
-const { web3, randomAccountWithBalance } = require('./helper')
+const { web3, randomAccountWithBalance } = require('../helper')
 const { TxOp, ContractMode } = require('icetea-common')
 
 jest.setTimeout(30000)
@@ -22,11 +22,11 @@ async function testSimpleStore (mode, contractPath) {
   const { privateKey, address: from } = account10k
   tweb3.wallet.importAccount(privateKey)
 
-  const fromBalance = (await tweb3.getBalance(from)).balance
+  const fromBalance = Number((await tweb3.getBalance(from)).balance)
   expect(fromBalance).toBeGreaterThan(1000)
 
-  const value = 1.5
-  const fee = 0.1
+  const value = 2
+  const fee = 1
   let src = fs.readFileSync(contractPath, 'base64')
 
   const data = {
@@ -50,16 +50,16 @@ async function testSimpleStore (mode, contractPath) {
   expect(events[0]).toEqual({
     emitter: 'system',
     eventName: 'Transferred',
-    eventData: { from, to, value }
+    eventData: { from, to, value: value.toString() }
   })
 
   // Verify balance changes after TX
 
   const newFromBalance = await tweb3.getBalance(from)
-  expect(newFromBalance.balance).toBe(fromBalance - value - fee)
+  expect(Number(newFromBalance.balance)).toBe(fromBalance - value - fee)
 
   const newToBalance = await tweb3.getBalance(to)
-  expect(newToBalance.balance).toBe(value)
+  expect(Number(newToBalance.balance)).toBe(value)
 
   // Verify getContracts
   const contracts = await tweb3.getContracts()
