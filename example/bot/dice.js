@@ -1,4 +1,4 @@
-const { SurveyBot, Message } = require('https://github.com/TradaTech/icetea/icetea/bot/index.js')
+const { SurveyBot, Message } = require('https://raw.githubusercontent.com/TradaTech/icetea/master/icetea/bot/index.js?token=AHWKRP3ZBMOICP3OXJB4J5K44PMK2')
 
 const RATE = 5
 const MAX = 6
@@ -90,7 +90,7 @@ const MAX_BET = 5
   }
 
   #getMaxBet = () => {
-    return Math.min(this.balance / (RATE - 1), MAX_BET)
+    return Math.min(Number(this.balance) / (RATE - 1), MAX_BET)
   }
     
 }
