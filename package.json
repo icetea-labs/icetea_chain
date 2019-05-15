@@ -6,6 +6,7 @@
   "scripts": {
     "test": "standard",
     "fix": "standard --fix",
+    "lint": "standard",
     "jest": "jest",
     "start": "standard --fix && node icetea/index.js",
     "app": "standard --fix && webpack-dev-server --open --config webpack.dev.js",
