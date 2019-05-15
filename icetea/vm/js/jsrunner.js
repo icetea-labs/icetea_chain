@@ -1,7 +1,8 @@
 /** @module */
 // const halts = require('halting-problem')
-const Runner = require('../runner')
 const babel = require('@babel/core')
+const vm = require('vm')
+const Runner = require('../runner')
 const wrapper = require('./wrapper/raw')
 const transpilePlugins = require('../../config').rawJs.transpile
 
@@ -97,6 +98,15 @@ module.exports = class extends Runner {
     }
     // TODO: change to use NodeJS's vm module
     const f = new Function('__g', '__info', srcWrapper) // eslint-disable-line
-    return f.call(context, guard, info)
+
+    const functionInSandbox = vm.runInNewContext(`(() => ${f.toString()})()`, {
+      process: {
+        env: {
+          NODE_ENV: process.env.NODE_ENV
+        }
+      }
+    })
+
+    return functionInSandbox.call(context, guard, info)
   }
 }
