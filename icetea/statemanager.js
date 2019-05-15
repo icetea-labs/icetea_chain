@@ -170,8 +170,8 @@ function incBalance (addr, delta) {
   // delta = parseFloat(delta) || 0
   delta = BigInt(delta)
   const state = stateTable[addr] || (stateTable[addr] = {})
-  const balance = state.balance || 0n
-  if (balance + delta < 0n) {
+  const balance = state.balance || BigInt(0)
+  if (balance + delta < BigInt(0)) {
     throw new Error('Not enough balance')
   }
   state.balance = balance + delta

@@ -163,7 +163,7 @@ const getStateProxy = (stateTable) => {
     if (balances.hasOwnProperty(addr)) {
       return balances[addr]
     }
-    return (deployedContracts[addr] || stateTable[addr] || {}).balance || 0n
+    return (deployedContracts[addr] || stateTable[addr] || {}).balance || BigInt(0)
   }
 
   const deployContract = (deployedBy, state) => {

@@ -668,10 +668,10 @@ const wasm_bindgen = function ({ log, importTableName, get_sender, get_address, 
 
   __exports.__gas_used = function () {
     if(!isTx) {
-      return 0n
+      return BigInt(0)
     }
     bigGasUsed = BigInt(gasUsed)
-    return (bigGasUsed - freeGasLimit) > 0n ? (bigGasUsed - freeGasLimit) : 0n
+    return (bigGasUsed - freeGasLimit) > BigInt(0) ? (bigGasUsed - freeGasLimit) : BigInt(0)
   }
 
   const u32CvtShim = new Uint32Array(2);

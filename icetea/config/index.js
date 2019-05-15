@@ -13,11 +13,11 @@ module.exports = {
   initialBalances: [
     {
       address: 'tea1al54h8fy75h078syz54z6hke6l9x232zyk25cx',
-      balance: 1000000000000n
+      balance: BigInt(1000000000000)
     },
     {
       address: 'system.faucet',
-      balance: 1000000000000000000000000000000n
+      balance: BigInt(1000000000000000000000000000000)
     }
   ],
   initialBotStore: {

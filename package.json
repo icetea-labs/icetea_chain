@@ -35,8 +35,7 @@
     ],
     "global": [
       "BigInt"
-    ],
-    "parser": "babel-eslint"
+    ]
   },
   "pre-commit": [
     "test"
