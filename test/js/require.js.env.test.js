@@ -37,7 +37,7 @@ const wrongSrc = `
 `
 
 describe('require contract', () => {
-  test('require contract systax', async () => {
+  test('require contract syntax', async () => {
     const { privateKey, address: from } = account10k
     tweb3.wallet.importAccount(privateKey)
 

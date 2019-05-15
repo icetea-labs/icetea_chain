@@ -66,7 +66,7 @@ const isSatisfied = (text, condition) => {
 
 const sanitizeAlias = (alias) => {
   alias = alias.trim().toLowerCase()
-  if (!/^[a-z0-9][a-z0-9-]{1,61}[a-z0-9](?:\.[a-z]{2,})*$/.test(alias)) {
+  if (!/^[a-z0-9][a-z0-9_-]{1,61}[a-z0-9](?:\.[a-z]{2,})*$/.test(alias)) {
     throw new Error(`Invalid alias '${alias}', make sure it does not contain invalid characters and has appropriate length.`)
   }
   return alias

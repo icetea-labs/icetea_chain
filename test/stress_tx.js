@@ -6,7 +6,7 @@ async function testSimpleStore (times = 10) {
   const key = process.env.BANK_KEY
   tweb3.wallet.importAccount(key)
 
-  const to = 'tea1al54h8fy75h078syz54z6hke6l9x232zyk25cx'
+  const to = 'teat1al54h8fy75h078syz54z6hke6l9x232zq3j9st'
 
   const promises = []
   for (let i = 0; i < times; i++) {

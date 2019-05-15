@@ -1,16 +1,23 @@
 import $ from 'jquery'
-// import { ecc, codec } from 'icetea-common'
-import { ecc } from 'icetea-common'
+import { ecc, codec } from 'icetea-common'
 import tweb3 from './tweb3'
 // import { functionTypeAnnotation } from '@babel/types'
 // import bip39 from 'bip39'
 // import HDKey from 'hdkey'
 
-const newKeyPairWithAddress = ecc.newKeyPairWithAddress
+const newKeyPairWithAddress = ecc.newKeys
 // const toPubKeyAndAddress = ecc.toPubKeyAndAddress
 
-document.getElementById('generatePrivateKey').addEventListener('click', function () {
-  var keyInfo = newKeyPairWithAddress()
+document.getElementById('generateRegularKey').addEventListener('click', function () {
+  generateKeys(codec.REGULAR_ACCOUNT)
+})
+
+document.getElementById('generateBankKey').addEventListener('click', function () {
+  generateKeys(codec.BANK_ACCOUNT)
+})
+
+function generateKeys (type) {
+  var keyInfo = newKeyPairWithAddress(type)
   document.getElementById('generated_private_key').textContent = keyInfo.privateKey
   document.getElementById('generated_public_key').textContent = keyInfo.address
   tweb3.wallet.importAccount(keyInfo.privateKey)
@@ -18,7 +25,7 @@ document.getElementById('generatePrivateKey').addEventListener('click', function
   tweb3.wallet.saveToStorage('123')
   showMessage('Success! New account set as default.')
   fillWallet()
-})
+}
 
 // document.getElementById('seePublicKey').addEventListener('click', function () {
 //   var privateKey = document.getElementById('your_private_key').value.trim()

@@ -60,7 +60,7 @@ describe('did', () => {
     })
 
     // test no right
-    const newAccount = ecc.newKeyPairWithAddress()
+    const newAccount = ecc.newKeys()
     tweb3.wallet.importAccount(newAccount.privateKey)
 
     const setFromNewAccount = () => {

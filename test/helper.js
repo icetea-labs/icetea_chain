@@ -29,7 +29,7 @@ exports.randomAccountWithBalance = async (tweb3, intialBalance = 10000) => {
   const configKey = process.env.BANK_KEY
   const account = await tweb3.wallet.importAccount(configKey)
   const from = account.address
-  const keyInfo = await ecc.newKeyPairWithAddress()
+  const keyInfo = await ecc.newKeys()
 
   // send money from configKey to newKey
   await tweb3.sendTransactionCommit({ from: from, to: keyInfo.address, value: intialBalance })

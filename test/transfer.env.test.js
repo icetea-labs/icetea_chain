@@ -24,7 +24,7 @@ describe('transfer', () => {
     const fromBalance = Number((await tweb3.getBalance(from)).balance)
     expect(fromBalance).toBeGreaterThan(100)
 
-    const to = ecc.toPubKeyAndAddressBuffer(ecc.generateKey()).address
+    const to = ecc.newKeyBuffers().address
     const toBalance = (await tweb3.getBalance(to)).balance
     expect(toBalance).toBeGreaterThanOrEqual(0)
 
@@ -64,13 +64,13 @@ describe('transfer', () => {
   })
 
   test('transfer with zero balance', async () => {
-    const privateKey = await ecc.generateKey()
+    const privateKey = await ecc.newKeys().privateKey
     var account = tweb3.wallet.importAccount(privateKey)
     const from = account.address // ecc.toPublicKey(privateKey)
     const fromBalance = Number((await tweb3.getBalance(from)).balance)
     expect(fromBalance).toBe(0)
 
-    const to = ecc.toPubKeyAndAddressBuffer(ecc.generateKey()).address
+    const to = ecc.newKeyBuffers().address
 
     let value
     let fee = 1
