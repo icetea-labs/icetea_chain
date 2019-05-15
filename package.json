@@ -32,7 +32,9 @@
       "**/example/",
       "/web/botui.js"
     ],
-    "global": [ "BigInt" ],
+    "global": [
+      "BigInt"
+    ],
     "parser": "babel-eslint"
   },
   "pre-commit": [
