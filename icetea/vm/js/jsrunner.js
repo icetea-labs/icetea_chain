@@ -99,9 +99,7 @@ module.exports = class extends Runner {
     // TODO: change to use NodeJS's vm module
     const f = new Function('__g', '__info', srcWrapper) // eslint-disable-line
 
-    const functionInSandbox = vm.runInNewContext(`module.exports = ${f.toString()}`, {
-      module,
-      exports,
+    const functionInSandbox = vm.runInNewContext(`(() => ${f.toString()})()`, {
       process: {
         env: {
           NODE_ENV: process.env.NODE_ENV
