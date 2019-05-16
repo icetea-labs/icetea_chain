@@ -3,7 +3,8 @@ const utils = require('./helper/utils')
 const sysContracts = require('./system')
 const invoker = require('./contractinvoker')
 const did = require('./system/did')
-const { validateAddress } = require('icetea-common').ecc
+const { ecc, codec } = require('icetea-common')
+const _ = require('lodash')
 
 const stateManager = require('./statemanager')
 
@@ -82,6 +83,10 @@ class App {
 
     verifyTxSignature(tx)
 
+    if (tx.payer) {
+      tx.payer = _ensureAddress(tx.payer)
+    }
+
     // verify TO to avoid lost fund
     if (tx.to) {
       tx.to = _ensureAddress(tx.to)
@@ -90,7 +95,10 @@ class App {
           throw new Error(`Invalid destination alias ${tx.to}`)
         }
       } else {
-        validateAddress(tx.to)
+        const toType = ecc.validateAddress(tx.to).type
+        if (tx.value > 0n && toType === codec.REGULAR_ACCOUNT) {
+          throw new Error('Could not transfer to regular account.')
+        }
       }
     } else {
       if (!tx.isContractCreation()) {
@@ -110,9 +118,41 @@ class App {
     }
 
     tx.from = tx.from || tx.signers[0]
-    did.checkPermission(tx.from, tx.signers, (stateManager.getBlock() || {}).timestamp || 0)
+    const blockTimestamp = (stateManager.getBlock() || {}).timestamp || 0
+    did.checkPermission(tx.from, tx.signers, blockTimestamp)
+
+    // check payer
+    if (!tx.payer) {
+      if (tx.value + tx.fee > 0n && codec.isRegularAddress(tx.from)) {
+        // This seems redundant since regular account should always have balance of 0
+        throw new Error('Cannot transfer from a regular account without specifying a payer.')
+      }
+    } else {
+      const { type: ptype } = ecc.validateAddress(tx.payer)
+      if (ptype === codec.REGULAR_ACCOUNT) {
+        throw new Error('Cannot specify a regular account as transaction payer.')
+      }
+
+      // check if the payer is a contract or an user
+      // this only reference state, not modify => should be ok
+      if (stateManager.isContract(tx.payer)) {
+        let agree = false
+        try {
+          agree = this.invokeView(tx.payer, '_agreeToPayFor', _.cloneDeep(tx))
+        } catch (err) {
+          throw new Error('Payer throws exception: ' + (err.stack || String(err)))
+        }
+
+        if (!agree) {
+          throw new Error('Payer does not agree to pay.')
+        }
+      } else {
+        did.checkPermission(tx.payer, tx.signers, blockTimestamp)
+      }
+    }
+
     // Check balance
-    if (tx.value + tx.fee > stateManager.balanceOf(tx.from)) {
+    if (tx.value + tx.fee > stateManager.balanceOf(tx.payer || tx.from)) {
       throw new Error('Not enough balance')
     }
   }

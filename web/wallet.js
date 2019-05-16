@@ -20,11 +20,13 @@ function generateKeys (type) {
   var keyInfo = newKeyPairWithAddress(type)
   document.getElementById('generated_private_key').textContent = keyInfo.privateKey
   document.getElementById('generated_public_key').textContent = keyInfo.address
-  tweb3.wallet.importAccount(keyInfo.privateKey)
-  tweb3.wallet.defaultAccount = keyInfo.address
-  tweb3.wallet.saveToStorage('123')
-  showMessage('Success! New account set as default.')
-  fillWallet()
+  if (document.getElementById('autoAdd').checked) {
+    tweb3.wallet.importAccount(keyInfo.privateKey)
+    tweb3.wallet.defaultAccount = keyInfo.address
+    tweb3.wallet.saveToStorage('123')
+    showMessage('Success! New account set as default.')
+    fillWallet()
+  }
 }
 
 // document.getElementById('seePublicKey').addEventListener('click', function () {
