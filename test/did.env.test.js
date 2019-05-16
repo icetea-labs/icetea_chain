@@ -1,6 +1,6 @@
 /* global jest describe test expect beforeAll afterAll */
 
-const { ecc } = require('icetea-common')
+const { ecc, codec } = require('icetea-common')
 const { web3, randomAccountWithBalance } = require('./helper')
 
 jest.setTimeout(30000)
@@ -60,7 +60,7 @@ describe('did', () => {
     })
 
     // test no right
-    const newAccount = ecc.newKeys()
+    const newAccount = ecc.newKeys(codec.BANK_ACCOUNT)
     tweb3.wallet.importAccount(newAccount.privateKey)
 
     const setFromNewAccount = () => {
