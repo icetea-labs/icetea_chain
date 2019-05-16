@@ -2,7 +2,7 @@ const _ = require('lodash')
 const config = require('./config')
 const { deepFreeze, checkUnsupportTypes } = require('./helper/utils')
 
-const { toContractAddress } = require('icetea-common').ecc
+const { ecc, codec } = require('icetea-common')
 
 // This class purpose is to improve performance
 // By reduce the amount of deepClone when state is large
@@ -39,7 +39,7 @@ const _generateContractAddress = (deployedBy, stateTable) => {
   ), 0)
 
   const id = count + '_' + deployedBy
-  return toContractAddress(id)
+  return ecc.toContractAddress(id)
 }
 
 const _srcFor = (contractAddress, { stateTable, deployedContracts }) => {
@@ -149,6 +149,10 @@ const getStateProxy = (stateTable) => {
   const deployedContracts = {}
 
   const _incBalance = (addr, value) => {
+    if (codec.isRegularAddress(addr)) {
+      throw new Error('Cannot transfer to regular account.')
+    }
+
     if (!value) return
     value = BigInt(value)
 

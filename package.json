@@ -28,6 +28,7 @@
   "author": "Trada Tech",
   "license": "MIT",
   "standard": {
+    "parser": "babel-eslint",
     "ignore": [
       "**/tmp/",
       "**/example/",
