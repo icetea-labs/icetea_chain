@@ -1,4 +1,6 @@
-const { SurveyBot, Message } = require('https://raw.githubusercontent.com/TradaTech/icetea/feature/light_surveybot/icetea/bot/index.js?token=AHWKRPYJQQFF6ADNOJAEB52445FZ2')
+// To deploy from web, use:
+// const { SurveyBot, Message } = require('https://raw.githubusercontent.com/TradaTech/botutils/master/index.js')
+const { SurveyBot, Message } = require('icetea-botutils')
 
 const RATE = 5
 const MAX = 6

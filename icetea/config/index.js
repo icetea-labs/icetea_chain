@@ -25,5 +25,8 @@ module.exports = {
       category: 0,
       icon: 'https://trada.tech/assets/img/logo.svg'
     }
-  }
+  },
+  whitelistModules: [
+    'lodash', 'moment', 'bn.js', '@hapi/joi', 'validator', 'cheerio', '@icetea/botutils', 'icetea-botutils',
+    'assert', 'buffer', 'console', 'constants', 'crypto', 'querystring', 'stream', 'string_decoder', 'url', 'util' ]
 }

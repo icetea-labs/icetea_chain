@@ -1,23 +1,30 @@
 /** @module */
 const utils = require('../../helper/utils')
 const invoker = require('../../contractinvoker')
+const config = require('../../config')
 
 function _require (name) {
-  const whitelist = [
-    'lodash', 'moment', 'bn.js', '@hapi/joi', 'validator', 'cheerio', '@icetea/botutils', '@icetea/polyfill',
-    'assert', 'buffer', 'console', 'constants', 'crypto', 'querystring', 'stream', 'string_decoder', 'url', 'util'
-  ]
+  const whitelist = config.whitelistModules
   const ok = whitelist.some(element => {
     return name === element || name.startsWith(`${element}/`)
   })
   if (!ok) {
-    throw new Error(`${name} is not supported now`)
+    throw new Error(`require('${name}') is not supported. If you want to load a contract, use loadContract function instead.`)
   }
   let module = require(name)
 
   // filter bad functions should not used in blockchain
   if (name === 'crypto') {
-    module = { createHash: module.createHash }
+    module = {
+
+      // What hash algos available depends on OpenSSL
+      // In the future, we might linit the number of hash algos supported
+      // to a safe and frequently-used list only.
+
+      createHash: module.createHash,
+      getHashes: module.getHashes,
+      timingSafeEqual: module.timingSafeEqual
+    }
   }
 
   return module
