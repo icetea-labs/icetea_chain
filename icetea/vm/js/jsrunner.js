@@ -104,7 +104,8 @@ module.exports = class extends Runner {
         env: {
           NODE_ENV: process.env.NODE_ENV
         }
-      }
+      },
+      console // TODO: only enable in dev mode
     })
 
     return functionInSandbox.call(context, guard, info)
