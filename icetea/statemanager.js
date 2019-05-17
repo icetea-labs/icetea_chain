@@ -167,14 +167,18 @@ function initStateTable () {
 }
 
 function incBalance (addr, delta) {
-  // delta = parseFloat(delta) || 0
-  delta = BigInt(delta)
+  // Note: there's no need to check for regular account here
+  // because this is NOT called by contract
+  // It is only called by app.js to handle 'transfer-only' tx
+
+  delta = BigInt(delta || 0n)
   const state = stateTable[addr] || (stateTable[addr] = {})
   const balance = state.balance || BigInt(0)
   if (balance + delta < BigInt(0)) {
     throw new Error('Not enough balance')
   }
   state.balance = balance + delta
+
   // TODO: review it, maybe it called from state proxy
   needCommitKeys.add(addr)
 }
