@@ -86,3 +86,25 @@ export function tryStringifyJson (p, replacer, space) {
     return String(p)
   }
 }
+
+export async function loadAddresses () {
+  try {
+    var resp = tweb3.wallet.loadFromStorage('123')
+    if (resp === 0) {
+      window.alert('Wallet empty! Please go to Wallet tab to create account.')
+      return
+    }
+    var wallets = tweb3.wallet.accounts
+    var select = document.getElementById('signer')
+    select.innerHTML = ''
+    wallets.forEach(item => {
+      let option = document.createElement('option')
+      option.value = item.address
+      option.textContent = item.address
+      select.appendChild(option)
+    })
+  } catch (error) {
+    console.log(error)
+    window.alert(String(error))
+  }
+}

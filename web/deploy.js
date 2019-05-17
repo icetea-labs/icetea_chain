@@ -78,3 +78,5 @@ document.getElementById('wasmFile').addEventListener('change', function (e) {
     window.alert(String(error))
   }
 })
+
+helper.loadAddresses()
