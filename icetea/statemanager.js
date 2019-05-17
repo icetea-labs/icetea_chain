@@ -57,7 +57,7 @@ class StateManager extends EventEmitter {
   }
 
   handleTransfer (tx) {
-    (tx.value + tx.fee) && decBalance(tx.from, tx.value + tx.fee)
+    (tx.value + tx.fee) && decBalance(tx.payer || tx.from, tx.value + tx.fee)
     tx.value && incBalance(tx.to, tx.value)
     tx.fee && incBalance(config.feeCollector, tx.fee)
   }
