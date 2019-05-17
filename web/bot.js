@@ -138,6 +138,9 @@ async function connectBot (botAddr) {
   // get bot info
   const botInfo = await contract.methods.botInfo().callPure()
   const commands = await contract.methods.getCommands().callPure()
+  // byId('restart').onclick = () => {
+  //   window.alert('Bot has not been started yet')
+  // }
 
   if (!botInfo.state_access) {
     const meta = await tweb3.getMetadata(botAddr)

@@ -119,7 +119,7 @@ const MAX_BET = 5000000
     }
     return Message.html(`DICE RESULT: <b>${r}</b><br>
       You guess: ${collector.number} => <b>YOU ${win ? 'WIN' : 'LOSE'}</b><br>
-      You sent: <b>${this.toTEA(msg.value)}</b> TEA<br>
+      You sent: <b>${this.toTEA(Number(msg.value))}</b> TEA<br>
       You received: <b>${this.toTEA(receiveAmount)}</b> TEA.`)
       .done()
   }
