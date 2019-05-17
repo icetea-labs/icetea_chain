@@ -29,6 +29,10 @@ const say = (text, options) => {
   botui.message.add(Object.assign({ content: String(text) }, options || {}))
 }
 
+/**
+ * generate buttons
+ * @param {string} action array of button title
+ */
 const sayButton = (action) => {
   if (!Array.isArray(action)) {
     action = [action]
@@ -69,6 +73,10 @@ const speak = items => {
   }, undefined)
 }
 
+/**
+ * get element by id
+ * @param {string} id element id
+ */
 function byId (id) {
   return document.getElementById(id)
 }
@@ -98,14 +106,14 @@ function confirmTransfer (amount) {
   ]).then(result => (result && result.value === 'transfer'))
 }
 
-async function callContract (method, type, value, ...params) {
+async function callContract (method, type, value, from, ...params) {
   const map = {
     'none': 'callPure',
     'read': 'call',
     'write': 'sendCommit'
   }
 
-  const result = await method(...params)[map[type]]({ value })
+  const result = await method(...params)[map[type]]({ value, from })
 
   if (type === 'write') {
     return result.result
@@ -114,6 +122,10 @@ async function callContract (method, type, value, ...params) {
   }
 }
 
+/**
+ * connect to bot smart contract
+ * @param {string} botAddr bot smart contract address
+ */
 async function connectBot (botAddr) {
   if (!web3Inited) {
     web3Inited = initWeb3()
@@ -125,6 +137,7 @@ async function connectBot (botAddr) {
 
   // get bot info
   const botInfo = await contract.methods.botInfo().callPure()
+  const commands = await contract.methods.getCommands().callPure()
 
   if (!botInfo.state_access) {
     const meta = await tweb3.getMetadata(botAddr)
@@ -152,11 +165,14 @@ async function connectBot (botAddr) {
 
   // display bot info
   await say(`<b>${botInfo.name}</b><br>${botInfo.description}`, { type: 'html', cssClass: 'bot-intro' })
+  await botui.message.bot('What would you like to do?')
 
   // display Start button
-  let result = await sayButton({ text: botInfo.start_button || 'Start', value: 'start' })
+  let result = await sayButton(commands.map(command => ({ text: command.title, value: command.value })))
   let callResult
   let isFirst = true
+  let sendback = null
+  let stateAccess = botInfo.state_access
   while (result && result.value) {
     let transferValue = 0
     if (callResult && callResult.options && callResult.options.value) {
@@ -169,17 +185,45 @@ async function connectBot (botAddr) {
     }
 
     // send lastValue to bot
+    if (sendback) {
+      result = {
+        sendback,
+        data: result.value
+      }
+    } else {
+      result = result.value
+    }
+    console.log('result', result)
     callResult = isFirst
-      ? await callContract(contract.methods.onstart, botInfo.state_access, 0)
-      : await callContract(contract.methods.ontext, botInfo.state_access, transferValue, result.value)
+      ? await callContract(contract.methods.oncommand, stateAccess, 0, tweb3.wallet.defaultAccount, result)
+      : await callContract(contract.methods.ontext, stateAccess, transferValue, tweb3.wallet.defaultAccount, result)
     isFirst = false
 
-    console.log(callResult)
     if (callResult) {
+      if (callResult.sendback) {
+        sendback = callResult.sendback
+        if (sendback[tweb3.wallet.defaultAccount].state_access) {
+          stateAccess = sendback[tweb3.wallet.defaultAccount].state_access
+        } else {
+          stateAccess = botInfo.state_access
+        }
+      } else {
+        sendback = null
+      }
+      if (callResult.data) {
+        callResult = callResult.data
+      }
       result = await speak(callResult.messages || callResult)
-      console.log(result)
     } else {
       result = undefined
+    }
+
+    if (!result || !result.value) {
+      await botui.message.bot('What would you like to do?')
+      result = await sayButton(commands.map(command => ({ text: command.title, value: command.value })))
+      isFirst = true
+      sendback = null
+      stateAccess = botInfo.state_access
     }
   }
 }
@@ -199,6 +243,7 @@ var getUrlParameter = function getUrlParameter (sParam) {
   }
 }
 
+// do not remove this semicolon
 ;(async () => {
   var address = getUrlParameter('address')
   if (address) {

@@ -147,7 +147,7 @@ Message.create = function () {
 
 exports.Message = Message
 
-exports.SurveyBot = class {
+class PersistSurveyBot {
   botInfo () {
     return {
       name: this.getName(),
@@ -264,3 +264,65 @@ exports.SurveyBot = class {
     throw err
   }
 }
+
+class SurveyBot extends PersistSurveyBot {
+  constructor () {
+    super()
+    this.chats = {}
+  }
+
+  botInfo () {
+    return {
+      name: this.getName(),
+      description: typeof this.getDescription === 'function' ? this.getDescription() : '',
+      state_access: 'read'
+    }
+  }
+
+  getChats () {
+    return this.chats || {}
+  }
+
+  setChats (chats) {
+    this.chats = chats
+  }
+
+  ontext (text = {}) {
+    try {
+      text = JSON.parse(text)
+    } catch (e) {
+      // ignore
+    }
+
+    try {
+      const who = this.getEnv().msg.sender
+      if (typeof text === 'object') {
+        this.setChats({ ...text.sendback })
+      }
+      let chats = this.getChats()
+      if (!chats[who]) {
+        chats[who] = {
+          _step: 0
+        }
+      }
+
+      if (typeof text === 'object') {
+        text = text.data
+      }
+      const collector = { ...chats[who] }
+      const result = this.proceed(String(text), collector)
+      chats = { ...chats, [who]: collector }
+
+      // save state back
+      // this.setChats(chats)
+
+      return { sendback: chats, data: result }
+    } catch (err) {
+      console.log(err)
+      return this.onError(err)
+    }
+  }
+}
+
+exports.PersistSurveyBot = PersistSurveyBot
+exports.SurveyBot = SurveyBot
