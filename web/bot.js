@@ -182,6 +182,7 @@ async function connectBot (botAddr) {
         return
       }
       transferValue = callResult.options.value
+      transferValue = parseFloat(transferValue).toFixed(6) * (10 ** 6)
     }
 
     // send lastValue to bot

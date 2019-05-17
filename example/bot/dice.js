@@ -1,8 +1,8 @@
-const { SurveyBot, Message } = require('https://raw.githubusercontent.com/TradaTech/icetea/master/icetea/bot/index.js?token=AHWKRP3ZBMOICP3OXJB4J5K44PMK2')
+const { SurveyBot, Message } = require('https://raw.githubusercontent.com/TradaTech/icetea/feature/light_surveybot/icetea/bot/index.js?token=AHWKRPYJQQFF6ADNOJAEB52445FZ2')
 
 const RATE = 5
 const MAX = 6
-const MAX_BET = 5
+const MAX_BET = 5000000
 
 @contract class DiceBot extends SurveyBot {
   @pure getName() {
@@ -70,17 +70,19 @@ const MAX_BET = 5
 
   succeedNumber(number) {
     const max = this.#getMaxBet()
+    const tea = this.toTEA(max)
     return Message.text(`You picked ${number}.`)
-      .text(`How much you want to bet (maximum ${max} TEA)?`)
+      .text(`How much you want to bet (maximum ${tea} TEA)?`)
       .input('Bet amount', {
-        value: parseInt(max),
-        sub_type: 'number'
+        value: tea,
+        sub_type: 'text'
       })
       .done()
   }
 
   collectAmount(amount, collector) {
     amount = +amount
+    amount = this.toUnit(amount)
     if (amount <= 0 || amount > this.#getMaxBet()) {
       throw new Error('Invalid bet amount')
     }
@@ -89,19 +91,21 @@ const MAX_BET = 5
 
   failAmount(amount) {
     const max = this.#getMaxBet()
-    return Message.text(`Invalid amount ${amount}. Please enter a valid amount (maximum ${max} TEA).`)
+    const tea = this.toTEA(max)
+    return Message.text(`Invalid amount ${amount}. Please enter a valid amount (maximum ${tea} TEA).`)
       .input('Bet amount', {
-          value: parseInt(max),
-          sub_type: 'number'
+          value: tea,
+          sub_type: 'text'
         })
-      .done() 
+      .done()
   }
 
   succeedAmount(amount, collector) {
     collector.state_access = 'write' // after state access of this step
-    return Message.html(`Your picked number: <b>${collector.number}</b><br>Your bet amount: <b>${amount}</b> TEA.`)
+    const tea = this.toTEA(amount)
+    return Message.html(`Your picked number: <b>${collector.number}</b><br>Your bet amount: <b>${tea}</b> TEA.`)
       .button('Confirm', 'confirm')
-      .requestTransfer(amount)
+      .requestTransfer(tea)
       .done()
   }
 
@@ -115,8 +119,8 @@ const MAX_BET = 5
     }
     return Message.html(`DICE RESULT: <b>${r}</b><br>
       You guess: ${collector.number} => <b>YOU ${win ? 'WIN' : 'LOSE'}</b><br>
-      You sent: <b>${msg.value}</b> TEA<br>
-      You received: <b>${receiveAmount}</b> TEA.`)
+      You sent: <b>${this.toTEA(msg.value)}</b> TEA<br>
+      You received: <b>${this.toTEA(receiveAmount)}</b> TEA.`)
       .done()
   }
 

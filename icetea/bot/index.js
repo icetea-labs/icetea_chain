@@ -148,6 +148,10 @@ Message.create = function () {
 exports.Message = Message
 
 class PersistSurveyBot {
+  constructor () {
+    this.decimal = 6
+  }
+
   botInfo () {
     return {
       name: this.getName(),
@@ -262,6 +266,14 @@ class PersistSurveyBot {
 
   onError (err) {
     throw err
+  }
+
+  toUnit (tea) {
+    return parseFloat(tea).toFixed(this.decimal) * (10 ** this.decimal)
+  }
+
+  toTEA (unit) {
+    return unit / (10 ** this.decimal)
   }
 }
 
