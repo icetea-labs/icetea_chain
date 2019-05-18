@@ -5,8 +5,8 @@
 const { checkMsg } = require('../helper/types')
 
 const METADATA = {
-  'getAmount': {
-    decorators: ['view'],
+  'getQuota': {
+    decorators: ['pure'],
     params: [],
     returnType: 'number'
   },
@@ -14,62 +14,96 @@ const METADATA = {
     decorators: ['transaction'],
     params: [],
     returnType: 'number'
-  },
-  'withdraw': {
-    decorators: ['transaction'],
-    params: [
-      { name: 'amount', type: ['number', 'undefined'] }
-    ],
-    returnType: 'number'
   }
 }
 
-const REQUEST_AMOUNT = 10e6
+const INTERNAL_METADATA = {
+  '_agreeToPayFor': {
+    decorators: ['view'],
+    params: [
+      { name: 'tx', type: 'object' }
+    ],
+    returnType: 'boolean'
+  }
+}
+
+const REQUEST_QUOTA = BigInt(10e6)
 
 // standard contract interface
 exports.run = (context) => {
   const { msg } = context.getEnv()
-  checkMsg(msg, METADATA)
+  checkMsg(msg, Object.assign({}, METADATA, INTERNAL_METADATA))
 
   const contract = {
-    getAmount () {
-      return REQUEST_AMOUNT
+    getQuota () {
+      return REQUEST_QUOTA
     },
 
     request () {
-      const receivers = this.getState('receivers', {})
-      if (receivers[msg.sender]) {
-        throw new Error(`You already received ${receivers[msg.sender]}. No more.`)
+      const paid = this.getState(msg.sender, 0n)
+      const toPay = REQUEST_QUOTA - paid
+      if (toPay <= 0n) {
+        throw new Error(`You already received ${paid}. No more.`)
       }
+
       if (!this.balance) {
         throw new Error('This faucet is out of balance.')
       }
-      const v = REQUEST_AMOUNT > this.balance ? this.balance : REQUEST_AMOUNT
-      receivers[msg.sender] = v
-      this.setState('receivers', receivers)
-      this.transfer(msg.sender, v)
-      this.emitEvent('FaucetRequested', {
+
+      const available = REQUEST_QUOTA > this.balance ? this.balance : REQUEST_QUOTA
+      const amount = available > toPay ? toPay : available
+
+      this.setState(msg.sender, amount)
+      this.transfer(msg.sender, amount + paid)
+
+      this.emitEvent('FaucetTransferred', {
         requester: msg.sender,
-        amount: v
+        amount
       }, ['requester'])
 
-      return v
+      return amount
     },
 
-    withdraw () {
-      if (this.deployedBy !== msg.sender) {
-        throw new Error('Only contract owner can withdraw.')
+    _agreeToPayFor (tx) {
+      const paid = this.getState(tx.from, 0n)
+      const requested = tx.value + tx.fee
+      const amount = paid + requested
+      if (amount > REQUEST_QUOTA) {
+        // throw an error to provide more info than just false
+        throw new Error('Requested amount from faucet is bigger than remaining quota.')
       }
-      let amount = this.balance
-      if (msg.params && msg.params.length) {
-        amount = msg.params[0]
-        if (typeof amount !== 'number' || amount > this.balance) {
-          throw new Error('Invalid withdrawal amount.')
-        }
-      }
-      this.transfer(this.deployedBy, amount)
 
-      return amount
+      if (amount > this.balance) {
+        // throw an error to provide more info than just false
+        throw new Error('Faucet out of money.')
+      }
+
+      return true
+    },
+
+    _beforePayFor (tx) {
+      if (msg.sender !== 'system') {
+        throw new Error('This function is reserved for internal use.')
+      }
+
+      const paid = this.getState(tx.from, 0n)
+      const requested = tx.value + tx.fee
+      const amount = paid + requested
+      if (amount > REQUEST_QUOTA) {
+        // throw an error to provide more info than just false
+        throw new Error('Requested amount from faucet is bigger than remaining quota.')
+      }
+
+      if (amount > this.balance) {
+        // throw an error to provide more info than just false
+        throw new Error('Faucet out of money.')
+      }
+
+      this.setState(tx.from, amount)
+      this.emitEvent('FaucetTransferred', {
+        requester: tx.from,
+        amount
+      }, ['requester'])
     }
   }
 
