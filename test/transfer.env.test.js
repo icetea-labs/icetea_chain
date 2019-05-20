@@ -1,6 +1,6 @@
 /* global jest describe test expect beforeAll afterAll */
 
-const { ecc, codec } = require('icetea-common')
+const { ecc } = require('icetea-common')
 const { web3, randomAccountWithBalance } = require('./helper')
 
 jest.setTimeout(30000)
@@ -24,7 +24,7 @@ describe('transfer', () => {
     const fromBalance = Number((await tweb3.getBalance(from)).balance)
     expect(fromBalance).toBeGreaterThan(100)
 
-    const to = ecc.newKeyBuffers(codec.BANK_ACCOUNT).address
+    const to = ecc.newBankKeyBuffers().address
     const toBalance = (await tweb3.getBalance(to)).balance
     expect(toBalance).toBeGreaterThanOrEqual(0)
 
@@ -51,7 +51,7 @@ describe('transfer', () => {
     expect(events[0]).toEqual({
       emitter: 'system',
       eventName: 'Transferred',
-      eventData: { from, to, value: value.toString() }
+      eventData: { from, to, payer: from, value: value.toString() }
     })
 
     // Verify balance changes after TX
@@ -64,13 +64,13 @@ describe('transfer', () => {
   })
 
   test('transfer with zero balance', async () => {
-    const privateKey = await ecc.newKeys(codec.BANK_ACCOUNT).privateKey
+    const privateKey = await ecc.newBankKeys().privateKey
     var account = tweb3.wallet.importAccount(privateKey)
     const from = account.address // ecc.toPublicKey(privateKey)
     const fromBalance = Number((await tweb3.getBalance(from)).balance)
     expect(fromBalance).toBe(0)
 
-    const to = ecc.newKeyBuffers(codec.BANK_ACCOUNT).address
+    const to = ecc.newBankKeyBuffers().address
 
     let value
     let fee = 1

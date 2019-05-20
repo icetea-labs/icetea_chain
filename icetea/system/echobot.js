@@ -26,7 +26,7 @@ const METADATA = {
 
 // standard contract interface
 exports.run = (context) => {
-  const { msg } = context.getEnv()
+  const { msg } = context.runtime
   checkMsg(msg, METADATA)
 
   const contract = {

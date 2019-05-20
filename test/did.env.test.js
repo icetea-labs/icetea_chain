@@ -1,6 +1,6 @@
 /* global jest describe test expect beforeAll afterAll */
 
-const { ecc, codec } = require('icetea-common')
+const { ecc } = require('icetea-common')
 const { web3, randomAccountWithBalance } = require('./helper')
 
 jest.setTimeout(30000)
@@ -60,7 +60,7 @@ describe('did', () => {
     })
 
     // test no right
-    const newAccount = ecc.newKeys(codec.BANK_ACCOUNT)
+    const newAccount = ecc.newBankKeys()
     tweb3.wallet.importAccount(newAccount.privateKey)
 
     const setFromNewAccount = () => {
@@ -69,7 +69,7 @@ describe('did', () => {
     await expect(setFromNewAccount()).rejects.toThrowError('Permission denied')
 
     const transferFromNewAccount = () => {
-      return tweb3.transfer('system.faucet', 100, { from, signers: newAccount.address })
+      return tweb3.transfer(from, 100, { from, signers: newAccount.address })
     }
     await expect(transferFromNewAccount()).rejects.toThrowError('Permission denied')
 

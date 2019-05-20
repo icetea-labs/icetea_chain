@@ -1,5 +1,5 @@
 import $ from 'jquery'
-import { ecc, codec } from 'icetea-common'
+import { ecc, AccountType } from 'icetea-common'
 import tweb3 from './tweb3'
 // import { functionTypeAnnotation } from '@babel/types'
 // import bip39 from 'bip39'
@@ -9,11 +9,11 @@ const newKeyPairWithAddress = ecc.newKeys
 // const toPubKeyAndAddress = ecc.toPubKeyAndAddress
 
 document.getElementById('generateRegularKey').addEventListener('click', function () {
-  generateKeys(codec.REGULAR_ACCOUNT)
+  generateKeys(AccountType.REGULAR_ACCOUNT)
 })
 
 document.getElementById('generateBankKey').addEventListener('click', function () {
-  generateKeys(codec.BANK_ACCOUNT)
+  generateKeys(AccountType.BANK_ACCOUNT)
 })
 
 function generateKeys (type) {

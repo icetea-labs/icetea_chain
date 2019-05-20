@@ -157,6 +157,8 @@ $(document).ready(function () {
     document.getElementById('funcInfo').textContent = 'No function selected.'
   })
 
+  helper.loadAddresses()
+
   document.getElementById('name').addEventListener('change', function () {
     fillSignature()
   })

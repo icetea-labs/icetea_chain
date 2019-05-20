@@ -1,4 +1,4 @@
-const msg = this.getEnv().msg;
+const msg = this.runtime.msg;
 const contract = {
     '__on_deployed': function () {
         this.setState('owner', msg.sender);

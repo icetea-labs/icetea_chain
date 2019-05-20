@@ -713,11 +713,13 @@ const wasm_bindgen = function ({ log, importTableName, get_sender, get_address, 
  * @returns {object} wasm object
  */
 module.exports = (wasmBuffer) => {
-  return (ctx) => {
+  return (ctx, info) => {
     var bindgen = wasm_bindgen(ctx)
     bindgen(wasmBuffer)
     const result = bindgen.main(ctx.get_msg_name(), ctx.get_msg_param())
-    const __gas_used = bindgen.__gas_used()
-    return Object.assign(result || {}, { __gas_used })
+    if (info) {
+      info.__gas_used = bindgen.__gas_used()
+    }
+    return result
   }
 }

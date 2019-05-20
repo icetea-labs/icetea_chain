@@ -209,8 +209,8 @@ function _ensureAddress (address) {
 }
 
 // standard contract interface
-exports.run = (context, options) => {
-  const { msg, block } = context.getEnv()
+exports.run = (context) => {
+  const { msg, block } = context.runtime
   checkMsg(msg, METADATA)
 
   const contract = {

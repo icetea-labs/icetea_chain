@@ -79,11 +79,12 @@ exports.emitEvent = function (emitter, tags, eventName, eventData, indexes = [])
  * @param {Array.<string>} tags - event tag
  * @param {string} from - from address
  * @param {string} to - to address
+ * @param {string} payer - the one who pays the transaction
  * @param {number} value - transfer value
  * @returns {Array.<string>} tags
  */
-exports.emitTransferred = (emitter, tags, from, to, value) => {
-  return exports.emitEvent(emitter, tags, 'Transferred', { from, to, value }, ['from', 'to'])
+exports.emitTransferred = (emitter, tags, from, to, payer, value) => {
+  return exports.emitEvent(emitter, tags, 'Transferred', { from, to, payer, value }, ['from', 'to', 'payer'])
 }
 
 /**
@@ -168,7 +169,7 @@ exports.unifyMetadata = meta => {
     }, {})
   }
 
-  const excepts = ['constructor', '__on_deployed', '__on_received', 'getEnv', 'getState', 'setState']
+  const excepts = ['constructor', '__on_deployed', '__on_received', 'runtime', 'getState', 'setState']
   Object.keys(meta).forEach(k => {
     if (excepts.includes(k) || k.startsWith('#')) {
       delete meta[k]
@@ -199,6 +200,27 @@ exports.deepFreeze = (object) => {
   }
 
   return Object.freeze(object)
+}
+
+/**
+ * Make obj CAN extend but CANNOT change existing props.
+ * It is similar to Object.freeze but allowing adding new props.
+ */
+exports.fixObject = obj => {
+  const props = Object.getOwnPropertyNames(obj)
+
+  for (let i = 0; i < props.length; i++) {
+    const desc = Object.getOwnPropertyDescriptor(obj, props[i])
+
+    if ('value' in desc) {
+      desc.writable = false
+    }
+
+    desc.configurable = false
+    Object.defineProperty(obj, props[i], desc)
+  }
+
+  return obj
 }
 
 exports.checkUnsupportTypes = o => {
@@ -266,3 +288,8 @@ exports.serialize = (obj) => {
     return value
   })
 }
+
+exports.envIs = (n, v) => process.env[n] == v // eslint-disable-line
+exports.envEnabled = n => process.env[n] === '1'
+exports.isDevMode = () => process.env.NODE_ENV === 'development'
+exports.isProdMode = () => process.env.NODE_ENV === 'production'

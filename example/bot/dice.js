@@ -26,7 +26,7 @@ const MAX_BET = 5000000
 
   oncommand (value) {
     if(value === 'start') {
-      const who = this.getEnv().msg.sender
+      const who = this.runtime.msg.sender
       const chats = this.getChats()
       if (chats[who]) {
         chats[who]._step = 0

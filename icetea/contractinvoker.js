@@ -35,10 +35,10 @@ class ContractInvoker {
     } else {
       const vm = getRunner(mode)
       const guard = getGuard(mode)(src)
-      result = vm.run(src, { context, guard })
+      result = vm.run(src, { context, guard, info: options.info })
     }
 
-    return invokeType === 'transaction' ? [result, context.getEnv().tags] : result
+    return result
   }
 
   /**

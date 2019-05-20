@@ -3,8 +3,7 @@ const utils = require('./helper/utils')
 const sysContracts = require('./system')
 const invoker = require('./contractinvoker')
 const did = require('./system/did')
-const { ecc, codec } = require('icetea-common')
-const _ = require('lodash')
+const { ecc, codec, AccountType } = require('icetea-common')
 
 const stateManager = require('./statemanager')
 
@@ -78,10 +77,34 @@ class App {
   }
 
   checkTx (tx) {
+    // NOTE:
     // CheckTX should not modify state
     // This way, we could avoid make a copy of state
+    // For example: do not change balance or exec contract to see if errors
+    // Such kind of error will be catch by deliver_tx eventually.
+
+    if (tx.value < 0n) {
+      throw new Error('Invalid transaction value.')
+    }
+
+    if (tx.fee < 0n) {
+      throw new Error('Invalid transaction fee.')
+    }
+
+    if (!tx.isSimpleTransfer() && !tx.isContractCall() && !tx.isContractCreation()) {
+      throw new Error('Unrecognized transaction type.')
+    }
+
+    if (tx.isContractCall() && tx.messageName() === '_beforePayFor') {
+      throw new Error('Cannot call _beforePayFor directly.')
+    }
 
     verifyTxSignature(tx)
+
+    if (tx.from) {
+      tx.from = _ensureAddress(tx.from)
+      ecc.validateAddress(tx.from)
+    }
 
     if (tx.payer) {
       tx.payer = _ensureAddress(tx.payer)
@@ -89,14 +112,14 @@ class App {
 
     // verify TO to avoid lost fund
     if (tx.to) {
+      if (tx.isContractCreation()) {
+        throw new Error('Transaction destination address must be blank when deploying a contract.')
+      }
+
       tx.to = _ensureAddress(tx.to)
-      if (tx.to.includes('.')) {
-        if (!sysContracts.has(tx.to)) {
-          throw new Error(`Invalid destination alias ${tx.to}`)
-        }
-      } else {
+      if (!sysContracts.has(tx.to)) {
         const toType = ecc.validateAddress(tx.to).type
-        if (tx.value > 0n && toType === codec.REGULAR_ACCOUNT) {
+        if (tx.value > 0n && toType === AccountType.REGULAR_ACCOUNT) {
           throw new Error('Could not transfer to regular account.')
         }
       }
@@ -110,9 +133,9 @@ class App {
     if (tx.signers.length === 0) {
       throw new Error('Must have at lease one signature.')
     } else if (tx.signers.length === 1) {
-      if (tx.from === tx.signers[0]) {
-        throw new Error("No need to set 'from' to save blockchain data size.") // so strict!
-      }
+      // if (tx.from === tx.signers[0]) {
+      //   throw new Error("No need to set 'from' to save blockchain data size.") // so strict!
+      // }
     } else if (!tx.from) {
       throw new Error("Must explicitly set 'from' when there are more than 1 signer.")
     }
@@ -122,15 +145,18 @@ class App {
     did.checkPermission(tx.from, tx.signers, blockTimestamp)
 
     // check payer
-    if (!tx.payer) {
+    const hasPayer = !!tx.payer && (tx.payer !== tx.from)
+    if (!hasPayer) {
       if (tx.value + tx.fee > 0n && codec.isRegularAddress(tx.from)) {
         // This seems redundant since regular account should always have balance of 0
         throw new Error('Cannot transfer from a regular account without specifying a payer.')
       }
     } else {
-      const { type: ptype } = ecc.validateAddress(tx.payer)
-      if (ptype === codec.REGULAR_ACCOUNT) {
-        throw new Error('Cannot specify a regular account as transaction payer.')
+      if (!sysContracts.has(tx.payer)) {
+        const { type: ptype } = ecc.validateAddress(tx.payer)
+        if (ptype === AccountType.REGULAR_ACCOUNT) {
+          throw new Error('Cannot specify a regular account as transaction payer.')
+        }
       }
 
       // check if the payer is a contract or an user
@@ -138,7 +164,7 @@ class App {
       if (stateManager.isContract(tx.payer)) {
         let agree = false
         try {
-          agree = this.invokeView(tx.payer, '_agreeToPayFor', _.cloneDeep(tx))
+          agree = this.invokeView(tx.payer, '_agreeToPayFor', [tx])
         } catch (err) {
           throw new Error('Payer throws exception: ' + (err.stack || String(err)))
         }
@@ -151,8 +177,13 @@ class App {
       }
     }
 
+    // payer appears ok, ensure it has value for simpler later logic
+    if (!tx.payer) {
+      tx.payer = tx.from
+    }
+
     // Check balance
-    if (tx.value + tx.fee > stateManager.balanceOf(tx.payer || tx.from)) {
+    if (tx.value + tx.fee > stateManager.balanceOf(tx.payer)) {
       throw new Error('Not enough balance')
     }
   }
@@ -206,7 +237,7 @@ class App {
     return { balance, system, mode, hasSrc: !!src, deployedBy }
   }
 
-  execTx (tx) {
+  execTx (tx, tags) {
     this.checkTx(tx)
 
     // No need, already done inside checkTx above
@@ -221,7 +252,8 @@ class App {
       tx,
       block: stateManager.getBlock(),
       stateAccess,
-      tools
+      tools,
+      tags
     })
 
     // commit change made to state
@@ -232,7 +264,7 @@ class App {
 
     stateManager.endCheckpoint()
 
-    return result || []
+    return result
   }
 }
 
@@ -244,7 +276,9 @@ class App {
  * @return {boolean} is right to execute
  */
 function willCallContract (tx) {
-  return tx.isContractCreation() || tx.isContractCall() || (tx.value > 0 && stateManager.isContract(tx.to))
+  return tx.isContractCreation() || tx.isContractCall() ||
+    (tx.value > 0n && stateManager.isContract(tx.to)) ||
+    (tx.value + tx.fee > 0n && tx.payer && tx.payer !== tx.from && stateManager.isContract(tx.payer))
 }
 
 /**
@@ -256,6 +290,7 @@ function willCallContract (tx) {
  */
 function doExecTx (options) {
   const { tx, tools = {} } = options
+  options.info = {}
   let result
 
   if (tx.isContractCreation()) {
@@ -265,45 +300,48 @@ function doExecTx (options) {
   }
 
   // process value transfer
-  (tools.refectTxValueAndFee || stateManager.handleTransfer)(tx)
+  if (tx.value + tx.fee > 0) {
+    if (tx.payer !== tx.from) {
+      const tmpTx = Object.assign({}, tx)
+      tmpTx.from = 'system'
+      invoker.invokeUpdate(tx.payer, '_beforePayFor', [tx], Object.assign({}, options, { tx: tmpTx }))
+    }
+    (tools.refectTxValueAndFee || stateManager.handleTransfer)(tx)
+  }
 
   if (tx.isContractCreation()) {
     // call constructor
-    result = invoker.invokeUpdate(
+    invoker.invokeUpdate(
       tx.to,
       '__on_deployed',
       tx.data.params,
       options
     )
+
+    // Skip this check because Wasm currently returns boolean
+    // if (typeof result !== 'undefined') {
+    //   throw new Error('Constructor or __on_deployed function could not return non-undefined value.')
+    // }
+
     // Result of ondeploy should be address
-    result[0] = tx.to
+    result = tx.to
   } else if (tx.isContractCall()) {
-    if (['constructor', '__on_received', '__on_deployed', 'getState', 'setState', 'getEnv'].includes(tx.data.name)) {
+    if (['constructor', '__on_received', '__on_deployed', 'getState', 'setState', 'runtime'].includes(tx.data.name)) {
       throw new Error('Calling this method directly is not allowed')
     }
     result = invoker.invokeTx(options)
-  }
-
-  // call __on_received
-  if (tx.value && stateManager.isRegularContract(tx.to) && !tx.isContractCreation() && !tx.isContractCall()) {
+  } else if (tx.value && stateManager.isContract(tx.to)) {
+    // call __on_received for regular transfer
     result = invoker.invokeUpdate(tx.to, '__on_received', tx.data.params, options)
   }
 
-  if (result && result.__gas_used && tools.refectTxValueAndFee) {
-    tools.refectTxValueAndFee({ from: tx.from, value: 0, fee: -(tx.fee - result.__gas_used) })
-    delete result.__gas_used
+  if (options.info && options.info.__gas_used && tx.fee > options.info.__gas_used) {
+    tools.refectTxValueAndFee({ payer: tx.payer, value: 0, fee: -(tx.fee - options.info.__gas_used) })
   }
 
   // emit Transferred event
-  if (tx.value > 0) {
-    const emitTransferred = (tags) => {
-      return utils.emitTransferred(null, tags, tx.from, tx.to, tx.value)
-    }
-    if (result) {
-      emitTransferred(result[1])
-    } else {
-      result = [undefined, emitTransferred()]
-    }
+  if (tx.value > 0n) {
+    utils.emitTransferred(null, options.tags, tx.from, tx.to, tx.payer, tx.value)
   }
 
   return result

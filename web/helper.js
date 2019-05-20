@@ -44,7 +44,7 @@ export function registerTxForm ($form, txData) {
 
     // value and fee in unit
     formData.value = toUNIT(parseFloat(formData.value))
-    formData.fee = toUNIT(parseFloat(formData.unit))
+    formData.fee = toUNIT(parseFloat(formData.fee))
 
     // submit tx
     try {
@@ -84,5 +84,27 @@ export function tryStringifyJson (p, replacer, space) {
     return JSON.stringify(p, replacer, space)
   } catch (e) {
     return String(p)
+  }
+}
+
+export async function loadAddresses () {
+  try {
+    var resp = tweb3.wallet.loadFromStorage('123')
+    if (resp === 0) {
+      window.alert('Wallet empty! Please go to Wallet tab to create account.')
+      return
+    }
+    var wallets = tweb3.wallet.accounts
+    var select = document.getElementById('signer')
+    select.innerHTML = ''
+    wallets.forEach(item => {
+      let option = document.createElement('option')
+      option.value = item.address
+      option.textContent = item.address
+      select.appendChild(option)
+    })
+  } catch (error) {
+    console.log(error)
+    window.alert(String(error))
   }
 }

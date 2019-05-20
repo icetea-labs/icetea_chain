@@ -33,7 +33,7 @@ exports.for = (invokeType, contractAddress, methodName, methodParams, options) =
  * @returns {object} context
  */
 exports.forTransaction = (address, fname, fparams = [], options) => {
-  const { tx, block, stateAccess, tools } = options
+  const { tx, block, stateAccess, tools, tags } = options
   const { balanceOf, getCode } = tools
   const {
     hasState,
@@ -45,12 +45,10 @@ exports.forTransaction = (address, fname, fparams = [], options) => {
 
   const importTableName = getCode(address).meta.importTableName
 
-  const tags = {}
-
   const ctx = {
     get_address: () => address,
     get_balance: () => balanceOf(address),
-    getEnv: () => ({ tags }),
+    runtime: { tags },
     importTableName,
     log: console.log,
     get_msg_name: () => fname,

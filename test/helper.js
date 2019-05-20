@@ -1,5 +1,5 @@
 require('dotenv').config()
-const { ecc, codec } = require('icetea-common')
+const { ecc } = require('icetea-common')
 const { IceTeaWeb3, utils } = require('icetea-web3')
 
 exports.switchEncoding = utils.switchEncoding
@@ -29,10 +29,10 @@ exports.randomAccountWithBalance = async (tweb3, intialBalance = 10000) => {
   const configKey = process.env.BANK_KEY
   const account = await tweb3.wallet.importAccount(configKey)
   const from = account.address
-  const keyInfo = await ecc.newKeys(codec.BANK_ACCOUNT)
+  const keyInfo = await ecc.newBankKeys()
 
   // send money from configKey to newKey
-  await tweb3.sendTransactionCommit({ from: from, to: keyInfo.address, value: intialBalance })
+  await tweb3.transfer(keyInfo.address, intialBalance, { from })
 
   return keyInfo
 }

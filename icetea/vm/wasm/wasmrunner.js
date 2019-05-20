@@ -24,8 +24,8 @@ class WasmRunner extends Runner {
    * @param {object} patcher - The JS wrapper around Wasm.
    * @param {object} options - options.
    */
-  doRun (wrapper, { context }) {
-    return wrapper(context)
+  doRun (wrapper, { context, info }) {
+    return wrapper(context, info)
   }
 
   /**
