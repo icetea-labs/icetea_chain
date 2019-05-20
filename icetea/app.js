@@ -289,9 +289,14 @@ function doExecTx (options) {
     result = invoker.invokeUpdate(tx.to, '__on_received', tx.data.params, options)
   }
 
-  if (result && result.__gas_used && tools.refectTxValueAndFee) {
-    tools.refectTxValueAndFee({ from: tx.from, value: 0, fee: -(tx.fee - result.__gas_used) })
-    delete result.__gas_used
+  let returnValue = result
+  // TODO: check it with wasm, do not know result in wasm is array or not, check later
+  if (Array.isArray(returnValue) && returnValue.length > 0) {
+    returnValue = returnValue[0]
+  }
+  if (returnValue && returnValue.__gas_used && tools.refectTxValueAndFee) {
+    tools.refectTxValueAndFee({ from: tx.from, value: BigInt(0), fee: -(tx.fee - BigInt(returnValue.__gas_used)) })
+    delete returnValue.__gas_used
   }
 
   // emit Transferred event

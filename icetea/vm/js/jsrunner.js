@@ -2,9 +2,12 @@
 // const halts = require('halting-problem')
 const babel = require('@babel/core')
 const vm = require('vm')
+const sizeof = require('object-sizeof')
 const Runner = require('../runner')
 const wrapper = require('./wrapper/raw')
 const transpilePlugins = require('../../config').rawJs.transpile
+
+const freeGasLimit = 1e9
 
 /**
  * js runner
@@ -99,15 +102,44 @@ module.exports = class extends Runner {
     // TODO: change to use NodeJS's vm module
     const f = new Function('__g', '__info', srcWrapper) // eslint-disable-line
 
+    let gasUsed = 0
     const functionInSandbox = vm.runInNewContext(`(() => ${f.toString()})()`, {
-      process: {
+      process: Object.freeze({
         env: {
           NODE_ENV: process.env.NODE_ENV
         }
-      },
-      console // TODO: only enable in dev mode
+      }),
+      console, // TODO: only enable in dev mode
+      usegas: Object.freeze((gas) => {
+        if (gas <= 0) {
+          throw new Error('gas is a positive number')
+        }
+        gasUsed += gas
+      }),
+      usestategas: Object.freeze((key, value) => {
+        // TODO: check deploy contract case
+        gasUsed += 200 // minimum setState gas
+        const oldSize = sizeof(context.getState(key))
+        const newSize = sizeof(value)
+        gasUsed += Math.abs(newSize - oldSize)
+      })
     })
 
-    return functionInSandbox.call(context, guard, info)
+    let result = functionInSandbox.call(context, guard, info)
+    if (result === null || result === undefined) {
+      result = result || {}
+    }
+
+    let gasInfo = {}
+    if (context.emitEvent) { // isTx, TODO: can check by other way
+      gasUsed = (gasUsed > freeGasLimit) ? (gasUsed - freeGasLimit) : 0
+      if (gasUsed > 0) {
+        gasInfo = {
+          __gas_used: gasUsed
+        }
+      }
+    }
+
+    return Object.assign(result, gasInfo)
   }
 }

@@ -71,6 +71,7 @@
     "merkle-patricia-tree": "3.0.0",
     "moment": "2.24.0",
     "node-localstorage": "1.3.1",
+    "object-sizeof": "1.3.1",
     "prismjs": "1.16.0",
     "semver": "^6.0.0",
     "validator": "10.11.0",
