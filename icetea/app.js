@@ -3,7 +3,7 @@ const utils = require('./helper/utils')
 const sysContracts = require('./system')
 const invoker = require('./contractinvoker')
 const did = require('./system/did')
-const { ecc, codec } = require('icetea-common')
+const { ecc, codec, AccountType } = require('icetea-common')
 
 const stateManager = require('./statemanager')
 
@@ -119,7 +119,7 @@ class App {
       tx.to = _ensureAddress(tx.to)
       if (!sysContracts.has(tx.to)) {
         const toType = ecc.validateAddress(tx.to).type
-        if (tx.value > 0n && toType === codec.REGULAR_ACCOUNT) {
+        if (tx.value > 0n && toType === AccountType.REGULAR_ACCOUNT) {
           throw new Error('Could not transfer to regular account.')
         }
       }
@@ -133,9 +133,9 @@ class App {
     if (tx.signers.length === 0) {
       throw new Error('Must have at lease one signature.')
     } else if (tx.signers.length === 1) {
-      if (tx.from === tx.signers[0]) {
-        throw new Error("No need to set 'from' to save blockchain data size.") // so strict!
-      }
+      // if (tx.from === tx.signers[0]) {
+      //   throw new Error("No need to set 'from' to save blockchain data size.") // so strict!
+      // }
     } else if (!tx.from) {
       throw new Error("Must explicitly set 'from' when there are more than 1 signer.")
     }
@@ -145,7 +145,7 @@ class App {
     did.checkPermission(tx.from, tx.signers, blockTimestamp)
 
     // check payer
-    const hasPayer = tx.payer !== tx.from
+    const hasPayer = !!tx.payer && (tx.payer !== tx.from)
     if (!hasPayer) {
       if (tx.value + tx.fee > 0n && codec.isRegularAddress(tx.from)) {
         // This seems redundant since regular account should always have balance of 0
@@ -154,7 +154,7 @@ class App {
     } else {
       if (!sysContracts.has(tx.payer)) {
         const { type: ptype } = ecc.validateAddress(tx.payer)
-        if (ptype === codec.REGULAR_ACCOUNT) {
+        if (ptype === AccountType.REGULAR_ACCOUNT) {
           throw new Error('Cannot specify a regular account as transaction payer.')
         }
       }
@@ -237,7 +237,7 @@ class App {
     return { balance, system, mode, hasSrc: !!src, deployedBy }
   }
 
-  execTx (tx) {
+  execTx (tx, tags) {
     this.checkTx(tx)
 
     // No need, already done inside checkTx above
@@ -252,7 +252,8 @@ class App {
       tx,
       block: stateManager.getBlock(),
       stateAccess,
-      tools
+      tools,
+      tags
     })
 
     // commit change made to state
@@ -263,7 +264,7 @@ class App {
 
     stateManager.endCheckpoint()
 
-    return result || []
+    return result
   }
 }
 
@@ -289,7 +290,7 @@ function willCallContract (tx) {
  */
 function doExecTx (options) {
   const { tx, tools = {} } = options
-  options.tags = []
+  options.info = {}
   let result
 
   if (tx.isContractCreation()) {
@@ -303,22 +304,27 @@ function doExecTx (options) {
     if (tx.payer !== tx.from) {
       const tmpTx = Object.assign({}, tx)
       tmpTx.from = 'system'
-      const r = invoker.invokeUpdate(tx.payer, '_beforePayFor', [tx], Object.assign({}, options, { tx: tmpTx }))
-      options.tags = r[1]
+      invoker.invokeUpdate(tx.payer, '_beforePayFor', [tx], Object.assign({}, options, { tx: tmpTx }))
     }
     (tools.refectTxValueAndFee || stateManager.handleTransfer)(tx)
   }
 
   if (tx.isContractCreation()) {
     // call constructor
-    result = invoker.invokeUpdate(
+    invoker.invokeUpdate(
       tx.to,
       '__on_deployed',
       tx.data.params,
       options
     )
+
+    // Skip this check because Wasm currently returns boolean
+    // if (typeof result !== 'undefined') {
+    //   throw new Error('Constructor or __on_deployed function could not return non-undefined value.')
+    // }
+
     // Result of ondeploy should be address
-    result[0] = tx.to
+    result = tx.to
   } else if (tx.isContractCall()) {
     if (['constructor', '__on_received', '__on_deployed', 'getState', 'setState', 'runtime'].includes(tx.data.name)) {
       throw new Error('Calling this method directly is not allowed')
@@ -329,27 +335,14 @@ function doExecTx (options) {
     result = invoker.invokeUpdate(tx.to, '__on_received', tx.data.params, options)
   }
 
-  if (result && result.__gas_used && tx.fee > result.__gas_used) {
-    tools.refectTxValueAndFee({ payer: tx.payer, value: 0, fee: -(tx.fee - result.__gas_used) })
-    delete result.__gas_used
+  if (options.info && options.info.__gas_used && tx.fee > options.info.__gas_used) {
+    tools.refectTxValueAndFee({ payer: tx.payer, value: 0, fee: -(tx.fee - options.info.__gas_used) })
   }
 
   // emit Transferred event
-  if (tx.value > 0) {
-    const emitTransferred = (tags) => {
-      return utils.emitTransferred(null, tags, tx.from, tx.to, tx.value)
-    }
-    if (result) {
-      emitTransferred(result[1])
-    } else {
-      result = [undefined, emitTransferred()]
-    }
+  if (tx.value > 0n) {
+    utils.emitTransferred(null, options.tags, tx.from, tx.to, tx.payer, tx.value)
   }
-
-  // console.log(_beforePayForTags, result)
-  // if (_beforePayForTags && Object.keys(_beforePayForTags).length) {
-  //   Object.assign(result[1], _beforePayForTags)
-  // }
 
   return result
 }

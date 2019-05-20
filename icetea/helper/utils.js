@@ -79,11 +79,12 @@ exports.emitEvent = function (emitter, tags, eventName, eventData, indexes = [])
  * @param {Array.<string>} tags - event tag
  * @param {string} from - from address
  * @param {string} to - to address
+ * @param {string} payer - the one who pays the transaction
  * @param {number} value - transfer value
  * @returns {Array.<string>} tags
  */
-exports.emitTransferred = (emitter, tags, from, to, value) => {
-  return exports.emitEvent(emitter, tags, 'Transferred', { from, to, value }, ['from', 'to'])
+exports.emitTransferred = (emitter, tags, from, to, payer, value) => {
+  return exports.emitEvent(emitter, tags, 'Transferred', { from, to, payer, value }, ['from', 'to', 'payer'])
 }
 
 /**
@@ -287,3 +288,8 @@ exports.serialize = (obj) => {
     return value
   })
 }
+
+exports.envIs = (n, v) => process.env[n] == v // eslint-disable-line
+exports.envEnabled = n => process.env[n] === '1'
+exports.isDevMode = () => process.env.NODE_ENV === 'development'
+exports.isProdMode = () => process.env.NODE_ENV === 'production'

@@ -47,7 +47,7 @@ exports.run = (context) => {
     },
 
     request () {
-      const paid = this.getState(msg.sender, 0n)
+      const paid = BigInt(this.getState(msg.sender, 0n))
       const toPay = REQUEST_QUOTA - paid
       if (toPay <= 0n) {
         throw new Error(`You already received ${paid}. No more.`)
@@ -60,12 +60,12 @@ exports.run = (context) => {
       const available = REQUEST_QUOTA > this.balance ? this.balance : REQUEST_QUOTA
       const amount = available > toPay ? toPay : available
 
-      this.setState(msg.sender, amount)
+      this.setState(msg.sender, String(amount))
       this.transfer(msg.sender, amount + paid)
 
       this.emitEvent('FaucetTransferred', {
         requester: msg.sender,
-        amount
+        amount: String(amount)
       }, ['requester'])
 
       return amount
@@ -106,11 +106,10 @@ exports.run = (context) => {
         throw new Error('Faucet out of money.')
       }
 
-      const serializableAmount = String(amount)
-      this.setState(tx.from, serializableAmount)
+      this.setState(tx.from, String(amount))
       this.emitEvent('FaucetTransferred', {
         requester: tx.from,
-        amount: serializableAmount
+        amount: String(requested)
       }, ['requester'])
     }
   }

@@ -89,6 +89,7 @@
     "jsdoc": "3.5.5",
     "jsdoc-template": "git+https://github.com/braintree/jsdoc-template.git",
     "jsx-ast-utils": "^2.1.0",
+    "mime-db": "^1.40.0",
     "nodemon": "1.18.11",
     "npm": "^6.9.0",
     "npx": "10.2.0",

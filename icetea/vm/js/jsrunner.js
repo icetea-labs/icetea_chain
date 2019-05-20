@@ -5,6 +5,7 @@ const vm = require('vm')
 const Runner = require('../runner')
 const wrapper = require('./wrapper/raw')
 const transpilePlugins = require('../../config').rawJs.transpile
+const utils = require('../../helper/utils')
 
 /**
  * js runner
@@ -88,7 +89,7 @@ module.exports = class extends Runner {
 
   doRun (srcWrapper, { context, guard, info }) {
     // Print source with line number - for debug
-    if (process.env.NODE_ENV === 'development' &&
+    if (utils.isDevMode() &&
       typeof srcWrapper === 'string' &&
       context.runtime.msg.name === '__on_deployed') {
       const { EOL } = require('os')
@@ -96,8 +97,8 @@ module.exports = class extends Runner {
       const lines = srcWrapper.split(EOL).map((line, i) => ((i + delta) + ': ' + line))
       console.log(lines.join(EOL))
     }
-    // TODO: change to use NodeJS's vm module
-    const f = new Function('__g', '__info', srcWrapper) // eslint-disable-line
+
+    const f = new Function('__g', srcWrapper) // eslint-disable-line
 
     const functionInSandbox = vm.runInNewContext(`(() => ${f.toString()})()`, {
       process: {
@@ -108,6 +109,6 @@ module.exports = class extends Runner {
       console // TODO: only enable in dev mode
     })
 
-    return functionInSandbox.call(context, guard, info)
+    return functionInSandbox.call(context, guard)
   }
 }

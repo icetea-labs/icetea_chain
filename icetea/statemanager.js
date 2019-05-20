@@ -3,6 +3,7 @@ const config = require('./config')
 const patricia = require('./helper/patricia')
 const EventEmitter = require('events')
 const stateProxy = require('./stateproxy')
+const utils = require('./helper/utils')
 
 // Declare outside class to ensure private
 let stateTable, lastBlock
@@ -143,7 +144,7 @@ class StateManager extends EventEmitter {
   }
 
   debugState () {
-    if (process.env.NODE_ENV === 'development') {
+    if (utils.isDevMode()) {
       return stateTable
     }
 

@@ -49,7 +49,7 @@ async function testSimpleStore (mode, src) {
   expect(events[0]).toEqual({
     emitter: 'system',
     eventName: 'Transferred',
-    eventData: { from, to, value: value.toString() }
+    eventData: { from, to, payer: from, value: value.toString() }
   })
 
   // Verify balance changes after TX

@@ -1,11 +1,12 @@
 const { getBlock, getTx, replyQuery } = require('./helper/abci')
 const app = require('./app')
+const utils = require('./helper/utils')
 
 // turn on debug logging
 // require('debug').enable('abci*')
 
 // turn on logging state diff to console
-if (process.env.NODE_ENV === 'development' && process.env.PRINT_STATE_DIFF === '1') {
+if (utils.isDevMode() && utils.envEnabled('PRINT_STATE_DIFF')) {
   app.addStateObserver(require('./helper/diff'))
 }
 
@@ -46,11 +47,12 @@ const handler = {
     try {
       const tx = getTx(req)
 
-      const [data, tags] = app.execTx(tx)
+      const tags = []
+      const data = app.execTx(tx, tags)
 
       const result = {}
       if (typeof data !== 'undefined') {
-        result.data = Buffer.from(JSON.stringify(data))
+        result.data = Buffer.from(utils.serialize(data))
       }
 
       result.tags = []

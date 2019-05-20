@@ -88,7 +88,7 @@ exports.for = (invokeType, contractAddress, methodName, methodParams, options) =
  * @returns {object} context
  */
 exports.forTransaction = (contractAddress, methodName, methodParams, options) => {
-  const { tx, block, stateAccess, tools, tags = {} } = options
+  const { tx, block, stateAccess, tools, tags } = options
 
   const msg = {}
   msg.name = methodName
@@ -112,9 +112,17 @@ exports.forTransaction = (contractAddress, methodName, methodParams, options) =>
     runtime: {
       msg,
       block,
-      tags,
       loadContract: _makeLoadContract(['invokeUpdate', 'invokeView', 'invokePure'], contractAddress, options),
-      require: _require
+      require: _require,
+      addTag: (name, value) => {
+        if (typeof name !== 'string' || typeof value !== 'string') {
+          throw new Error('Tag name and value must be strings.')
+        }
+        if (name in tags) {
+          throw new Error(`Tag ${name} already exists for this transaction.`)
+        }
+        tags[name] = value
+      }
     },
     emitEvent: (eventName, eventData, indexes = []) => {
       utils.emitEvent(contractAddress, tags, eventName, eventData, indexes)
@@ -166,7 +174,7 @@ exports.forView = (contractAddress, name, params, options) => {
     }
   }
 
-  return utils.deepFreeze(ctx)
+  return Object.freeze(ctx)
 }
 
 /**
