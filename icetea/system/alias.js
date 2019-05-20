@@ -74,7 +74,7 @@ const sanitizeAlias = (alias) => {
 
 // standard contract interface
 exports.run = (context, options) => {
-  const { msg, block } = context.getEnv()
+  const { msg, block } = context.runtime
   checkMsg(msg, METADATA)
 
   const contract = {

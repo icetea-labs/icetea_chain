@@ -103,7 +103,7 @@ async function testSimpleStore (mode, src) {
 describe('SimpleStore', () => {
   test('raw JS valid-syntax simple store', async () => {
     const CONTRACT_SRC = `
-            const msg = this.getEnv().msg;
+            const msg = this.runtime.msg;
             switch (msg.name) {
             case '__on_deployed':
                 this.setState('owner', msg.sender);

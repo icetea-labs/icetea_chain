@@ -25,13 +25,13 @@ let global = {}, globalThis = {}, process = void 0, Function = void 0,
     clearImmediate = void 0, clearTimeout = void 0, clearInterval = void 0,
     queueMicrotask = void 0, WebAssembly = void 0, Console = void 0
 
-const { require } = this.getEnv()
+const { require } = this.runtime
 
 let Math = new Proxy(__sysmath, {
     get(obj, prop) {
         if (prop === 'random') {
             return () => {
-                const bl = __systhis.getEnv().block
+                const bl = __systhis.runtime.block
                 if (!bl) {
                     throw new Error('Cannot call Math.random() in this context.')
                 }
@@ -47,7 +47,7 @@ let Date = class {
     constructor(...args) {
         let d
         if (args.length === 0) {
-            const bl = __systhis.getEnv().block
+            const bl = __systhis.runtime.block
             if (!bl) {
                 throw new Error('Cannot call new Date() in this context.')
             }
@@ -65,7 +65,7 @@ let Date = class {
     }
 }
 Date.now = () => {
-    const bl = __systhis.getEnv().block
+    const bl = __systhis.runtime.block
     if (!bl) {
         throw new Error('Cannot call Date.now() in this context.')
     }

@@ -44,7 +44,7 @@ export function registerTxForm ($form, txData) {
 
     // value and fee in unit
     formData.value = toUNIT(parseFloat(formData.value))
-    formData.fee = toUNIT(parseFloat(formData.unit))
+    formData.fee = toUNIT(parseFloat(formData.fee))
 
     // submit tx
     try {

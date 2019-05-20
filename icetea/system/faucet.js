@@ -24,6 +24,13 @@ const INTERNAL_METADATA = {
       { name: 'tx', type: 'object' }
     ],
     returnType: 'boolean'
+  },
+  '_beforePayFor': {
+    decorators: ['transaction'],
+    params: [
+      { name: 'tx', type: 'object' }
+    ],
+    returnType: 'undefined'
   }
 }
 
@@ -31,7 +38,7 @@ const REQUEST_QUOTA = BigInt(10e6)
 
 // standard contract interface
 exports.run = (context) => {
-  const { msg } = context.getEnv()
+  const { msg } = context.runtime
   checkMsg(msg, Object.assign({}, METADATA, INTERNAL_METADATA))
 
   const contract = {
@@ -65,8 +72,8 @@ exports.run = (context) => {
     },
 
     _agreeToPayFor (tx) {
-      const paid = this.getState(tx.from, 0n)
-      const requested = tx.value + tx.fee
+      const paid = BigInt(this.getState(tx.from, 0n))
+      const requested = BigInt(tx.value) + BigInt(tx.fee)
       const amount = paid + requested
       if (amount > REQUEST_QUOTA) {
         // throw an error to provide more info than just false
@@ -86,7 +93,7 @@ exports.run = (context) => {
         throw new Error('This function is reserved for internal use.')
       }
 
-      const paid = this.getState(tx.from, 0n)
+      const paid = BigInt(this.getState(tx.from, 0n))
       const requested = tx.value + tx.fee
       const amount = paid + requested
       if (amount > REQUEST_QUOTA) {
@@ -99,10 +106,11 @@ exports.run = (context) => {
         throw new Error('Faucet out of money.')
       }
 
-      this.setState(tx.from, amount)
+      const serializableAmount = String(amount)
+      this.setState(tx.from, serializableAmount)
       this.emitEvent('FaucetTransferred', {
         requester: tx.from,
-        amount
+        amount: serializableAmount
       }, ['requester'])
     }
   }

@@ -38,7 +38,7 @@ class ContractInvoker {
       result = vm.run(src, { context, guard })
     }
 
-    return invokeType === 'transaction' ? [result, context.getEnv().tags] : result
+    return invokeType === 'transaction' ? [result, context.runtime.tags] : result
   }
 
   /**

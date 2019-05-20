@@ -90,7 +90,7 @@ module.exports = class extends Runner {
     // Print source with line number - for debug
     if (process.env.NODE_ENV === 'development' &&
       typeof srcWrapper === 'string' &&
-      context.getEnv().msg.name === '__on_deployed') {
+      context.runtime.msg.name === '__on_deployed') {
       const { EOL } = require('os')
       const delta = 3
       const lines = srcWrapper.split(EOL).map((line, i) => ((i + delta) + ': ' + line))

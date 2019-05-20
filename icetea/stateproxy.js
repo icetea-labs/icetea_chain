@@ -177,7 +177,7 @@ const getStateProxy = (stateTable) => {
   }
 
   const refectTxValueAndFee = tx => {
-    (tx.value + tx.fee) && _incBalance(tx.payer || tx.from, -tx.value - tx.fee)
+    (tx.value + tx.fee) && _incBalance(tx.payer, -tx.value - tx.fee)
     tx.value && _incBalance(tx.to, tx.value)
     tx.fee && _incBalance(config.feeCollector, tx.fee)
   }

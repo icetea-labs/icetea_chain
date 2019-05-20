@@ -1,4 +1,4 @@
-const msg = this.getEnv().msg;
+const msg = this.runtime.msg;
 switch (msg.name) {
   case '__on_deployed':
     this.setState('owner', msg.sender);

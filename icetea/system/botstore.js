@@ -61,7 +61,7 @@ exports.ondeploy = state => {
 
 // standard contract interface
 exports.run = (context, options) => {
-  const { msg } = context.getEnv()
+  const { msg } = context.runtime
   checkMsg(msg, METADATA)
 
   const contract = {

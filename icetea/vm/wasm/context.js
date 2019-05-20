@@ -50,7 +50,7 @@ exports.forTransaction = (address, fname, fparams = [], options) => {
   const ctx = {
     get_address: () => address,
     get_balance: () => balanceOf(address),
-    getEnv: () => ({ tags }),
+    runtime: () => ({ tags }),
     importTableName,
     log: console.log,
     get_msg_name: () => fname,
