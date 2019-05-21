@@ -45,13 +45,7 @@ function _makeLoadContract (invokerTypes, srcContract, options) {
 function _makeInvokableMethod (invokerTypes, destContract, method, options) {
   return invokerTypes.reduce((obj, t) => {
     obj[t] = (...params) => {
-      const r = invoker[t](destContract, method, params, options)
-      if (t === 'invokeUpdate') {
-        Object.assign(options.tags, r[1])
-        return r[0]
-      } else {
-        return r
-      }
+      return invoker[t](destContract, method, params, options)
     }
     return obj
   }, {})
