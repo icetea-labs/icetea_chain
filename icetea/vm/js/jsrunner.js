@@ -6,6 +6,7 @@ const sizeof = require('object-sizeof')
 const Runner = require('../runner')
 const wrapper = require('./wrapper/raw')
 const transpilePlugins = require('../../config').rawJs.transpile
+const utils = require('../../helper/utils')
 
 const freeGasLimit = 1e9
 
@@ -91,16 +92,16 @@ module.exports = class extends Runner {
 
   doRun (srcWrapper, { context, guard, info }) {
     // Print source with line number - for debug
-    if (process.env.NODE_ENV === 'development' &&
+    if (utils.isDevMode() &&
       typeof srcWrapper === 'string' &&
-      context.getEnv().msg.name === '__on_deployed') {
+      context.runtime.msg.name === '__on_deployed') {
       const { EOL } = require('os')
       const delta = 3
       const lines = srcWrapper.split(EOL).map((line, i) => ((i + delta) + ': ' + line))
       console.log(lines.join(EOL))
     }
-    // TODO: change to use NodeJS's vm module
-    const f = new Function('__g', '__info', srcWrapper) // eslint-disable-line
+
+    const f = new Function('__g', srcWrapper) // eslint-disable-line
 
     let gasUsed = 0
     const functionInSandbox = vm.runInNewContext(`(() => ${f.toString()})()`, {
@@ -125,21 +126,14 @@ module.exports = class extends Runner {
       })
     })
 
-    let result = functionInSandbox.call(context, guard, info)
-    if (result === null || result === undefined) {
-      result = result || {}
-    }
-
-    let gasInfo = {}
-    if (context.emitEvent) { // isTx, TODO: can check by other way
+    const result = functionInSandbox.call(context, guard)
+    if (info) {
       gasUsed = (gasUsed > freeGasLimit) ? (gasUsed - freeGasLimit) : 0
       if (gasUsed > 0) {
-        gasInfo = {
-          __gas_used: gasUsed
-        }
+        info.__gas_used = gasUsed
       }
     }
 
-    return Object.assign(result, gasInfo)
+    return result
   }
 }

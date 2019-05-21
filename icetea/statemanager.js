@@ -3,6 +3,7 @@ const config = require('./config')
 const patricia = require('./helper/patricia')
 const EventEmitter = require('events')
 const stateProxy = require('./stateproxy')
+const utils = require('./helper/utils')
 
 // Declare outside class to ensure private
 let stateTable, lastBlock
@@ -57,7 +58,7 @@ class StateManager extends EventEmitter {
   }
 
   handleTransfer (tx) {
-    (tx.value + tx.fee) && decBalance(tx.payer || tx.from, tx.value + tx.fee)
+    (tx.value + tx.fee) && decBalance(tx.payer, tx.value + tx.fee)
     tx.value && incBalance(tx.to, tx.value)
     tx.fee && incBalance(config.feeCollector, tx.fee)
   }
@@ -143,7 +144,7 @@ class StateManager extends EventEmitter {
   }
 
   debugState () {
-    if (process.env.NODE_ENV === 'development') {
+    if (utils.isDevMode()) {
       return stateTable
     }
 

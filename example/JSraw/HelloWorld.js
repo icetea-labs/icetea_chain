@@ -1,1 +1,1 @@
-return `You call ${this.getEnv().msg.name}`;
+return `You call ${this.runtime.msg.name}`;

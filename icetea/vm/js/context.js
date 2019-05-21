@@ -30,24 +30,24 @@ function _require (name) {
   return module
 }
 
-function _makeLoadContract (invokerTypes, srcContract, options, tags) {
+function _makeLoadContract (invokerTypes, srcContract, options) {
   return destContract => {
     return new Proxy({}, {
       get (obj, method) {
         const tx = { from: srcContract }
         const newOpts = { ...options, tx, ...tx }
-        return _makeInvokableMethod(invokerTypes, destContract, method, newOpts, tags)
+        return _makeInvokableMethod(invokerTypes, destContract, method, newOpts)
       }
     })
   }
 }
 
-function _makeInvokableMethod (invokerTypes, destContract, method, options, tags) {
+function _makeInvokableMethod (invokerTypes, destContract, method, options) {
   return invokerTypes.reduce((obj, t) => {
     obj[t] = (...params) => {
       const r = invoker[t](destContract, method, params, options)
       if (t === 'invokeUpdate') {
-        Object.assign(tags, r[1])
+        Object.assign(options.tags, r[1])
         return r[0]
       } else {
         return r
@@ -88,7 +88,7 @@ exports.for = (invokeType, contractAddress, methodName, methodParams, options) =
  * @returns {object} context
  */
 exports.forTransaction = (contractAddress, methodName, methodParams, options) => {
-  const { tx, block, stateAccess, tools } = options
+  const { tx, block, stateAccess, tools, tags } = options
 
   const msg = {}
   msg.name = methodName
@@ -97,12 +97,10 @@ exports.forTransaction = (contractAddress, methodName, methodParams, options) =>
   msg.signers = tx.signers
   msg.value = tx.value
   msg.fee = tx.fee
-  msg.callType = (msg.value > 0) ? 'payable' : 'transaction'
-  utils.deepFreeze(msg)
+  msg.callType = (msg.value > 0 && methodName !== '_beforePayFor') ? 'payable' : 'transaction'
 
   const contractHelpers = stateAccess.forUpdate(contractAddress)
   const { deployedBy } = tools.getCode(contractAddress)
-  const tags = {}
 
   const ctx = {
     ...contractHelpers,
@@ -111,13 +109,21 @@ exports.forTransaction = (contractAddress, methodName, methodParams, options) =>
     get balance () {
       return tools.balanceOf(contractAddress)
     },
-    getEnv: () => ({
+    runtime: {
       msg,
       block,
-      tags,
-      loadContract: _makeLoadContract(['invokeUpdate', 'invokeView', 'invokePure'], contractAddress, options, tags),
-      require: _require
-    }),
+      loadContract: _makeLoadContract(['invokeUpdate', 'invokeView', 'invokePure'], contractAddress, options),
+      require: _require,
+      addTag: (name, value) => {
+        if (typeof name !== 'string' || typeof value !== 'string') {
+          throw new Error('Tag name and value must be strings.')
+        }
+        if (name in tags) {
+          throw new Error(`Tag ${name} already exists for this transaction.`)
+        }
+        tags[name] = value
+      }
+    },
     emitEvent: (eventName, eventData, indexes = []) => {
       utils.emitEvent(contractAddress, tags, eventName, eventData, indexes)
     }
@@ -138,7 +144,7 @@ exports.forTransaction = (contractAddress, methodName, methodParams, options) =>
 exports.forView = (contractAddress, name, params, options) => {
   const { from, block, stateAccess, tools } = options
 
-  const msg = new Proxy({ name, params, sender: from, callType: 'view' }, {
+  const msg = new Proxy({ name, params: utils.deepFreeze(params), sender: from, callType: 'view' }, {
     get (target, prop) {
       if (Object.keys(msg).includes(prop) && !['name', 'params', 'callType', 'sender'].includes(prop)) {
         throw new Error('Cannot access msg.' + prop + ' when calling a view function')
@@ -160,12 +166,12 @@ exports.forView = (contractAddress, name, params, options) => {
     get balance () {
       return tools.balanceOf(contractAddress)
     },
-    getEnv: () => ({
+    runtime: {
       msg,
       block,
       loadContract: _makeLoadContract(['invokeView', 'invokePure'], contractAddress, options),
       require: _require
-    })
+    }
   }
 
   return Object.freeze(ctx)
@@ -183,7 +189,15 @@ exports.forView = (contractAddress, name, params, options) => {
 exports.forPure = (address, name, params, { from, block }) => {
   const ctx = {
     address,
-    getEnv: () => ({ msg: { sender: from, name, params, callType: 'pure' }, block, require: _require })
+    runtime: {
+      msg: {
+        sender: from,
+        name,
+        params,
+        callType: 'pure'
+      },
+      block,
+      require: _require }
   }
 
   return utils.deepFreeze(ctx)
@@ -193,5 +207,10 @@ exports.forPure = (address, name, params, { from, block }) => {
  * metadata for unlisted invoke type
  */
 exports.forMetadata = {
-  getEnv: () => ({ msg: { callType: 'metadata', name: '__metadata' }, block: {}, require: _require })
+  runtime: {
+    msg: {
+      callType: 'metadata',
+      name: '__metadata' },
+    block: {}
+  }
 }

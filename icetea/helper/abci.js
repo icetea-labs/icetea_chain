@@ -25,18 +25,20 @@ function getBlock (req) {
  */
 function getTx (req) {
   let reqTx = codec.decode(req.tx)
-  const tx = new Tx(
-    reqTx.to,
-    reqTx.value,
-    reqTx.fee,
-    JSON.parse(reqTx.data || '{}'),
-    reqTx.nonce).setEvidence(reqTx.evidence)
-  tx.from = reqTx.from
 
-  // TODO: should move this change to icetea-common
+  // santitize reqTx
+  if (reqTx.data == undefined) { // eslint-disable-line
+    reqTx.data = {}
+  } else if (typeof reqTx.data === 'string') {
+    try {
+      reqTx.data = JSON.parse(reqTx.data)
+    } catch (err) {
+    }
+  }
+
+  const tx = new Tx(reqTx).setEvidence(reqTx.evidence)
   tx.value = BigInt(tx.value)
   tx.fee = BigInt(tx.fee)
-
   return tx
 }
 
