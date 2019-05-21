@@ -7,8 +7,9 @@ const Runner = require('../runner')
 const wrapper = require('./wrapper/raw')
 const transpilePlugins = require('../../config').rawJs.transpile
 const utils = require('../../helper/utils')
+const config = require('../../config')
 
-const freeGasLimit = 1e9
+const { freeGasLimit, minStateGas, gasPerByte } = config.contract
 
 /**
  * js runner
@@ -116,21 +117,38 @@ module.exports = class extends Runner {
           throw new Error('gas is a positive number')
         }
         gasUsed += gas
-      }),
-      usestategas: Object.freeze((key, value) => {
-        // TODO: check deploy contract case
-        gasUsed += 200 // minimum setState gas
-        const oldSize = sizeof(context.getState(key))
-        const newSize = sizeof(value)
-        gasUsed += Math.abs(newSize - oldSize)
       })
     })
 
-    const result = functionInSandbox.call(context, guard)
+    let runCtx = { ...context }
+    runCtx.setState = (key, value) => {
+      gasUsed += minStateGas
+      const oldValue = context.getState(key)
+      if (oldValue === null || oldValue === undefined) {
+        gasUsed += sizeof({ key: value }) * gasPerByte
+      } else {
+        const oldSize = sizeof({ key: oldValue })
+        const newSize = sizeof({ key: value })
+        gasUsed += Math.abs(newSize - oldSize) * gasPerByte
+      }
+      context.setState(key, value)
+    }
+    runCtx.deleteState = key => {
+      gasUsed += minStateGas
+      gasUsed += sizeof({ key: context.getState(key) }) * gasPerByte
+      context.deleteState(key)
+    }
+    runCtx = Object.freeze(runCtx)
+
+    const result = functionInSandbox.call(runCtx, guard)
     if (info) {
       gasUsed = (gasUsed > freeGasLimit) ? (gasUsed - freeGasLimit) : 0
       if (gasUsed > 0) {
-        info.__gas_used = gasUsed
+        if (info.__gas_used) {
+          info.__gas_used += gasUsed // gas sum for contract call contract
+        } else {
+          info.__gas_used = gasUsed
+        }
       }
     }
 

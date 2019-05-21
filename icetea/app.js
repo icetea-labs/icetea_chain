@@ -4,6 +4,10 @@ const sysContracts = require('./system')
 const invoker = require('./contractinvoker')
 const did = require('./system/did')
 const { ecc, codec, AccountType } = require('icetea-common')
+const config = require('./config')
+const sizeof = require('object-sizeof')
+
+const { minStateGas, gasPerByte, minTxGas, maxTxGas } = config.contract
 
 const stateManager = require('./statemanager')
 
@@ -290,13 +294,27 @@ function willCallContract (tx) {
  */
 function doExecTx (options) {
   const { tx, tools = {} } = options
-  options.info = {}
+  options.info = { __gas_used: 0 }
   let result
 
   if (tx.isContractCreation()) {
     // analyze & save contract state
     const contractState = invoker.prepareContract(tx)
     tx.to = tools.deployContract(tx.from, contractState)
+
+    // deploy fee
+    options.info.__gas_used += minStateGas + sizeof(contractState) * gasPerByte
+  }
+
+  // min tx fee
+  // TODO: check later
+  if (minTxGas && maxTxGas) {
+    if (tx.fee < minTxGas) {
+      throw new Error(`tx fee ${tx.fee} is too low, at least ${minTxGas}`)
+    }
+    if (tx.fee > maxTxGas) {
+      throw new Error(`tx fee ${tx.fee} is too high, at most ${maxTxGas}`)
+    }
   }
 
   // process value transfer
@@ -336,6 +354,9 @@ function doExecTx (options) {
   }
 
   if (options.info && options.info.__gas_used && tx.fee > options.info.__gas_used) {
+    if (options.info.__gas_used > maxTxGas) {
+      throw new Error(`gas used ${options.info.__gas_used} is too high, at most ${maxTxGas}`)
+    }
     tools.refectTxValueAndFee({ payer: tx.payer, value: 0, fee: -(tx.fee - options.info.__gas_used) })
   }
 

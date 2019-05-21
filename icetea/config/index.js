@@ -28,5 +28,12 @@ module.exports = {
   },
   whitelistModules: [
     'lodash', 'moment', 'bn.js', '@hapi/joi', 'validator', 'cheerio', '@icetea/botutils', 'icetea-botutils',
-    'assert', 'buffer', 'console', 'constants', 'crypto', 'querystring', 'stream', 'string_decoder', 'url', 'util' ]
+    'assert', 'buffer', 'console', 'constants', 'crypto', 'querystring', 'stream', 'string_decoder', 'url', 'util' ],
+  contract: {
+    minStateGas: 200,
+    freeGasLimit: 1e9,
+    gasPerByte: 1,
+    minTxGas: 0,
+    maxTxGas: 1e12
+  }
 }
