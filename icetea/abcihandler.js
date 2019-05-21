@@ -65,6 +65,7 @@ const handler = {
       // add system tags
       result.tags.push({ key: Buffer.from('tx.from'), value: Buffer.from(tx.from) })
       result.tags.push({ key: Buffer.from('tx.to'), value: Buffer.from(tx.isContractCreation() ? data : tx.to) })
+      result.tags.push({ key: Buffer.from('tx.payer'), value: Buffer.from(tx.payer) })
 
       // console.log(result);
       return result
