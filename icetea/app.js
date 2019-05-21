@@ -353,12 +353,14 @@ function doExecTx (options) {
     result = invoker.invokeUpdate(tx.to, '__on_received', tx.data.params, options)
   }
 
+  let actualFee = minTxGas
   if (options.info && options.info.__gas_used && tx.fee > options.info.__gas_used) {
     if (options.info.__gas_used > maxTxGas) {
       throw new Error(`gas used ${options.info.__gas_used} is too high, at most ${maxTxGas}`)
     }
-    tools.refectTxValueAndFee({ payer: tx.payer, value: 0, fee: -(tx.fee - options.info.__gas_used) })
+    actualFee += options.info.__gas_used
   }
+  tools.refectTxValueAndFee({ payer: tx.payer, value: 0, fee: -(tx.fee - actualFee) }) // refund unused gas
 
   // emit Transferred event
   if (tx.value > 0n) {
