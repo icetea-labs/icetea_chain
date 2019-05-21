@@ -70,9 +70,10 @@ const store = {
       botInfo.address = bot
       botInfo.category = bots[bot].category
       botInfo.icon = bots[bot].icon
-      botInfo.name = info.name
+      botInfo.name = bots[bot].name || info.name
+      botInfo.bot = bot
       botInfo.alias = bot.split('.', 2)[1]
-      botInfo.description = info.description || ''
+      botInfo.description = bots[bot].description || info.description || ''
       if (botInfo.description.length > 36) {
         botInfo.description = botInfo.description.substring(0, 36) + '...'
       }

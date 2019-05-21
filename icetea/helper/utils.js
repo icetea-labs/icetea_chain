@@ -234,7 +234,7 @@ exports.checkUnsupportTypes = o => {
     o instanceof Map ||
     o instanceof Set ||
     o instanceof WeakMap) {
-    throw new Error('State contains unsupported type.')
+    throw new Error(`State contains unsupported type: ${o.toString()}`)
   }
 
   if (t === 'object') {
