@@ -23,6 +23,7 @@
     overflow-x: hidden; /* Disable horizontal scroll */
     padding-top: 0;
     transition: 0.5s; /* 0.5 second transition effect to slide in the sidenav */
+    text-transform: uppercase;
 }
 
 #bot-menu a {

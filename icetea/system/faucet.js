@@ -34,7 +34,7 @@ const INTERNAL_METADATA = {
   }
 }
 
-const REQUEST_QUOTA = BigInt(10e6)
+const REQUEST_QUOTA = BigInt(100e6)
 
 // standard contract interface
 exports.run = (context) => {
@@ -50,7 +50,7 @@ exports.run = (context) => {
       const paid = BigInt(this.getState(msg.sender, 0n))
       const toPay = REQUEST_QUOTA - paid
       if (toPay <= 0n) {
-        throw new Error(`You already received ${paid}. No more.`)
+        throw new Error(`You already received ${paid} microtea. No more.`)
       }
 
       if (!this.balance) {

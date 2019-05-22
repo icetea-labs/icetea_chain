@@ -82,24 +82,28 @@ function byId (id) {
   return document.getElementById(id)
 }
 
-// function fmtNum (n) {
-//   return n.toLocaleString(undefined, {
-//     minimumFractionDigits: 0,
-//     maximumFractionDigits: 9
-//   })
-// }
+function fmtMicroTea (n) {
+  const tea = n / Math.pow(10, 6)
+  return tea.toLocaleString(undefined, {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 9
+  })
+}
 
-// function confirmTransfer (amount) {
-//   say(`ATTENTION: you are about to transfer <b>${fmtNum(amount)}</b> TEA to this bot.`, {
-//     type: 'html', cssClass: 'bot-intro'
-//   })
-//   return sayButton([
-//     { text: 'Let\'s transfer', value: 'transfer' },
-//     { text: 'No way', value: 'no' }
-//   ]).then(result => (result && result.value === 'transfer'))
-// }
+function confirmTransfer (amount) {
+  say(`ATTENTION: you are about to transfer <b>${fmtMicroTea(amount)}</b> TEA to this bot.`, {
+    type: 'html', cssClass: 'bot-intro'
+  })
+  return sayButton([
+    { text: 'Let\'s transfer', value: 'transfer' },
+    { text: 'No way', value: 'no' }
+  ]).then(result => (!!result && result.value === 'transfer'))
+}
 
 function callContract (method, type, value, from, ...params) {
+  if (value) {
+    type = 'write'
+  }
   const map = {
     'none': 'callPure',
     'read': 'call',
@@ -128,35 +132,68 @@ async function getBotInfo (alias) {
   return Object.assign(await getBotInfoFromBot(alias), await getBotInfoFromStore(alias))
 }
 
-function setCommands (commands, contract) {
+function setCommands (commands, contract, defStateAccess) {
   var t = byId('bot-menu-items')
   t.innerHTML = ''
   commands.forEach(c => {
     var a = document.createElement('A')
     a.href = '#'
     a.setAttribute('data-value', c.value)
-    a.textContent = c.title || c.value
+    a.textContent = c.text || c.value
     t.appendChild(a)
     a.onclick = function () {
       closeNav()
       botui.action.hide()
-      say(c.title || c.value, { human: true })
-      callContract(contract.methods.ontext, 'none', 0, tweb3.wallet.defaultAccount, c.value)
-        .then(r => speak(r.messages || r))
-        .then(r => {
-          queue.push(r)
-        })
+      say(c.text || c.value, { human: true })
+      queue.push({
+        type: 'command',
+        content: { value: c.value },
+        state_access: c.state_access || defStateAccess
+      })
     }
   })
 }
 
-function handleQueue (contract) {
+function handleQueue (contract, defStateAccess) {
   if (queue.length) {
-    var r = queue.shift()
-    callContract(contract.methods.ontext, 'none', 0, tweb3.wallet.defaultAccount, r.value)
-      .then(r => speak(r.messages || r))
+    var item = queue.shift()
+    console.log(item)
+    callContract(contract.methods['on' + item.type],
+      item.state_access,
+      item.transferValue || 0,
+      tweb3.wallet.defaultAccount,
+      item.content.value)
+      .then(contractResult => {
+        console.log(contractResult)
+        return speak(contractResult.messages || contractResult).then(speakResult => {
+          if (contractResult.options && contractResult.options.value) {
+            return confirmTransfer(contractResult.options.value).then(ok => {
+              if (!ok) {
+                say('Transfer canceled. You could reconnect to this bot to start a new conversation.')
+                return sayButton({ text: 'Restart', value: 'start' })
+              }
+
+              speakResult.transferValue = contractResult.options.value
+              return speakResult
+            })
+          } else {
+            return speakResult
+          }
+        })
+      })
       .then(r => {
-        queue.push(r)
+        if (r && r.value) {
+          queue.push({
+            type: 'text',
+            content: r,
+            transferValue: r.transferValue,
+            state_access: (item.options || {}).state_access || defStateAccess
+          })
+        }
+      })
+      .catch(err => {
+        console.error(err)
+        say('An error has occured: ' + err, { type: 'html', cssClass: 'bot-error' })
       })
   }
 }
@@ -176,12 +213,10 @@ async function connectBot (botAddr) {
   // get bot info
   const botInfo = await getBotInfo(botAddr)
   const commands = botInfo.commands || [{
-    title: 'Start',
+    text: 'Start',
     value: 'start',
     state_access: 'none'
   }]
-
-  setCommands(commands, contract)
 
   if (!botInfo.state_access) {
     const meta = await tweb3.getMetadata(botAddr)
@@ -198,7 +233,7 @@ async function connectBot (botAddr) {
       botInfo.state_access = 'read'
     }
   } else if (!['read', 'write', 'none'].includes(botInfo.state_access)) {
-    window.alert('Cannot connect to this bot. It has an invalid state access specifier.')
+    botInfo.state_access = 'read'
     return
   }
 
@@ -207,15 +242,21 @@ async function connectBot (botAddr) {
 
   botui.message.removeAll()
 
+  setCommands(commands, contract, botInfo.state_access)
+
   // display bot info
   await say(`<b>${botInfo.name}</b><br>${botInfo.description}`, { type: 'html', cssClass: 'bot-intro' })
-  sayButton({ text: botInfo.start_title || 'Start', value: 'start' })
+  sayButton({ text: botInfo.start_button || 'Start', value: 'start' })
     .then(r => {
-      queue.push(r)
+      queue.push({
+        type: 'command',
+        content: r,
+        state_access: botInfo.state_access
+      })
     })
 
   setInterval(function () {
-    handleQueue(contract)
+    handleQueue(contract, botInfo.state_access)
   }, 100)
 
   // display Start button
@@ -329,7 +370,7 @@ function closeNav () {
 }
 
 // do not remove this semicolon
-;(async () => {
+; (async () => {
   showBotOptionBtn()
   var address = getUrlParameter('address')
   if (address) {

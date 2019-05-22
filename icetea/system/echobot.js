@@ -12,9 +12,7 @@ const METADATA = {
   },
   'oncommand': {
     decorators: ['pure'],
-    params: [
-      { name: 'command', type: ['string'] }
-    ],
+    params: [],
     returnType: 'object'
   },
   'ontext': {
@@ -42,8 +40,8 @@ exports.run = (context) => {
       }
     },
 
-    oncommand (command) {
-      return contract.ontext(command)
+    oncommand () {
+      return contract.ontext('Start')
     },
 
     ontext (content) {
