@@ -129,7 +129,7 @@ module.exports = class extends Runner {
     }
     runCtx.deleteState = key => {
       gasUsed += minStateGas
-      gasUsed += sizeof({ key: context.getState(key) }) * gasPerByte
+      // gasUsed += sizeof({ key: context.getState(key) }) * gasPerByte
       context.deleteState(key)
     }
     runCtx.usegas = gas => {

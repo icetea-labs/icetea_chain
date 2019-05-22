@@ -1,7 +1,10 @@
 /** @module */
 /*eslint-disable*/
 const util = require('util');
+const sizeof = require('object-sizeof')
 const freeGasLimit = BigInt(1e9);
+const config = require('../../config')
+const { minStateGas, gasPerByte } = config.contract
 
 const wasm_bindgen = function ({ log, importTableName, get_sender, get_address, get_balance, now, get_block_hash, get_block_number, get_msg_value, get_msg_fee, load, save, has_state, delete_state, transfer, read_contract, write_contract, emit_event }) {
   var wasm
@@ -762,11 +765,36 @@ const wasm_bindgen = function ({ log, importTableName, get_sender, get_address, 
  */
 module.exports = (wasmBuffer) => {
   return (ctx, info) => {
-    var bindgen = wasm_bindgen(ctx)
+    let gasUsed = 0
+    let runCtx = { ...ctx }
+    runCtx.save = (key, value) => {
+      gasUsed += minStateGas
+      const oldValue = ctx.load(key)
+      if (oldValue === null || oldValue === undefined) {
+        gasUsed += sizeof({ key: value }) * gasPerByte
+      } else {
+        const oldSize = sizeof({ key: oldValue })
+        const newSize = sizeof({ key: value })
+        gasUsed += Math.abs(newSize - oldSize) * gasPerByte
+      }
+      ctx.save(key, value)
+    }
+    runCtx.delete_state = key => {
+      gasUsed += minStateGas
+      ctx.delete_state(key)
+    }
+    runCtx = Object.freeze(runCtx)
+
+    var bindgen = wasm_bindgen(runCtx)
     bindgen(wasmBuffer)
     const result = bindgen.main(ctx.get_msg_name(), ctx.get_msg_param())
     if (info) {
-      info.__gas_used = bindgen.__gas_used()
+      const logicGasUsed = Number(bindgen.__gas_used())
+      if(info.__gas_used) {
+        info.__gas_used += logicGasUsed + gasUsed
+      } else {
+        info.__gas_used = logicGasUsed + gasUsed
+      }
     }
     return result
   }
