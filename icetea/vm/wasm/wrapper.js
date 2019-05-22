@@ -3,7 +3,7 @@
 const util = require('util');
 const freeGasLimit = BigInt(1e9);
 
-const wasm_bindgen = function ({ log, importTableName, get_sender, get_address, now, get_block_hash, get_block_number, get_msg_value, get_msg_fee, load, save, read_contract, write_contract, emit_event }) {
+const wasm_bindgen = function ({ log, importTableName, get_sender, get_address, get_balance, now, get_block_hash, get_block_number, get_msg_value, get_msg_fee, load, save, has_state, delete_state, transfer, read_contract, write_contract, emit_event }) {
   var wasm
   const __exports = {}
   let gasLimit = freeGasLimit // mocking, change this depend on bussiness (gas price)
@@ -83,6 +83,20 @@ const wasm_bindgen = function ({ log, importTableName, get_sender, get_address, 
     }
     return cachegetUint32Memory
   }
+
+  let cachegetUint64Memory = null;
+  function getUint64Memory() {
+    if (cachegetUint64Memory === null || cachegetUint64Memory.buffer !== wasm.memory.buffer) {
+      cachegetUint64Memory = new BigUint64Array(wasm.memory.buffer);
+    }
+    return cachegetUint64Memory;
+  }
+
+  __exports.__wbg_getbalance_901ea9d184937702 = function(ret, arg0, arg1) {
+    let varg0 = getStringFromWasm(arg0, arg1);
+    const val = get_balance(varg0);
+    getUint64Memory()[ret / 8] = val;
+  };
 
   __exports.__wbg_getsender_959abeb9602465cd = function (ret) {
     try {
@@ -188,6 +202,26 @@ const wasm_bindgen = function ({ log, importTableName, get_sender, get_address, 
     let varg0 = getStringFromWasm(arg0, arg1)
     try {
       save(varg0, getObject(arg2))
+    } catch (e) {
+      console.error('wasm-bindgen: imported JS function that was not marked as `catch` threw an error:', e)
+      throw e
+    }
+  }
+
+  __exports.__wbg_hasstate_95a6b987624fdf32 = function (arg0, arg1) {
+    let varg0 = getStringFromWasm(arg0, arg1)
+    try {
+      return has_state(varg0) ? 1 : 0;
+    } catch (e) {
+      console.error('wasm-bindgen: imported JS function that was not marked as `catch` threw an error:', e)
+      throw e
+    }
+  }
+
+  __exports.__wbg_deletestate_e24c09c11dcf18b8 = function (arg0, arg1) {
+    let varg0 = getStringFromWasm(arg0, arg1)
+    try {
+      delete_state(varg0)
     } catch (e) {
       console.error('wasm-bindgen: imported JS function that was not marked as `catch` threw an error:', e)
       throw e
@@ -676,6 +710,20 @@ const wasm_bindgen = function ({ log, importTableName, get_sender, get_address, 
 
   const u32CvtShim = new Uint32Array(2);
   const int64CvtShim = new BigInt64Array(u32CvtShim.buffer);
+  const uint64CvtShim = new BigUint64Array(u32CvtShim.buffer);
+
+  __exports.__wbg_transfer_c22cbf75dc972462 = function (arg0, arg1, arg2, arg3) {
+    let varg0 = getStringFromWasm(arg0, arg1);
+    u32CvtShim[0] = arg2;
+    u32CvtShim[1] = arg3;
+    const narg2 = uint64CvtShim[0];
+    try {
+      transfer(varg0, narg2);
+    } catch (e) {
+      console.error('wasm-bindgen: imported JS function that was not marked as `catch` threw an error:', e)
+      throw e
+    }
+  }
 
   function init(buffer) {
     // console.log({ [importTableName]: __exports });
