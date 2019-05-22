@@ -7,7 +7,7 @@ const { ecc, codec, AccountType } = require('icetea-common')
 const config = require('./config')
 const sizeof = require('object-sizeof')
 
-const { minStateGas, gasPerByte, minTxGas, maxTxGas } = config.contract
+const { minStateGas, gasPerByte, minTxGas, maxTxGas, freeGasLimit } = config.contract
 
 const stateManager = require('./statemanager')
 
@@ -309,10 +309,10 @@ function doExecTx (options) {
   // min tx fee
   // TODO: check later
   if (minTxGas && maxTxGas) {
-    if (tx.fee < minTxGas) {
+    if (Number(tx.fee) + freeGasLimit < minTxGas) {
       throw new Error(`tx fee ${tx.fee} is too low, at least ${minTxGas}`)
     }
-    if (tx.fee > maxTxGas) {
+    if (Number(tx.fee) + freeGasLimit > maxTxGas) {
       throw new Error(`tx fee ${tx.fee} is too high, at most ${maxTxGas}`)
     }
   }

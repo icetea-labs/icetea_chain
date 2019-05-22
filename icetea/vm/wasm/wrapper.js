@@ -2,18 +2,17 @@
 /*eslint-disable*/
 const util = require('util');
 const sizeof = require('object-sizeof')
-const freeGasLimit = BigInt(1e9);
 const config = require('../../config')
-const { minStateGas, gasPerByte } = config.contract
+const { minStateGas, gasPerByte, freeGasLimit, maxTxGas } = config.contract
 
 const wasm_bindgen = function ({ log, importTableName, get_sender, get_address, get_balance, now, get_block_hash, get_block_number, get_msg_value, get_msg_fee, load, save, has_state, delete_state, transfer, read_contract, write_contract, emit_event }) {
   var wasm
   const __exports = {}
-  let gasLimit = freeGasLimit // mocking, change this depend on bussiness (gas price)
+  let gasLimit = maxTxGas // mocking, change this depend on bussiness (gas price)
   let gasUsed = 0
   let isTx = false
   if(get_msg_fee) {
-    gasLimit += get_msg_fee()
+    gasLimit = freeGasLimit + Number(get_msg_fee())
     isTx = true
   }
 
@@ -705,10 +704,9 @@ const wasm_bindgen = function ({ log, importTableName, get_sender, get_address, 
 
   __exports.__gas_used = function () {
     if(!isTx) {
-      return BigInt(0)
+      return 0
     }
-    bigGasUsed = BigInt(gasUsed)
-    return (bigGasUsed - freeGasLimit) > BigInt(0) ? (bigGasUsed - freeGasLimit) : BigInt(0)
+    return gasUsed > freeGasLimit ? (gasUsed - freeGasLimit) : 0
   }
 
   const u32CvtShim = new Uint32Array(2);
@@ -745,8 +743,12 @@ const wasm_bindgen = function ({ log, importTableName, get_sender, get_address, 
           u32CvtShim[1] = arg1;
           const gas = parseInt(int64CvtShim[0].toString(), 10); // BigInt cannot mixed with Number
           gasUsed += gas
-          if (isTx && gasUsed > gasLimit) {
-            throw new Error("Out of gas!")
+
+          if (gasUsed > gasLimit) {
+            if(isTx) {
+              throw new Error("out of gas")
+            }
+            throw new Error("out of resources")
           }
         }
       }
@@ -765,6 +767,12 @@ const wasm_bindgen = function ({ log, importTableName, get_sender, get_address, 
  */
 module.exports = (wasmBuffer) => {
   return (ctx, info) => {
+    let gasLimit = maxTxGas
+    let isTx = false
+    if(ctx.get_msg_fee) {
+      gasLimit = freeGasLimit + Number(ctx.get_msg_fee())
+      isTx = true
+    }
     let gasUsed = 0
     let runCtx = { ...ctx }
     runCtx.save = (key, value) => {
@@ -777,10 +785,20 @@ module.exports = (wasmBuffer) => {
         const newSize = sizeof({ key: value })
         gasUsed += Math.abs(newSize - oldSize) * gasPerByte
       }
+
+      if(gasUsed > gasLimit) {
+        throw new Error(`wasm save ${key} failed: out of gas`)
+      }
+
       ctx.save(key, value)
     }
     runCtx.delete_state = key => {
       gasUsed += minStateGas
+
+      if(gasUsed > gasLimit) {
+        throw new Error(`wasm delete_state ${key} failed: out of gas`)
+      }
+
       ctx.delete_state(key)
     }
     runCtx = Object.freeze(runCtx)
@@ -794,6 +812,14 @@ module.exports = (wasmBuffer) => {
         info.__gas_used += logicGasUsed + gasUsed
       } else {
         info.__gas_used = logicGasUsed + gasUsed
+      }
+
+      // final check for contract call contract
+      if(info.__gas_used > gasLimit) {
+        if(isTx) {
+          throw new Error('out of gas')
+        }
+        throw new ErrorEvent('out of resouces')
       }
     }
     return result

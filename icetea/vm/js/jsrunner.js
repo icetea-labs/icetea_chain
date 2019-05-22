@@ -9,7 +9,7 @@ const transpilePlugins = require('../../config').rawJs.transpile
 const utils = require('../../helper/utils')
 const config = require('../../config')
 
-const { freeGasLimit, minStateGas, gasPerByte } = config.contract
+const { freeGasLimit, minStateGas, gasPerByte, maxTxGas } = config.contract
 
 /**
  * js runner
@@ -92,6 +92,11 @@ module.exports = class extends Runner {
   }
 
   doRun (srcWrapper, { context, guard, info }) {
+    let gasLimit = maxTxGas
+    if (context.emitEvent) {
+      gasLimit = freeGasLimit + Number(context.runtime.msg.fee)
+    }
+
     // Print source with line number - for debug
     if (utils.isDevMode() &&
       typeof srcWrapper === 'string' &&
@@ -125,11 +130,20 @@ module.exports = class extends Runner {
         const newSize = sizeof({ key: value })
         gasUsed += Math.abs(newSize - oldSize) * gasPerByte
       }
+
+      if (gasUsed > gasLimit) {
+        throw new Error(`setState ${key} failed: out of gas`)
+      }
+
       context.setState(key, value)
     }
     runCtx.deleteState = key => {
       gasUsed += minStateGas
-      // gasUsed += sizeof({ key: context.getState(key) }) * gasPerByte
+
+      if (gasUsed > gasLimit) {
+        throw new Error(`deleteState ${key} failed: out of gas`)
+      }
+
       context.deleteState(key)
     }
     runCtx.usegas = gas => {
@@ -137,6 +151,13 @@ module.exports = class extends Runner {
         throw new Error('gas is a positive number')
       }
       gasUsed += gas
+
+      if (gasUsed > gasLimit) {
+        if (context.emitEvent) { // isTX
+          throw new Error('out of gas')
+        }
+        throw new Error('out of resources')
+      }
     }
     runCtx = Object.freeze(runCtx)
 
@@ -149,6 +170,14 @@ module.exports = class extends Runner {
         } else {
           info.__gas_used = gasUsed
         }
+      }
+
+      // last check for contract call contract
+      if (info.__gas_used > gasLimit) {
+        if (context.emitEvent) { // isTX
+          throw new Error('out of gas')
+        }
+        throw new Error('out of resources')
       }
     }
 
