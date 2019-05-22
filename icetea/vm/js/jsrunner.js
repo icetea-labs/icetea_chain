@@ -111,13 +111,7 @@ module.exports = class extends Runner {
           NODE_ENV: process.env.NODE_ENV
         }
       }),
-      console, // TODO: only enable in dev mode
-      usegas: Object.freeze((gas) => {
-        if (gas <= 0) {
-          throw new Error('gas is a positive number')
-        }
-        gasUsed += gas
-      })
+      console // TODO: only enable in dev mode
     })
 
     let runCtx = { ...context }
@@ -137,6 +131,12 @@ module.exports = class extends Runner {
       gasUsed += minStateGas
       gasUsed += sizeof({ key: context.getState(key) }) * gasPerByte
       context.deleteState(key)
+    }
+    runCtx.usegas = gas => {
+      if (gas <= 0) {
+        throw new Error('gas is a positive number')
+      }
+      gasUsed += gas
     }
     runCtx = Object.freeze(runCtx)
 

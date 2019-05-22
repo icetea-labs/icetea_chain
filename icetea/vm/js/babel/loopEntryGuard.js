@@ -34,7 +34,7 @@ const generateInside = ({ t, id, line, ch, gas }) => {
       [t.stringLiteral(id.name), t.numericLiteral(line), t.numericLiteral(ch)]
     )),
     t.expressionStatement(t.callExpression(
-      t.identifier('usegas'),
+      t.memberExpression(t.identifier('this'), t.identifier('usegas')),
       [t.numericLiteral(gas)]
     ))
   ])
