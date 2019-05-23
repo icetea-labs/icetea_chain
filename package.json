@@ -4,10 +4,9 @@
   "description": "Tendermint-based icetea",
   "main": "server.js",
   "scripts": {
-    "test": "standard",
     "fix": "standard --fix",
     "lint": "standard",
-    "jest": "jest --test-environment ./test/icetea.env.js",
+    "test": "jest --test-environment ./test/icetea.env.js",
     "start": "standard --fix && node icetea/index.js",
     "app": "standard --fix && webpack-dev-server --open --config webpack.dev.js",
     "web": "standard --fix && webpack-dev-server --config webpack.dev.js",
@@ -48,7 +47,7 @@
     ]
   },
   "pre-commit": [
-    "test"
+    "lint"
   ],
   "dependencies": {
     "@babel/plugin-proposal-class-properties": "7.4.4",
@@ -95,7 +94,7 @@
     "dotenv-webpack": "1.7.0",
     "get-port": "5.0.0",
     "globals": "11.12.0",
-    "jest": "24.7.1",
+    "jest": "24.8.0",
     "jest-environment-node": "24.8.0",
     "jsdoc": "3.5.5",
     "jsdoc-template": "git+https://github.com/braintree/jsdoc-template.git",
