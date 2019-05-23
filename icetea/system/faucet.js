@@ -47,9 +47,9 @@ exports.run = (context) => {
     },
 
     request () {
-      const paid = BigInt(this.getState(msg.sender, 0n))
+      const paid = BigInt(this.getState(msg.sender, BigInt(0)))
       const toPay = REQUEST_QUOTA - paid
-      if (toPay <= 0n) {
+      if (toPay <= BigInt(0)) {
         throw new Error(`You already received ${paid}. No more.`)
       }
 
@@ -72,7 +72,7 @@ exports.run = (context) => {
     },
 
     _agreeToPayFor (tx) {
-      const paid = BigInt(this.getState(tx.from, 0n))
+      const paid = BigInt(this.getState(tx.from, BigInt(0)))
       const requested = BigInt(tx.value) + BigInt(tx.fee)
       const amount = paid + requested
       if (amount > REQUEST_QUOTA) {
@@ -93,7 +93,7 @@ exports.run = (context) => {
         throw new Error('This function is reserved for internal use.')
       }
 
-      const paid = BigInt(this.getState(tx.from, 0n))
+      const paid = BigInt(this.getState(tx.from, BigInt(0)))
       const requested = tx.value + tx.fee
       const amount = paid + requested
       if (amount > REQUEST_QUOTA) {

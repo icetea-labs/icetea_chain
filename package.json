@@ -7,7 +7,7 @@
     "test": "standard",
     "fix": "standard --fix",
     "lint": "standard",
-    "jest": "jest",
+    "jest": "jest --test-environment ./test/icetea.env.js",
     "start": "standard --fix && node icetea/index.js",
     "app": "standard --fix && webpack-dev-server --open --config webpack.dev.js",
     "web": "standard --fix && webpack-dev-server --config webpack.dev.js",
@@ -36,6 +36,15 @@
     ],
     "global": [
       "BigInt"
+    ],
+    "env": [
+      "jest"
+    ]
+  },
+  "jest": {
+    "collectCoverageFrom": [
+      "<rootDir>/icetea/**/*",
+      "!<rootDir>/node_modules/"
     ]
   },
   "pre-commit": [
@@ -84,8 +93,10 @@
     "babel-loader": "8.0.5",
     "copy-webpack-plugin": "5.0.3",
     "dotenv-webpack": "1.7.0",
-    "globals": "^11.12.0",
+    "get-port": "5.0.0",
+    "globals": "11.12.0",
     "jest": "24.7.1",
+    "jest-environment-node": "24.8.0",
     "jsdoc": "3.5.5",
     "jsdoc-template": "git+https://github.com/braintree/jsdoc-template.git",
     "jsx-ast-utils": "^2.1.0",
@@ -98,7 +109,9 @@
     "pre-commit": "1.2.2",
     "react-is": "^16.8.6",
     "resolve": "^1.11.0",
-    "standard": "^12.0.1",
+    "standard": "12.0.1",
+    "tempy": "0.3.0",
+    "tendermint-node": "5.1.2",
     "webpack": "4.30.0",
     "webpack-cli": "3.3.1",
     "webpack-dev-server": "3.3.1",
