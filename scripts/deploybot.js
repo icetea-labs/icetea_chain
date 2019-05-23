@@ -27,7 +27,7 @@ async function deploy () {
 
   // deploy the astrobot
   const src = await resolveExternal(fs.readFileSync(botFile, 'utf8'))
-  const theBot = await tweb3.deploy(ContractMode.JS_DECORATED, src, [], { value: 10000 })
+  const theBot = await tweb3.deploy(ContractMode.JS_DECORATED, src, [], { value: 10000e6 })
 
   // add astrobot alias
   const alias = tweb3.contract('system.alias', key)

@@ -68,6 +68,7 @@ typings/
 .DS_Store
 /state
 /tmp
+/contract_src/*.js
 
 # Documentation
 docs

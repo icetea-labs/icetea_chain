@@ -12,7 +12,7 @@ const revert = text => {throw new Error(text || "Transaction reverted.")};
 const expect = (condition, text) => {if (!condition) revert(text)}
 const assert = expect;
 
-const {msg, block, tags: __tags, balanceOf, loadContract, require} = this.runtime
+const {msg, block, balanceOf, loadContract, require} = this.runtime
 const now = block ? block.timestamp : 0;
 
 assert(typeof msg !== "undefined" && msg, "Invalid or corrupt transaction data.");
@@ -29,6 +29,10 @@ ${src}
     }
     expect(["__metadata", "address", "balance", "deployedBy"].includes(__name) || 
         (__name in __contract && !__name.startsWith('#')), "Method " + __name + " is private or does not exist.");
+
+    if (__metadata[__name] && __metadata[__name].decorators && __metadata[__name].decorators.includes('internal')) {
+        revert("Method " + msg.name + " is internal.")
+    }
 
     Object.defineProperties(__contract, Object.getOwnPropertyDescriptors(this));
     const __c = {

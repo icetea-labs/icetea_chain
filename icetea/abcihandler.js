@@ -116,6 +116,7 @@ const handler = {
 
       return { code: 1, info: 'Path not supported' }
     } catch (error) {
+      console.log('ABCI Query error', error)
       return { code: 2, info: String(error) }
     }
   }

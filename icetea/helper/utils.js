@@ -169,9 +169,12 @@ exports.unifyMetadata = meta => {
     }, {})
   }
 
+  console.log(meta)
+
   const excepts = ['constructor', '__on_deployed', '__on_received', 'runtime', 'getState', 'setState']
   Object.keys(meta).forEach(k => {
-    if (excepts.includes(k) || k.startsWith('#')) {
+    if (excepts.includes(k) || k.startsWith('#') ||
+      (meta[k].decorators && meta[k].decorators.includes('internal'))) {
       delete meta[k]
     }
   })

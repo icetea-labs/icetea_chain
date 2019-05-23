@@ -60,8 +60,10 @@ const speak = items => {
     item.type = item.type || 'text'
     switch (item.type) {
       case 'text':
-      case 'html':
+      case 'html': {
+        console.log(item)
         return botui.message.add(item)
+      }
       case 'input':
         return botui.action.text({
           action: item.content
@@ -92,7 +94,7 @@ function fmtMicroTea (n) {
 
 function confirmTransfer (amount) {
   say(`ATTENTION: you are about to transfer <b>${fmtMicroTea(amount)}</b> TEA to this bot.`, {
-    type: 'html', cssClass: 'bot-intro'
+    type: 'html', cssClass: 'bot-confirm'
   })
   return sayButton([
     { text: 'Let\'s transfer', value: 'transfer' },
@@ -132,7 +134,7 @@ async function getBotInfo (alias) {
   return Object.assign(await getBotInfoFromBot(alias), await getBotInfoFromStore(alias))
 }
 
-function setCommands (commands, contract, defStateAccess) {
+function setCommands (commands, defStateAccess) {
   var t = byId('bot-menu-items')
   t.innerHTML = ''
   commands.forEach(c => {
@@ -143,7 +145,7 @@ function setCommands (commands, contract, defStateAccess) {
     t.appendChild(a)
     a.onclick = function () {
       closeNav()
-      botui.action.hide()
+      // botui.action.hide()
       say(c.text || c.value, { human: true })
       queue.push({
         type: 'command',
@@ -157,14 +159,12 @@ function setCommands (commands, contract, defStateAccess) {
 function handleQueue (contract, defStateAccess) {
   if (queue.length) {
     var item = queue.shift()
-    console.log(item)
     callContract(contract.methods['on' + item.type],
       item.state_access,
       item.transferValue || 0,
       tweb3.wallet.defaultAccount,
       item.content.value)
       .then(contractResult => {
-        console.log(contractResult)
         return speak(contractResult.messages || contractResult).then(speakResult => {
           if (contractResult.options && contractResult.options.value) {
             return confirmTransfer(contractResult.options.value).then(ok => {
@@ -242,7 +242,7 @@ async function connectBot (botAddr) {
 
   botui.message.removeAll()
 
-  setCommands(commands, contract, botInfo.state_access)
+  setCommands(commands, botInfo.state_access)
 
   // display bot info
   await say(`<b>${botInfo.name}</b><br>${botInfo.description}`, { type: 'html', cssClass: 'bot-intro' })

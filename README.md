@@ -52,7 +52,7 @@ To reset tendermint (delete all blocks & state), use `npm run reset`.
 @contract class Withdraw {
     @state fund = {}
 
-    @onReceived @payable receive() {
+    @onreceive @payable receive() {
         this.fund[msg.sender] = (this.fund[msg.sender] || 0) + msg.value
     }
 
