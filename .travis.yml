@@ -8,5 +8,10 @@ before_install:
 # - docker run -d --rm -p 26656:26656 -p 26657:26657 -p 26658:26658 -p 3001:3001 icetea
 # - docker ps -a
 - npm i -g jest jest-environment-node
+install:
+  - npm install
+cache:
+  directories:
+    - "node_modules"
 script:
 - npm run jest

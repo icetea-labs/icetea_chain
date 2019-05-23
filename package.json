@@ -45,9 +45,6 @@
     "collectCoverageFrom": [
       "<rootDir>/icetea/**/*",
       "!<rootDir>/node_modules/"
-    ],
-    "modulePaths": [
-      "<rootDir>"
     ]
   },
   "pre-commit": [
