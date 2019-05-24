@@ -3,7 +3,7 @@ const utils = require('../../helper/utils')
 const invoker = require('../../contractinvoker')
 const config = require('../../config')
 
-function _require (name) {
+const _require = Object.freeze((name) => {
   const whitelist = config.whitelistModules
   const ok = whitelist.some(element => {
     return name === element || name.startsWith(`${element}/`)
@@ -27,8 +27,8 @@ function _require (name) {
     }
   }
 
-  return module
-}
+  return Object.freeze(module)
+})
 
 function _makeLoadContract (invokerTypes, srcContract, options) {
   return destContract => {
