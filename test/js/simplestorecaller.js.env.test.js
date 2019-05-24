@@ -1,19 +1,30 @@
 /* global jest describe test expect beforeAll afterAll */
 
-const { web3, randomAccountWithBalance } = require('../helper')
+const { sleep, randomAccountWithBalance } = require('../helper')
+const startup = require('../../icetea/abcihandler')
 const { ContractMode } = require('icetea-common')
+const { IceTeaWeb3 } = require('icetea-web3')
+const server = require('abci')
+const createTempDir = require('tempy').directory
 
 jest.setTimeout(30000)
 
 let tweb3
 let account10k // this key should have 10k of coins before running test suite
+let instance
 beforeAll(async () => {
-  tweb3 = web3.default()
-  account10k = await randomAccountWithBalance(tweb3, 10000).catch(console.error)
+  const handler = await startup({ path: createTempDir() })
+  instance = server(handler)
+  instance.listen(global.ports.abci)
+  await sleep(3000)
+
+  tweb3 = new IceTeaWeb3(`http://127.0.0.1:${global.ports.rpc}`)
+  account10k = await randomAccountWithBalance(tweb3, 10000)
 })
 
 afterAll(() => {
   tweb3.close()
+  instance.close()
 })
 
 async function testSimpleStoreCaller (mode, calleeSrc, callerSrc) {

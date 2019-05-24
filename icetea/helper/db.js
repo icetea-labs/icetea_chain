@@ -3,7 +3,13 @@
 
 const level = require('level')
 
+let instance
 /**
  * return a leveldb object
  */
-module.exports = level('./state')
+module.exports = (path = './state') => {
+  if (!instance) {
+    instance = level(path)
+  }
+  return instance
+}

@@ -36,3 +36,7 @@ exports.randomAccountWithBalance = async (tweb3, intialBalance = 10000) => {
 
   return keyInfo
 }
+
+exports.sleep = (ms) => {
+  return new Promise(resolve => setTimeout(resolve, ms))
+}

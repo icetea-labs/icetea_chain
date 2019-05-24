@@ -10,7 +10,11 @@ if (utils.isDevMode() && utils.envEnabled('PRINT_STATE_DIFF')) {
   app.addStateObserver(require('./helper/diff'))
 }
 
-module.exports = () => {
+module.exports = (config = {}) => {
+  const { path } = config
+  if (path) {
+    return app.loadState(path).then(() => handler)
+  }
   return app.loadState().then(() => handler)
 }
 
