@@ -389,7 +389,7 @@ function registerEvents () {
 ; (function () {
   window.setTimeout(loadWallet, 300)
   registerEvents()
-  tweb3.contract('system.faucet').methods.getAmount().call()
+  tweb3.contract('system.faucet').methods.getQuota().callPure()
     .then(n => {
       const tea = toTEA(n)
       text('faucetAmount', tea)

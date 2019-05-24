@@ -2,7 +2,7 @@
     botInfo = {
         name: 'Echo bot',
         description: 'It just echoes what you say, like a parrot.',
-        state_access: 'none'
+        stateAccess: 'none'
     }
 
     @pure onstart() {

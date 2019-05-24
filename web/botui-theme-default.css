@@ -143,3 +143,21 @@
     padding: 12px 24px;
     background-color: beige;
 }
+
+.bot-help .botui-message-content {
+    line-height: 1.8;
+    padding: 12px 24px;
+    background-color: rgb(164, 255, 161);
+}
+
+.bot-confirm .botui-message-content {
+    line-height: 1.8;
+    padding: 12px 24px;
+    background-color: rgb(255, 227, 185);
+}
+
+.bot-error .botui-message-content {
+    line-height: 1.8;
+    padding: 12px 24px;
+    background-color: rgb(255, 203, 173);
+}

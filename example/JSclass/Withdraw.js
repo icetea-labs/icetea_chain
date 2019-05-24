@@ -11,7 +11,7 @@
         this.fund[msg.sender] = (this.fund[msg.sender] || 0) + delta;
     }
 
-    @onReceived receive() {
+    @onreceive receive() {
         this.#changeFund(msg.value);
     }
 

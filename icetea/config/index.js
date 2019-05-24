@@ -27,6 +27,6 @@ module.exports = {
     }
   },
   whitelistModules: [
-    'lodash', 'moment', 'bn.js', '@hapi/joi', 'validator', 'cheerio', '@icetea/botutils', 'icetea-botutils',
+    'lodash', 'moment', 'big.js', '@hapi/joi', 'validator', 'cheerio', '@icetea/botutils', 'icetea-botutils',
     'assert', 'buffer', 'console', 'constants', 'crypto', 'querystring', 'stream', 'string_decoder', 'url', 'util' ]
 }

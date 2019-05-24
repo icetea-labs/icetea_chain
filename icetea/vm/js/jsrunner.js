@@ -6,6 +6,8 @@ const Runner = require('../runner')
 const wrapper = require('./wrapper/raw')
 const transpilePlugins = require('../../config').rawJs.transpile
 const utils = require('../../helper/utils')
+const path = require('path')
+const fs = require('fs')
 
 /**
  * js runner
@@ -88,25 +90,33 @@ module.exports = class extends Runner {
   }
 
   doRun (srcWrapper, { context, guard, info }) {
-    // Print source with line number - for debug
+    console.log(context)
+
+    const contractSrc = `(()=>function(__g){${srcWrapper}})()`
+    const filename = path.resolve(process.cwd(), 'contract_src', context.address + '.js')
+
+    // Print source for debug
     if (utils.isDevMode() &&
       typeof srcWrapper === 'string' &&
       context.runtime.msg.name === '__on_deployed') {
-      const { EOL } = require('os')
-      const delta = 3
-      const lines = srcWrapper.split(EOL).map((line, i) => ((i + delta) + ': ' + line))
-      console.log(lines.join(EOL))
+      fs.writeFile(filename, contractSrc, err => {
+        if (err) console.error(err)
+      })
     }
 
-    const f = new Function('__g', srcWrapper) // eslint-disable-line
-
-    const functionInSandbox = vm.runInNewContext(`(() => ${f.toString()})()`, {
+    const functionInSandbox = vm.runInNewContext(contractSrc, {
       process: {
         env: {
           NODE_ENV: process.env.NODE_ENV
         }
       },
       console // TODO: only enable in dev mode
+    }, {
+      filename,
+      contextCodeGeneration: {
+        strings: false,
+        wasm: false
+      }
     })
 
     return functionInSandbox.call(context, guard)
