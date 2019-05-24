@@ -1,4 +1,4 @@
-module.exports = {
+const config = {
   versions: {
     node: '>=11.8.0 <13.0.0'
   },
@@ -35,5 +35,11 @@ module.exports = {
     gasPerByte: 1,
     minTxGas: 0,
     maxTxGas: 1e12
+  },
+  // method
+  setFreeGasLimit: (freeGasLimit = 0) => {
+    config.contract.freeGasLimit = freeGasLimit
   }
 }
+
+module.exports = config

@@ -1,4 +1,5 @@
 const { verifyTxSignature } = require('icetea-common/src/utils')
+const _ = require('lodash')
 const utils = require('./helper/utils')
 const sysContracts = require('./system')
 const invoker = require('./contractinvoker')
@@ -8,6 +9,7 @@ const config = require('./config')
 const sizeof = require('object-sizeof')
 
 const { minStateGas, gasPerByte, minTxGas, maxTxGas, freeGasLimit } = config.contract
+const { setFreeGasLimit } = config
 
 const stateManager = require('./statemanager')
 
@@ -31,7 +33,12 @@ class App {
     })
   }
 
-  loadState (path = './state') {
+  loadState ({ freeGasLimit: _freeGasLimit, path }) {
+    // TBD: now use global config for convenience
+    // prefer to save it in app and pass to other component
+    if (!_.isNil(_freeGasLimit)) {
+      setFreeGasLimit(_freeGasLimit)
+    }
     return stateManager.load(path)
   }
 

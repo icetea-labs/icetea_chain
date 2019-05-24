@@ -7,6 +7,7 @@
     "fix": "standard --fix",
     "lint": "standard",
     "test": "jest --test-environment ./test/icetea.env.js",
+    "test:coverage": "npm run test -- --coverage",
     "start": "standard --fix && node icetea/index.js",
     "app": "standard --fix && webpack-dev-server --open --config webpack.dev.js",
     "web": "standard --fix && webpack-dev-server --config webpack.dev.js",
