@@ -90,8 +90,6 @@ module.exports = class extends Runner {
   }
 
   doRun (srcWrapper, { context, guard, info }) {
-    console.log(context)
-
     const contractSrc = `(()=>function(__g){${srcWrapper}})()`
     const filename = path.resolve(process.cwd(), 'contract_src', context.address + '.js')
 
