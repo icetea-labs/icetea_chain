@@ -32,9 +32,9 @@ exports.run = (context) => {
   const contract = {
     botInfo () {
       return {
-        spec_version: '1.0', // version of the bot spec
-        bot_version: '1.0', // the version of this bot
-        state_access: 'none',
+        specVersion: '1.0', // version of the bot spec
+        botVersion: '1.0', // the version of this bot
+        stateAccess: 'none',
         name: 'Echo bot',
         description: 'It just echoes what you say, like a parrot.'
       }

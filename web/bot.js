@@ -61,7 +61,6 @@ const speak = items => {
     switch (item.type) {
       case 'text':
       case 'html': {
-        console.log(item)
         return botui.message.add(item)
       }
       case 'input':
@@ -147,12 +146,23 @@ function setCommands (commands, defStateAccess) {
       closeNav()
       // botui.action.hide()
       say(c.text || c.value, { human: true })
-      queue.push({
-        type: 'command',
-        content: { value: c.value },
-        state_access: c.state_access || defStateAccess
-      })
+      pushToQueue('command', c, c.stateAccess || defStateAccess)
     }
+  })
+}
+
+function pushToQueue (type, content, stateAccess, transferValue, sendback) {
+  if (content.value.indexOf(':') > 0) {
+    const parts = content.value.split(':', 2)
+    type = parts[0]
+    content.value = parts[1]
+  }
+  queue.push({
+    type,
+    content,
+    transferValue,
+    sendback,
+    stateAccess
   })
 }
 
@@ -160,17 +170,22 @@ function handleQueue (contract, defStateAccess) {
   if (queue.length) {
     var item = queue.shift()
     callContract(contract.methods['on' + item.type],
-      item.state_access,
+      item.stateAccess,
       item.transferValue || 0,
       tweb3.wallet.defaultAccount,
-      item.content.value)
+      item.content.value,
+      { sendback: item.sendback })
       .then(contractResult => {
         return speak(contractResult.messages || contractResult).then(speakResult => {
+          if (typeof speakResult === 'object') {
+            speakResult.sendback = contractResult.sendback
+            speakResult.stateAccess = (contractResult.options || {}).nextStateAccess
+          }
           if (contractResult.options && contractResult.options.value) {
             return confirmTransfer(contractResult.options.value).then(ok => {
               if (!ok) {
                 say('Transfer canceled. You could reconnect to this bot to start a new conversation.')
-                return sayButton({ text: 'Restart', value: 'start' })
+                return sayButton({ text: 'Restart', value: 'command:start' })
               }
 
               speakResult.transferValue = contractResult.options.value
@@ -183,12 +198,7 @@ function handleQueue (contract, defStateAccess) {
       })
       .then(r => {
         if (r && r.value) {
-          queue.push({
-            type: 'text',
-            content: r,
-            transferValue: r.transferValue,
-            state_access: (item.options || {}).state_access || defStateAccess
-          })
+          pushToQueue('text', r, r.stateAccess || defStateAccess, r.transferValue, r.sendback)
         }
       })
       .catch(err => {
@@ -215,26 +225,25 @@ async function connectBot (botAddr) {
   const commands = botInfo.commands || [{
     text: 'Start',
     value: 'start',
-    state_access: 'none'
+    stateAccess: 'none'
   }]
 
-  if (!botInfo.state_access) {
+  if (!botInfo.stateAccess) {
     const meta = await tweb3.getMetadata(botAddr)
     if (meta && meta.oncommand && meta.oncommand.decorators && meta.oncommand.decorators.length > 0) {
       const deco = meta.oncommand.decorators[0]
       if (deco === 'transaction' || deco === 'payable') {
-        botInfo.state_access = 'write'
+        botInfo.stateAccess = 'write'
       } else if (deco === 'pure') {
-        botInfo.state_access = 'none'
+        botInfo.stateAccess = 'none'
       } else {
-        botInfo.state_access = 'read'
+        botInfo.stateAccess = 'read'
       }
     } else {
-      botInfo.state_access = 'read'
+      botInfo.stateAccess = 'read'
     }
-  } else if (!['read', 'write', 'none'].includes(botInfo.state_access)) {
-    botInfo.state_access = 'read'
-    return
+  } else if (!['read', 'write', 'none'].includes(botInfo.stateAccess)) {
+    botInfo.stateAccess = 'read'
   }
 
   !botInfo.name && (botInfo.name = botAddr.split('.', 2)[1])
@@ -242,89 +251,18 @@ async function connectBot (botAddr) {
 
   botui.message.removeAll()
 
-  setCommands(commands, botInfo.state_access)
+  setCommands(commands, botInfo.stateAccess)
 
   // display bot info
   await say(`<b>${botInfo.name}</b><br>${botInfo.description}`, { type: 'html', cssClass: 'bot-intro' })
-  sayButton({ text: botInfo.start_button || 'Start', value: 'start' })
+  sayButton({ text: botInfo.startButtonText || 'Start', value: 'start' })
     .then(r => {
-      queue.push({
-        type: 'command',
-        content: r,
-        state_access: botInfo.state_access
-      })
+      pushToQueue('command', r, botInfo.stateAccess)
     })
 
   setInterval(function () {
-    handleQueue(contract, botInfo.state_access)
+    handleQueue(contract, botInfo.stateAccess)
   }, 100)
-
-  // display Start button
-  // sayButton(commands.map(command => ({ text: command.title, value: command.value })))
-  //   .then(r => {
-  //     callContract(contract.methods.ontext, botInfo.state_access, 0, tweb3.wallet.defaultAccount, r.value)
-  //       .then(r => speak(r.messages || r))
-  //   })
-
-  // let callResult
-  // let isFirst = true
-  // let sendback = null
-  // let stateAccess = botInfo.state_access
-
-  // while (result && result.value) {
-  //   let transferValue = 0
-  //   if (callResult && callResult.options && callResult.options.value) {
-  //     const ok = await confirmTransfer(callResult.options.value) // should confirm at wallet level
-  //     if (!ok) {
-  //       say('Transfer canceled. You could reconnect to this bot to start a new conversation.')
-  //       return
-  //     }
-  //     transferValue = callResult.options.value
-  //     transferValue = parseFloat(transferValue).toFixed(6) * (10 ** 6)
-  //   }
-
-  //   // send lastValue to bot
-  //   if (sendback) {
-  //     result = {
-  //       sendback,
-  //       data: result.value
-  //     }
-  //   } else {
-  //     result = result.value
-  //   }
-  //   console.log('result', result)
-  //   callResult = isFirst
-  //     ? await callContract(contract.methods.oncommand, stateAccess, 0, tweb3.wallet.defaultAccount, result)
-  //     : await callContract(contract.methods.ontext, stateAccess, transferValue, tweb3.wallet.defaultAccount, result)
-  //   isFirst = false
-
-  //   if (callResult) {
-  //     if (callResult.sendback) {
-  //       sendback = callResult.sendback
-  //       if (sendback[tweb3.wallet.defaultAccount].state_access) {
-  //         stateAccess = sendback[tweb3.wallet.defaultAccount].state_access
-  //       } else {
-  //         stateAccess = botInfo.state_access
-  //       }
-  //     } else {
-  //       sendback = null
-  //     }
-  //     if (callResult.data) {
-  //       callResult = callResult.data
-  //     }
-  //     result = await speak(callResult.messages || callResult)
-  //   } else {
-  //     result = undefined
-  //   }
-
-  //   if (!result || !result.value) {
-  //     await botui.message.bot('What would you like to do?')
-  //     result = await sayButton(commands.map(command => ({ text: command.title, value: command.value })))
-  //     isFirst = true
-  //     sendback = null
-  //     stateAccess = botInfo.state_access
-  //   }
-  // }
 }
 
 var getUrlParameter = function getUrlParameter (sParam) {

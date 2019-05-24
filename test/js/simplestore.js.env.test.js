@@ -141,8 +141,8 @@ describe('SimpleStore', () => {
         @contract class SimpleStore  {
             @state #owner = msg.sender
             @state #value
-            getOwner() { return this.#owner }
-            getValue() { return this.#value }
+            @view getOwner() { return this.#owner }
+            @view getValue() { return this.#value }
             @transaction setValue(value) {
                 expect(this.#owner == msg.sender, 'Only contract owner can set value')
                 expect(value, 'Invalid value')
