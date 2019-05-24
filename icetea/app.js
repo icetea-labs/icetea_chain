@@ -8,7 +8,7 @@ const { ecc, codec, AccountType } = require('icetea-common')
 const config = require('./config')
 const sizeof = require('object-sizeof')
 
-const { minStateGas, gasPerByte, minTxGas, maxTxGas, freeGasLimit } = config.contract
+const { minStateGas, gasPerByte, minTxGas, maxTxGas } = config.contract
 const { setFreeGasLimit } = config
 
 const stateManager = require('./statemanager')
@@ -91,6 +91,7 @@ class App {
   }
 
   checkTx (tx) {
+    const { freeGasLimit } = config.contract
     // NOTE:
     // CheckTX should not modify state
     // This way, we could avoid make a copy of state
@@ -103,6 +104,14 @@ class App {
 
     if (tx.fee < BigInt(0)) {
       throw new Error('Invalid transaction fee.')
+    }
+
+    if (Number(tx.fee) + freeGasLimit < minTxGas) {
+      throw new Error(`tx fee ${tx.fee} is too low, at least ${minTxGas}`)
+    }
+
+    if (Number(tx.fee) > maxTxGas) {
+      throw new Error(`tx fee ${tx.fee} is too high, at most ${maxTxGas}`)
     }
 
     if (!tx.isSimpleTransfer() && !tx.isContractCall() && !tx.isContractCreation()) {
@@ -316,17 +325,6 @@ function doExecTx (options) {
     options.info.__gas_used += minStateGas + sizeof(contractState) * gasPerByte
   }
 
-  // min tx fee
-  // TODO: check later
-  if (minTxGas && maxTxGas) {
-    if (Number(tx.fee) + freeGasLimit < minTxGas) {
-      throw new Error(`tx fee ${tx.fee} is too low, at least ${minTxGas}`)
-    }
-    if (Number(tx.fee) + freeGasLimit > maxTxGas) {
-      throw new Error(`tx fee ${tx.fee} is too high, at most ${maxTxGas}`)
-    }
-  }
-
   // process value transfer
   if (tx.value + tx.fee > 0) {
     if (tx.payer !== tx.from) {
@@ -363,18 +361,23 @@ function doExecTx (options) {
     result = invoker.invokeUpdate(tx.to, '__on_received', tx.data.params, options)
   }
 
-  if (tools.refectTxValueAndFee) {
+  if (tools.refectTxValueAndFee || stateManager.handleTransfer) {
     let actualFee = minTxGas
-    if (options.info && options.info.__gas_used && tx.fee > options.info.__gas_used) {
-      if (options.info.__gas_used > maxTxGas) {
-        throw new Error(`gas used ${options.info.__gas_used} is too high, at most ${maxTxGas}`)
-      }
+    if (options.info && options.info.__gas_used) {
       actualFee += options.info.__gas_used
+      if (actualFee > maxTxGas) {
+        throw new Error(`gas used ${actualFee} is too high, at most ${maxTxGas}`)
+      }
     }
-    // TBD: transfer tx will be refund unused gas?
-    if (actualFee > 0) {
-      tools.refectTxValueAndFee({ payer: tx.payer, value: BigInt(0), fee: -(tx.fee - BigInt(actualFee)) }) // refund unused gas
+
+    const { freeGasLimit } = config.contract
+    actualFee = actualFee > freeGasLimit ? (actualFee - freeGasLimit) : 0
+    if (tx.fee < BigInt(actualFee)) {
+      throw new Error('Insufficient fee')
     }
+    const refundTx = { payer: tx.payer, value: BigInt(0), fee: -(tx.fee - BigInt(actualFee)) }
+    const refundFunc = tools.refectTxValueAndFee || stateManager.handleTransfer
+    refundFunc(refundTx)
   }
 
   // emit Transferred event

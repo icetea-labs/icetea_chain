@@ -93,8 +93,9 @@ module.exports = class extends Runner {
 
   doRun (srcWrapper, { context, guard, info }) {
     let gasLimit = maxTxGas
-    if (context.emitEvent) {
-      gasLimit = freeGasLimit + Number(context.runtime.msg.fee)
+    if (context.emitEvent) { // isTx
+      const userGas = freeGasLimit + Number(context.runtime.msg.fee)
+      gasLimit = userGas > maxTxGas ? maxTxGas : userGas
     }
 
     // Print source with line number - for debug
@@ -163,7 +164,6 @@ module.exports = class extends Runner {
 
     const result = functionInSandbox.call(runCtx, guard)
     if (info) {
-      gasUsed = (gasUsed > freeGasLimit) ? (gasUsed - freeGasLimit) : 0
       if (gasUsed > 0) {
         if (info.__gas_used) {
           info.__gas_used += gasUsed // gas sum for contract call contract

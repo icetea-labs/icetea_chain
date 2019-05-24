@@ -12,7 +12,8 @@ const wasm_bindgen = function ({ log, importTableName, get_sender, get_address, 
   let gasUsed = 0
   let isTx = false
   if(get_msg_fee) {
-    gasLimit = freeGasLimit + Number(get_msg_fee())
+    const userGas = freeGasLimit + Number(get_msg_fee())
+    gasLimit = userGas > maxTxGas ? maxTxGas : userGas
     isTx = true
   }
 
@@ -703,10 +704,7 @@ const wasm_bindgen = function ({ log, importTableName, get_sender, get_address, 
   }
 
   __exports.__gas_used = function () {
-    if(!isTx) {
-      return 0
-    }
-    return gasUsed > freeGasLimit ? (gasUsed - freeGasLimit) : 0
+    return gasUsed
   }
 
   const u32CvtShim = new Uint32Array(2);

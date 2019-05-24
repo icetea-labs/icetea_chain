@@ -67,7 +67,7 @@ async function testSimpleStore (mode, contractPath) {
   // Verify balance changes after TX
 
   const newFromBalance = await tweb3.getBalance(from)
-  expect(Number(newFromBalance.balance)).toBe(fromBalance - value - fee)
+  expect(Number(newFromBalance.balance)).toBe(fromBalance - value)
 
   const newToBalance = await tweb3.getBalance(to)
   expect(Number(newToBalance.balance)).toBe(value)

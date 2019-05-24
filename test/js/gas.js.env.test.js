@@ -63,6 +63,7 @@ describe('simple store contract', () => {
 
     const fromBalance = Number((await tweb3.getBalance(from)).balance)
     // have refund unused gas
+    expect(fromBalance).toBeLessThan(originBalance)
     expect(fromBalance).toBeGreaterThan(originBalance - fee)
 
     // call without fee
