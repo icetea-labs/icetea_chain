@@ -1,9 +1,11 @@
 const Trie = require('merkle-patricia-tree')
 const async = require('async')
-const db = require('./db')
+const newDB = require('./db')
 const { serialize } = require('./utils')
 const rootKey = 'rootKey'
 const lastBlockKey = 'lastBlockKey'
+
+let db
 
 const patricia = () => {
   return new Promise((resolve, reject) => {
@@ -57,7 +59,8 @@ const lastBlock = () => {
   })
 }
 
-exports.load = async () => {
+exports.load = async (path) => {
+  db = newDB(path)
   const trie = await patricia()
   const [state, block] = await Promise.all([dump(trie), lastBlock()])
   if (!block) {

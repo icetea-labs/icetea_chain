@@ -12,8 +12,8 @@ let stateTable, lastBlock
 const needCommitKeys = new Set()
 
 class StateManager extends EventEmitter {
-  async load () {
-    const storedData = (await patricia.load()) || {
+  async load (path) {
+    const storedData = (await patricia.load(path)) || {
       state: initStateTable()
     }
 
@@ -172,7 +172,7 @@ function incBalance (addr, delta) {
   // because this is NOT called by contract
   // It is only called by app.js to handle 'transfer-only' tx
 
-  delta = BigInt(delta || 0n)
+  delta = BigInt(delta || BigInt(0))
   const state = stateTable[addr] || (stateTable[addr] = {})
   const balance = state.balance || BigInt(0)
   if (balance + delta < BigInt(0)) {

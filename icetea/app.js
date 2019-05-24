@@ -25,11 +25,14 @@ class App {
     // Copy some methods
     Object.assign(this, {
       setBlock: stateManager.setBlock.bind(stateManager),
-      loadState: stateManager.load.bind(stateManager),
       persistState: stateManager.persist.bind(stateManager),
       balanceOf: stateManager.balanceOf.bind(stateManager),
       debugState: stateManager.debugState.bind(stateManager)
     })
+  }
+
+  loadState (path = './state') {
+    return stateManager.load(path)
   }
 
   async activate () {
@@ -87,11 +90,11 @@ class App {
     // For example: do not change balance or exec contract to see if errors
     // Such kind of error will be catch by deliver_tx eventually.
 
-    if (tx.value < 0n) {
+    if (tx.value < BigInt(0)) {
       throw new Error('Invalid transaction value.')
     }
 
-    if (tx.fee < 0n) {
+    if (tx.fee < BigInt(0)) {
       throw new Error('Invalid transaction fee.')
     }
 
@@ -123,7 +126,7 @@ class App {
       tx.to = _ensureAddress(tx.to)
       if (!sysContracts.has(tx.to)) {
         const toType = ecc.validateAddress(tx.to).type
-        if (tx.value > 0n && toType === AccountType.REGULAR_ACCOUNT) {
+        if (tx.value > BigInt(0) && toType === AccountType.REGULAR_ACCOUNT) {
           throw new Error('Could not transfer to regular account.')
         }
       }
@@ -151,7 +154,7 @@ class App {
     // check payer
     const hasPayer = !!tx.payer && (tx.payer !== tx.from)
     if (!hasPayer) {
-      if (tx.value + tx.fee > 0n && codec.isRegularAddress(tx.from)) {
+      if (tx.value + tx.fee > BigInt(0) && codec.isRegularAddress(tx.from)) {
         // This seems redundant since regular account should always have balance of 0
         throw new Error('Cannot transfer from a regular account without specifying a payer.')
       }
@@ -281,8 +284,8 @@ class App {
  */
 function willCallContract (tx) {
   return tx.isContractCreation() || tx.isContractCall() ||
-    (tx.value > 0n && stateManager.isContract(tx.to)) ||
-    (tx.value + tx.fee > 0n && tx.payer && tx.payer !== tx.from && stateManager.isContract(tx.payer))
+    (tx.value > BigInt(0) && stateManager.isContract(tx.to)) ||
+    (tx.value + tx.fee > BigInt(0) && tx.payer && tx.payer !== tx.from && stateManager.isContract(tx.payer))
 }
 
 /**
@@ -368,7 +371,7 @@ function doExecTx (options) {
   }
 
   // emit Transferred event
-  if (tx.value > 0n) {
+  if (tx.value > BigInt(0)) {
     utils.emitTransferred(null, options.tags, tx.from, tx.to, tx.payer, tx.value)
   }
 
