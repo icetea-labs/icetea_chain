@@ -332,25 +332,6 @@ const wasm_bindgen = function ({ log, importTableName, get_sender, get_address, 
     }
   }
 
-  // keep two same function, depend on wasm-bindgen signature
-  __exports.__wbg_from_3443719e1e26ff42 = function (arg0) {
-    try {
-      return addHeapObject(Array.from(getObject(arg0)))
-    } catch (e) {
-      console.error('wasm-bindgen: imported JS function that was not marked as `catch` threw an error:', e)
-      throw e
-    }
-  }
-
-  __exports.__wbg_length_1b01f07c51dbf51f = function (arg0) {
-    try {
-      return getObject(arg0).length
-    } catch (e) {
-      console.error('wasm-bindgen: imported JS function that was not marked as `catch` threw an error:', e)
-      throw e
-    }
-  }
-
   __exports.__wbg_length_434e555f76c0b257 = function (arg0) {
     try {
       return getObject(arg0).length
@@ -411,14 +392,6 @@ const wasm_bindgen = function ({ log, importTableName, get_sender, get_address, 
   }
 
   __exports.__wbg_get_e323dac36fd230a3 = function (arg0, arg1, exnptr) {
-    try {
-      return addHeapObject(Reflect.get(getObject(arg0), getObject(arg1)))
-    } catch (e) {
-      handleError(exnptr, e)
-    }
-  }
-
-  __exports.__wbg_get_9136c910ad341873 = function (arg0, arg1, exnptr) {
     try {
       return addHeapObject(Reflect.get(getObject(arg0), getObject(arg1)))
     } catch (e) {

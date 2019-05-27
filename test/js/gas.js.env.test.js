@@ -104,4 +104,28 @@ describe('simple store contract', () => {
       expect(err).not.toBe(null)
     }
   })
+
+  test('endless recursion', async () => {
+    const endlessSrc = `
+      @contract class Endless {
+        @pure endlessFunc() {
+          this.endlessFunc()
+        }
+      }
+    `
+
+    const { privateKey, address: from } = account10k
+    tweb3.wallet.importAccount(privateKey)
+    const fee = 20000
+
+    const result = await tweb3.deploy(ContractMode.JS_DECORATED, endlessSrc, [], { from, fee })
+    expect(result.address).toBeDefined()
+    const endlessContract = tweb3.contract(result.address)
+
+    try {
+      await endlessContract.methods.endlessFunc().callPure()
+    } catch (err) {
+      expect(err).not.toBe(null)
+    }
+  })
 })
