@@ -64,19 +64,25 @@ const store = {
     var resInfo = []
     var keys = Object.keys(bots)
     for (let bot of keys) {
-      var botInfo = { address: '', category: 'category', name: 'name', icon: 'icon', description: 'description' }
-      const contract = tweb3.contract(bot)
-      const info = await contract.methods.botInfo().callPure()
-      botInfo.address = bot
-      botInfo.category = bots[bot].category
-      botInfo.icon = bots[bot].icon
-      botInfo.name = info.name
-      botInfo.alias = bot.split('.', 2)[1]
-      botInfo.description = info.description || ''
-      if (botInfo.description.length > 36) {
-        botInfo.description = botInfo.description.substring(0, 36) + '...'
+      try {
+        const botInfo = { address: '', category: 'category', name: 'name', icon: 'icon', description: 'description' }
+        const contract = tweb3.contract(bot)
+        const info = await contract.methods.botInfo().callPure().catch(console.error)
+        botInfo.address = bot
+        botInfo.category = bots[bot].category
+        botInfo.icon = bots[bot].icon
+        botInfo.name = bots[bot].name || info.name
+        botInfo.bot = bot
+        botInfo.alias = bot.split('.', 2)[1]
+        botInfo.description = bots[bot].description || info.description || ''
+        if (botInfo.description.length > 36) {
+          botInfo.description = botInfo.description.substring(0, 36) + '...'
+        }
+        resInfo.push(botInfo)
+      } catch (error) {
+        console.error(error)
+        console.log('Skip error bot: ' + bot)
       }
-      resInfo.push(botInfo)
     }
     return resInfo
   },

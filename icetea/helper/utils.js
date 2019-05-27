@@ -171,7 +171,8 @@ exports.unifyMetadata = meta => {
 
   const excepts = ['constructor', '__on_deployed', '__on_received', 'runtime', 'getState', 'setState']
   Object.keys(meta).forEach(k => {
-    if (excepts.includes(k) || k.startsWith('#')) {
+    if (excepts.includes(k) || k.startsWith('#') ||
+      (meta[k].decorators && meta[k].decorators.includes('internal'))) {
       delete meta[k]
     }
   })
@@ -234,7 +235,7 @@ exports.checkUnsupportTypes = o => {
     o instanceof Map ||
     o instanceof Set ||
     o instanceof WeakMap) {
-    throw new Error('State contains unsupported type.')
+    throw new Error(`State contains unsupported type: ${o.toString()}`)
   }
 
   if (t === 'object') {

@@ -5,6 +5,7 @@
     <link rel="stylesheet" href="botui.min.css" />
     <link rel="stylesheet" href="botui-theme-default.css" />
     <link rel="stylesheet" type="text/css" href="style.css">
+    <link rel="stylesheet" type="text/css" href="bot.css">
 </head>
 <body>
     <div id="content">
@@ -20,6 +21,16 @@
         <br>
         <div id="my-botui-app">
             <bot-ui></bot-ui>
+        </div>
+        <div id='bot-option'><a href='#' id='show-bot-option'>MENU</a></div>
+        <div id='bot-menu'>
+            <a href="#" class="closebtn" id='hide-bot-option'>&times;</a>
+            <div id='bot-menu-items'>
+                <a href="#">About</a>
+                <a href="#">Services</a>
+                <a href="#">Clients</a>
+                <a href="#">Contact</a>
+            </div>
         </div>
     </div>
     <script src="bot.js"></script>

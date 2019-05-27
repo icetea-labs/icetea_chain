@@ -32,10 +32,13 @@ const handler = {
   },
 
   checkTx (req) {
+    let tx
     try {
-      app.checkTx(getTx(req))
+      tx = getTx(req)
+      app.checkTx(tx)
       return {}
     } catch (err) {
+      console.error(`TX checking error. Transaction data: ${tx || req}`)
       return { code: 1, log: String(err) }
     }
   },
@@ -46,8 +49,9 @@ const handler = {
   },
 
   deliverTx (req) {
+    let tx
     try {
-      const tx = getTx(req)
+      tx = getTx(req)
 
       const tags = []
       const data = app.execTx(tx, tags)
@@ -72,8 +76,9 @@ const handler = {
       // console.log(result);
       return result
     } catch (err) {
+      console.error('TX execution error. Transaction data:', tx || req)
       console.error(err)
-      return { code: 1, log: String(err) }
+      return { code: 2, log: String(err) }
     }
   },
 
@@ -83,6 +88,7 @@ const handler = {
   },
 
   query (req) {
+    let path, data
     try {
       // console.log(req.path, req.data.toString(), req.prove || false);
 
@@ -90,8 +96,8 @@ const handler = {
 
       // const prove = !!req.prove;
 
-      const path = req.path
-      const data = req.data.toString()
+      path = req.path
+      data = String(req.data)
 
       switch (path) {
         case 'balance':
@@ -118,7 +124,9 @@ const handler = {
 
       return { code: 1, info: 'Path not supported' }
     } catch (error) {
-      return { code: 2, info: String(error) }
+      console.error('ABCI Query error. Path: ', path, ', data: ', data)
+      console.error(error)
+      return { code: 3, info: String(error) }
     }
   }
 }

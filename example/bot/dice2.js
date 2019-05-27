@@ -1,6 +1,6 @@
 // To deploy from web, use https://raw.githubusercontent.com/TradaTech/botutils/master/index.js
 
-const { SurveyBot, Message, utils } = require('icetea-botutils')
+const { MemoirSurveyBot, Message, utils } = require('icetea-botutils')
 const Big = require('big.js')
 
 const DiceTypes = [{
@@ -13,10 +13,10 @@ const DiceTypes = [{
     maxBet: 5000000n
 }]
 
-@contract class DiceBot extends SurveyBot {
+@contract class DiceBot extends MemoirSurveyBot {
 
-    diceType = 0
-    dice = (diceType = this.diceType || 0) => DiceTypes[diceType]
+    @state #diceType = 0
+    dice = (diceType = this.#diceType || 0) => DiceTypes[diceType]
 
     @pure getName() {
         return 'Dice Bot'
@@ -36,33 +36,16 @@ const DiceTypes = [{
     }
 
     getSteps() {
-        return [
-            {
-                name: 'intro',
-                nextStateAccess: 'read' // need to get balance for getMaxBet
-            },
-            {
-                name: 'number',
-                nextStateAccess: 'read',
-            },
-            'amount',
-            'confirm'
-        ]
-    }
-
-    makeSendback(addr, chat) {
-        const sendback = super.makeSendback(addr, chat)
-        sendback.diceType = this.diceType
-        return sendback
+        return ['intro', 'number', 'amount', 'confirm' ]
     }
 
     oncommand_dice6() {
-        this.diceType = 0
+        this.#diceType = 0
         return this.start()
     }
 
     oncommand_dice2() {
-        this.diceType = 1
+        this.#diceType = 1
         return this.start()
     }
 
@@ -103,10 +86,12 @@ const DiceTypes = [{
     }
 
     collect_number(number, collector) {
+        console.log('collect number', number, collector)
         return collector.number = number
     }
 
     succeed_number(number) {
+        console.log('succeed number', number)
         const max = this.getMaxBet()
         const tea = utils.toTEA(max)
         return Message.text(`You picked ${number}.`)

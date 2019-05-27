@@ -3,10 +3,10 @@
 export const decimal = 6
 
 export function toTEA (unit) {
-  return unit / (10 ** decimal)
+  return +unit / (10 ** decimal)
 }
 
 export function toUNIT (tea) {
-  tea = tea.toFixed(decimal)
+  tea = (+tea).toFixed(decimal)
   return tea * (10 ** decimal)
 }

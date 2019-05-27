@@ -1,6 +1,6 @@
 @contract class Bet  {
     // You could call bet, or just send ETH
-    @onReceived @transaction  bet(z1) {
+    @onreceive @transaction  bet(z1) {
         let zz = "" + z1; // convert to string
         if (zz !== "1") zz = "0"; // ensure it is just "0" or "1"
 

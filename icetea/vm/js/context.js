@@ -191,7 +191,8 @@ exports.forPure = (address, name, params, { from, block }) => {
         callType: 'pure'
       },
       block,
-      require: _require }
+      require: _require
+    }
   }
 
   return utils.deepFreeze(ctx)
@@ -200,11 +201,14 @@ exports.forPure = (address, name, params, { from, block }) => {
 /**
  * metadata for unlisted invoke type
  */
-exports.forMetadata = {
+exports.forMetadata = address => ({
+  address,
   runtime: {
     msg: {
       callType: 'metadata',
       name: '__metadata' },
-    block: {}
+    block: {},
+    require: () => undefined,
+    loadContract: () => undefined
   }
-}
+})

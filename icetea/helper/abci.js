@@ -27,7 +27,7 @@ function getTx (req) {
   let reqTx = codec.decode(req.tx)
 
   // santitize reqTx
-  if (reqTx.data == undefined) { // eslint-disable-line
+  if (reqTx.data == null) { // eslint-disable-line
     reqTx.data = {}
   } else if (typeof reqTx.data === 'string') {
     try {

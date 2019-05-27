@@ -171,7 +171,7 @@ function astify (t, literal) {
   }
 }
 
-const SYSTEM_DECORATORS = ['state', 'onReceived', 'transaction', 'view', 'pure', 'payable']
+const SYSTEM_DECORATORS = ['state', 'onreceive', 'transaction', 'view', 'pure', 'internal', 'payable']
 const STATE_CHANGE_DECORATORS = ['transaction', 'view', 'pure', 'payable']
 // const SPECIAL_MEMBERS = ['constructor', '__on_deployed', '__on_received']
 
@@ -227,7 +227,7 @@ module.exports = function ({ types: t }) {
                       throw buildError('Class method cannot be decorated as @state', mp)
                     }
                     wrapState(t, mp, memberMeta)
-                  } else if (dname === 'onReceived') {
+                  } else if (dname === 'onreceive') {
                     // const newNode = t.classProperty(t.identifier('__on_received'),
                     //   t.memberExpression(t.thisExpression(), t.identifier(propName)))
                     // path.parent.body.body.push(newNode)
@@ -245,7 +245,7 @@ module.exports = function ({ types: t }) {
 
               // process type annotation
               if (typeof memberMeta[propName] === 'string') {
-                // link to other method, like __on_received => @onReceived. No handle.
+                // link to other method, like __on_received => @onreceive. No handle.
               } if (!isMethod(m)) {
                 memberMeta[propName].fieldType = getTypeName(m.typeAnnotation)
               } else {
@@ -281,22 +281,30 @@ module.exports = function ({ types: t }) {
                 // const isState = memberMeta[key].decorators.includes("state");
                 const mp = memberMeta[key].mp
                 delete memberMeta[key].mp
-                if (!isMethod(mp.node)) {
+                if (!isMethod(mp.node)) { // is a field
                   if (stateDeco.length) {
                     throw buildError('State mutability decorators cannot be attached to variables', mp)
                   } else {
                     if (memberMeta[key].decorators.includes('state')) {
                       memberMeta[key].decorators.push('view')
                     } else {
-                      memberMeta[key].decorators.push('pure')
+                      memberMeta[key].decorators.push('internal')
                     }
                   }
-                } else if (key.startsWith('#') && stateDeco.includes('payable')) {
-                  throw buildError('Private function cannot be payable', mp)
-                } else {
-                  if (!stateDeco.length) {
-                    // default to view
-                    memberMeta[key].decorators.push('view')
+                } else if (key.startsWith('#')) { // is a private method
+                  if (stateDeco.length) {
+                    throw buildError('State mutability decorators cannot be attached to private functions', mp)
+                  } else if (memberMeta[key].decorators.includes('internal')) {
+                    throw buildError('Private function cannot be declared @internal', mp)
+                  }
+                } else { // non-private method
+                  if (memberMeta[key].decorators.includes('internal')) { // internal method
+                    if (stateDeco.length) {
+                      throw buildError('State mutability decorators cannot be attached to internal functions', mp)
+                    }
+                  } else if (!stateDeco.length) { // public method without state muta deco
+                    // default to internal
+                    memberMeta[key].decorators.push('internal')
                   } else if (stateDeco.length > 1) {
                     throw buildError(`Could not define multiple state mutablility decorators: ${stateDeco.join(', ')}`, mp)
                   }

@@ -10,6 +10,8 @@ const utils = require('../../helper/utils')
 const config = require('../../config')
 
 const { freeGasLimit, minStateGas, gasPerByte, maxTxGas } = config.contract
+const path = require('path')
+const fs = require('fs')
 
 /**
  * js runner
@@ -99,25 +101,32 @@ module.exports = class extends Runner {
     }
 
     // Print source with line number - for debug
+    const contractSrc = `(()=>function(__g){${srcWrapper}})()`
+    const filename = path.resolve(process.cwd(), 'contract_src', context.address + '.js')
+
+    // Print source for debug
     if (utils.isDevMode() &&
       typeof srcWrapper === 'string' &&
       context.runtime.msg.name === '__on_deployed') {
-      const { EOL } = require('os')
-      const delta = 3
-      const lines = srcWrapper.split(EOL).map((line, i) => ((i + delta) + ': ' + line))
-      console.log(lines.join(EOL))
+      fs.writeFile(filename, contractSrc, err => {
+        if (err) console.error(err)
+      })
     }
 
-    const f = new Function('__g', srcWrapper) // eslint-disable-line
-
     let gasUsed = 0
-    const functionInSandbox = vm.runInNewContext(`(() => ${f.toString()})()`, {
+    const functionInSandbox = vm.runInNewContext(contractSrc, {
       process: Object.freeze({
         env: {
           NODE_ENV: process.env.NODE_ENV
         }
       }),
       console // TODO: only enable in dev mode
+    }, {
+      filename,
+      contextCodeGeneration: {
+        strings: false,
+        wasm: false
+      }
     })
 
     let runCtx = { ...context }
