@@ -37,6 +37,7 @@ exports.parseMetadata = (buffer) => {
     throw new Error('Invalid Rust wasm_bindgen WASM module: main function not exported')
   }
 
+  // TBD: if wasm file empty, importTableName = meter => remove this condition
   if (!importTableName) {
     throw new Error('Invalid Rust wasm_bindgen WASM module: import table not found.')
   }

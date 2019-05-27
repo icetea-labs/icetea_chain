@@ -95,10 +95,13 @@ const wasm_bindgen = function ({ log, importTableName, get_sender, get_address, 
     return cachegetUint64Memory;
   }
 
-  __exports.__wbg_getbalance_901ea9d184937702 = function(ret, arg0, arg1) {
-    let varg0 = getStringFromWasm(arg0, arg1);
-    const val = get_balance(varg0);
-    getUint64Memory()[ret / 8] = val;
+  __exports.__wbg_getbalance_901ea9d184937702 = function() {
+    try {
+      return addHeapObject(get_balance());
+    } catch (e) {
+      console.error("wasm-bindgen: imported JS function that was not marked as `catch` threw an error:", e);
+      throw e;
+    }
   };
 
   __exports.__wbg_getsender_959abeb9602465cd = function (ret) {
@@ -450,15 +453,6 @@ const wasm_bindgen = function ({ log, importTableName, get_sender, get_address, 
     }
   }
 
-  __exports.__wbg_new_a99726b0abef495b = function () {
-    try {
-      return addHeapObject(new Error())
-    } catch (e) {
-      console.error('wasm-bindgen: imported JS function that was not marked as `catch` threw an error:', e)
-      throw e
-    }
-  }
-
   __exports.__wbg_new_366f5eda217e0401 = function () {
     try {
       return addHeapObject(new Array())
@@ -468,58 +462,50 @@ const wasm_bindgen = function ({ log, importTableName, get_sender, get_address, 
     }
   }
 
-  __exports.__wbg_new_eed4009beab03e81 = function () {
-    try {
-      return addHeapObject(new Array())
-    } catch (e) {
-      console.error('wasm-bindgen: imported JS function that was not marked as `catch` threw an error:', e)
-      throw e
-    }
-  }
-
+  // TBD: async preparation, all function is sync now
   // new js_sys::Promise
-  __exports.__wbg_new_86c0ea6acca9eed8 = function (arg0, arg1) {
-    let cbarg0 = function (arg0, arg1) {
-      let a = this.a
-      this.a = 0
-      try {
-        return this.f(a, this.b, addHeapObject(arg0), addHeapObject(arg1))
-      } finally {
-        this.a = a
-      }
-    }
-    cbarg0.f = wasm.__wbg_function_table.get(36)
-    cbarg0.a = arg0
-    cbarg0.b = arg1
-    try {
-      try {
-        return addHeapObject(new Promise(cbarg0.bind(cbarg0)))
-      } catch (e) {
-        console.error('wasm-bindgen: imported JS function that was not marked as `catch` threw an error:', e)
-        throw e
-      }
-    } finally {
-      cbarg0.a = cbarg0.b = 0
-    }
-  }
+  // __exports.__wbg_new_86c0ea6acca9eed8 = function (arg0, arg1) {
+  //   let cbarg0 = function (arg0, arg1) {
+  //     let a = this.a
+  //     this.a = 0
+  //     try {
+  //       return this.f(a, this.b, addHeapObject(arg0), addHeapObject(arg1))
+  //     } finally {
+  //       this.a = a
+  //     }
+  //   }
+  //   cbarg0.f = wasm.__wbg_function_table.get(36)
+  //   cbarg0.a = arg0
+  //   cbarg0.b = arg1
+  //   try {
+  //     try {
+  //       return addHeapObject(new Promise(cbarg0.bind(cbarg0)))
+  //     } catch (e) {
+  //       console.error('wasm-bindgen: imported JS function that was not marked as `catch` threw an error:', e)
+  //       throw e
+  //     }
+  //   } finally {
+  //     cbarg0.a = cbarg0.b = 0
+  //   }
+  // }
 
-  __exports.__wbg_resolve_5fc6132876c4b96b = function (arg0) {
-    try {
-      return addHeapObject(Promise.resolve(getObject(arg0)))
-    } catch (e) {
-      console.error('wasm-bindgen: imported JS function that was not marked as `catch` threw an error:', e)
-      throw e
-    }
-  }
+  // __exports.__wbg_resolve_5fc6132876c4b96b = function (arg0) {
+  //   try {
+  //     return addHeapObject(Promise.resolve(getObject(arg0)))
+  //   } catch (e) {
+  //     console.error('wasm-bindgen: imported JS function that was not marked as `catch` threw an error:', e)
+  //     throw e
+  //   }
+  // }
 
-  __exports.__wbg_then_d745932b7ab63614 = function (arg0, arg1) {
-    try {
-      return addHeapObject(getObject(arg0).then(getObject(arg1)))
-    } catch (e) {
-      console.error('wasm-bindgen: imported JS function that was not marked as `catch` threw an error:', e)
-      throw e
-    }
-  }
+  // __exports.__wbg_then_d745932b7ab63614 = function (arg0, arg1) {
+  //   try {
+  //     return addHeapObject(getObject(arg0).then(getObject(arg1)))
+  //   } catch (e) {
+  //     console.error('wasm-bindgen: imported JS function that was not marked as `catch` threw an error:', e)
+  //     throw e
+  //   }
+  // }
 
   __exports.__wbg_stack_4931b18709aff089 = function (ret, arg0) {
     try {
@@ -668,15 +654,15 @@ const wasm_bindgen = function ({ log, importTableName, get_sender, get_address, 
     return ptr
   }
 
-  __exports.__wbindgen_cb_drop = function (i) {
-    const obj = getObject(i).original
-    dropObject(i)
-    if (obj.cnt-- == 1) {
-      obj.a = 0
-      return 1
-    }
-    return 0
-  }
+  // __exports.__wbindgen_cb_drop = function (i) {
+  //   const obj = getObject(i).original
+  //   dropObject(i)
+  //   if (obj.cnt-- == 1) {
+  //     obj.a = 0
+  //     return 1
+  //   }
+  //   return 0
+  // }
 
   __exports.__wbindgen_closure_wrapper288 = function (a, b, _ignored) {
     const f = wasm.__wbg_function_table.get(28)
@@ -716,11 +702,12 @@ const wasm_bindgen = function ({ log, importTableName, get_sender, get_address, 
     u32CvtShim[0] = arg2;
     u32CvtShim[1] = arg3;
     const narg2 = uint64CvtShim[0];
+
     try {
       transfer(varg0, narg2);
     } catch (e) {
-      console.error('wasm-bindgen: imported JS function that was not marked as `catch` threw an error:', e)
-      throw e
+      console.error("wasm-bindgen: imported JS function that was not marked as `catch` threw an error:", e);
+      throw e;
     }
   }
 
