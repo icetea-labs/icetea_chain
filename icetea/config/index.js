@@ -1,18 +1,19 @@
 module.exports = {
   versions: {
-    node: '>=11.8.0 <13.0.0'
+    node: '>=12.3.1 <13.0.0'
   },
   rawJs: {
     transpile: [
+      '@babel/plugin-proposal-optional-chaining',
       '@babel/plugin-proposal-private-methods',
       '@babel/plugin-proposal-class-properties'
     ]
   },
   abciServerPort: 26658,
-  feeCollector: 'teat1al54h8fy75h078syz54z6hke6l9x232zq3j9st',
+  feeCollector: process.env.FEE_COLLECTOR,
   initialBalances: [
     {
-      address: 'teat1al54h8fy75h078syz54z6hke6l9x232zq3j9st',
+      address: process.env.BANK_ADDR,
       balance: BigInt(1000000000000)
     },
     {
@@ -27,6 +28,6 @@ module.exports = {
     }
   },
   whitelistModules: [
-    'lodash', 'moment', 'big.js', '@hapi/joi', 'validator', 'cheerio', '@icetea/botutils', 'icetea-botutils',
-    'assert', 'buffer', 'console', 'constants', 'crypto', 'querystring', 'stream', 'string_decoder', 'url', 'util' ]
+    'lodash', 'moment', 'big.js', '@hapi/joi', 'validator', 'ajv', 'cheerio', '@icetea/polytils', 'icetea-botutils',
+    'assert', 'buffer', 'crypto', 'querystring', 'stream', 'string_decoder', 'url', 'util' ]
 }
