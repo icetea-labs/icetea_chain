@@ -88,6 +88,20 @@ exports.emitTransferred = (emitter, tags, from, to, payer, value) => {
 }
 
 /**
+ * emit gas used events
+ * @function
+ * @param {object} emitter - emmitter
+ * @param {Array.<string>} tags - event tag
+ * @param {string} address - contract address
+ * @param {string} method - contract address method
+ * @param {number} value - transfer value
+ * @returns {Array.<string>} tags
+ */
+exports.emitGasUsed = (emitter, tags, address, method, value) => {
+  return exports.emitEvent(emitter, tags, 'GasUsed', { address, method, value }, ['address', 'method', 'value'])
+}
+
+/**
  * merge blockchain state and excuted state
  * @function
  * @param {object} t1 - first state

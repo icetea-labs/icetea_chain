@@ -36,11 +36,21 @@ const hackerSrc = `
     @pure changeFunc() {
       let isNil = _.isNil
       isNil = undefined
+      _.isNil = undefined
     }
 
-    @pure usegas() {
+    @pure useFunc() {
+      return _.isNil(undefined)
+    }
+
+    @pure usegasPure() {
+      this.usegas = undefined
+    }
+
+    @view usegasView() {
       let usegas = this.usegas
       usegas = undefined
+      return this.usegas === undefined
     }
   }
 `
@@ -54,77 +64,54 @@ describe('restart app', () => {
     expect(result.address).toBeDefined()
     const hackerContract = tweb3.contract(result.address)
 
-    try {
-      await hackerContract.methods.changeRequire().callPure()
-    } catch (err) {
-      expect(err).not.toBe(null)
-    }
+    await expect(hackerContract.methods.changeRequire().callPure()).rejects.toThrow(Error)
 
-    try {
-      await hackerContract.methods.changeFunc().callPure()
-    } catch (err) {
-      expect(err).not.toBe(null)
-    }
+    await hackerContract.methods.changeFunc().callPure()
+    const tmp = await hackerContract.methods.useFunc().callPure()
+    expect(tmp).toBe(true)
 
-    try {
-      await hackerContract.methods.usegas().callPure()
-    } catch (err) {
-      expect(err).not.toBe(null)
-    }
+    await expect(hackerContract.methods.usegasPure().callPure()).rejects.toThrow(Error)
+
+    const r = await hackerContract.methods.usegasView().call()
+    expect(r).toBe(false)
   })
 
   test('prevent hack on deployment', async () => {
     const { privateKey, address: from } = account10k
     tweb3.wallet.importAccount(privateKey)
 
-    try {
-      await tweb3.deploy(ContractMode.JS_DECORATED, `
-        @contract class Hack1 {
-          constructor() {
-            new Function("return process")().exit()
-          }
+    await expect(tweb3.deploy(ContractMode.JS_DECORATED, `
+      @contract class Hack1 {
+        constructor() {
+          new Function("return process")().exit()
         }
-      `, [], { from })
-    } catch (err) {
-      expect(err).not.toBe(null)
-    }
+      }
+    `, [], { from })).rejects.toThrow(Error)
 
-    try {
-      await tweb3.deploy(ContractMode.JS_DECORATED, `
-        @contract class Hack2 {
-          constructor() {
-            this.constructor.constructor("return process")().exit()
-          }
+    await expect(tweb3.deploy(ContractMode.JS_DECORATED, `
+      @contract class Hack2 {
+        constructor() {
+          this.constructor.constructor("return process")().exit()
         }
-      `, [], { from })
-    } catch (err) {
-      expect(err).not.toBe(null)
-    }
+      }
+    `, [], { from })).rejects.toThrow(Error)
 
-    try {
-      await tweb3.deploy(ContractMode.JS_DECORATED, `
-        @contract class Hack3 {
-          constructor() {
-            const require = new Function("return process.mainModule.require")();
-            console.log(require);
-          }
+    await expect(tweb3.deploy(ContractMode.JS_DECORATED, `
+      @contract class Hack3 {
+        constructor() {
+          const require = new Function("return process.mainModule.require")();
+          console.log(require);
         }
-      `, [], { from })
-    } catch (err) {
-      expect(err).not.toBe(null)
-    }
+      }
+    `, [], { from })).rejects.toThrow(Error)
 
-    try {
-      await tweb3.deploy(ContractMode.JS_DECORATED, `
-        @contract class Hack4 {
-          constructor() {
-            const global = new Function("return global")();
-            console.log(global);
-          }
+    await expect(tweb3.deploy(ContractMode.JS_DECORATED, `
+      @contract class Hack4 {
+        constructor() {
+          const global = new Function("return global")();
+          console.log(global);
         }
-      `, [], { from })
-    } catch (err) {
-      expect(err).not.toBe(null)
-    }
+      }
+    `, [], { from })).rejects.toThrow(Error)
   })
 })

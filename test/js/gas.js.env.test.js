@@ -49,11 +49,7 @@ describe('simple store contract', () => {
     const originBalance = Number((await tweb3.getBalance(from)).balance)
 
     // deploy without fee
-    try {
-      await tweb3.deploy(ContractMode.JS_DECORATED, src, [], { from })
-    } catch (err) {
-      expect(err).not.toBe(null)
-    }
+    await expect(tweb3.deploy(ContractMode.JS_DECORATED, src, [], { from })).rejects.toThrow(Error)
 
     // deploy with fee
     const fee = 20000
@@ -67,11 +63,7 @@ describe('simple store contract', () => {
     expect(fromBalance).toBeGreaterThan(originBalance - fee)
 
     // call without fee
-    try {
-      await simplestoreContract.methods.setValue(1000).sendCommit({ from })
-    } catch (err) {
-      expect(err).not.toBe(null)
-    }
+    await expect(simplestoreContract.methods.setValue(1000).sendCommit({ from })).rejects.toThrow(Error)
 
     // call with fee
     const setValueResult = await simplestoreContract.methods.setValue(1000).sendCommit({ fee, from })
@@ -98,11 +90,7 @@ describe('simple store contract', () => {
     expect(result.address).toBeDefined()
     const loopContract = tweb3.contract(result.address)
 
-    try {
-      await loopContract.methods.loopFunc().call()
-    } catch (err) {
-      expect(err).not.toBe(null)
-    }
+    await expect(loopContract.methods.loopFunc().call()).rejects.toThrow(Error)
   })
 
   test('endless recursion', async () => {
@@ -122,10 +110,6 @@ describe('simple store contract', () => {
     expect(result.address).toBeDefined()
     const endlessContract = tweb3.contract(result.address)
 
-    try {
-      await endlessContract.methods.endlessFunc().callPure()
-    } catch (err) {
-      expect(err).not.toBe(null)
-    }
+    await expect(endlessContract.methods.endlessFunc().callPure()).rejects.toThrow(Error)
   })
 })

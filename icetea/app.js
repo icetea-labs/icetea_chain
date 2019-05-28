@@ -385,6 +385,11 @@ function doExecTx (options) {
     utils.emitTransferred(null, options.tags, tx.from, tx.to, tx.payer, tx.value)
   }
 
+  // emit GasUsed event
+  if (options.info.__gas_used > 0) {
+    utils.emitGasUsed(null, options.tags, tx.to, tx.data.name, options.info.__gas_used)
+  }
+
   return result
 }
 

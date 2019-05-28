@@ -78,10 +78,6 @@ describe('require contract', () => {
     const value = 2
     const fee = 1
 
-    try {
-      await tweb3.deploy(ContractMode.JS_DECORATED, wrongSrc, [], { value, fee, from })
-    } catch (err) {
-      expect(err).not.toBe(null)
-    }
+    await expect(tweb3.deploy(ContractMode.JS_DECORATED, wrongSrc, [], { value, fee, from })).rejects.toThrow(Error)
   })
 })

@@ -1,9 +1,10 @@
 /** @module */
+const _ = require('lodash')
 const utils = require('../../helper/utils')
 const invoker = require('../../contractinvoker')
 const config = require('../../config')
 
-const _require = Object.freeze((name) => {
+const _require = (name) => {
   const whitelist = config.whitelistModules
   const ok = whitelist.some(element => {
     return name === element || name.startsWith(`${element}/`)
@@ -27,8 +28,8 @@ const _require = Object.freeze((name) => {
     }
   }
 
-  return Object.freeze(module)
-})
+  return _.cloneDeep(module)
+}
 
 function _makeLoadContract (invokerTypes, srcContract, options) {
   return destContract => {
