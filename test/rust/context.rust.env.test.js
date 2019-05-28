@@ -10,6 +10,7 @@ jest.setTimeout(30000)
 let tweb3
 let account10k // this key should have 10k of coins before running test suite
 let instance
+let contract
 beforeAll(async () => {
   const handler = await startup({ path: createTempDir() })
   instance = server(handler)
@@ -32,7 +33,7 @@ describe('rust wasm context', () => {
 
     const result = await tweb3.deployWasm(fs.readFileSync('./test/rust/assets/context-test.wasm', 'base64'), [], { from })
     expect(result.address).toBeDefined()
-    const contract = tweb3.contract(result.address)
+    contract = tweb3.contract(result.address)
 
     const sender = await contract.methods.get_sender().call({ from })
     expect(sender).toBe(from)
@@ -62,5 +63,35 @@ describe('rust wasm context', () => {
 
     const afterBalance = await contract.methods.get_balance().call({ from })
     expect(afterBalance).toBe('0')
+
+    const returnValue = await contract.methods.get_msg_value().sendCommit({ from, value })
+    expect(returnValue.result).toBe(value.toString())
+
+    const returnFee = await contract.methods.get_msg_fee().sendCommit({ from, fee: value })
+    expect(returnFee.result).toBe(value.toString())
+  })
+
+  test('state opts', async () => {
+    const { address: from } = account10k
+
+    const hasState = await contract.methods.has_state('owner').call({ from })
+    expect(hasState).toBe(true)
+
+    const deleteState = await contract.methods.delete_state('owner').sendCommit({ from })
+    expect(deleteState.result).toBe(true)
+
+    const oldContract = contract
+    const result = await tweb3.deployWasm(fs.readFileSync('./test/rust/assets/context-test.wasm', 'base64'), [oldContract.address], { from })
+    contract = tweb3.contract(result.address)
+
+    const otherHasState = await contract.methods.other_has_state('owner').call({ from })
+    expect(otherHasState).toBe(false)
+  })
+
+  test('pure opts', async () => {
+    const { address: from } = account10k
+
+    const sender = await contract.methods.pure_get_sender().callPure({ from })
+    expect(sender).toBe(from)
   })
 })

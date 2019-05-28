@@ -104,6 +104,24 @@ const wasm_bindgen = function ({ log, importTableName, get_sender, get_address, 
     }
   };
 
+  __exports.__wbg_getmsgvalue_e530ff9a41fe655f = function() {
+    try {
+      return addHeapObject(get_msg_value());
+    } catch (e) {
+      console.error("wasm-bindgen: imported JS function that was not marked as `catch` threw an error:", e);
+      throw e;
+    }
+  };
+
+  __exports.__wbg_getmsgfee_7108ebe3cb9289de = function() {
+    try {
+      return addHeapObject(get_msg_fee());
+    } catch (e) {
+      console.error("wasm-bindgen: imported JS function that was not marked as `catch` threw an error:", e);
+      throw e;
+    }
+  };
+
   __exports.__wbg_getsender_959abeb9602465cd = function (ret) {
     try {
       const retptr = passStringToWasm(get_sender())
@@ -157,18 +175,6 @@ const wasm_bindgen = function ({ log, importTableName, get_sender, get_address, 
       return get_block_number()
     } catch (e) {
       console.error('wasm-bindgen: imported JS function that was not marked as `catch` threw an error:', e)
-      throw e
-    }
-  }
-
-  __exports.__wbg_getmsgvalue_e530ff9a41fe655f = function () {
-    try {
-      return get_msg_value()
-    } catch (e) {
-      console.error(
-        'wasm-bindgen: imported JS function that was not marked as `catch` threw an error:',
-        e
-      )
       throw e
     }
   }
@@ -234,15 +240,16 @@ const wasm_bindgen = function ({ log, importTableName, get_sender, get_address, 
     }
   }
 
-  __exports.__wbg_loadcontract_89a5ded7e7be8839 = function (arg0, arg1) {
-    let varg0 = getStringFromWasm(arg0, arg1)
-    try {
-      return addHeapObject(load_contract(varg0))
-    } catch (e) {
-      console.error('wasm-bindgen: imported JS function that was not marked as `catch` threw an error:', e)
-      throw e
-    }
-  }
+  // TBD: use read_contract and write_contract instead. Consider this later
+  // __exports.__wbg_loadcontract_89a5ded7e7be8839 = function (arg0, arg1) {
+  //   let varg0 = getStringFromWasm(arg0, arg1)
+  //   try {
+  //     return addHeapObject(load_contract(varg0))
+  //   } catch (e) {
+  //     console.error('wasm-bindgen: imported JS function that was not marked as `catch` threw an error:', e)
+  //     throw e
+  //   }
+  // }
 
   __exports.__wbg_jsonstringify_8bf98dfd8c0f9963 = function (ret, arg0) {
     try {
@@ -347,45 +354,45 @@ const wasm_bindgen = function ({ log, importTableName, get_sender, get_address, 
     view[exnptr / 4 + 1] = addHeapObject(e)
   }
 
-  __exports.__wbg_apply_b7cb7040572f956e = function (arg0, arg1, arg2, exnptr) {
-    try {
-      return addHeapObject(getObject(arg0).apply(getObject(arg1), getObject(arg2)))
-    } catch (e) {
-      handleError(exnptr, e)
-    }
-  }
+  // __exports.__wbg_apply_b7cb7040572f956e = function (arg0, arg1, arg2, exnptr) {
+  //   try {
+  //     return addHeapObject(getObject(arg0).apply(getObject(arg1), getObject(arg2)))
+  //   } catch (e) {
+  //     handleError(exnptr, e)
+  //   }
+  // }
 
-  __exports.__wbg_call_b1011dd6b074a84c = function (arg0, arg1, exnptr) {
-    try {
-      return addHeapObject(getObject(arg0).call(getObject(arg1)))
-    } catch (e) {
-      handleError(exnptr, e)
-    }
-  }
+  // __exports.__wbg_call_b1011dd6b074a84c = function (arg0, arg1, exnptr) {
+  //   try {
+  //     return addHeapObject(getObject(arg0).call(getObject(arg1)))
+  //   } catch (e) {
+  //     handleError(exnptr, e)
+  //   }
+  // }
 
-  __exports.__wbg_call_88d2a6153573084e = function (arg0, arg1, arg2, exnptr) {
-    try {
-      return addHeapObject(getObject(arg0).call(getObject(arg1), getObject(arg2)))
-    } catch (e) {
-      handleError(exnptr, e)
-    }
-  }
+  // __exports.__wbg_call_88d2a6153573084e = function (arg0, arg1, arg2, exnptr) {
+  //   try {
+  //     return addHeapObject(getObject(arg0).call(getObject(arg1), getObject(arg2)))
+  //   } catch (e) {
+  //     handleError(exnptr, e)
+  //   }
+  // }
 
-  __exports.__wbg_call_7d492f332f3e8798 = function (arg0, arg1, arg2, arg3, exnptr) {
-    try {
-      return addHeapObject(getObject(arg0).call(getObject(arg1), getObject(arg2), getObject(arg3)))
-    } catch (e) {
-      handleError(exnptr, e)
-    }
-  }
+  // __exports.__wbg_call_7d492f332f3e8798 = function (arg0, arg1, arg2, arg3, exnptr) {
+  //   try {
+  //     return addHeapObject(getObject(arg0).call(getObject(arg1), getObject(arg2), getObject(arg3)))
+  //   } catch (e) {
+  //     handleError(exnptr, e)
+  //   }
+  // }
 
-  __exports.__wbg_call_f7834149513195b8 = function (arg0, arg1, arg2, arg3, arg4, exnptr) {
-    try {
-      return addHeapObject(getObject(arg0).call(getObject(arg1), getObject(arg2), getObject(arg3), getObject(arg4)))
-    } catch (e) {
-      handleError(exnptr, e)
-    }
-  }
+  // __exports.__wbg_call_f7834149513195b8 = function (arg0, arg1, arg2, arg3, arg4, exnptr) {
+  //   try {
+  //     return addHeapObject(getObject(arg0).call(getObject(arg1), getObject(arg2), getObject(arg3), getObject(arg4)))
+  //   } catch (e) {
+  //     handleError(exnptr, e)
+  //   }
+  // }
 
   __exports.__wbindgen_object_clone_ref = function (idx) {
     return addHeapObject(getObject(idx))
