@@ -27,6 +27,14 @@ function generateKeys (type) {
     showMessage('Success! New account set as default.')
     fillWallet()
   }
+
+  if (type === AccountType.BANK_ACCOUNT && document.getElementById('autoFaucet').checked) {
+    tweb3.contract('system.faucet').methods.request(/* address */).sendCommit({ from: keyInfo.address, payer: 'system.faucet' })
+      .catch(error => {
+        console.error(error)
+        window.alert(String(error))
+      })
+  }
 }
 
 // document.getElementById('seePublicKey').addEventListener('click', function () {

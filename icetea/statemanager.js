@@ -86,7 +86,7 @@ class StateManager extends EventEmitter {
   }
 
   installSystemContract (address) {
-    if (stateTable[address] && stateTable[address.deployedBy]) {
+    if (stateTable[address] && stateTable[address].deployedBy) {
       throw new Error(`Contract ${address} already installed.`)
     }
 

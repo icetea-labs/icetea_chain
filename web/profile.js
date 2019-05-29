@@ -119,7 +119,7 @@ function registerFaucetEvent () {
       return
     }
 
-    tweb3.contract('system.faucet').methods.request(/* address */).sendCommit({ from: address })
+    tweb3.contract('system.faucet').methods.request(/* address */).sendCommit({ from: address, payer: 'system.faucet' })
       .then(r => {
         window.alert('Success.')
       })
