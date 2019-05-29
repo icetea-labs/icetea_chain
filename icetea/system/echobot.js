@@ -12,13 +12,17 @@ const METADATA = {
   },
   'oncommand': {
     decorators: ['pure'],
-    params: [],
+    params: [
+      { name: 'command', type: ['string'] },
+      { name: 'options', type: ['any'] }
+    ],
     returnType: 'object'
   },
   'ontext': {
     decorators: ['pure'],
     params: [
-      { name: 'content', type: ['string'] }
+      { name: 'content', type: ['string'] },
+      { name: 'options', type: ['any'] }
     ],
     returnType: 'object'
   }
