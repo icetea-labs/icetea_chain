@@ -1,4 +1,4 @@
-module.exports = {
+const config = {
   versions: {
     node: '>=12.3.1 <13.0.0'
   },
@@ -29,5 +29,18 @@ module.exports = {
   },
   whitelistModules: [
     'lodash', 'moment', 'big.js', '@hapi/joi', 'validator', 'ajv', 'cheerio', '@icetea/polytils', 'icetea-botutils',
-    'assert', 'buffer', 'crypto', 'querystring', 'stream', 'string_decoder', 'url', 'util' ]
+    'assert', 'buffer', 'crypto', 'querystring', 'stream', 'string_decoder', 'url', 'util' ],
+  contract: {
+    minStateGas: 200,
+    freeGasLimit: 1e9,
+    gasPerByte: 1,
+    minTxGas: 0,
+    maxTxGas: 1e12
+  },
+  // method
+  setFreeGasLimit: (freeGasLimit = 0) => {
+    config.contract.freeGasLimit = freeGasLimit
+  }
 }
+
+module.exports = config

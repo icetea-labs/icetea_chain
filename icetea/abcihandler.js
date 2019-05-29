@@ -11,11 +11,9 @@ if (utils.isDevMode() && utils.envEnabled('PRINT_STATE_DIFF')) {
 }
 
 module.exports = (config = {}) => {
-  const { path } = config
-  if (path) {
-    return app.loadState(path).then(() => handler)
-  }
-  return app.loadState().then(() => handler)
+  const path = config.path || './state'
+  const freeGasLimit = config.freeGasLimit
+  return app.loadState({ path, freeGasLimit }).then(() => handler)
 }
 
 const handler = {

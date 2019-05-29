@@ -1,0 +1,115 @@
+/* global jest describe test expect beforeAll afterAll */
+
+const { randomAccountWithBalance, sleep } = require('../helper')
+const startup = require('../../icetea/abcihandler')
+const { ContractMode } = require('icetea-common')
+const { IceTeaWeb3 } = require('icetea-web3')
+const server = require('abci')
+const createTempDir = require('tempy').directory
+
+jest.setTimeout(30000)
+
+let tweb3
+let account10k // this key should have 10k of coins before running test suite
+let instance
+beforeAll(async () => {
+  const handler = await startup({ path: createTempDir(), freeGasLimit: 0 })
+  instance = server(handler)
+  instance.listen(global.ports.abci)
+  await sleep(3000)
+
+  tweb3 = new IceTeaWeb3(`http://127.0.0.1:${global.ports.rpc}`)
+  account10k = await randomAccountWithBalance(tweb3, 1e10)
+})
+
+afterAll(() => {
+  tweb3.close()
+  instance.close()
+})
+
+const src = `
+  @contract class SimpleStore  {
+    @state #owner = msg.sender
+    @state #value
+    getOwner() { return this.#owner }
+    getValue() { return this.#value }
+    @transaction setValue(value) {
+      expect(this.#owner == msg.sender, 'Only contract owner can set value')
+      expect(value, 'Invalid value')
+      this.#value = value
+      this.emitEvent("ValueChanged", {value: this.#value})
+    }
+  }
+`
+
+describe('simple store contract', () => {
+  test('no free gas limit', async () => {
+    const { privateKey, address: from } = account10k
+    tweb3.wallet.importAccount(privateKey)
+    const originBalance = Number((await tweb3.getBalance(from)).balance)
+
+    // deploy without fee
+    await expect(tweb3.deploy(ContractMode.JS_DECORATED, src, [], { from })).rejects.toThrow(Error)
+
+    // deploy with fee
+    const fee = 20000
+    const result = await tweb3.deploy(ContractMode.JS_DECORATED, src, [], { from, fee })
+    expect(result.address).toBeDefined()
+    const simplestoreContract = tweb3.contract(result.address)
+
+    const fromBalance = Number((await tweb3.getBalance(from)).balance)
+    // have refund unused gas
+    expect(fromBalance).toBeLessThan(originBalance)
+    expect(fromBalance).toBeGreaterThan(originBalance - fee)
+
+    // call without fee
+    await expect(simplestoreContract.methods.setValue(1000).sendCommit({ from })).rejects.toThrow(Error)
+
+    // call with fee
+    const setValueResult = await simplestoreContract.methods.setValue(1000).sendCommit({ fee, from })
+    expect(setValueResult.hash).toBeDefined()
+  })
+
+  test('loop many times', async () => {
+    const loopSrc = `
+      @contract class Loop  {
+        loopFunc() {
+          let times = 0
+          for(let i = 0; i < 1e10; i++) {
+            times += 1
+          }
+        }
+      }
+    `
+
+    const { privateKey, address: from } = account10k
+    tweb3.wallet.importAccount(privateKey)
+    const fee = 20000
+
+    const result = await tweb3.deploy(ContractMode.JS_DECORATED, loopSrc, [], { from, fee })
+    expect(result.address).toBeDefined()
+    const loopContract = tweb3.contract(result.address)
+
+    await expect(loopContract.methods.loopFunc().call()).rejects.toThrow(Error)
+  })
+
+  test('endless recursion', async () => {
+    const endlessSrc = `
+      @contract class Endless {
+        @pure endlessFunc() {
+          this.endlessFunc()
+        }
+      }
+    `
+
+    const { privateKey, address: from } = account10k
+    tweb3.wallet.importAccount(privateKey)
+    const fee = 20000
+
+    const result = await tweb3.deploy(ContractMode.JS_DECORATED, endlessSrc, [], { from, fee })
+    expect(result.address).toBeDefined()
+    const endlessContract = tweb3.contract(result.address)
+
+    await expect(endlessContract.methods.endlessFunc().callPure()).rejects.toThrow(Error)
+  })
+})

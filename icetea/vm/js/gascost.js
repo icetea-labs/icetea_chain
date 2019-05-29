@@ -76,3 +76,4 @@ class GasUsage {
 }
 
 exports.GasUsage = GasUsage
+exports.CostTable = CostTable

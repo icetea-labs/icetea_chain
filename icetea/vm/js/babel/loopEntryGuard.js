@@ -25,11 +25,19 @@ Note: it does not report line number, since we do not map to original line numbe
 
 */
 
-const generateInside = ({ t, id, line, ch }) => {
-  return t.callExpression(
-    t.memberExpression(t.identifier('__guard'), t.identifier('enterLoop')),
-    [t.stringLiteral(id.name), t.numericLiteral(line), t.numericLiteral(ch)]
-  )
+const { CostTable } = require('../gascost')
+
+const generateInside = ({ t, id, line, ch, gas }) => {
+  return t.blockStatement([
+    t.expressionStatement(t.callExpression(
+      t.memberExpression(t.identifier('__guard'), t.identifier('enterLoop')),
+      [t.stringLiteral(id.name), t.numericLiteral(line), t.numericLiteral(ch)]
+    )),
+    t.expressionStatement(t.callExpression(
+      t.memberExpression(t.identifier('this'), t.identifier('usegas')),
+      [t.numericLiteral(gas)]
+    ))
+  ])
 }
 
 const protect = t => path => {
@@ -39,7 +47,7 @@ const protect = t => path => {
     ch = path.node.loc.start.column
   }
   const id = path.scope.generateUidIdentifierBasedOnNode(path.node.id)
-  const inside = generateInside({ t, id, line, ch })
+  const inside = generateInside({ t, id, line, ch, gas: CostTable.EnterLoop })
   const body = path.get('body')
 
   // if we have an expression statement, convert it to a block

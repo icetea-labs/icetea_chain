@@ -2,10 +2,14 @@
 // const halts = require('halting-problem')
 const babel = require('@babel/core')
 const vm = require('vm')
+const sizeof = require('object-sizeof')
 const Runner = require('../runner')
 const wrapper = require('./wrapper/raw')
 const transpilePlugins = require('../../config').rawJs.transpile
 const utils = require('../../helper/utils')
+const config = require('../../config')
+
+const { freeGasLimit, minStateGas, gasPerByte, maxTxGas } = config.contract
 const path = require('path')
 const fs = require('fs')
 
@@ -90,6 +94,13 @@ module.exports = class extends Runner {
   }
 
   doRun (srcWrapper, { context, guard, info }) {
+    let gasLimit = maxTxGas
+    if (context.emitEvent) { // isTx
+      const userGas = freeGasLimit + Number(context.runtime.msg.fee)
+      gasLimit = userGas > maxTxGas ? maxTxGas : userGas
+    }
+
+    // Print source with line number - for debug
     const contractSrc = `(()=>function(__g){${srcWrapper}})()`
     const filename = path.resolve(process.cwd(), 'contract_src', context.address + '.js')
 
@@ -102,12 +113,13 @@ module.exports = class extends Runner {
       })
     }
 
+    let gasUsed = 0
     const functionInSandbox = vm.runInNewContext(contractSrc, {
-      process: {
+      process: Object.freeze({
         env: {
           NODE_ENV: process.env.NODE_ENV
         }
-      },
+      }),
       console // TODO: only enable in dev mode
     }, {
       filename,
@@ -117,6 +129,67 @@ module.exports = class extends Runner {
       }
     })
 
-    return functionInSandbox.call(context, guard)
+    let runCtx = { ...context }
+    runCtx.setState = (key, value) => {
+      gasUsed += minStateGas
+      const oldValue = context.getState(key)
+      if (oldValue === null || oldValue === undefined) {
+        gasUsed += sizeof({ key: value }) * gasPerByte
+      } else {
+        const oldSize = sizeof({ key: oldValue })
+        const newSize = sizeof({ key: value })
+        gasUsed += Math.abs(newSize - oldSize) * gasPerByte
+      }
+
+      if (gasUsed > gasLimit) {
+        throw new Error(`setState ${key} failed: out of gas`)
+      }
+
+      context.setState(key, value)
+    }
+    runCtx.deleteState = key => {
+      gasUsed += minStateGas
+
+      if (gasUsed > gasLimit) {
+        throw new Error(`deleteState ${key} failed: out of gas`)
+      }
+
+      context.deleteState(key)
+    }
+    runCtx.usegas = gas => {
+      if (gas <= 0) {
+        throw new Error('gas is a positive number')
+      }
+      gasUsed += gas
+
+      if (gasUsed > gasLimit) {
+        if (context.emitEvent) { // isTX
+          throw new Error('out of gas')
+        }
+        throw new Error('out of resources')
+      }
+    }
+    runCtx = Object.freeze(runCtx)
+
+    const result = functionInSandbox.call(runCtx, guard)
+    if (info) {
+      if (gasUsed > 0) {
+        if (info.__gas_used) {
+          info.__gas_used += gasUsed // gas sum for contract call contract
+        } else {
+          info.__gas_used = gasUsed
+        }
+      }
+
+      // last check for contract call contract
+      if (info.__gas_used > gasLimit) {
+        if (context.emitEvent) { // isTX
+          throw new Error('out of gas')
+        }
+        throw new Error('out of resources')
+      }
+    }
+
+    return result
   }
 }

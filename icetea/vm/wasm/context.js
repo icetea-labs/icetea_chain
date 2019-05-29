@@ -139,9 +139,15 @@ exports.forView = (address, name, params = [], options) => {
  * @param {object} option - method option.
  * @returns {object} context
  */
-exports.forPure = (address, name, params = [], { from = '' }) => {
+exports.forPure = (address, name, params = [], options) => {
+  const { from = '', tools } = options
+  const { getCode } = tools
+  const importTableName = getCode(address).meta.importTableName
+
   const ctx = {
     address,
+    importTableName,
+    get_address: () => address,
     log: console.log,
     get_msg_name: () => name,
     get_msg_param: () => params.map(x => typeof x === 'number' ? x.toString() : x),

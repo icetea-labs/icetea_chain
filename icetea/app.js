@@ -1,9 +1,15 @@
 const { verifyTxSignature } = require('icetea-common/src/utils')
+const _ = require('lodash')
 const utils = require('./helper/utils')
 const sysContracts = require('./system')
 const invoker = require('./contractinvoker')
 const did = require('./system/did')
 const { ecc, codec, AccountType } = require('icetea-common')
+const config = require('./config')
+const sizeof = require('object-sizeof')
+
+const { minStateGas, gasPerByte, minTxGas, maxTxGas } = config.contract
+const { setFreeGasLimit } = config
 
 const stateManager = require('./statemanager')
 
@@ -27,7 +33,12 @@ class App {
     })
   }
 
-  loadState (path = './state') {
+  loadState ({ freeGasLimit: _freeGasLimit, path }) {
+    // TBD: now use global config for convenience
+    // prefer to save it in app and pass to other component
+    if (!_.isNil(_freeGasLimit)) {
+      setFreeGasLimit(_freeGasLimit)
+    }
     return stateManager.load(path)
   }
 
@@ -80,6 +91,7 @@ class App {
   }
 
   checkTx (tx) {
+    const { freeGasLimit } = config.contract
     // NOTE:
     // CheckTX should not modify state
     // This way, we could avoid make a copy of state
@@ -92,6 +104,14 @@ class App {
 
     if (tx.fee < BigInt(0)) {
       throw new Error('Invalid transaction fee.')
+    }
+
+    if (Number(tx.fee) + freeGasLimit < minTxGas) {
+      throw new Error(`tx fee ${tx.fee} is too low, at least ${minTxGas}`)
+    }
+
+    if (Number(tx.fee) > maxTxGas) {
+      throw new Error(`tx fee ${tx.fee} is too high, at most ${maxTxGas}`)
     }
 
     if (!tx.isSimpleTransfer() && !tx.isContractCall() && !tx.isContractCreation()) {
@@ -293,13 +313,16 @@ function willCallContract (tx) {
  */
 function doExecTx (options) {
   const { tx, tools = {} } = options
-  options.info = {}
+  options.info = { __gas_used: 0 }
   let result
 
   if (tx.isContractCreation()) {
     // analyze & save contract state
     const contractState = invoker.prepareContract(tx)
     tx.to = tools.deployContract(tx.from, contractState)
+
+    // deploy fee
+    options.info.__gas_used += minStateGas + sizeof(contractState) * gasPerByte
   }
 
   // process value transfer
@@ -338,13 +361,33 @@ function doExecTx (options) {
     result = invoker.invokeUpdate(tx.to, '__on_received', tx.data.params, options)
   }
 
-  if (options.info && options.info.__gas_used && tx.fee > options.info.__gas_used) {
-    tools.refectTxValueAndFee({ payer: tx.payer, value: 0, fee: -(tx.fee - options.info.__gas_used) })
+  if (tools.refectTxValueAndFee || stateManager.handleTransfer) {
+    let actualFee = minTxGas
+    if (options.info && options.info.__gas_used) {
+      actualFee += options.info.__gas_used
+      if (actualFee > maxTxGas) {
+        throw new Error(`gas used ${actualFee} is too high, at most ${maxTxGas}`)
+      }
+    }
+
+    const { freeGasLimit } = config.contract
+    actualFee = actualFee > freeGasLimit ? (actualFee - freeGasLimit) : 0
+    if (tx.fee < BigInt(actualFee)) {
+      throw new Error('Insufficient fee')
+    }
+    const refundTx = { payer: tx.payer, value: BigInt(0), fee: -(tx.fee - BigInt(actualFee)) }
+    const refundFunc = tools.refectTxValueAndFee || stateManager.handleTransfer
+    refundFunc(refundTx)
   }
 
   // emit Transferred event
   if (tx.value > BigInt(0)) {
     utils.emitTransferred(null, options.tags, tx.from, tx.to, tx.payer, tx.value)
+  }
+
+  // emit GasUsed event
+  if (options.info.__gas_used > 0) {
+    utils.emitGasUsed(null, options.tags, tx.to, tx.data.name, options.info.__gas_used)
   }
 
   return result

@@ -68,7 +68,7 @@ describe('transfer', () => {
     // Verify balance changes after TX
 
     const newFromBalance = Number((await tweb3.getBalance(from)).balance)
-    expect(newFromBalance).toBe(fromBalance - value - fee)
+    expect(newFromBalance).toBe(fromBalance - value)
 
     const newToBalance = Number((await tweb3.getBalance(to)).balance)
     expect(newToBalance).toBe(toBalance + value)
