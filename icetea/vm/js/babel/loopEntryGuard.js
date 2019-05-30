@@ -24,7 +24,7 @@ Note: it does not report line number, since we do not map to original line numbe
 (maybe use map file or recast later on)
 
 */
-
+const template = require('@babel/template')
 const { CostTable } = require('../gascost')
 
 const generateInside = ({ t, id, line, ch, gas }) => {
@@ -40,7 +40,7 @@ const generateInside = ({ t, id, line, ch, gas }) => {
   ])
 }
 
-const protect = t => path => {
+const _protect = (t, path) => {
   let line = 1; let ch = 0
   if (path.node.loc) {
     line = path.node.loc.start.line
@@ -57,6 +57,45 @@ const protect = t => path => {
   body.unshiftContainer('body', inside)
 }
 
+const protect = t => path => {
+  _protect(t, path)
+}
+
+const callExpression = t => path => {
+  const { node } = path
+  if (!node.callee || node.callee.type !== 'MemberExpression') {
+    return
+  }
+  const { property } = node.callee
+  if (!property || property.type !== 'Identifier' || !([
+    'map', 'filter', 'reduce', 'forEach', 'every', 'some'
+  ].includes(property.name))) {
+    return
+  }
+
+  if (node.arguments.length === 0) {
+    return
+  }
+
+  const arg = node.arguments[0]
+  if (!['ArrowFunctionExpression', 'FunctionExpression'].includes(arg.type)) {
+    return
+  }
+
+  if (arg.body.type !== 'BlockStatement') {
+    const fn = template.smart(`
+      {
+        return VAR
+      }
+    `)
+    arg.body = fn({
+      VAR: arg.body
+    })
+  }
+
+  _protect(t, path.get('arguments')[0])
+}
+
 /**
  * loop entry guard
  * @function
@@ -67,9 +106,12 @@ module.exports = ({ types: t }) => {
   return {
     name: 'loop-entry-guard',
     visitor: {
-      WhileStatement: protect(t),
       ForStatement: protect(t),
-      DoWhileStatement: protect(t)
+      ForOfStatement: protect(t),
+      ForInStatement: protect(t),
+      WhileStatement: protect(t),
+      DoWhileStatement: protect(t),
+      CallExpression: callExpression(t)
     }
   }
 }
