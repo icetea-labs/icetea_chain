@@ -15,7 +15,7 @@ beforeAll(async () => {
   const handler = await startup({ path: createTempDir() })
   instance = server(handler)
   instance.listen(global.ports.abci)
-  await sleep(3000)
+  await sleep(4000)
 
   tweb3 = new IceTeaWeb3(`http://127.0.0.1:${global.ports.rpc}`)
   account10k = await randomAccountWithBalance(tweb3, 10000)
