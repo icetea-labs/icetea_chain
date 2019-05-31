@@ -4,8 +4,9 @@ const invoker = require('../../contractinvoker')
 const config = require('../../config')
 
 function reload (name) {
+  const lib = require(name)
   delete require.cache[require.resolve(name)]
-  return require(name)
+  return lib
 }
 
 const _require = (name) => {
