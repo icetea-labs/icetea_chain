@@ -1,11 +1,13 @@
 import $ from 'jquery'
+import { transpile, setWhiteListModules } from 'sunseed'
 import * as helper from './helper'
 import tweb3 from './tweb3'
-import { resolveExternal } from './preprocess'
 import { toUNIT } from './common'
+import { whitelistModules } from '../icetea/config'
 window.$ = $
 
 var wasmBuffer = null
+setWhiteListModules(whitelistModules)
 
 // helper.registerTxForm($('#form'), buildData);
 $('#form').submit(async function (e) {
@@ -42,10 +44,15 @@ $('#form').submit(async function (e) {
     const value = document.getElementById('value').value
     const fee = document.getElementById('fee').value
 
-    var tx = await resolveExternal(src).then(src => tweb3.deploy(mode, src, params, {
+    // only raw js
+    if (mode === 1) {
+      mode = 0
+      src = await transpile(src, { prettier: true })
+    }
+    const tx = await tweb3.deploy(mode, src, params, {
       value: toUNIT(parseFloat(value)),
       fee: toUNIT(parseFloat(fee))
-    }))
+    })
     // console.log('tx',tx);
     window.location.href = '/tx.html?hash=' + tx.hash
   } catch (error) {

@@ -1,9 +1,11 @@
 require('dotenv').config()
 const { ContractMode } = require('icetea-common')
-const { resolveExternal } = require('../web/preprocess')
 const fs = require('fs')
+const { whitelistModules } = require('../icetea/config')
+const { transpile, setWhiteListModules } = require('sunseed')
 
 global.fetch = require('node-fetch')
+setWhiteListModules(whitelistModules)
 
 const { IceTeaWeb3 } = require('icetea-web3')
 const tweb3 = new IceTeaWeb3('ws://localhost:26657/websocket')
@@ -17,8 +19,8 @@ async function deploy () {
   if (check) return
 
   // deploy the astrobot
-  const src = await resolveExternal(fs.readFileSync('./example/bot/astrobot/astrobot.js', 'utf8'))
-  const astrobot = await tweb3.deploy(ContractMode.JS_DECORATED, src)
+  const src = await transpile(fs.readFileSync('./example/bot/astrobot/astrobot.js', 'utf8'), { prettier: true })
+  const astrobot = await tweb3.deploy(ContractMode.JS_RAW, src)
 
   // add astrobot alias
   const alias = tweb3.contract('system.alias', key)

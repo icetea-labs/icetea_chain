@@ -6,6 +6,7 @@ const { TxOp, ContractMode } = require('icetea-common')
 const { IceTeaWeb3 } = require('icetea-web3')
 const server = require('abci')
 const createTempDir = require('tempy').directory
+const { transpile } = global
 
 jest.setTimeout(30000)
 
@@ -36,6 +37,11 @@ async function testSimpleStore (mode, src) {
 
   const value = 2
   const fee = 1
+
+  if (mode === ContractMode.JS_DECORATED) {
+    mode = ContractMode.JS_RAW
+    src = await transpile(src)
+  }
 
   const data = {
     op: TxOp.DEPLOY_CONTRACT,

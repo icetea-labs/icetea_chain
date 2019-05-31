@@ -4,6 +4,11 @@ const tm = require('tendermint-node')
 const createTempDir = require('tempy').directory
 const getPort = require('get-port')
 
+const { transpile, setWhiteListModules } = require('sunseed')
+const { whitelistModules } = require('../icetea/config')
+
+setWhiteListModules(whitelistModules)
+
 class IceteaEnvironment extends NodeEnvironment {
   constructor (config, context) {
     super(config, context)
@@ -28,6 +33,7 @@ class IceteaEnvironment extends NodeEnvironment {
 
     this.global.node = node
     this.global.ports = ports
+    this.global.transpile = transpile
   }
 
   async teardown () {

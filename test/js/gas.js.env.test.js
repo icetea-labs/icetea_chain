@@ -6,6 +6,7 @@ const { ContractMode } = require('icetea-common')
 const { IceTeaWeb3 } = require('icetea-web3')
 const server = require('abci')
 const createTempDir = require('tempy').directory
+const { transpile } = global
 
 jest.setTimeout(30000)
 
@@ -49,11 +50,11 @@ describe('simple store contract', () => {
     const originBalance = Number((await tweb3.getBalance(from)).balance)
 
     // deploy without fee
-    await expect(tweb3.deploy(ContractMode.JS_DECORATED, src, [], { from })).rejects.toThrow(Error)
+    await expect(tweb3.deploy(ContractMode.JS_RAW, await transpile(src), [], { from })).rejects.toThrow(Error)
 
     // deploy with fee
     const fee = 20000
-    const result = await tweb3.deploy(ContractMode.JS_DECORATED, src, [], { from, fee })
+    const result = await tweb3.deploy(ContractMode.JS_RAW, await transpile(src), [], { from, fee })
     expect(result.address).toBeDefined()
     const simplestoreContract = tweb3.contract(result.address)
 
@@ -73,7 +74,7 @@ describe('simple store contract', () => {
   test('loop many times', async () => {
     const loopSrc = `
       @contract class Loop  {
-        loopFunc() {
+        @pure loopFunc() {
           let times = 0
           for(let i = 0; i < 1e10; i++) {
             times += 1
@@ -86,11 +87,11 @@ describe('simple store contract', () => {
     tweb3.wallet.importAccount(privateKey)
     const fee = 20000
 
-    const result = await tweb3.deploy(ContractMode.JS_DECORATED, loopSrc, [], { from, fee })
+    const result = await tweb3.deploy(ContractMode.JS_RAW, await transpile(loopSrc), [], { from, fee })
     expect(result.address).toBeDefined()
     const loopContract = tweb3.contract(result.address)
 
-    await expect(loopContract.methods.loopFunc().call()).rejects.toThrow(Error)
+    await expect(loopContract.methods.loopFunc().callPure()).rejects.toThrow(Error)
   })
 
   test('endless recursion', async () => {
@@ -106,7 +107,7 @@ describe('simple store contract', () => {
     tweb3.wallet.importAccount(privateKey)
     const fee = 20000
 
-    const result = await tweb3.deploy(ContractMode.JS_DECORATED, endlessSrc, [], { from, fee })
+    const result = await tweb3.deploy(ContractMode.JS_RAW, await transpile(endlessSrc), [], { from, fee })
     expect(result.address).toBeDefined()
     const endlessContract = tweb3.contract(result.address)
 
