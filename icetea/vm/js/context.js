@@ -119,6 +119,9 @@ exports.forTransaction = (contractAddress, methodName, methodParams, options) =>
         if (typeof name !== 'string' || typeof value !== 'string') {
           throw new Error('Tag name and value must be strings.')
         }
+        if (['tx.from', 'tx.to', 'tx.payer', 'tx.gasused'].includes(name)) {
+          throw new Error(`Tag name ${name} is reserved for system use only.`)
+        }
         if (name in tags) {
           throw new Error(`Tag ${name} already exists for this transaction.`)
         }
@@ -130,7 +133,7 @@ exports.forTransaction = (contractAddress, methodName, methodParams, options) =>
     }
   }
 
-  return Object.freeze(ctx) // prevent from changing address, balance, etc.
+  return utils.deepFreeze(ctx) // prevent from changing address, balance, etc.
 }
 
 /**
@@ -167,12 +170,12 @@ exports.forView = (contractAddress, name, params, options) => {
     get balance () {
       return tools.balanceOf(contractAddress)
     },
-    runtime: {
+    runtime: Object.freeze({
       msg,
       block,
       loadContract: _makeLoadContract(['invokeView', 'invokePure'], contractAddress, options),
       require: _require
-    }
+    })
   }
 
   return Object.freeze(ctx)

@@ -11,21 +11,23 @@ module.exports = src => `
 const __systhis = this
 const __sysmath = Math
 const __sysdate = Date
-if (['production', 'mainnet'].includes(process.env.NODE_ENV)) {
-    console = new Proxy({}, {
-        get(obj, prop) {
-            return () => void 0
-        }
-    })
-}
 
 { // block to scope let/const and avoid hoisting (could use IIFE instead)
-let global = {}, globalThis = {}, process = void 0, Function = void 0,
-    setInterval = void 0, setTimeout = void 0, setImmediate = void 0,
-    clearImmediate = void 0, clearTimeout = void 0, clearInterval = void 0,
-    queueMicrotask = void 0, WebAssembly = void 0, Console = void 0
 
-const require = Object.freeze(this.runtime.require)
+let global = {}, globalThis = {}, process = {env: {}},
+    Function = void 0, WebAssembly = void 0,
+    setInterval, setTimeout, setImmediate, queueMicrotask,
+    clearImmediate, clearTimeout, clearInterval
+
+    { // scoping let/const
+        const makeUnsupport = name => () => {
+            throw new Error(name + ' is not supported.')
+        }
+        setInterval = makeUnsupport('setInterval')
+        setTimeout = makeUnsupport('setTimeout')
+        setImmediate = makeUnsupport('setImmediate')
+        queueMicrotask = makeUnsupport('queueMicrotask')
+    }
 
 let Math = new Proxy(__sysmath, {
     get(obj, prop) {

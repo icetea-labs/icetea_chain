@@ -10,8 +10,18 @@ body {
 }
 .notice {
     padding: 12px;
-    background-color: gold;
+    background-color: lightblue;
     margin-bottom: 16px;
+    position: relative;
+}
+.notice::after {
+    content: 'TESNET';
+    position: absolute;
+    right: 10px;
+    top: 10px;
+    display: inline-block;
+    padding: 2px 8px;
+    background-color: bisque;
 }
 #info:empty {
     display: none;
@@ -46,10 +56,10 @@ td {
 td.Error, .break-all {
     word-break: break-word;
 }
-td.Success {
+.Success {
     color: green;
 }
-td.Error {
+.Error {
     color: red;
 }
 td pre {

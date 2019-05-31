@@ -361,8 +361,8 @@ function doExecTx (options) {
     result = invoker.invokeUpdate(tx.to, '__on_received', tx.data.params, options)
   }
 
+  let actualFee = minTxGas
   if (tools.refectTxValueAndFee || stateManager.handleTransfer) {
-    let actualFee = minTxGas
     if (options.info && options.info.__gas_used) {
       actualFee += options.info.__gas_used
       if (actualFee > maxTxGas) {
@@ -385,9 +385,10 @@ function doExecTx (options) {
     utils.emitTransferred(null, options.tags, tx.from, tx.to, tx.payer, tx.value)
   }
 
-  // emit GasUsed event
-  if (options.info.__gas_used > 0) {
-    utils.emitGasUsed(null, options.tags, tx.to, tx.data.name, options.info.__gas_used)
+  // add gasused tag
+  if (actualFee > 0) {
+    // utils.emitGasUsed(null, options.tags, tx.to, tx.data.name, actualFee)
+    options.tags['tx.gasused'] = String(actualFee)
   }
 
   return result

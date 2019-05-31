@@ -242,7 +242,7 @@ exports.checkUnsupportTypes = o => {
   try {
     exports.serialize(o)
   } catch (err) {
-    throw new Error('This object is not serializable')
+    throw new Error('State not serializable.')
   }
 
   if (o == null) return null

@@ -7,7 +7,9 @@ import Prism from 'prismjs'
 import { toUNIT, toTEA } from './common'
 window.$ = $
 
-const tryStringifyJson = helper.tryStringifyJson
+const tryStringifyJson = function (value) {
+  return helper.tryStringifyJson(value, undefined, 2)
+}
 
 async function fillContracts () {
   try {
@@ -87,7 +89,7 @@ function fillSignature () {
   var fn = document.getElementById('name').value
   if (!fn) return
 
-  document.getElementById('funcInfo').textContent = signatures[fn]
+  document.getElementById('funcInfo').innerHTML = signatures[fn]
   Prism.highlightElement(document.getElementById('funcInfo'))
 }
 
@@ -154,7 +156,7 @@ $(document).ready(function () {
     fillContractInfo()
     fillFuncs()
     document.getElementById('name').value = ''
-    document.getElementById('funcInfo').textContent = 'No function selected.'
+    document.getElementById('funcInfo').innerHTML = 'No function selected.'
   })
 
   helper.loadAddresses()
@@ -173,25 +175,53 @@ $(document).ready(function () {
     const value = document.getElementById('value').value
     const fee = document.getElementById('fee').value
 
+    var result
+
     // submit tx
     try {
+      document.getElementById('funcName').innerHTML = name
+
       var resp = tweb3.wallet.loadFromStorage('123')
       if (resp === 0) {
         window.alert('Wallet empty! Please go to Wallet tab to create account.')
         return
       }
       var ct = tweb3.contract(address)
-      var tx = await ct.methods[name](...params).sendSync({
+      result = await ct.methods[name](...params).sendCommit({
         value: toUNIT(parseFloat(value)),
         fee: toUNIT(parseFloat(fee))
       })
-      // console.log('tx',tx);
-      window.location.href = '/tx.html?hash=' + tx.hash
+      // console.log(tryStringifyJson(result));
+      document.getElementById('resultJson').innerHTML = formatResult(result)
     } catch (error) {
       console.log(error)
-      window.alert(String(error))
+      document.getElementById('resultJson').innerHTML = formatResult(error, true)
     }
+
+    window.scrollTo(0, document.body.scrollHeight)
   })
+
+  function formatResult (r, isError) {
+    const fail = isError || r.deliver_tx.code || r.check_tx.code
+    let msg
+    if (fail) {
+      msg = '<b>Result</b>: <span class="Error":>ERROR</span><br><b>Message</b>: <span class="Error">' +
+        (r.deliver_tx.log || r.check_tx.log || tryStringifyJson(r)) + '</span>' + '<br><b>Hash</b>: '
+      if (r.hash) {
+        msg += '<a href="/tx.html?hash=' + r.hash + '">' + r.hash + '</a>'
+      } else {
+        msg += 'N/A'
+      }
+      return msg
+    } else {
+      msg = '<b>Result</b>: <span class="Success"><b>SUCCESS</b></span>' +
+        '<br><b>Returned Value</b>:  <span class="Success">' + tryStringifyJson(r.result) + '</span>' +
+        '<br><b>Hash</b>: <a href="/tx.html?hash=' + r.hash + '">' + r.hash + '</a>'
+      msg += '<br><b>Height</b>: ' + r.height + '<br><b>Tags</b>: ' + tryStringifyJson(r.tags) +
+        '<br><b>Events:</b> ' + tryStringifyJson(r.events)
+      return msg
+    }
+  }
 
   function popupwindow (url, title, w, h) {
     var left = (window.screen.width / 2) - (w / 2)
@@ -215,7 +245,7 @@ $(document).ready(function () {
     //     alert("Please select a contract which has function.");
     //     return;
     // }
-    document.getElementById('funcName').textContent = name
+    document.getElementById('funcName').innerHTML = name
     var params = helper.parseParamsFromField('#params')
     // const privateKey = window.$('#private_key').val().trim()
 
@@ -226,13 +256,19 @@ $(document).ready(function () {
       // var ct = tweb3.contract(address, privateKey)
       // var result = await ct.methods[name].call(name, params)
       // if (result.success) {
-      document.getElementById('resultJson').textContent = tryStringifyJson(result)
+      document.getElementById('resultJson').innerHTML = tryStringifyJson(result)
       // } else {
-      // document.getElementById('resultJson').textContent = tryStringifyJson(result.error)
+      // document.getElementById('resultJson').innerHTML = tryStringifyJson(result.error)
       // }
     } catch (error) {
-      document.getElementById('resultJson').textContent = tryStringifyJson(error)
+      document.getElementById('resultJson').innerHTML = tryStringifyJson(error)
     }
-    Prism.highlightElement(document.getElementById('resultJson'))
+    // Prism.highlightElement(document.getElementById('resultJson'))
+  })
+
+  $('.more').on('click', function (e) {
+    e.preventDefault()
+
+    $($(this).attr('data-target')).fadeToggle('fast')
   })
 })

@@ -114,13 +114,11 @@ module.exports = class extends Runner {
     }
 
     let gasUsed = 0
+    const isDevMode = utils.isDevMode()
     const functionInSandbox = vm.runInNewContext(contractSrc, {
-      process: Object.freeze({
-        env: {
-          NODE_ENV: process.env.NODE_ENV
-        }
-      }),
-      console // TODO: only enable in dev mode
+      console: {
+        log: isDevMode ? console.log : () => void 0
+      }
     }, {
       filename,
       contextCodeGeneration: {

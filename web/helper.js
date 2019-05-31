@@ -55,7 +55,11 @@ export function registerTxForm ($form, txData) {
         return
       }
       var result = await tweb3.sendTransactionSync(formData)
-      window.location.href = '/tx.html?hash=' + result.hash
+      if ($form.attr('data-stay')) {
+        window.alert(exports.tryStringifyJson(result))
+      } else {
+        window.location.href = '/tx.html?hash=' + result.hash
+      }
     } catch (error) {
       console.log(error)
       window.alert(String(error))
@@ -71,6 +75,8 @@ export function detectCallType (decorators) {
     return 'transaction'
   } else if (decorators.includes('transaction')) {
     return 'transaction'
+  } else if (decorators.includes('pure')) {
+    return 'pure'
   }
 
   return 'view'

@@ -64,6 +64,9 @@ const handler = {
       result.tags = []
       if (typeof tags !== 'undefined' && Object.keys(tags).length) {
         Object.keys(tags).forEach((key) => {
+          if (typeof tags[key] !== 'string') {
+            throw new Error(`Tag value for key ${key} is has wrong type, expect: string, got: ${typeof tags[key]}`)
+          }
           result.tags.push({ key: Buffer.from(key), value: Buffer.from(tags[key]) })
         })
       }
