@@ -85,12 +85,26 @@ function fmtType (t, convert) {
 
 let signatures = {}
 
+function setVisible (selector, signature, stateAccess) {
+  var $item = $(selector)
+  if (!signature || signature.indexOf(stateAccess) >= 0) {
+    $item.show()
+  } else {
+    $item.hide()
+  }
+}
+
 function fillSignature () {
   var fn = document.getElementById('name').value
   if (!fn) return
 
-  document.getElementById('funcInfo').innerHTML = signatures[fn]
-  Prism.highlightElement(document.getElementById('funcInfo'))
+  if (signatures[fn]) {
+    document.getElementById('funcInfo').innerHTML = signatures[fn]
+    Prism.highlightElement(document.getElementById('funcInfo'))
+  }
+  setVisible('#submit_btn', signatures[fn], '@transaction')
+  setVisible('#read', signatures[fn], '@view')
+  setVisible('#pure', signatures[fn], '@pure')
 }
 
 async function fillFuncs () {
