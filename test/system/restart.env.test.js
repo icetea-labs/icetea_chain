@@ -5,6 +5,7 @@ const { IceTeaWeb3 } = require('icetea-web3')
 const server = require('abci')
 const createTempDir = require('tempy').directory
 const _ = require('lodash')
+const { transpile } = global
 
 jest.setTimeout(30000)
 
@@ -35,14 +36,18 @@ describe('restart app', () => {
     const { privateKey, address: from } = account10k
     tweb3.wallet.importAccount(privateKey)
     const numOfContracts = 5
-    const result = await Promise.all(_.range(numOfContracts).map(x => tweb3.deploy(ContractMode.JS_DECORATED, src, [], { from })))
+    const result = await Promise.all(_.range(numOfContracts).map(async x => {
+      return tweb3.deploy(ContractMode.JS_RAW, await transpile(src), [], { from })
+    }))
     expect(result.length).toBe(numOfContracts)
 
     await instance.close()
     instance.listen(global.ports.abci)
-    await sleep(3000)
+    await sleep(4000)
 
-    const result2 = await Promise.all(_.range(numOfContracts).map(x => tweb3.deploy(ContractMode.JS_DECORATED, src, [], { from })))
+    const result2 = await Promise.all(_.range(numOfContracts).map(async x => {
+      return tweb3.deploy(ContractMode.JS_RAW, await transpile(src), [], { from })
+    }))
     expect(result2.length).toBe(numOfContracts)
   })
 })

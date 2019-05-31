@@ -30,5 +30,9 @@ module.exports = {
 
   plugins: [
     new CopyWebpackPlugin([{ from: 'web', ignore: [ '*.js' ] }])
-  ]
+  ],
+
+  node: {
+    fs: 'empty'
+  }
 }

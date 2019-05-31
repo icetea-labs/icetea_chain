@@ -71,6 +71,7 @@
     "icetea-botutils": "github:TradaTech/botutils",
     "icetea-common": "github:TradaTech/icetea-common",
     "icetea-web3": "github:TradaTech/icetea-web3",
+    "sunseed": "github:TradaTech/sunseed",
     "jquery": ">=3.4.0",
     "json-formatter-js": "2.2.1",
     "level": "5.0.1",

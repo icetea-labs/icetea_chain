@@ -6,6 +6,7 @@ const { ContractMode } = require('icetea-common')
 const { IceTeaWeb3 } = require('icetea-web3')
 const server = require('abci')
 const createTempDir = require('tempy').directory
+const { transpile } = global
 
 jest.setTimeout(30000)
 
@@ -58,7 +59,7 @@ describe('require contract', () => {
     const value = 2
     const fee = 1
 
-    const result = await tweb3.deploy(ContractMode.JS_DECORATED, requireSrc, [], { value, fee, from })
+    const result = await tweb3.deploy(ContractMode.JS_RAW, await transpile(requireSrc), [], { value, fee, from })
     expect(result.address).toBeDefined()
 
     const requireContract = tweb3.contract(result.address)
@@ -78,6 +79,6 @@ describe('require contract', () => {
     const value = 2
     const fee = 1
 
-    await expect(tweb3.deploy(ContractMode.JS_DECORATED, wrongSrc, [], { value, fee, from })).rejects.toThrow(Error)
+    await expect(tweb3.deploy(ContractMode.JS_RAW, await transpile(wrongSrc), [], { value, fee, from })).rejects.toThrow(Error)
   })
 })
