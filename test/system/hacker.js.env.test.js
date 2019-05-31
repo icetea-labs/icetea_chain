@@ -30,6 +30,8 @@ const hackerSrc = `
   const _ = require('lodash')
 
   @contract class Hacker {
+    @state value
+
     @pure changeRequire() {
       require = undefined
     }
@@ -52,6 +54,12 @@ const hackerSrc = `
       let usegas = this.usegas
       usegas = undefined
       return this.usegas === undefined
+    }
+
+    @transaction circular() {
+      let a = []
+      a[0] = a
+      this.value = a
     }
   }
 `
@@ -82,6 +90,8 @@ describe('restart app', () => {
 
     const r = await hackerContract.methods.usegasView().call()
     expect(r).toBe(false)
+
+    await expect(hackerContract.methods.circular().sendCommit()).rejects.toThrow(Error)
   })
 
   test('prevent hack on deployment', async () => {

@@ -239,6 +239,12 @@ exports.fixObject = obj => {
 }
 
 exports.checkUnsupportTypes = o => {
+  try {
+    exports.serialize(o)
+  } catch (err) {
+    throw new Error('This object is not serializable')
+  }
+
   if (o == null) return null
   if (Buffer.isBuffer(o)) return o
   const t = typeof o
