@@ -1,8 +1,13 @@
 /** @module */
-const _ = require('lodash')
 const utils = require('../../helper/utils')
 const invoker = require('../../contractinvoker')
 const config = require('../../config')
+
+function reload (name) {
+  const lib = require(name)
+  delete require.cache[require.resolve(name)]
+  return lib
+}
 
 const _require = (name) => {
   const whitelist = config.whitelistModules
@@ -12,7 +17,8 @@ const _require = (name) => {
   if (!ok) {
     throw new Error(`require('${name}') is not supported. If you want to load a contract, use loadContract function instead.`)
   }
-  let module = require(name)
+
+  let module = reload(name)
 
   // filter bad functions should not used in blockchain
   if (name === 'crypto') {
@@ -28,7 +34,7 @@ const _require = (name) => {
     }
   }
 
-  return _.cloneDeep(module)
+  return module
 }
 
 function _makeLoadContract (invokerTypes, srcContract, options) {
