@@ -70,7 +70,7 @@ async function testSimpleStore () {
   let tx = await simpleContract.methods.set_value(value2Set).sendCommit({ from })
 
   // Check ValueChanged event was emit
-  expect(tx.events.length).toBe(2)
+  expect(tx.events.length).toBe(1)
   expect(tx.events[0]).toEqual({
     emitter: to,
     eventName: 'ValueChanged',
@@ -79,7 +79,7 @@ async function testSimpleStore () {
 
   const callerValue = 200
   tx = await callerContract.methods.set_value(callerValue).sendCommit()
-  expect(tx.events.length).toBe(2)
+  expect(tx.events.length).toBe(1)
   expect(tx.events[0]).toEqual({
     emitter: to,
     eventName: 'ValueChanged',

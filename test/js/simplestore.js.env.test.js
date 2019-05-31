@@ -62,7 +62,7 @@ async function testSimpleStore (mode, src) {
 
   // since value > 0, a system 'Transferred' event must be emitted
   const events = tweb3.utils.decodeEventData(result)
-  expect(events.length).toBe(2)
+  expect(events.length).toBe(1)
   expect(events[0]).toEqual({
     emitter: 'system',
     eventName: 'Transferred',
@@ -105,7 +105,7 @@ async function testSimpleStore (mode, src) {
 
   // Check ValueChanged event was emit
   const events2 = tweb3.utils.decodeEventData(result2)
-  expect(events2.length).toBe(2)
+  expect(events2.length).toBe(1)
   expect(events2[0]).toEqual({
     emitter: to,
     eventName: 'ValueChanged',

@@ -32,10 +32,6 @@ const hackerSrc = `
   @contract class Hacker {
     @state value
 
-    @pure changeRequire() {
-      require = undefined
-    }
-
     @pure changeFunc() {
       let isNil = _.isNil
       isNil = undefined
@@ -72,8 +68,6 @@ describe('restart app', () => {
     const result = await tweb3.deploy(ContractMode.JS_RAW, (await transpile(hackerSrc)), [], { from })
     expect(result.address).toBeDefined()
     const hackerContract = tweb3.contract(result.address)
-
-    await expect(hackerContract.methods.changeRequire().callPure()).rejects.toThrow(Error)
 
     await hackerContract.methods.changeFunc().callPure()
     await expect(hackerContract.methods.useFunc().callPure()).rejects.toThrow(Error)

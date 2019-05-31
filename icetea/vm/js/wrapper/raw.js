@@ -19,15 +19,17 @@ let global = {}, globalThis = {}, process = {env: {}},
     setInterval, setTimeout, setImmediate, queueMicrotask,
     clearImmediate, clearTimeout, clearInterval
 
-    { // scoping let/const
-        const makeUnsupport = name => () => {
-            throw new Error(name + ' is not supported.')
-        }
-        setInterval = makeUnsupport('setInterval')
-        setTimeout = makeUnsupport('setTimeout')
-        setImmediate = makeUnsupport('setImmediate')
-        queueMicrotask = makeUnsupport('queueMicrotask')
+{ // scoping let/const
+    const makeUnsupport = name => () => {
+        throw new Error(name + ' is not supported.')
     }
+    setInterval = makeUnsupport('setInterval')
+    setTimeout = makeUnsupport('setTimeout')
+    setImmediate = makeUnsupport('setImmediate')
+    queueMicrotask = makeUnsupport('queueMicrotask')
+}
+
+let require = this.runtime.require
 
 let Math = new Proxy(__sysmath, {
     get(obj, prop) {
@@ -73,7 +75,7 @@ Date.now = () => {
     }
     return bl.timestamp * 1000
 }
-    
+
 const __guard = __g;
 ${src}
 
