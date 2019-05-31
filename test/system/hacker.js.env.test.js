@@ -67,6 +67,12 @@ describe('restart app', () => {
     await expect(hackerContract.methods.changeRequire().callPure()).rejects.toThrow(Error)
 
     await hackerContract.methods.changeFunc().callPure()
+
+    // jest does not implement require.cache so you should clear by hand
+    // recommend to test on real environment
+    // issue: https://github.com/facebook/jest/issues/5741
+    jest.resetModules()
+
     const tmp = await hackerContract.methods.useFunc().callPure()
     expect(tmp).toBe(true)
 
