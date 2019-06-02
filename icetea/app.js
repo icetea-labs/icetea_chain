@@ -352,7 +352,7 @@ function doExecTx (options) {
     // Result of ondeploy should be address
     result = tx.to
   } else if (tx.isContractCall()) {
-    if (['constructor', '__on_received', '__on_deployed', 'getState', 'setState', 'runtime'].includes(tx.data.name)) {
+    if (['constructor', '__on_received', '__on_deployed', 'getState', 'setState', 'deleteState', 'runtime'].includes(tx.data.name)) {
       throw new Error('Calling this method directly is not allowed')
     }
     result = invoker.invokeTx(options)

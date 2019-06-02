@@ -3,10 +3,10 @@
  */
 
 require('dotenv').config()
-const { IceTeaWeb3 } = require('icetea-web3')
+const { IceteaWeb3 } = require('icetea-web3')
 
 setTimeout(async () => {
-  const tweb3 = new IceTeaWeb3('ws://localhost:26657/websocket')
+  const tweb3 = new IceteaWeb3('ws://localhost:26657/websocket')
   tweb3.wallet.importAccount(process.env.BANK_KEY)
 
   tweb3.subscribe('OffchainDataQuery', {}, async data => {

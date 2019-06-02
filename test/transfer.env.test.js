@@ -3,7 +3,7 @@
 const { ecc } = require('icetea-common')
 const { sleep, randomAccountWithBalance } = require('./helper')
 const startup = require('../icetea/abcihandler')
-const { IceTeaWeb3 } = require('icetea-web3')
+const { IceteaWeb3 } = require('icetea-web3')
 const server = require('abci')
 const createTempDir = require('tempy').directory
 
@@ -18,7 +18,7 @@ beforeAll(async () => {
   instance.listen(global.ports.abci)
   await sleep(4000)
 
-  tweb3 = new IceTeaWeb3(`http://127.0.0.1:${global.ports.rpc}`)
+  tweb3 = new IceteaWeb3(`http://127.0.0.1:${global.ports.rpc}`)
   account10k = await randomAccountWithBalance(tweb3, 10000)
 })
 
@@ -49,15 +49,15 @@ describe('transfer', () => {
     const tx = await tweb3.getTransaction(result.hash)
 
     // tags must be correct
-    const tags = tweb3.utils.decodeTags(tx)
+    const tags = tweb3.utils.decodeTxTags(tx)
     expect(tags['tx.from']).toBe(from)
     expect(tags['tx.to']).toBe(to)
 
-    const tags2 = tweb3.utils.decodeTags(result)
+    const tags2 = tweb3.utils.decodeTxTags(result)
     expect(tags).toEqual(tags2)
 
     // since value > 0, a system 'Transferred' event must be emitted
-    const events = tweb3.utils.decodeEventData(result)
+    const events = tweb3.utils.decodeTxEvents(result)
     expect(events.length).toBe(1)
     expect(events[0]).toEqual({
       emitter: 'system',

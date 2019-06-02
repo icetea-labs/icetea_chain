@@ -3,7 +3,7 @@
 const { sleep, randomAccountWithBalance } = require('../helper')
 const startup = require('../../icetea/abcihandler')
 const { ContractMode } = require('icetea-common')
-const { IceTeaWeb3 } = require('icetea-web3')
+const { IceteaWeb3 } = require('icetea-web3')
 const server = require('abci')
 const createTempDir = require('tempy').directory
 
@@ -18,7 +18,7 @@ beforeAll(async () => {
   instance.listen(global.ports.abci)
   await sleep(4000)
 
-  tweb3 = new IceTeaWeb3(`http://127.0.0.1:${global.ports.rpc}`)
+  tweb3 = new IceteaWeb3(`http://127.0.0.1:${global.ports.rpc}`)
   account10k = await randomAccountWithBalance(tweb3, 10000)
 })
 

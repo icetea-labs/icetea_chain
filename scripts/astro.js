@@ -7,8 +7,8 @@ const { transpile, setWhiteListModules } = require('sunseed')
 global.fetch = require('node-fetch')
 setWhiteListModules(whitelistModules)
 
-const { IceTeaWeb3 } = require('icetea-web3')
-const tweb3 = new IceTeaWeb3('ws://localhost:26657/websocket')
+const { IceteaWeb3 } = require('icetea-web3')
+const tweb3 = new IceteaWeb3('ws://localhost:26657/websocket')
 
 async function deploy () {
   const key = process.env.BANK_KEY

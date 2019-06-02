@@ -1,7 +1,7 @@
 const fs = require('fs')
 const { sleep, randomAccountWithBalance } = require('../helper')
 const startup = require('../../icetea/abcihandler')
-const { IceTeaWeb3 } = require('icetea-web3')
+const { IceteaWeb3 } = require('icetea-web3')
 const server = require('abci')
 const createTempDir = require('tempy').directory
 
@@ -17,7 +17,7 @@ beforeAll(async () => {
   instance.listen(global.ports.abci)
   await sleep(4000)
 
-  tweb3 = new IceTeaWeb3(`http://127.0.0.1:${global.ports.rpc}`)
+  tweb3 = new IceteaWeb3(`http://127.0.0.1:${global.ports.rpc}`)
   account10k = await randomAccountWithBalance(tweb3, 10000)
 })
 
@@ -65,10 +65,10 @@ describe('rust wasm context', () => {
     expect(afterBalance).toBe('0')
 
     const returnValue = await contract.methods.get_msg_value().sendCommit({ from, value })
-    expect(returnValue.result).toBe(value.toString())
+    expect(returnValue.returnValue).toBe(value.toString())
 
     const returnFee = await contract.methods.get_msg_fee().sendCommit({ from, fee: value })
-    expect(returnFee.result).toBe(value.toString())
+    expect(returnFee.returnValue).toBe(value.toString())
   })
 
   test('state opts', async () => {
@@ -78,7 +78,7 @@ describe('rust wasm context', () => {
     expect(hasState).toBe(true)
 
     const deleteState = await contract.methods.delete_state('owner').sendCommit({ from })
-    expect(deleteState.result).toBe(true)
+    expect(deleteState.returnValue).toBe(true)
 
     const oldContract = contract
     const result = await tweb3.deployWasm(fs.readFileSync('./test/rust/assets/context-test.wasm', 'base64'), [oldContract.address], { from })

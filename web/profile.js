@@ -146,7 +146,7 @@ function registerUpdateAliasEvent () {
     }
     tweb3.contract('system.alias').methods.register(alias, address).sendCommit({ from: address })
       .then(r => {
-        byId('alias').value = r.result
+        byId('alias').value = r.returnValue
         window.alert('Success.')
       })
       .catch(error => {
@@ -172,7 +172,7 @@ function registerUpdateThresholdEvent () {
     }
     tweb3.contract('system.did').methods.setThreshold(address, +threshold).sendCommit({ from: address })
       .then(r => {
-        byId('threshold').value = r.result
+        byId('threshold').value = r.returnValue
         window.alert('Success.')
       })
       .catch(error => {

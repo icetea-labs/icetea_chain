@@ -38,7 +38,8 @@ const handler = {
       app.checkTx(tx)
       return {}
     } catch (err) {
-      console.error(`TX checking error. Transaction data: ${tx || req}`)
+      console.error('TX checking error. Transaction data: ', tx || req)
+      console.error(err)
       return { code: 1, log: String(err) }
     }
   },
@@ -79,7 +80,7 @@ const handler = {
       // console.log(result);
       return result
     } catch (err) {
-      console.error('TX execution error. Transaction data:', tx || req)
+      console.error('TX execution error. Transaction data: ', tx || req)
       console.error(err)
       return { code: 2, log: String(err) }
     }

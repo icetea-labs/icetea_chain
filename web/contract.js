@@ -212,6 +212,7 @@ $(document).ready(function () {
         value: toUNIT(parseFloat(value)),
         fee: parseInt(fee)
       })
+      console.log(result)
       // console.log(tryStringifyJson(result));
       document.getElementById('resultJson').innerHTML = formatResult(result)
     } catch (error) {
@@ -236,7 +237,7 @@ $(document).ready(function () {
       return msg
     } else {
       msg = '<b>Result</b>: <span class="Success"><b>SUCCESS</b></span>' +
-        '<br><b>Returned Value</b>:  <span class="Success">' + tryStringifyJson(r.result) + '</span>' +
+        '<br><b>Returned Value</b>:  <span class="Success">' + tryStringifyJson(r.returnValue) + '</span>' +
         '<br><b>Hash</b>: <a href="/tx.html?hash=' + r.hash + '">' + r.hash + '</a>'
       msg += '<br><b>Height</b>: ' + r.height + '<br><b>Tags</b>: ' + tryStringifyJson(r.tags) +
         '<br><b>Events:</b> ' + tryStringifyJson(r.events)

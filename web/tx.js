@@ -1,11 +1,7 @@
 import handlebars from 'handlebars/dist/handlebars.min.js'
-import { utils } from 'icetea-web3'
 import tweb3 from './tweb3'
 import Prism from 'prismjs'
-import { tryStringifyJson } from './helper'
-
-const switchEncoding = utils.switchEncoding
-const tryParseJson = utils.tryParseJson
+import { tryStringifyJson, switchEncoding, tryParseJson } from './helper'
 
 var AU = require('ansi_up')
 var ansi_up = new AU.default() // eslint-disable-line
@@ -47,9 +43,9 @@ async function fetchTxDetails (template, hash) {
     tx.value = data.value
     tx.fee = data.fee
 
-    const resultIsObj = typeof tx.result === 'object'
+    const resultIsObj = typeof tx.returnValue === 'object'
 
-    tx.result = tryStringifyJson(tx.result, undefined, 2)
+    tx.result = tryStringifyJson(tx.returnValue, undefined, 2)
 
     tx.txType = 'transfer'
     data.data = JSON.parse(data.data) || {}
@@ -64,7 +60,7 @@ async function fetchTxDetails (template, hash) {
     }
 
     tx.data = formatContractData(data.data, tx.to)
-    tx.events = tryStringifyJson(tx.events, null, 2) // tweb3.utils.decodeEventData(tx), null, 2)
+    tx.events = tryStringifyJson(tx.events, null, 2) // tweb3.utils.decodeTxEvents(tx), null, 2)
     // const tags = tweb3.utils.decodeTags(tx)
     tx.from = tx.tags['tx.from']
     tx.tags = tryStringifyJson(tx.tags, null, 2)

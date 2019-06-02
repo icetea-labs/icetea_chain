@@ -52,6 +52,9 @@ exports.emitEvent = function (emitter, tags, eventName, eventData, indexes = [])
     throw new Error(`Event name cannot contain ${EVENTNAMES_SEP}, ${EMITTER_EVENTNAME_SEP}, or ${EVENTNAME_INDEX_SEP} characters.`)
   }
 
+  // copy so that we can safely delete indexed fields before serialization
+  eventData = Object.assign({}, eventData)
+
   if (!tags.EventNames) tags.EventNames = EVENTNAMES_SEP
   if (tags.EventNames.includes(EVENTNAMES_SEP + eventName + EVENTNAMES_SEP)) {
     throw new Error('Event ' + eventName + ' was already emit')
@@ -65,6 +68,8 @@ exports.emitEvent = function (emitter, tags, eventName, eventData, indexes = [])
     //    throw new Error("Event's indexed value is not provided");
     // }
     tags[eventName + EVENTNAME_INDEX_SEP + indexedKey] = String(JSON.stringify(eventData[indexedKey]))
+
+    // it is a copy, safely to delete
     delete eventData[indexedKey]
   })
   tags[eventName] = String(exports.serialize(eventData))

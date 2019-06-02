@@ -1,12 +1,26 @@
-// import ecc from '../icetea/helper/ecc'
-// import { ecc } from 'icetea-common'
-import { utils } from 'icetea-web3'
 import tweb3 from './tweb3'
 import { toUNIT } from './common'
 
-const switchEncoding = utils.switchEncoding
-const replaceAll = utils.replaceAll
-const tryParseJson = utils.tryParseJson
+export function replaceAll (text, search, replacement) {
+  return text.split(search).join(replacement)
+}
+
+export function tryParseJson (p) {
+  try {
+    return JSON.parse(p)
+  } catch (e) {
+    // console.log("WARN: ", e);
+    return p
+  }
+}
+
+export function ensureBuffer (buf, enc) {
+  return Buffer.isBuffer(buf) ? buf : Buffer.from(buf, enc)
+}
+
+export function switchEncoding (str, from, to) {
+  return ensureBuffer(str, from).toString(to)
+}
 
 export function fieldToBase64 (selector) {
   return switchEncoding(document.querySelector(selector).value.trim(), 'utf8', 'base64')

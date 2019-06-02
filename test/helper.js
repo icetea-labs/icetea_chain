@@ -1,24 +1,27 @@
 require('dotenv').config()
 const { ecc } = require('icetea-common')
-const { IceTeaWeb3, utils } = require('icetea-web3')
+const { IceteaWeb3 } = require('icetea-web3')
 
-exports.switchEncoding = utils.switchEncoding
+exports.switchEncoding = function (text, from, to) {
+  const buf = Buffer.isBuffer(text) ? text : Buffer.from(text, from)
+  return buf.toString(to)
+}
 
 exports.web3 = {
   default: function () {
     return exports.web3.http()
   },
   http: function () {
-    return new IceTeaWeb3('http://localhost:26657')
+    return new IceteaWeb3('http://localhost:26657')
   },
   https: function () {
-    return new IceTeaWeb3('https://localhost:26657')
+    return new IceteaWeb3('https://localhost:26657')
   },
   ws: function () {
-    return new IceTeaWeb3('ws://localhost:26657/websocket')
+    return new IceteaWeb3('ws://localhost:26657/websocket')
   },
   wss: function () {
-    return new IceTeaWeb3('wss://localhost:26657/websocket')
+    return new IceteaWeb3('wss://localhost:26657/websocket')
   }
 }
 

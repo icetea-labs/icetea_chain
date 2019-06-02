@@ -3,7 +3,7 @@
 const { sleep, randomAccountWithBalance, switchEncoding } = require('../helper')
 const startup = require('../../icetea/abcihandler')
 const { TxOp, ContractMode } = require('icetea-common')
-const { IceTeaWeb3 } = require('icetea-web3')
+const { IceteaWeb3 } = require('icetea-web3')
 const server = require('abci')
 const createTempDir = require('tempy').directory
 const { transpile } = global
@@ -19,7 +19,7 @@ beforeAll(async () => {
   instance.listen(global.ports.abci)
   await sleep(4000)
 
-  tweb3 = new IceTeaWeb3(`http://127.0.0.1:${global.ports.rpc}`)
+  tweb3 = new IceteaWeb3(`http://127.0.0.1:${global.ports.rpc}`)
   account10k = await randomAccountWithBalance(tweb3, 10000)
 })
 
@@ -53,15 +53,15 @@ async function testSimpleStore (mode, src) {
   expect(result.deliver_tx.code).toBeFalsy()
 
   // tags must be correct
-  const tags = tweb3.utils.decodeTags(result)
+  const tags = tweb3.utils.decodeTxTags(result)
   expect(tags['tx.from']).toBe(from)
   expect(typeof tags['tx.to']).toBe('string')
   const to = tags['tx.to']
 
-  expect(to).toBe(result.result)
+  expect(to).toBe(result.returnValue)
 
   // since value > 0, a system 'Transferred' event must be emitted
-  const events = tweb3.utils.decodeEventData(result)
+  const events = tweb3.utils.decodeTxEvents(result)
   expect(events.length).toBe(1)
   expect(events[0]).toEqual({
     emitter: 'system',
@@ -104,7 +104,7 @@ async function testSimpleStore (mode, src) {
   expect(result2.deliver_tx.code).toBeFalsy()
 
   // Check ValueChanged event was emit
-  const events2 = tweb3.utils.decodeEventData(result2)
+  const events2 = tweb3.utils.decodeTxEvents(result2)
   expect(events2.length).toBe(1)
   expect(events2[0]).toEqual({
     emitter: to,

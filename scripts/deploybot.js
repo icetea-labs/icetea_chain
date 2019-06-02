@@ -19,8 +19,8 @@ if (process.argv.length > 2) {
 }
 botFile = './example/bot/' + botFile
 
-const { IceTeaWeb3 } = require('icetea-web3')
-const tweb3 = new IceTeaWeb3('ws://localhost:26657/websocket')
+const { IceteaWeb3 } = require('icetea-web3')
+const tweb3 = new IceteaWeb3('ws://localhost:26657/websocket')
 
 async function deploy () {
   const key = process.env.BANK_KEY
@@ -39,6 +39,7 @@ async function deploy () {
     botName = botName + '_' + Date.now().toString(36).substr(-4)
     console.log('Use new bot name: ' + botName)
   }
+  console.log(botName, theBot)
   await alias.methods.register(botName, theBot.address).sendCommit()
 
   // register astrobot with botstore

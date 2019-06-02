@@ -110,7 +110,7 @@ function callContract (method, type, value, from, ...params) {
     'read': 'call',
     'write': 'sendCommit'
   }
-  return method(...params)[map[type]]({ value, from }).then(r => type === 'write' ? r.result : r)
+  return method(...params)[map[type]]({ value, from }).then(r => type === 'write' ? r.returnValue : r)
 }
 
 async function getBotInfoFromStore (alias) {
