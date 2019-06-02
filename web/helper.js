@@ -44,17 +44,21 @@ export function registerTxForm ($form, txData) {
 
     // value and fee in unit
     formData.value = toUNIT(parseFloat(formData.value))
-    formData.fee = toUNIT(parseFloat(formData.fee))
+    formData.fee = parseInt(formData.fee)
+
+    const signers = formData.signers
+    delete formData.signers
 
     // submit tx
     try {
       // Should send sync to catch check_tx error
-      var resp = tweb3.wallet.loadFromStorage('123')
+      var resp = tweb3.wallet.loadFromStorage('123', tweb3.wallet, signers || tweb3.wallet.defaultAccount)
+
       if (resp === 0) {
         window.alert('Wallet empty! Please go to Wallet tab to create account.')
         return
       }
-      var result = await tweb3.sendTransactionSync(formData)
+      var result = await tweb3.sendTransactionSync(formData, { signers })
       if ($form.attr('data-stay')) {
         window.alert(exports.tryStringifyJson(result))
       } else {
@@ -95,20 +99,25 @@ export function tryStringifyJson (p, replacer, space) {
 
 export async function loadAddresses () {
   try {
-    var resp = tweb3.wallet.loadFromStorage('123')
-    if (resp === 0) {
-      window.alert('Wallet empty! Please go to Wallet tab to create account.')
+    var count = tweb3.wallet.loadFromStorage('x', undefined, [])
+    if (!count) {
+      window.alert('Wallet empty. Please go to Wallet tab to create account.')
       return
     }
-    var wallets = tweb3.wallet.accounts
-    var select = document.getElementById('signer')
+
+    var wallet = tweb3.wallet
+
+    var select = document.getElementById('signers')
     select.innerHTML = ''
-    wallets.forEach(item => {
+    wallet.accounts.forEach(item => {
       let option = document.createElement('option')
       option.value = item.address
       option.textContent = item.address
       select.appendChild(option)
     })
+    if (wallet.defaultAccount) {
+      select.value = wallet.defaultAccount
+    }
   } catch (error) {
     console.log(error)
     window.alert(String(error))

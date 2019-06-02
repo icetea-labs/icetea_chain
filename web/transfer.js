@@ -12,7 +12,7 @@ function buildData () {
 }
 registerTxForm($('#form'), buildData)
 
-document.getElementById('signer').addEventListener('change', function () {
+document.getElementById('signers').addEventListener('change', function () {
   fillAddressInfo()
 })
 
@@ -23,7 +23,7 @@ $(document).ready(function () {
 
 async function fillAddressInfo () {
   try {
-    var contract = document.getElementById('signer').value
+    var contract = document.getElementById('signers').value
     if (!contract) return
     const info = await tweb3.getAccountInfo(contract)
     info.address = contract

@@ -8,7 +8,7 @@ const storeTemplate = handlebars.compile(document.getElementById('storeTemplate'
 
 const initWeb3 = (showAlert = true) => {
   try {
-    var resp = tweb3.wallet.loadFromStorage('123')
+    var resp = tweb3.wallet.loadFromStorage('123', undefined, tweb3.wallet.defaultAccount)
     if (resp === 0) {
       window.alert('Wallet empty! Please go to Wallet tab to create account.')
       return

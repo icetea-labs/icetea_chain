@@ -34,15 +34,18 @@ $('#form').submit(async function (e) {
   }
 
   try {
+    const signers = document.getElementById('signers').value
+    const from = document.getElementById('from').value
+    const payer = document.getElementById('payer').value
+    const value = document.getElementById('value').value
+    const fee = document.getElementById('fee').value
+
     var params = helper.parseParamsFromField('#params')
-    var resp = tweb3.wallet.loadFromStorage('123')
+    var resp = tweb3.wallet.loadFromStorage('123', tweb3.wallet, signers || tweb3.wallet.defaultAccount)
     if (resp === 0) {
       window.alert('Wallet empty! Please go to Wallet tab to create account.')
       return
     }
-
-    const value = document.getElementById('value').value
-    const fee = document.getElementById('fee').value
 
     // only raw js
     if (mode === 1) {
@@ -50,8 +53,11 @@ $('#form').submit(async function (e) {
       src = await transpile(src, { prettier: true })
     }
     const tx = await tweb3.deploy(mode, src, params, {
+      signers,
+      from,
+      payer,
       value: toUNIT(parseFloat(value)),
-      fee: toUNIT(parseFloat(fee))
+      fee: parseInt(fee)
     })
     // console.log('tx',tx);
     window.location.href = '/tx.html?hash=' + tx.hash

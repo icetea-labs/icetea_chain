@@ -19,14 +19,14 @@
         <h1>Deploy contract</h1>
 
         <form id="form">
-            <label>Signer:</label> <select id="signer" name="signer" autofocus required></select>
+            <label>Signer:</label> <select id="signers" name="signers" autofocus required></select>
             <p><label>From: <input type="text" id="from" name="from" placeholder="Leave blank if same as signer"></label></p>
             <p><label>Payer: <input type="text" id="payer" name="payer" list="payers" placeholder="Leave blank if same as from"></label></p>
             <datalist id="payers">
                 <option value="system.faucet">
             </datalist>
-            <p class="input-row"><input placeholder="Value" type="number" step="0.01" name="value" id="value">
-                <input placeholder="Fee" type="number" step="0.01" name="fee" id="fee"></p>
+            <p class="input-row"><input placeholder="Value (TEA)" type="number" step="0.01" name="value" id="value">
+                <input placeholder="Gas limit (MicroTEA)" type="number" step="1" name="fee" id="fee"></p>
             <p><label>Contract source mode:
                 <select id="srcMode">
                     <option value="0">Raw JS</option>

@@ -21,7 +21,7 @@
 
         <form id="form" action="/api/send_tx" method="POST" data-stay="true">
             <p>
-                <label>Signer:</label> <select id="signer" name="signer" autofocus required></select>
+                <label>Signer:</label> <select id="signers" name="signers" autofocus required></select>
                 &nbsp;&nbsp;<a href="#" class='more' data-target='.more-opts'>more</a>
             </p>
             <div class="hide more-opts">
@@ -30,27 +30,27 @@
                 <datalist id="payers">
                     <option value="system.faucet">
                 </datalist>
-                <p class="input-row"><input placeholder="Value" type="number" step="0.01" name="value" id="value">
-                <input placeholder="Fee" type="number" step="0.01" name="fee" id="fee"></p>
+                <p class="input-row"><input placeholder="Value (TEA)" type="number" step="0.01" name="value" id="value">
+                <input placeholder="Gas limit (MicroTEA)" type="number" step="1" name="fee" id="fee"></p>
             </div>
             <p>
-                <label>Contract address:</label> <select id="to" name="to" autofocus required></select>
+                <label>Contract:</label> <select id="to" name="to" autofocus required></select>
                 &nbsp;&nbsp;<a href="#" class='more' data-target='#contractInfo'>info</a>
             </p>
             <div id="contractInfo" class="info-box hide">No contract available, try deploy one.</div>
             <p id="lookLikeBot" class="hide">If this is a chatbot <button id='chatbot'>Chat to it</button></p>
             <p class="input-row">
-                <label>Function name:</label>
+                <label>Function:</label>
                 <input id="name" name="name" size="16" autocomplete="off" list="funcs" style="width: 160px"></select>
                 <datalist id="funcs"></datalist>
                 <span class="info-box"><code id="funcInfo" class="language-js">function</code></span>
             </p>
             <p><label>Params (each param 1 row, JSON accepted, use " to denote string)</label></p>
             <p><textarea id="params" style="height: 100px;" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></textarea></p>
-            <p><button type="submit" style="padding: 8px 32px" id="submit_btn">Send (Write)</button>
+            <p><button type="submit" class="hide" style="padding: 8px 32px" id="submit_btn">Send (Write)</button>
         </form>
-        <p><button id="read" style="padding: 8px 32px" >Call (View)</button>&nbsp;&nbsp;&nbsp;
-            <button id="pure" style="padding: 8px 32px" >Call (Pure)</button></p>
+        <p><button id="read" class="hide" style="padding: 8px 32px" >Call (View)</button>&nbsp;&nbsp;&nbsp;
+            <button id="pure" class="hide" style="padding: 8px 32px" >Call (Pure)</button></p>
         <section id="result">
             <div><b id="funcName"></b></div>
             <div><pre style="white-space: pre-wrap"><code id="resultJson"></code></pre></div>

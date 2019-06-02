@@ -189,21 +189,28 @@ $(document).ready(function () {
     const value = document.getElementById('value').value
     const fee = document.getElementById('fee').value
 
+    const signers = document.getElementById('signers').value
+    const from = document.getElementById('from').value
+    const payer = document.getElementById('payer').value
+
     var result
 
     // submit tx
     try {
       document.getElementById('funcName').innerHTML = name
 
-      var resp = tweb3.wallet.loadFromStorage('123')
+      var resp = tweb3.wallet.loadFromStorage('123', tweb3.wallet, signers || tweb3.wallet.defaultAccount)
       if (resp === 0) {
         window.alert('Wallet empty! Please go to Wallet tab to create account.')
         return
       }
       var ct = tweb3.contract(address)
       result = await ct.methods[name](...params).sendCommit({
+        signers,
+        from,
+        payer,
         value: toUNIT(parseFloat(value)),
-        fee: toUNIT(parseFloat(fee))
+        fee: parseInt(fee)
       })
       // console.log(tryStringifyJson(result));
       document.getElementById('resultJson').innerHTML = formatResult(result)
