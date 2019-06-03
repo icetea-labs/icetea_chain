@@ -218,7 +218,7 @@ exports.forMetadata = address => ({
       callType: 'metadata',
       name: '__metadata' },
     block: {},
-    require: () => undefined,
-    loadContract: () => undefined
+    require: _require,
+    loadContract: () => ({})
   }
 })
