@@ -48,6 +48,7 @@ const lastBlock = () => {
         }
         return reject(err)
       }
+      value = Buffer.from(JSON.parse(value).data)
       return resolve(v8.deserialize(value))
     })
   })
@@ -111,7 +112,7 @@ exports.save = async ({ block, state, commitKeys }) => {
         db.put(rootKey, trie.root.toString('hex'), next)
       },
       (next) => {
-        db.put(lastBlockKey, v8.serialize(block), next)
+        db.put(lastBlockKey, JSON.stringify(v8.serialize(block)), next)
       }
     ], (err, ret) => {
       if (err) {
