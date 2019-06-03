@@ -38,7 +38,7 @@
             <section data-modes="0;1">
             <p><label>JS source:</label></p>
             <p><textarea id="src" style="height: 280px;" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">@contract class NumberStore  {
-    @state value: ?number
+    @view @state value: ?number
     @transaction setValue (value: number): void {
         this.value = value
         this.emitEvent("ValueChanged", { value })
