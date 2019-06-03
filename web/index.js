@@ -4,7 +4,7 @@ import { utils } from 'icetea-web3'
 import tweb3 from './tweb3'
 import { ecc } from 'icetea-common'
 
-const decodeTX = utils.decodeTX
+const decodeTX = utils.decodeTxContent
 const blockTemplate = handlebars.compile(document.getElementById('blockTemplate').innerHTML)
 const txTemplate = handlebars.compile(document.getElementById('txTemplate').innerHTML)
 
