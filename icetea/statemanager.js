@@ -44,7 +44,6 @@ class StateManager extends EventEmitter {
       return Buffer.alloc(0)
     }
     // const appHash = await patricia.getHash(stateTable)
-    // console.log(`height ${lastBlock.number}, appHash ${appHash.toString('hex').toUpperCase()}`)
 
     const appHash = await patricia.save({
       block: lastBlock,

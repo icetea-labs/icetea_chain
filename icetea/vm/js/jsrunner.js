@@ -12,6 +12,7 @@ const config = require('../../config')
 const { freeGasLimit, minStateGas, gasPerByte, maxTxGas } = config.contract
 const path = require('path')
 const fs = require('fs')
+const debug = require('debug')('jsrunner')
 
 /**
  * js runner
@@ -109,7 +110,7 @@ module.exports = class extends Runner {
       typeof srcWrapper === 'string' &&
       context.runtime.msg.name === '__on_deployed') {
       fs.writeFile(filename, contractSrc, err => {
-        if (err) console.error(err)
+        if (err) debug(err)
       })
     }
 

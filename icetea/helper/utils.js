@@ -20,7 +20,6 @@ exports.getAllPropertyNames = function (obj) {
     })
   } while ((obj = Object.getPrototypeOf(obj)) && obj !== Object.prototype)
 
-  // console.log(props);
   return props
 }
 

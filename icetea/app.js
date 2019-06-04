@@ -7,6 +7,7 @@ const did = require('./system/did')
 const { ecc, codec, AccountType } = require('icetea-common')
 const config = require('./config')
 const sizeof = require('object-sizeof')
+const debug = require('debug')('icetea:app')
 
 const { minStateGas, gasPerByte, minTxGas, maxTxGas } = config.contract
 const { setFreeGasLimit } = config
@@ -46,7 +47,7 @@ class App {
     this.initSystemContracts()
     await stateManager.load()
     const lastState = await stateManager.getLastState()
-    console.log('Last state loaded', { height: lastState.lastBlockHeight, appHash: lastState.lastBlockAppHash.toString('hex').toUpperCase() })
+    debug('Last state loaded', { height: lastState.lastBlockHeight, appHash: lastState.lastBlockAppHash.toString('hex').toUpperCase() })
     return lastState
   }
 

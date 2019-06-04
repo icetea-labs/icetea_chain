@@ -1,9 +1,7 @@
 const { getBlock, getTx, replyQuery } = require('./helper/abci')
 const app = require('./app')
 const utils = require('./helper/utils')
-
-// turn on debug logging
-// require('debug').enable('abci*')
+const debug = require('debug')('icetea:abci')
 
 // turn on logging state diff to console
 if (utils.isDevMode() && utils.envEnabled('PRINT_STATE_DIFF')) {
@@ -38,8 +36,8 @@ const handler = {
       app.checkTx(tx)
       return {}
     } catch (err) {
-      console.error('TX checking error. Transaction data: ', tx || req)
-      console.error(err)
+      debug('TX checking error. Transaction data: ', tx || req)
+      debug(err)
       return { code: 1, log: String(err) }
     }
   },
@@ -77,11 +75,10 @@ const handler = {
       result.tags.push({ key: Buffer.from('tx.to'), value: Buffer.from(tx.isContractCreation() ? data : tx.to) })
       result.tags.push({ key: Buffer.from('tx.payer'), value: Buffer.from(tx.payer) })
 
-      // console.log(result);
       return result
     } catch (err) {
-      console.error('TX execution error. Transaction data: ', tx || req)
-      console.error(err)
+      debug('TX execution error. Transaction data: ', tx || req)
+      debug(err)
       return { code: 2, log: String(err) }
     }
   },
@@ -94,8 +91,6 @@ const handler = {
   query (req) {
     let path, data
     try {
-      // console.log(req.path, req.data.toString(), req.prove || false);
-
       // TODO: handle replying merkle proof to client if requested
 
       // const prove = !!req.prove;
@@ -128,8 +123,8 @@ const handler = {
 
       return { code: 1, info: 'Path not supported' }
     } catch (error) {
-      console.error('ABCI Query error. Path: ', path, ', data: ', data)
-      console.error(error)
+      debug('ABCI Query error. Path: ', path, ', data: ', data)
+      debug(error)
       return { code: 3, info: String(error) }
     }
   }
