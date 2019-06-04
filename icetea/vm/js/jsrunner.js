@@ -12,7 +12,10 @@ const config = require('../../config')
 const { freeGasLimit, minStateGas, gasPerByte, maxTxGas } = config.contract
 const path = require('path')
 const fs = require('fs')
-const debug = require('debug')('jsrunner')
+const debugFactory = require('debug')
+const debug = debugFactory('icetea:jsrunner')
+const contractDebug = debugFactory('icetea:contract')
+contractDebug.log = console.log.bind(console)
 
 /**
  * js runner
@@ -118,7 +121,7 @@ module.exports = class extends Runner {
     const isDevMode = utils.isDevMode()
     const functionInSandbox = vm.runInNewContext(contractSrc, {
       console: {
-        log: isDevMode ? console.log : () => void 0
+        log: isDevMode ? contractDebug : () => void 0
       }
     }, {
       filename,

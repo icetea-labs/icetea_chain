@@ -4,7 +4,7 @@ const util = require('util');
 const sizeof = require('object-sizeof')
 const config = require('../../config')
 const { minStateGas, gasPerByte, freeGasLimit, maxTxGas } = config.contract
-const debug = debug = require('debug')('icetea:wasm')
+const debug = require('debug')('icetea:wasm')
 
 const wasm_bindgen = function ({ log, importTableName, get_sender, get_address, get_balance, now, get_block_hash, get_block_number, get_msg_value, get_msg_fee, load, save, has_state, delete_state, transfer, read_contract, write_contract, emit_event }) {
   var wasm
