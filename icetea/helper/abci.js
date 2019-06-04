@@ -12,7 +12,8 @@ const { serialize } = require('./utils')
 function getBlock (req) {
   const hash = req.hash.toString('hex')
   const number = typeof req.header.height === 'number' ? req.header.height : req.header.height.toNumber()
-  const timestamp = typeof req.header.time.seconds === 'number' ? req.header.time.seconds : req.header.time.seconds.toNumber()
+  const time = req.header.time
+  const timestamp = time.seconds.toNumber() * 1000 + ((time.nanos / 1000) | 0)
   return { hash, number, timestamp }
 }
 
