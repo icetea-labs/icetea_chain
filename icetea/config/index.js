@@ -28,8 +28,8 @@ const config = {
     }
   },
   whitelistModules: [
-    'lodash', 'moment', 'big.js', '@hapi/joi', 'validator', 'ajv', 'cheerio', '@icetea/polytils', 'icetea-botutils',
-    'assert', 'buffer', 'crypto', 'querystring', 'stream', 'string_decoder', 'url', 'util' ],
+    'lodash', 'moment', 'big.js', '@hapi/joi', 'validator', 'ajv', 'cheerio', '@iceteachain/utils', 'u',
+    'assert', 'buffer', 'crypto', 'querystring', 'stream', 'string_decoder', 'url', 'util', 'create-hash' ],
   contract: {
     minStateGas: 200,
     freeGasLimit: 1e9,

@@ -1,7 +1,7 @@
 require('dotenv').config()
 const { ContractMode } = require('icetea-common')
 const fs = require('fs')
-const { transpile, setWhiteListModules } = require('sunseed')
+const { transpile, setWhiteListModules } = require('@iceteachain/sunseed')
 const { whitelistModules } = require('../icetea/config')
 
 global.fetch = require('node-fetch')

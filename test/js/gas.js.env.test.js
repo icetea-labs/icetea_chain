@@ -28,7 +28,7 @@ afterAll(() => {
   instance.close()
 })
 
-const src = `
+const src = `const { expect } = require('u')
   @contract class SimpleStore  {
     @state #owner = msg.sender
     @state #value

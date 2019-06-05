@@ -2,6 +2,7 @@
 <head>
     <title>icetea - deploy contract</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/codemirror@5.47.0/lib/codemirror.css">
     <link rel="stylesheet" type="text/css" href="style.css">
 </head>
 <body>
@@ -19,17 +20,22 @@
         <h1>Deploy contract</h1>
 
         <form id="form">
-            <label>Signer:</label> <select id="signers" name="signers" autofocus required></select>
-            <p><label>From: <input type="text" id="from" name="from" placeholder="Leave blank if same as signer"></label></p>
-            <p><label>Payer: <input type="text" id="payer" name="payer" list="payers" placeholder="Leave blank if same as from"></label></p>
-            <datalist id="payers">
-                <option value="system.faucet">
-            </datalist>
-            <p class="input-row"><input placeholder="Value (TEA)" type="number" step="0.01" name="value" id="value">
-                <input placeholder="Gas limit (MicroTEA)" type="number" step="1" name="fee" id="fee"></p>
-            <p><label>Contract source mode:
+            <p>
+                <label>Signer:</label> <select id="signers" name="signers" autofocus required></select>
+                &nbsp;&nbsp;<a href="#" class='more' data-target='.more-opts'>more</a>
+            </p>
+            <div class="hide more-opts">
+                <p><label>From: <input type="text" id="from" name="from" placeholder="Leave blank if same as signer"></label></p>
+                <p><label>Payer: <input type="text" id="payer" name="payer" list="payers" placeholder="Leave blank if same as from"></label></p>
+                <datalist id="payers">
+                    <option value="system.faucet">
+                </datalist>
+                <p class="input-row"><input placeholder="Value (TEA)" type="number" step="0.01" name="value" id="value">
+                    <input placeholder="Gas limit (MicroTEA)" type="number" step="1" name="fee" id="fee"></p>
+            </div>
+            <p><label>Mode:
                 <select id="srcMode">
-                    <option value="0">Raw JS</option>
+                    <option value="0">Regular JS</option>
                     <option value="1" selected>Decorated JS</option>
                     <option value="100">Wasm (Rust wasm_bindgen)</option>
                 </select>
@@ -38,18 +44,29 @@
             <section data-modes="0;1">
             <p><label>JS source:</label></p>
             <p><textarea id="src" style="height: 280px;" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">@contract class NumberStore  {
-    @view @state value: ?number
-    @transaction setValue (value: number): void {
-        this.value = value
-        this.emitEvent("ValueChanged", { value })
-    }
+  @view @state value: ?number
+  @transaction setValue (value: number): void {
+    this.value = value
+    this.emitEvent("ValueSet", { value })
+  }
 }</textarea></p>
 </section>
-            <p><label>ondeploy params (each param 1 row, JSON accepted, use " to denote string)</label></p>
-            <p><textarea id="params" style="height: 60px;" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></textarea></p>
-            <p><button type="submit" style="padding: 8px 32px" id="submit_btn">Send</button>
+            <p><a href="#" class='more' data-target='.more-params'>params</a></p>
+            <div class='hide more-params'>
+                <p><label>ondeploy params (each param 1 row, JSON accepted, use " to denote string)</label></p>
+                <p><textarea id="params" style="height: 60px;" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></textarea></p>
+            </div>
+            <p><button type="submit" style="padding: 8px 32px" id="submit_btn">Deploy</button>
         </form>
     </div>
+    <script src="https://cdn.jsdelivr.net/npm/codemirror@5.47.0/lib/codemirror.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/codemirror@5.47.0/mode/javascript/javascript.js"></script>
+    <script>
+        CodeMirror.fromTextArea(document.getElementById('src'), {
+            mode:  "javascript",
+            lineNumbers: true
+        });
+      </script>
     <script src="deploy.js"></script>
 </body>
 

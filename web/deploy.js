@@ -1,5 +1,5 @@
 import $ from 'jquery'
-import { transpile, setWhiteListModules } from 'sunseed'
+import { transpile, setWhiteListModules } from '@iceteachain/sunseed'
 import * as helper from './helper'
 import tweb3 from './tweb3'
 import { toUNIT } from './common'
@@ -90,6 +90,12 @@ document.getElementById('wasmFile').addEventListener('change', function (e) {
     console.log(error)
     window.alert(String(error))
   }
+})
+
+$('.more').on('click', function (e) {
+  e.preventDefault()
+
+  $($(this).attr('data-target')).fadeToggle('fast')
 })
 
 helper.loadAddresses()
