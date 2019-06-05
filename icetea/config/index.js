@@ -1,3 +1,5 @@
+// NOTE: this file is used by web folder as well, so don't use BigInt (error on Safari)
+
 const config = {
   versions: {
     node: '>=12.3.1 <13.0.0'
@@ -14,11 +16,11 @@ const config = {
   initialBalances: [
     {
       address: process.env.BANK_ADDR,
-      balance: BigInt(1000000000000)
+      balance: '1000000000000'
     },
     {
       address: 'system.faucet',
-      balance: BigInt(1000000000000000000000000000000)
+      balance: '1000000000000000000000000000000'
     }
   ],
   initialBotStore: {
