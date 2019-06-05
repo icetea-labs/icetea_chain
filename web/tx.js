@@ -41,7 +41,7 @@ async function fetchTxDetails (template, hash) {
     const data = tx.tx // decodeTX(tx.tx)
     tx.to = data.to
     tx.value = data.value
-    tx.fee = data.fee
+    tx.fee = data.fee || 0
 
     const resultIsObj = typeof tx.returnValue === 'object'
 

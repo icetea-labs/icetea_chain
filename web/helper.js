@@ -137,3 +137,11 @@ export async function loadAddresses () {
     window.alert(String(error))
   }
 }
+
+export function registerMoreButtons () {
+  var $ = window.$
+  $('.more').on('click', function (e) {
+    e.preventDefault()
+    $($(this).attr('data-target')).fadeToggle('fast')
+  })
+}

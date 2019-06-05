@@ -92,10 +92,5 @@ document.getElementById('wasmFile').addEventListener('change', function (e) {
   }
 })
 
-$('.more').on('click', function (e) {
-  e.preventDefault()
-
-  $($(this).attr('data-target')).fadeToggle('fast')
-})
-
+helper.registerMoreButtons()
 helper.loadAddresses()

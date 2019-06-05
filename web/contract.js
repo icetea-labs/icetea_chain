@@ -53,7 +53,7 @@ async function fillContractInfo () {
     info.modeName = 'N/A'
     if (!isAccount) {
       if (info.mode === ContractMode.JS_RAW) {
-        info.modeName = 'Raw JS'
+        info.modeName = 'Regular JS'
       } else if (info.mode === ContractMode.JS_DECORATED) {
         info.modeName = 'Decorated JS'
       } else if (info.mode === ContractMode.WASM) {
@@ -204,6 +204,7 @@ $(document).ready(function () {
         window.alert('Wallet empty! Please go to Wallet tab to create account.')
         return
       }
+      document.getElementById('resultJson').innerHTML = "<span class='Error'>sending...</span>"
       var ct = tweb3.contract(address)
       result = await ct.methods[name](...params).sendCommit({
         signers,
@@ -268,6 +269,7 @@ $(document).ready(function () {
     //     return;
     // }
     document.getElementById('funcName').innerHTML = name
+    document.getElementById('resultJson').innerHTML = "<span class='Error'>calling...</span>"
     var params = helper.parseParamsFromField('#params')
     // const privateKey = window.$('#private_key').val().trim()
 
@@ -288,9 +290,5 @@ $(document).ready(function () {
     // Prism.highlightElement(document.getElementById('resultJson'))
   })
 
-  $('.more').on('click', function (e) {
-    e.preventDefault()
-
-    $($(this).attr('data-target')).fadeToggle('fast')
-  })
+  helper.registerMoreButtons()
 })
