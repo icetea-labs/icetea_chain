@@ -154,7 +154,7 @@ describe('SimpleStore', () => {
   })
 
   test('decorated JS valid-syntax simple store', async () => {
-    const CONTRACT_SRC = `const { expect } = require('u')
+    const CONTRACT_SRC = `const { expect } = require(';')
         @contract class SimpleStore  {
             @state #owner = msg.sender
             @state #value

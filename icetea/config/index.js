@@ -30,7 +30,7 @@ const config = {
     }
   },
   whitelistModules: [
-    'lodash', 'moment', 'big.js', '@hapi/joi', 'validator', 'ajv', 'cheerio', '@iceteachain/utils', 'u',
+    'lodash', 'moment', 'big.js', '@hapi/joi', 'validator', 'ajv', 'cheerio', '@iceteachain/utils', ';',
     'assert', 'buffer', 'crypto', 'querystring', 'stream', 'string_decoder', 'url', 'util', 'create-hash' ],
   contract: {
     minStateGas: 200,

@@ -18,7 +18,7 @@ const moduleCrypto = Object.freeze({
 
 function reload (name) {
   const mapping = {
-    u: moduleUtils,
+    ';': moduleUtils,
     crypto: moduleCrypto,
     'create-hash': moduleCrypto.createHash
   }
