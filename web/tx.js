@@ -53,7 +53,11 @@ async function fetchTxDetails (template, hash) {
       tx.txType = 'deploy'
       tx.to = tx.result
       if (tx.to) {
-        tx.metadata = tryStringifyJson(await tweb3.getMetadata(tx.to), null, 2)
+        try {
+          tx.metadata = tryStringifyJson(await tweb3.getMetadata(tx.to), null, 2)
+        } catch (error) {
+          tx.metadata = String(error)
+        }
       }
     } else if (data.data.op === 1) {
       tx.txType = 'call'

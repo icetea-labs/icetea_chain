@@ -153,27 +153,31 @@ module.exports = class extends Runner {
       gasUsed += minStateGas
 
       if (gasUsed > gasLimit) {
-        throw new Error(`deleteState ${key} failed: out of gas`)
+        throw new Error(`deleteState ${key} failed: out of gas.`)
       }
 
       context.deleteState(key)
     }
-    runCtx.usegas = gas => {
+
+    const runGuard = { ...guard }
+    runGuard.usegas = gas => {
       if (gas <= 0) {
-        throw new Error('gas is a positive number')
+        throw new Error('Gas must be a positive number.')
       }
       gasUsed += gas
 
       if (gasUsed > gasLimit) {
         if (context.emitEvent) { // isTX
-          throw new Error('out of gas')
+          throw new Error('Out of gas.')
         }
-        throw new Error('out of resources')
+        throw new Error('Out of allowed resources.')
       }
     }
-    runCtx = Object.freeze(runCtx)
 
-    const result = functionInSandbox.call(runCtx, guard)
+    Object.freeze(runCtx)
+    Object.freeze(runGuard)
+
+    const result = functionInSandbox.call(runCtx, runGuard)
     if (info) {
       if (gasUsed > 0) {
         if (info.__gas_used) {
@@ -186,9 +190,9 @@ module.exports = class extends Runner {
       // last check for contract call contract
       if (info.__gas_used > gasLimit) {
         if (context.emitEvent) { // isTX
-          throw new Error('out of gas')
+          throw new Error('Out of gas.')
         }
-        throw new Error('out of resources')
+        throw new Error('Out of allowed resources.')
       }
     }
 
