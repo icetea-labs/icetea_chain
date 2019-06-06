@@ -1,5 +1,5 @@
 /** @module */
-const { ContractMode } = require('icetea-common')
+const { ContractMode } = require('@iceteachain/common')
 
 /**
  * get runner

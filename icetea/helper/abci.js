@@ -1,5 +1,5 @@
 /** @module */
-const { codec, Tx } = require('icetea-common')
+const { codec, Tx } = require('@iceteachain/common')
 const { serialize } = require('./utils')
 
 /**

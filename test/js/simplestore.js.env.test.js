@@ -2,8 +2,8 @@
 
 const { sleep, randomAccountWithBalance, switchEncoding } = require('../helper')
 const startup = require('../../icetea/abcihandler')
-const { TxOp, ContractMode } = require('icetea-common')
-const { IceteaWeb3 } = require('icetea-web3')
+const { TxOp, ContractMode } = require('@iceteachain/common')
+const { IceteaWeb3 } = require('@iceteachain/web3')
 const server = require('abci')
 const createTempDir = require('tempy').directory
 const { transpile } = global

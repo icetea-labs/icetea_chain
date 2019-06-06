@@ -1,6 +1,6 @@
 require('dotenv').config()
-const { ecc } = require('icetea-common')
-const { IceteaWeb3 } = require('icetea-web3')
+const { ecc } = require('@iceteachain/common')
+const { IceteaWeb3 } = require('@iceteachain/web3')
 
 exports.switchEncoding = function (text, from, to) {
   const buf = Buffer.isBuffer(text) ? text : Buffer.from(text, from)

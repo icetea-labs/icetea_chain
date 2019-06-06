@@ -1,7 +1,7 @@
 import $ from 'jquery'
 import * as helper from './helper'
 import tweb3 from './tweb3'
-import { ContractMode } from 'icetea-common'
+import { ContractMode } from '@iceteachain/common'
 import handlebars from 'handlebars/dist/handlebars.min.js'
 import Prism from 'prismjs'
 import { toUNIT, toTEA } from './common'
@@ -199,7 +199,7 @@ $(document).ready(function () {
     try {
       document.getElementById('funcName').innerHTML = name
 
-      var resp = tweb3.wallet.loadFromStorage('123', tweb3.wallet, signers || tweb3.wallet.defaultAccount)
+      var resp = await tweb3.wallet.loadFromStorage('123', tweb3.wallet, signers || tweb3.wallet.defaultAccount)
       if (resp === 0) {
         window.alert('Wallet empty! Please go to Wallet tab to create account.')
         return

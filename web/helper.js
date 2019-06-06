@@ -66,7 +66,7 @@ export function registerTxForm ($form, txData) {
     // submit tx
     try {
       // Should send sync to catch check_tx error
-      var resp = tweb3.wallet.loadFromStorage('123', tweb3.wallet, signers || tweb3.wallet.defaultAccount)
+      var resp = await tweb3.wallet.loadFromStorage('123', tweb3.wallet, signers || tweb3.wallet.defaultAccount)
 
       if (resp === 0) {
         window.alert('Wallet empty! Please go to Wallet tab to create account.')
@@ -113,7 +113,8 @@ export function tryStringifyJson (p, replacer, space) {
 
 export async function loadAddresses () {
   try {
-    var count = tweb3.wallet.loadFromStorage('x', undefined, [])
+    var count = await tweb3.wallet.loadFromStorage('x', undefined, [])
+    console.log(count, tweb3.wallet.accounts)
     if (!count) {
       window.alert('Wallet empty. Please go to Wallet tab to create account.')
       return

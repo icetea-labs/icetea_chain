@@ -1,5 +1,5 @@
 import $ from 'jquery'
-import { ecc, AccountType } from 'icetea-common'
+import { ecc, AccountType } from '@iceteachain/common'
 import tweb3 from './tweb3'
 // import { functionTypeAnnotation } from '@babel/types'
 // import bip39 from 'bip39'
@@ -7,6 +7,11 @@ import tweb3 from './tweb3'
 
 const newKeyPairWithAddress = ecc.newKeys
 // const toPubKeyAndAddress = ecc.toPubKeyAndAddress
+
+const handleError = function (error) {
+  console.error(error)
+  window.alert(String(error))
+}
 
 document.getElementById('generateRegularKey').addEventListener('click', function () {
   generateKeys(AccountType.REGULAR_ACCOUNT)
@@ -16,24 +21,21 @@ document.getElementById('generateBankKey').addEventListener('click', function ()
   generateKeys(AccountType.BANK_ACCOUNT)
 })
 
-function generateKeys (type) {
+async function generateKeys (type) {
   var keyInfo = newKeyPairWithAddress(type)
   document.getElementById('generated_private_key').textContent = keyInfo.privateKey
   document.getElementById('generated_public_key').textContent = keyInfo.address
   if (document.getElementById('autoAdd').checked) {
     tweb3.wallet.importAccount(keyInfo.privateKey)
     tweb3.wallet.defaultAccount = keyInfo.address
-    tweb3.wallet.saveToStorage('123')
+    await tweb3.wallet.saveToStorage('123')
     showMessage('Success! New account set as default.')
     fillWallet()
   }
 
   if (type === AccountType.BANK_ACCOUNT && document.getElementById('autoFaucet').checked) {
     tweb3.contract('system.faucet').methods.request(/* address */).sendCommit({ from: keyInfo.address, payer: 'system.faucet' })
-      .catch(error => {
-        console.error(error)
-        window.alert(String(error))
-      })
+      .catch(handleError)
   }
 }
 
@@ -71,25 +73,24 @@ function showMessage (text, time = 4000) {
   }, time)
 }
 
-$(document).ready(function () {
-  tweb3.wallet.loadFromStorage('123')
+$(document).ready(async function () {
+  await tweb3.wallet.loadFromStorage('123')
   fillWallet()
-  $('#setDefaultAcc').on('click', () => {
+  $('#setDefaultAcc').on('click', async () => {
     try {
       var contract = document.getElementById('wallet').value
       tweb3.wallet.defaultAccount = contract
       $('#currentDefaultAcc').text(tweb3.wallet.defaultAccount)
-      tweb3.wallet.saveToStorage('123')
+      await tweb3.wallet.saveToStorage('123')
       showMessage('Success')
     } catch (error) {
-      console.log(error)
-      window.alert(String(error))
+      handleError(error)
     }
   })
 
   // $('#saveStorage').on('click', async () => {
   //   // showMessage('Saving...')
-  //   tweb3.wallet.saveToStorage('123')
+  //   await tweb3.wallet.saveToStorage('123')
   //   showMessage('Success', 2000)
   // })
 
@@ -98,12 +99,11 @@ $(document).ready(function () {
       var privateKey = $('#your_private_key_account').val()
       var account = tweb3.wallet.importAccount(privateKey)
       tweb3.wallet.defaultAccount = account.address
-      tweb3.wallet.saveToStorage('123')
+      await tweb3.wallet.saveToStorage('123')
       showMessage('Success! Import account set as default.')
       fillWallet()
     } catch (error) {
-      console.log(error)
-      window.alert(String(error))
+      handleError(error)
     }
   })
 
@@ -120,8 +120,7 @@ $(document).ready(function () {
   //     $('#generated_public_key_seed').val(account.address)
   //     fillWallet()
   //   } catch (error) {
-  //     console.log(error)
-  //     window.alert(String(error))
+  //     handleError(error)
   //   }
   // })
 })

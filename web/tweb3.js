@@ -1,5 +1,5 @@
 // import { IceteaWeb3 } from '../tweb3'
-import { IceteaWeb3 } from 'icetea-web3'
+import { IceteaWeb3 } from '@iceteachain/web3'
 
 // For localhost test, set .env.dev ICETEA_WS = http://localhost:3001/api or ws://localhost:3001/websocket
 

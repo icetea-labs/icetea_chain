@@ -41,7 +41,7 @@ $('#form').submit(async function (e) {
     const fee = document.getElementById('fee').value
 
     var params = helper.parseParamsFromField('#params')
-    var resp = tweb3.wallet.loadFromStorage('123', tweb3.wallet, signers || tweb3.wallet.defaultAccount)
+    var resp = await tweb3.wallet.loadFromStorage('123', tweb3.wallet, signers || tweb3.wallet.defaultAccount)
     if (resp === 0) {
       window.alert('Wallet empty! Please go to Wallet tab to create account.')
       return

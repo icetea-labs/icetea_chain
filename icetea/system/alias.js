@@ -9,7 +9,7 @@
 
 const { Alias: ALIAS_ADDR } = require('./botnames')
 const { checkMsg } = require('../helper/types')
-const { validateAddress } = require('icetea-common').ecc
+const { validateAddress } = require('@iceteachain/common').ecc
 
 const METADATA = {
   'query': {

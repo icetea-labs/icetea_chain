@@ -3,7 +3,7 @@
  */
 
 require('dotenv').config()
-const { IceteaWeb3 } = require('icetea-web3')
+const { IceteaWeb3 } = require('@iceteachain/web3')
 
 setTimeout(async () => {
   const tweb3 = new IceteaWeb3('ws://localhost:26657/websocket')

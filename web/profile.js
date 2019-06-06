@@ -28,9 +28,9 @@ function val (x, t) {
   return e
 }
 
-function loadWallet () {
+async function loadWallet () {
   try {
-    const resp = tweb3.wallet.loadFromStorage('123')
+    const resp = await tweb3.wallet.loadFromStorage('123')
     if (resp === 0) {
       window.alert('Wallet empty! Please go to Wallet tab to create account.')
       return

@@ -1,9 +1,9 @@
 /* global jest describe test expect beforeAll afterAll */
 
-const { ecc } = require('icetea-common')
+const { ecc } = require('@iceteachain/common')
 const { sleep, randomAccountWithBalance } = require('./helper')
 const startup = require('../icetea/abcihandler')
-const { IceteaWeb3 } = require('icetea-web3')
+const { IceteaWeb3 } = require('@iceteachain/web3')
 const server = require('abci')
 const createTempDir = require('tempy').directory
 

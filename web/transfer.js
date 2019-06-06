@@ -16,9 +16,9 @@ document.getElementById('signers').addEventListener('change', function () {
   fillAddressInfo()
 })
 
-$(document).ready(function () {
+$(document).ready(async function () {
   registerMoreButtons()
-  loadAddresses()
+  await loadAddresses()
   fillAddressInfo()
 })
 
