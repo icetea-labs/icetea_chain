@@ -87,7 +87,7 @@ let signatures = {}
 
 function setVisible (selector, signature, stateAccess) {
   var $item = $(selector)
-  if (!signature || signature.indexOf(stateAccess) >= 0) {
+  if (!signature || signature.indexOf('@') < 0 || signature.indexOf(stateAccess) >= 0) {
     $item.show()
   } else {
     $item.hide()

@@ -20,9 +20,10 @@
             <a href="/profile.html">Profile</a>
         </nav>
         <h1>Wallet</h1>
-        <!--h2>
-            1. Set default account
-        </h2-->
+        <p class='Error'>
+            This wallet is for <b>TESTING ONLY.</b> Please DO NOT use mainnet private keys/seeds.
+        </p>
+        <hr size='1'>
         <div>
             <p>
                 <label>Default account:</label> <label id="currentDefaultAcc"></label>
@@ -33,8 +34,9 @@
                 <p>More than 2 accounts will make loading slow. <button id='clear'>Clear accounts</button></p>
             </p>
         </div>
+        <hr size='1'>
         <h2>
-            2. Generate new account
+            1. Generate new account
         </h2>
         <div>
             <p><label><input id='autoAdd' type="checkbox" checked> Add to wallet after generation</label></p>
@@ -45,13 +47,15 @@
             <p><b>Account address:</b> <span id="generated_public_key"></span></p>
             <p><i>After generation, you could go to <a href='/profile.html'>Profile</a> tab to change account settings.</i></p>
         </div>
+        <hr size='1'>
         <h2>
-            3. Import private key
+            2. Import private key
         </h2>
         <div>
             <textarea id="your_private_key_account"  placeholder="private key (base58)" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></textarea>
             <br/><br/><button id="importAccount">Import</button>
         </div>
+
         <!--h2>
             3. Save data into storage
         </h2>
@@ -63,7 +67,7 @@
 
         <!--
         <h2>
-            4. Generate account by seed phrases
+            4. Import seed phrases (mnemonic)
         </h2>
         <div>
             <button id="generateMnemonic">Generate</button>
@@ -74,6 +78,7 @@
             <h3>Account address</h3>
             <textarea disabled id="generated_public_key_seed" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></textarea>
         </div>
+        
         <h2>
             5. Reveal account address
         </h2>
