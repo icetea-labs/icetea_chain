@@ -443,6 +443,16 @@ const wasm_bindgen = function ({ log, importTableName, get_sender, get_address, 
     }
   }
 
+  // This function is required for token.rs of Icetea Studio
+  __exports.__wbg_new_a99726b0abef495b = function () {
+    try {
+      return addHeapObject(new Error())
+    } catch (e) {
+      debug('wasm-bindgen: imported JS function "new" that was not marked as `catch` threw an error:', e)
+      throw e
+    }
+  }
+
   // TBD: async preparation, all function is sync now
   // new js_sys::Promise
   // __exports.__wbg_new_86c0ea6acca9eed8 = function (arg0, arg1) {
