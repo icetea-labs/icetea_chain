@@ -14,8 +14,7 @@ module.exports = {
     tx: './web/tx.js',
     bot: './web/bot.js',
     botstore: './web/botstore.js',
-    profile: './web/profile.js',
-    test: './web/playground.js'
+    profile: './web/profile.js'
   },
   output: {
     path: path.resolve(__dirname, 'web_dist'),

@@ -19,6 +19,7 @@
     "docs:build": "node_modules/.bin/jsdoc --configure jsdoc.json --verbose",
     "blockchain": "tendermint node & node icetea/index.js",
     "build": "webpack --config webpack.prod.js",
+    "build:dev": "webpack --config webpack.dev.js",
     "build:server": "node --max_old_space_size=1096 node_modules/webpack/bin/webpack.js --config webpack.prod.js"
   },
   "keywords": [
