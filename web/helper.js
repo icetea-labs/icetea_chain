@@ -133,6 +133,10 @@ export async function loadAddresses () {
     if (wallet.defaultAccount) {
       select.value = wallet.defaultAccount
     }
+
+    if (wallet.accounts.length !== 1) {
+      window.$('.hide-when-1-account').show().remove('more-opts')
+    }
   } catch (error) {
     console.log(error)
     window.alert(String(error))

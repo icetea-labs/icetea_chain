@@ -45,7 +45,7 @@ async function generateKeys (type) {
 // })
 
 document.getElementById('clear').addEventListener('click', function () {
-  window.localStorage.removeItem('accounts')
+  window.localStorage.removeItem('_icetea_accounts')
   window.location.reload()
 })
 

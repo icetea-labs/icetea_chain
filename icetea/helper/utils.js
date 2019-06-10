@@ -1,6 +1,8 @@
 /** @module */
 
 const _ = require('lodash')
+const sysContracts = require('../system')
+const { validateAddress } = require('@iceteachain/common').ecc
 
 /**
  * get all property name of an object
@@ -312,6 +314,11 @@ exports.serialize = (obj) => {
     }
     return value
   })
+}
+
+exports.validateAddress = addr => {
+  if (sysContracts.has(addr)) return
+  validateAddress(addr)
 }
 
 exports.envIs = (n, v) => process.env[n] == v // eslint-disable-line

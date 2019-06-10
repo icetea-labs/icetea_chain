@@ -1,6 +1,6 @@
 const _ = require('lodash')
 const config = require('./config')
-const { deepFreeze, checkUnsupportTypes } = require('./helper/utils')
+const { deepFreeze, checkUnsupportTypes, validateAddress } = require('./helper/utils')
 
 const { ecc, codec } = require('@iceteachain/common')
 
@@ -149,7 +149,7 @@ const getStateProxy = (stateTable) => {
   const deployedContracts = {}
 
   const _incBalance = (addr, value) => {
-    ecc.validateAddress(addr)
+    validateAddress(addr)
     if (codec.isRegularAddress(addr)) {
       throw new Error('Cannot transfer to regular account.')
     }
