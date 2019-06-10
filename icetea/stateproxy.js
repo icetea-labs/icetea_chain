@@ -149,6 +149,7 @@ const getStateProxy = (stateTable) => {
   const deployedContracts = {}
 
   const _incBalance = (addr, value) => {
+    ecc.validateAddress(addr)
     if (codec.isRegularAddress(addr)) {
       throw new Error('Cannot transfer to regular account.')
     }

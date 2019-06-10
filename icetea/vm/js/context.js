@@ -135,6 +135,7 @@ exports.forTransaction = (contractAddress, methodName, methodParams, options) =>
     runtime: {
       msg,
       block,
+      balanceOf: tools.balanceOf,
       loadContract: _makeLoadContract(['invokeUpdate', 'invokeView', 'invokePure'], contractAddress, options),
       require: _require,
       addTag: (name, value) => {
@@ -195,6 +196,7 @@ exports.forView = (contractAddress, name, params, options) => {
     runtime: Object.freeze({
       msg,
       block,
+      balanceOf: tools.balanceOf,
       loadContract: _makeLoadContract(['invokeView', 'invokePure'], contractAddress, options),
       require: _require
     })
