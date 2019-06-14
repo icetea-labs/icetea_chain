@@ -71,15 +71,16 @@ const handler = {
       }
 
       // add system tags
-      result.tags.push({ key: Buffer.from('tx.from'), value: Buffer.from(tx.from) })
-      result.tags.push({ key: Buffer.from('tx.to'), value: Buffer.from(tx.isContractCreation() ? data : tx.to) })
-      result.tags.push({ key: Buffer.from('tx.payer'), value: Buffer.from(tx.payer) })
+      _addSystemTags(result.tags, tx, data)
 
       return result
     } catch (err) {
       debug('TX execution error. Transaction data: ', tx || req)
       debug(err)
-      return { code: 2, log: String(err) }
+
+      const tags = []
+      _addSystemTags(tags, tx)
+      return { code: 2, tags, log: String(err) }
     }
   },
 
@@ -128,4 +129,13 @@ const handler = {
       return { code: 3, info: String(error) }
     }
   }
+}
+
+const _addSystemTags = (tags, tx, data) => {
+  tags.push({ key: Buffer.from('tx.from'), value: Buffer.from(tx.from) })
+  const txTo = tx.isContractCreation() ? data : tx.to
+  if (txTo) {
+    tags.push({ key: Buffer.from('tx.to'), value: Buffer.from(txTo) })
+  }
+  tags.push({ key: Buffer.from('tx.payer'), value: Buffer.from(tx.payer) })
 }
