@@ -2,10 +2,9 @@ import JSONFormatter from 'json-formatter-js'
 import handlebars from 'handlebars/dist/handlebars.min.js'
 import { utils } from '@iceteachain/web3'
 import tweb3 from './tweb3'
-import { ecc } from '@iceteachain/common'
 import { fmtHex, fmtTime } from './helper'
+import { toTEA } from './common'
 
-const decodeTX = utils.decodeTxContent
 const blockTemplate = handlebars.compile(document.getElementById('blockTemplate').innerHTML)
 const txTemplate = handlebars.compile(document.getElementById('txTemplate').innerHTML)
 
@@ -19,20 +18,18 @@ function fmtBlocks (blocks) {
 }
 
 function fmtTxs (txs) {
-  Object.keys(txs).forEach(k => {
-    const t = txs[k]
+  console.log(txs)
+  txs = txs.map(utils.decodeTxResult)
+  txs.forEach(t => {
+    const data = t.tx
     t.shash = fmtHex(t.hash)
     t.blockHeight = t.height
 
-    const data = decodeTX(t.tx)
-    let from = data.from
-    if (!from) {
-      const pubkey = data.evidence.pubkey || data.evidence[0].pubkey
-      from = ecc.toAddress(pubkey)
-    }
-    t.from = fmtHex(from, 6)
-    t.to = fmtHex(data.to, 6)
-    t.value = data.value
+    t.from = data.from || t.tags['tx.from']
+    t.fromText = fmtHex(t.from, 6)
+    t.to = data.to || t.tags['tx.to']
+    t.toText = fmtHex(t.to, 6)
+    t.value = toTEA(data.value).toLocaleString() + ' TEA'
     t.fee = data.fee
 
     t.status = t.tx_result.code ? 'Error' : 'Success'
@@ -41,7 +38,6 @@ function fmtTxs (txs) {
     data.data = JSON.parse(data.data) || {}
     if (data.data.op === 0) {
       t.txType = 'deploy'
-      // t.to = fmtHex(t.tx_result.data);
     } else if (data.data.op === 1) {
       t.txType = 'call'
     }
