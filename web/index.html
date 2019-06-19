@@ -32,7 +32,7 @@
                 {{#each this}}
                 <tr>
                     <td><a href="/tx.html?hash={{hash}}">{{txType}}</a></td>
-                    <td>{{blockHeight}}</td>
+                    <td><a href="/block.html?height={{blockHeight}}">{{blockHeight}}</a></td>
                     <td class={{status}}>{{status}}</td>
                     <td>{{from}}</td>
                     <td>{{to}}</td>
@@ -57,7 +57,7 @@
                 </tr>
                 {{#each this}}
                 <tr>
-                    <td>{{shash}}</td>
+                    <td><a href="/block.html?height={{height}}">{{shash}}</a></td>
                     <td>{{height}}</td>
                     <td>{{timestamp}}</td>
                     <td>{{txCount}}</td>

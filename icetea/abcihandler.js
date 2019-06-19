@@ -114,6 +114,9 @@ const handler = {
         case 'account_info': {
           return replyQuery(app.getAccountInfo(data))
         }
+        case 'contract_src': {
+          return replyQuery(app.getContractSource(data))
+        }
         case 'invokeView':
         case 'invokePure': {
           const options = JSON.parse(data)

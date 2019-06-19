@@ -150,3 +150,15 @@ export function registerMoreButtons () {
     $($(this).attr('data-target')).fadeToggle('fast')
   })
 }
+
+export function fmtHex (hex, c) {
+  if (!hex || hex.length < c * 2 + 4) return hex
+  if (hex.indexOf('.') >= 0) return hex
+  c = c || 4
+  return hex.substr(0, c - 1) + '...' + hex.substr(-c - 1)
+}
+
+export function fmtTime (tm) {
+  var d = (typeof tm === 'number') ? tm * 1000 : Date.parse(tm)
+  return new Date(d).toLocaleString()
+}

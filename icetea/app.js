@@ -261,6 +261,15 @@ class App {
     return { balance, system, mode, hasSrc: !!src, deployedBy }
   }
 
+  getContractSource (addr) {
+    addr = _ensureAddress(addr)
+    const src = stateManager.getAccountState(addr).src
+    if (src && Buffer.isBuffer(src)) {
+      return src.toString('base64')
+    }
+    return src
+  }
+
   execTx (tx, tags) {
     this.checkTx(tx)
 

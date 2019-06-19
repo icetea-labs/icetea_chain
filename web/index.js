@@ -3,22 +3,11 @@ import handlebars from 'handlebars/dist/handlebars.min.js'
 import { utils } from '@iceteachain/web3'
 import tweb3 from './tweb3'
 import { ecc } from '@iceteachain/common'
+import { fmtHex, fmtTime } from './helper'
 
 const decodeTX = utils.decodeTxContent
 const blockTemplate = handlebars.compile(document.getElementById('blockTemplate').innerHTML)
 const txTemplate = handlebars.compile(document.getElementById('txTemplate').innerHTML)
-
-function fmtTime (tm) {
-  var d = (typeof tm === 'number') ? tm * 1000 : Date.parse(tm)
-  return new Date(d).toLocaleTimeString()
-}
-
-function fmtHex (hex, c) {
-  if (!hex || hex.length < c * 2 + 4) return hex
-  if (hex.indexOf('.') >= 0) return hex
-  c = c || 4
-  return hex.substr(0, c) + '...' + hex.substr(-c)
-}
 
 function fmtBlocks (blocks) {
   return blocks.map(b => ({
@@ -106,7 +95,7 @@ async function loadData () {
     // load debug info
     const myJSON = await tweb3.getDebugState()
 
-    const formatter = new JSONFormatter(myJSON, 1)
+    const formatter = new JSONFormatter(myJSON, 0)
     document.getElementById('debug').innerHTML = ''
     document.getElementById('debug').appendChild(formatter.render())
   }
