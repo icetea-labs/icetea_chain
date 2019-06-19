@@ -1,5 +1,5 @@
 import $ from 'jquery'
-import { transpile, setWhiteListModules } from 'sunseed'
+import { transpile, setWhiteListModules } from '@iceteachain/sunseed'
 import * as helper from './helper'
 import tweb3 from './tweb3'
 import { toUNIT } from './common'
@@ -41,7 +41,7 @@ $('#form').submit(async function (e) {
     const fee = document.getElementById('fee').value
 
     var params = helper.parseParamsFromField('#params')
-    var resp = tweb3.wallet.loadFromStorage('123', tweb3.wallet, signers || tweb3.wallet.defaultAccount)
+    var resp = await tweb3.wallet.loadFromStorage('123', tweb3.wallet, signers || tweb3.wallet.defaultAccount)
     if (resp === 0) {
       window.alert('Wallet empty! Please go to Wallet tab to create account.')
       return
@@ -92,4 +92,5 @@ document.getElementById('wasmFile').addEventListener('change', function (e) {
   }
 })
 
+helper.registerMoreButtons()
 helper.loadAddresses()

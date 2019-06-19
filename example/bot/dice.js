@@ -1,6 +1,4 @@
-// To deploy from web, use https://raw.githubusercontent.com/TradaTech/botutils/master/index.js
-
-const { SurveyBot, Message, utils } = require('icetea-botutils')
+const { SurveyBot, Message, utils } = require('@iceteachain/utils')
 const Big = require('big.js')
 
 const DiceTypes = [{
@@ -108,7 +106,7 @@ const DiceTypes = [{
 
     succeed_number(number) {
         const max = this.getMaxBet()
-        const tea = utils.toTEA(max)
+        const tea = utils.toStandardUnit(max)
         return Message.text(`You picked ${number}.`)
             .text(`How much you want to bet(maximum ${tea} TEA) ? `)
             .input('Bet amount', {
@@ -119,7 +117,7 @@ const DiceTypes = [{
     }
 
     collect_amount(amount, collector) {
-        amount = utils.toUnit(+amount)
+        amount = utils.toMicroUnit(+amount)
         if (amount <= 0 || amount > this.getMaxBet()) {
             throw new Error('Invalid bet amount')
         }
@@ -128,7 +126,7 @@ const DiceTypes = [{
 
     fail_amount(amount) {
         const max = this.getMaxBet()
-        const tea = utils.toTEA(max)
+        const tea = utils.toStandardUnit(max)
         return Message.text(`Invalid amount ${amount}.Please enter a valid amount(maximum ${tea} TEA).`)
             .input('Bet amount', {
                 value: tea,
@@ -138,7 +136,7 @@ const DiceTypes = [{
     }
 
     succeed_amount(amount, collector) {
-        const tea = utils.toTEA(amount)
+        const tea = utils.toStandardUnit(amount)
         return Message.html(`Your picked number: <b>${collector.number}</b> <br>Your bet amount: <b>${tea}</b> TEA.`)
             .button('Confirm', 'confirm')
             .requestTransfer(amount)
@@ -154,8 +152,8 @@ const DiceTypes = [{
         }
         return Message.html(`DICE RESULT: <b>${r}</b><br>
         You guess: ${collector.number} => <b>YOU ${win ? 'WIN' : 'LOSE'}</b><br>
-            You sent: <b>${utils.toTEA(msg.value)}</b> TEA<br>
-                You received: <b>${utils.toTEA(receiveAmount)}</b> TEA.`)
+            You sent: <b>${utils.toStandardUnit(msg.value)}</b> TEA<br>
+                You received: <b>${utils.toStandardUnit(receiveAmount)}</b> TEA.`)
             .button('Play Again', 'start')
             .done()
     }

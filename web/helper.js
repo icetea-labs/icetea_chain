@@ -66,7 +66,7 @@ export function registerTxForm ($form, txData) {
     // submit tx
     try {
       // Should send sync to catch check_tx error
-      var resp = tweb3.wallet.loadFromStorage('123', tweb3.wallet, signers || tweb3.wallet.defaultAccount)
+      var resp = await tweb3.wallet.loadFromStorage('123', tweb3.wallet, signers || tweb3.wallet.defaultAccount)
 
       if (resp === 0) {
         window.alert('Wallet empty! Please go to Wallet tab to create account.')
@@ -113,7 +113,8 @@ export function tryStringifyJson (p, replacer, space) {
 
 export async function loadAddresses () {
   try {
-    var count = tweb3.wallet.loadFromStorage('x', undefined, [])
+    var count = await tweb3.wallet.loadFromStorage('x', undefined, [])
+    console.log(count, tweb3.wallet.accounts)
     if (!count) {
       window.alert('Wallet empty. Please go to Wallet tab to create account.')
       return
@@ -132,8 +133,32 @@ export async function loadAddresses () {
     if (wallet.defaultAccount) {
       select.value = wallet.defaultAccount
     }
+
+    if (wallet.accounts.length !== 1) {
+      window.$('.hide-when-1-account').show().remove('more-opts')
+    }
   } catch (error) {
     console.log(error)
     window.alert(String(error))
   }
+}
+
+export function registerMoreButtons () {
+  var $ = window.$
+  $('.more').on('click', function (e) {
+    e.preventDefault()
+    $($(this).attr('data-target')).fadeToggle('fast')
+  })
+}
+
+export function fmtHex (hex, c) {
+  if (!hex || hex.length < c * 2 + 4) return hex
+  if (hex.indexOf('.') >= 0) return hex
+  c = c || 4
+  return hex.substr(0, c - 1) + '...' + hex.substr(-c - 1)
+}
+
+export function fmtTime (tm) {
+  var d = (typeof tm === 'number') ? tm * 1000 : Date.parse(tm)
+  return new Date(d).toLocaleString()
 }

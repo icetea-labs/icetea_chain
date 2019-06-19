@@ -2,6 +2,7 @@ import handlebars from 'handlebars/dist/handlebars.min.js'
 import tweb3 from './tweb3'
 import Prism from 'prismjs'
 import { tryStringifyJson, switchEncoding, tryParseJson } from './helper'
+import { toTEA } from './common'
 
 var AU = require('ansi_up')
 var ansi_up = new AU.default() // eslint-disable-line
@@ -38,10 +39,10 @@ async function fetchTxDetails (template, hash) {
 
     tx.status = tx.tx_result.code ? 'Error' : 'Success'
 
-    const data = tx.tx // decodeTX(tx.tx)
+    const data = tx.tx
     tx.to = data.to
-    tx.value = data.value
-    tx.fee = data.fee
+    tx.value = toTEA(data.value).toLocaleString() + ' TEA'
+    tx.fee = toTEA(data.fee || 0).toLocaleString() + ' TEA'
 
     const resultIsObj = typeof tx.returnValue === 'object'
 
@@ -53,7 +54,11 @@ async function fetchTxDetails (template, hash) {
       tx.txType = 'deploy'
       tx.to = tx.result
       if (tx.to) {
-        tx.metadata = tryStringifyJson(await tweb3.getMetadata(tx.to), null, 2)
+        try {
+          tx.metadata = tryStringifyJson(await tweb3.getMetadata(tx.to), null, 2)
+        } catch (error) {
+          tx.metadata = String(error)
+        }
       }
     } else if (data.data.op === 1) {
       tx.txType = 'call'

@@ -2,8 +2,8 @@
 
 const { sleep, randomAccountWithBalance, switchEncoding } = require('../helper')
 const startup = require('../../icetea/abcihandler')
-const { TxOp, ContractMode } = require('icetea-common')
-const { IceteaWeb3 } = require('icetea-web3')
+const { TxOp, ContractMode } = require('@iceteachain/common')
+const { IceteaWeb3 } = require('@iceteachain/web3')
 const server = require('abci')
 const createTempDir = require('tempy').directory
 const { transpile } = global
@@ -154,7 +154,7 @@ describe('SimpleStore', () => {
   })
 
   test('decorated JS valid-syntax simple store', async () => {
-    const CONTRACT_SRC = `
+    const CONTRACT_SRC = `const { expect } = require(';')
         @contract class SimpleStore  {
             @state #owner = msg.sender
             @state #value

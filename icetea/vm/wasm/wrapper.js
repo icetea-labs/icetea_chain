@@ -4,6 +4,7 @@ const util = require('util');
 const sizeof = require('object-sizeof')
 const config = require('../../config')
 const { minStateGas, gasPerByte, freeGasLimit, maxTxGas } = config.contract
+const debug = require('debug')('icetea:wasm')
 
 const wasm_bindgen = function ({ log, importTableName, get_sender, get_address, get_balance, now, get_block_hash, get_block_number, get_msg_value, get_msg_fee, load, save, has_state, delete_state, transfer, read_contract, write_contract, emit_event }) {
   var wasm
@@ -36,7 +37,7 @@ const wasm_bindgen = function ({ log, importTableName, get_sender, get_address, 
     try {
       log(varg0)
     } catch (e) {
-      console.error('wasm-bindgen: imported JS function that was not marked as `catch` threw an error:', e)
+      debug('wasm-bindgen: imported JS function "log" that was not marked as `catch` threw an error:', e)
       throw e
     }
   }
@@ -99,7 +100,7 @@ const wasm_bindgen = function ({ log, importTableName, get_sender, get_address, 
     try {
       return addHeapObject(get_balance());
     } catch (e) {
-      console.error("wasm-bindgen: imported JS function that was not marked as `catch` threw an error:", e);
+      debug("wasm-bindgen: imported JS function 'getbalance' that was not marked as `catch` threw an error:", e);
       throw e;
     }
   };
@@ -108,7 +109,7 @@ const wasm_bindgen = function ({ log, importTableName, get_sender, get_address, 
     try {
       return addHeapObject(get_msg_value());
     } catch (e) {
-      console.error("wasm-bindgen: imported JS function that was not marked as `catch` threw an error:", e);
+      debug("wasm-bindgen: imported JS function 'getmsgvalue' that was not marked as `catch` threw an error:", e);
       throw e;
     }
   };
@@ -117,7 +118,7 @@ const wasm_bindgen = function ({ log, importTableName, get_sender, get_address, 
     try {
       return addHeapObject(get_msg_fee());
     } catch (e) {
-      console.error("wasm-bindgen: imported JS function that was not marked as `catch` threw an error:", e);
+      debug("wasm-bindgen: imported JS function 'getmsgfee' that was not marked as `catch` threw an error:", e);
       throw e;
     }
   };
@@ -130,7 +131,7 @@ const wasm_bindgen = function ({ log, importTableName, get_sender, get_address, 
       mem[ret / 4] = retptr
       mem[ret / 4 + 1] = retlen
     } catch (e) {
-      console.error('wasm-bindgen: imported JS function that was not marked as `catch` threw an error:', e)
+      debug('wasm-bindgen: imported JS function "getsender" that was not marked as `catch` threw an error:', e)
       throw e
     }
   }
@@ -143,7 +144,7 @@ const wasm_bindgen = function ({ log, importTableName, get_sender, get_address, 
       mem[ret / 4] = retptr
       mem[ret / 4 + 1] = retlen
     } catch (e) {
-      console.error('wasm-bindgen: imported JS function that was not marked as `catch` threw an error:', e)
+      debug('wasm-bindgen: imported JS function "getaddress" that was not marked as `catch` threw an error:', e)
       throw e
     }
   }
@@ -152,7 +153,7 @@ const wasm_bindgen = function ({ log, importTableName, get_sender, get_address, 
     try {
       return now()
     } catch (e) {
-      console.error('wasm-bindgen: imported JS function that was not marked as `catch` threw an error:', e)
+      debug('wasm-bindgen: imported JS function "now" that was not marked as `catch` threw an error:', e)
       throw e
     }
   }
@@ -165,7 +166,7 @@ const wasm_bindgen = function ({ log, importTableName, get_sender, get_address, 
       mem[ret / 4] = retptr
       mem[ret / 4 + 1] = retlen
     } catch (e) {
-      console.error('wasm-bindgen: imported JS function that was not marked as `catch` threw an error:', e)
+      debug('wasm-bindgen: imported JS function "getblockchain" that was not marked as `catch` threw an error:', e)
       throw e
     }
   }
@@ -174,7 +175,7 @@ const wasm_bindgen = function ({ log, importTableName, get_sender, get_address, 
     try {
       return get_block_number()
     } catch (e) {
-      console.error('wasm-bindgen: imported JS function that was not marked as `catch` threw an error:', e)
+      debug('wasm-bindgen: imported JS function "getblocknumber" that was not marked as `catch` threw an error:', e)
       throw e
     }
   }
@@ -203,7 +204,7 @@ const wasm_bindgen = function ({ log, importTableName, get_sender, get_address, 
     try {
       return addHeapObject(load(varg0))
     } catch (e) {
-      console.error('wasm-bindgen: imported JS function that was not marked as `catch` threw an error:', e)
+      debug('wasm-bindgen: imported JS function "load" that was not marked as `catch` threw an error:', e)
       throw e
     }
   }
@@ -215,7 +216,7 @@ const wasm_bindgen = function ({ log, importTableName, get_sender, get_address, 
     try {
       save(varg0, getObject(arg2))
     } catch (e) {
-      console.error('wasm-bindgen: imported JS function that was not marked as `catch` threw an error:', e)
+      debug('wasm-bindgen: imported JS function "save" that was not marked as `catch` threw an error:', e)
       throw e
     }
   }
@@ -225,7 +226,7 @@ const wasm_bindgen = function ({ log, importTableName, get_sender, get_address, 
     try {
       return has_state(varg0) ? 1 : 0;
     } catch (e) {
-      console.error('wasm-bindgen: imported JS function that was not marked as `catch` threw an error:', e)
+      debug('wasm-bindgen: imported JS function "hasstate" that was not marked as `catch` threw an error:', e)
       throw e
     }
   }
@@ -235,7 +236,7 @@ const wasm_bindgen = function ({ log, importTableName, get_sender, get_address, 
     try {
       delete_state(varg0)
     } catch (e) {
-      console.error('wasm-bindgen: imported JS function that was not marked as `catch` threw an error:', e)
+      debug('wasm-bindgen: imported JS function "deletestate" that was not marked as `catch` threw an error:', e)
       throw e
     }
   }
@@ -246,7 +247,7 @@ const wasm_bindgen = function ({ log, importTableName, get_sender, get_address, 
   //   try {
   //     return addHeapObject(load_contract(varg0))
   //   } catch (e) {
-  //     console.error('wasm-bindgen: imported JS function that was not marked as `catch` threw an error:', e)
+  //     debug('wasm-bindgen: imported JS function "loadcontract" that was not marked as `catch` threw an error:', e)
   //     throw e
   //   }
   // }
@@ -259,7 +260,7 @@ const wasm_bindgen = function ({ log, importTableName, get_sender, get_address, 
       mem[ret / 4] = retptr
       mem[ret / 4 + 1] = retlen
     } catch (e) {
-      console.error('wasm-bindgen: imported JS function that was not marked as `catch` threw an error:', e)
+      debug('wasm-bindgen: imported JS function "jsonstringify" that was not marked as `catch` threw an error:', e)
       throw e
     }
   }
@@ -269,8 +270,8 @@ const wasm_bindgen = function ({ log, importTableName, get_sender, get_address, 
     try {
       emit_event(varg0, getObject(arg2), getObject(arg3))
     } catch (e) {
-      console.error(
-        'wasm-bindgen: imported JS function that was not marked as `catch` threw an error:',
+      debug(
+        'wasm-bindgen: imported JS function "emitevent" that was not marked as `catch` threw an error:',
         e
       )
       throw e
@@ -314,7 +315,7 @@ const wasm_bindgen = function ({ log, importTableName, get_sender, get_address, 
     try {
       return addHeapObject(read_contract(varg0, varg2, takeObject(arg4)))
     } catch (e) {
-      console.error('wasm-bindgen: imported JS function that was not marked as `catch` threw an error:', e)
+      debug('wasm-bindgen: imported JS function "readcontract" that was not marked as `catch` threw an error:', e)
       throw e
     }
   }
@@ -325,7 +326,7 @@ const wasm_bindgen = function ({ log, importTableName, get_sender, get_address, 
     try {
       return addHeapObject(write_contract(varg0, varg2, takeObject(arg4)))
     } catch (e) {
-      console.error('wasm-bindgen: imported JS function that was not marked as `catch` threw an error:', e)
+      debug('wasm-bindgen: imported JS function "writecontract" that was not marked as `catch` threw an error:', e)
       throw e
     }
   }
@@ -334,7 +335,7 @@ const wasm_bindgen = function ({ log, importTableName, get_sender, get_address, 
     try {
       return addHeapObject(Array.from(getObject(arg0)))
     } catch (e) {
-      console.error('wasm-bindgen: imported JS function that was not marked as `catch` threw an error:', e)
+      debug('wasm-bindgen: imported JS function "from" that was not marked as `catch` threw an error:', e)
       throw e
     }
   }
@@ -343,7 +344,7 @@ const wasm_bindgen = function ({ log, importTableName, get_sender, get_address, 
     try {
       return getObject(arg0).length
     } catch (e) {
-      console.error('wasm-bindgen: imported JS function that was not marked as `catch` threw an error:', e)
+      debug('wasm-bindgen: imported JS function "length" that was not marked as `catch` threw an error:', e)
       throw e
     }
   }
@@ -426,9 +427,9 @@ const wasm_bindgen = function ({ log, importTableName, get_sender, get_address, 
     wasm.__wbindgen_free(arg0, arg1 * 1)
 
     try {
-      console.error(varg0)
+      debug(varg0)
     } catch (e) {
-      console.error('wasm-bindgen: imported JS function that was not marked as `catch` threw an error:', e)
+      debug('wasm-bindgen: imported JS function "error" that was not marked as `catch` threw an error:', e)
       throw e
     }
   }
@@ -437,7 +438,17 @@ const wasm_bindgen = function ({ log, importTableName, get_sender, get_address, 
     try {
       return addHeapObject(new Array())
     } catch (e) {
-      console.error('wasm-bindgen: imported JS function that was not marked as `catch` threw an error:', e)
+      debug('wasm-bindgen: imported JS function "new" that was not marked as `catch` threw an error:', e)
+      throw e
+    }
+  }
+
+  // This function is required for token.rs of Icetea Studio
+  __exports.__wbg_new_a99726b0abef495b = function () {
+    try {
+      return addHeapObject(new Error())
+    } catch (e) {
+      debug('wasm-bindgen: imported JS function "new" that was not marked as `catch` threw an error:', e)
       throw e
     }
   }
@@ -461,7 +472,7 @@ const wasm_bindgen = function ({ log, importTableName, get_sender, get_address, 
   //     try {
   //       return addHeapObject(new Promise(cbarg0.bind(cbarg0)))
   //     } catch (e) {
-  //       console.error('wasm-bindgen: imported JS function that was not marked as `catch` threw an error:', e)
+  //       debug('wasm-bindgen: imported JS function that was not marked as `catch` threw an error:', e)
   //       throw e
   //     }
   //   } finally {
@@ -473,7 +484,7 @@ const wasm_bindgen = function ({ log, importTableName, get_sender, get_address, 
   //   try {
   //     return addHeapObject(Promise.resolve(getObject(arg0)))
   //   } catch (e) {
-  //     console.error('wasm-bindgen: imported JS function that was not marked as `catch` threw an error:', e)
+  //     debug('wasm-bindgen: imported JS function that was not marked as `catch` threw an error:', e)
   //     throw e
   //   }
   // }
@@ -482,7 +493,7 @@ const wasm_bindgen = function ({ log, importTableName, get_sender, get_address, 
   //   try {
   //     return addHeapObject(getObject(arg0).then(getObject(arg1)))
   //   } catch (e) {
-  //     console.error('wasm-bindgen: imported JS function that was not marked as `catch` threw an error:', e)
+  //     debug('wasm-bindgen: imported JS function that was not marked as `catch` threw an error:', e)
   //     throw e
   //   }
   // }
@@ -495,7 +506,7 @@ const wasm_bindgen = function ({ log, importTableName, get_sender, get_address, 
       mem[ret / 4] = retptr
       mem[ret / 4 + 1] = retlen
     } catch (e) {
-      console.error('wasm-bindgen: imported JS function that was not marked as `catch` threw an error:', e)
+      debug('wasm-bindgen: imported JS function "stack" that was not marked as `catch` threw an error:', e)
       throw e
     }
   }
@@ -504,7 +515,7 @@ const wasm_bindgen = function ({ log, importTableName, get_sender, get_address, 
     try {
       return getObject(arg0).push(getObject(arg1))
     } catch (e) {
-      console.error('wasm-bindgen: imported JS function that was not marked as `catch` threw an error:', e)
+      debug('wasm-bindgen: imported JS function "push" that was not marked as `catch` threw an error:', e)
       throw e
     }
   }
@@ -686,13 +697,12 @@ const wasm_bindgen = function ({ log, importTableName, get_sender, get_address, 
     try {
       transfer(varg0, narg2);
     } catch (e) {
-      console.error("wasm-bindgen: imported JS function that was not marked as `catch` threw an error:", e);
+      debug("wasm-bindgen: imported JS function 'transfer' that was not marked as `catch` threw an error:", e);
       throw e;
     }
   }
 
   function init(buffer) {
-    // console.log({ [importTableName]: __exports });
     // return global.WebAssembly.instantiate(buffer, { [importTableName]: __exports })
     //   .then(({ instance }) => {
     //     wasm = init.wasm = instance.exports

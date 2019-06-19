@@ -2,8 +2,30 @@
 const utils = require('../../helper/utils')
 const invoker = require('../../contractinvoker')
 const config = require('../../config')
+const crypto = require('crypto')
+
+const moduleUtils = Object.freeze(require('@iceteachain/utils/utils.js'))
+const moduleCrypto = Object.freeze({
+
+  // What hash algos available depends on OpenSSL
+  // In the future, we might linit the number of hash algos supported
+  // to a safe and frequently-used list only.
+
+  createHash: crypto.createHash,
+  getHashes: crypto.getHashes,
+  timingSafeEqual: crypto.timingSafeEqual
+})
 
 function reload (name) {
+  const mapping = {
+    ';': moduleUtils,
+    crypto: moduleCrypto,
+    'create-hash': moduleCrypto.createHash
+  }
+  if (mapping[name]) {
+    return mapping[name]
+  }
+
   const lib = require(name)
   delete require.cache[require.resolve(name)]
   return lib
@@ -113,6 +135,7 @@ exports.forTransaction = (contractAddress, methodName, methodParams, options) =>
     runtime: {
       msg,
       block,
+      balanceOf: tools.balanceOf,
       loadContract: _makeLoadContract(['invokeUpdate', 'invokeView', 'invokePure'], contractAddress, options),
       require: _require,
       addTag: (name, value) => {
@@ -173,6 +196,7 @@ exports.forView = (contractAddress, name, params, options) => {
     runtime: Object.freeze({
       msg,
       block,
+      balanceOf: tools.balanceOf,
       loadContract: _makeLoadContract(['invokeView', 'invokePure'], contractAddress, options),
       require: _require
     })
@@ -218,7 +242,7 @@ exports.forMetadata = address => ({
       callType: 'metadata',
       name: '__metadata' },
     block: {},
-    require: () => undefined,
-    loadContract: () => undefined
+    require: _require,
+    loadContract: () => ({})
   }
 })

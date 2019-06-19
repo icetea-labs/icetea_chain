@@ -1,7 +1,7 @@
 require('dotenv').config()
-const { ContractMode } = require('icetea-common')
+const { ContractMode } = require('@iceteachain/common')
 const fs = require('fs')
-const { transpile, setWhiteListModules } = require('sunseed')
+const { transpile, setWhiteListModules } = require('@iceteachain/sunseed')
 const { whitelistModules } = require('../icetea/config')
 
 global.fetch = require('node-fetch')
@@ -19,7 +19,7 @@ if (process.argv.length > 2) {
 }
 botFile = './example/bot/' + botFile
 
-const { IceteaWeb3 } = require('icetea-web3')
+const { IceteaWeb3 } = require('@iceteachain/web3')
 const tweb3 = new IceteaWeb3('ws://localhost:26657/websocket')
 
 async function deploy () {

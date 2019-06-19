@@ -1,9 +1,7 @@
 const { getBlock, getTx, replyQuery } = require('./helper/abci')
 const app = require('./app')
 const utils = require('./helper/utils')
-
-// turn on debug logging
-// require('debug').enable('abci*')
+const debug = require('debug')('icetea:abci')
 
 // turn on logging state diff to console
 if (utils.isDevMode() && utils.envEnabled('PRINT_STATE_DIFF')) {
@@ -38,8 +36,8 @@ const handler = {
       app.checkTx(tx)
       return {}
     } catch (err) {
-      console.error('TX checking error. Transaction data: ', tx || req)
-      console.error(err)
+      debug('TX checking error. Transaction data: ', tx || req)
+      debug(err)
       return { code: 1, log: String(err) }
     }
   },
@@ -73,16 +71,16 @@ const handler = {
       }
 
       // add system tags
-      result.tags.push({ key: Buffer.from('tx.from'), value: Buffer.from(tx.from) })
-      result.tags.push({ key: Buffer.from('tx.to'), value: Buffer.from(tx.isContractCreation() ? data : tx.to) })
-      result.tags.push({ key: Buffer.from('tx.payer'), value: Buffer.from(tx.payer) })
+      _addSystemTags(result.tags, tx, data)
 
-      // console.log(result);
       return result
     } catch (err) {
-      console.error('TX execution error. Transaction data: ', tx || req)
-      console.error(err)
-      return { code: 2, log: String(err) }
+      debug('TX execution error. Transaction data: ', tx || req)
+      debug(err)
+
+      const tags = []
+      _addSystemTags(tags, tx)
+      return { code: 2, tags, log: String(err) }
     }
   },
 
@@ -94,8 +92,6 @@ const handler = {
   query (req) {
     let path, data
     try {
-      // console.log(req.path, req.data.toString(), req.prove || false);
-
       // TODO: handle replying merkle proof to client if requested
 
       // const prove = !!req.prove;
@@ -118,6 +114,9 @@ const handler = {
         case 'account_info': {
           return replyQuery(app.getAccountInfo(data))
         }
+        case 'contract_src': {
+          return replyQuery(app.getContractSource(data))
+        }
         case 'invokeView':
         case 'invokePure': {
           const options = JSON.parse(data)
@@ -128,9 +127,18 @@ const handler = {
 
       return { code: 1, info: 'Path not supported' }
     } catch (error) {
-      console.error('ABCI Query error. Path: ', path, ', data: ', data)
-      console.error(error)
+      debug('ABCI Query error. Path: ', path, ', data: ', data)
+      debug(error)
       return { code: 3, info: String(error) }
     }
   }
+}
+
+const _addSystemTags = (tags, tx, data) => {
+  tags.push({ key: Buffer.from('tx.from'), value: Buffer.from(tx.from) })
+  const txTo = tx.isContractCreation() ? data : tx.to
+  if (txTo) {
+    tags.push({ key: Buffer.from('tx.to'), value: Buffer.from(txTo) })
+  }
+  tags.push({ key: Buffer.from('tx.payer'), value: Buffer.from(tx.payer) })
 }

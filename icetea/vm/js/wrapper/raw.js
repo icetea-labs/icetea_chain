@@ -55,7 +55,7 @@ let Date = class {
             if (!bl) {
                 throw new Error('Cannot call new Date() in this context.')
             }
-            d = new __sysdate(bl.timestamp * 1000)
+            d = new __sysdate(bl.timestamp)
         } else {
             d = new __sysdate(...args)
         }
@@ -73,7 +73,7 @@ Date.now = () => {
     if (!bl) {
         throw new Error('Cannot call Date.now() in this context.')
     }
-    return bl.timestamp * 1000
+    return bl.timestamp
 }
 
 const __guard = __g;

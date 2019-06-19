@@ -1,7 +1,7 @@
 import $ from 'jquery'
 import * as helper from './helper'
 import tweb3 from './tweb3'
-import { ContractMode } from 'icetea-common'
+import { ContractMode } from '@iceteachain/common'
 import handlebars from 'handlebars/dist/handlebars.min.js'
 import Prism from 'prismjs'
 import { toUNIT, toTEA } from './common'
@@ -53,7 +53,7 @@ async function fillContractInfo () {
     info.modeName = 'N/A'
     if (!isAccount) {
       if (info.mode === ContractMode.JS_RAW) {
-        info.modeName = 'Raw JS'
+        info.modeName = 'Regular JS'
       } else if (info.mode === ContractMode.JS_DECORATED) {
         info.modeName = 'Decorated JS'
       } else if (info.mode === ContractMode.WASM) {
@@ -87,7 +87,7 @@ let signatures = {}
 
 function setVisible (selector, signature, stateAccess) {
   var $item = $(selector)
-  if (!signature || signature.indexOf(stateAccess) >= 0) {
+  if (!signature || signature.indexOf('@') < 0 || signature.indexOf(stateAccess) >= 0) {
     $item.show()
   } else {
     $item.hide()
@@ -199,11 +199,12 @@ $(document).ready(function () {
     try {
       document.getElementById('funcName').innerHTML = name
 
-      var resp = tweb3.wallet.loadFromStorage('123', tweb3.wallet, signers || tweb3.wallet.defaultAccount)
+      var resp = await tweb3.wallet.loadFromStorage('123', tweb3.wallet, signers || tweb3.wallet.defaultAccount)
       if (resp === 0) {
         window.alert('Wallet empty! Please go to Wallet tab to create account.')
         return
       }
+      document.getElementById('resultJson').innerHTML = "<span class='Error'>sending...</span>"
       var ct = tweb3.contract(address)
       result = await ct.methods[name](...params).sendCommit({
         signers,
@@ -268,6 +269,7 @@ $(document).ready(function () {
     //     return;
     // }
     document.getElementById('funcName').innerHTML = name
+    document.getElementById('resultJson').innerHTML = "<span class='Error'>calling...</span>"
     var params = helper.parseParamsFromField('#params')
     // const privateKey = window.$('#private_key').val().trim()
 
@@ -288,9 +290,5 @@ $(document).ready(function () {
     // Prism.highlightElement(document.getElementById('resultJson'))
   })
 
-  $('.more').on('click', function (e) {
-    e.preventDefault()
-
-    $($(this).attr('data-target')).fadeToggle('fast')
-  })
+  helper.registerMoreButtons()
 })

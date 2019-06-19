@@ -1,7 +1,7 @@
 const { randomAccountWithBalance, sleep } = require('../helper')
 const startup = require('../../icetea/abcihandler')
-const { ContractMode } = require('icetea-common')
-const { IceteaWeb3 } = require('icetea-web3')
+const { ContractMode } = require('@iceteachain/common')
+const { IceteaWeb3 } = require('@iceteachain/web3')
 const server = require('abci')
 const createTempDir = require('tempy').directory
 const transpile = global.transpile
@@ -43,13 +43,13 @@ const hackerSrc = `
     }
 
     @pure usegasPure() {
-      this.usegas = undefined
+      __guard.usegas = undefined
     }
 
     @view usegasView() {
-      let usegas = this.usegas
+      let usegas = __guard.usegas
       usegas = undefined
-      return this.usegas === undefined
+      return __guard.usegas === undefined
     }
 
     @transaction circular() {

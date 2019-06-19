@@ -1,6 +1,6 @@
 require('dotenv').config()
 const { web3, switchEncoding } = require('./helper')
-const { TxOp, ContractMode } = require('icetea-common')
+const { TxOp, ContractMode } = require('@iceteachain/common')
 
 const tweb3 = web3.default()
 

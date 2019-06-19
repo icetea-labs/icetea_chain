@@ -2,10 +2,10 @@
 
 const { randomAccountWithBalance, sleep } = require('./helper')
 const startup = require('../icetea/abcihandler')
-const { IceteaWeb3 } = require('icetea-web3')
+const { IceteaWeb3 } = require('@iceteachain/web3')
 const server = require('abci')
 const createTempDir = require('tempy').directory
-const { ecc } = require('icetea-common')
+const { ecc } = require('@iceteachain/common')
 
 jest.setTimeout(30000)
 

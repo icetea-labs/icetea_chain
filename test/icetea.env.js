@@ -4,7 +4,7 @@ const tm = require('tendermint-node')
 const createTempDir = require('tempy').directory
 const getPort = require('get-port')
 
-const { transpile, setWhiteListModules } = require('sunseed')
+const { transpile, setWhiteListModules } = require('@iceteachain/sunseed')
 const { whitelistModules } = require('../icetea/config')
 
 setWhiteListModules(whitelistModules)

@@ -11,7 +11,6 @@ function isClassProperty(type) {
 */
 
 function isMethod (node) {
-  // console.log(mp);
   if (!node) return false
   const type = node.type
   if (type === 'ClassMethod' || type === 'ClassPrivateMethod') {
@@ -201,10 +200,8 @@ module.exports = function ({ types: t }) {
             const memberMeta = {}
 
             const members = path.parentPath.get('body.body')
-            // console.log(members);
             members.forEach(mp => {
               const m = mp.node
-              // console.log(mp);
 
               const propName = m.key.name || ('#' + m.key.id.name)
               memberMeta[propName] = {
@@ -271,8 +268,6 @@ module.exports = function ({ types: t }) {
               }
             })
 
-            // console.log(memberMeta)
-
             // validate metadata
 
             Object.keys(memberMeta).forEach(key => {
@@ -313,7 +308,6 @@ module.exports = function ({ types: t }) {
             })
 
             // add to __metadata
-            // console.log(astify(t, memberMeta))
 
             const program = path.findParent(p => p.isProgram())
             const metaDeclare = program.get('body').find(p => p.isVariableDeclaration() && p.node.declarations[0].id.name === '__metadata')

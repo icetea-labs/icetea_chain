@@ -1,11 +1,11 @@
 @contract class EchoBot {
-    botInfo = {
+    @pure botInfo = {
         name: 'Echo bot',
         description: 'It just echoes what you say, like a parrot.',
         stateAccess: 'none'
     }
 
-    @pure onstart() {
+    @pure oncommand() {
         return this.ontext('Start')
     }
 

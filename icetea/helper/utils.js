@@ -2,6 +2,8 @@
 
 const _ = require('lodash')
 const v8 = require('v8')
+const sysContracts = require('../system')
+const { validateAddress } = require('@iceteachain/common').ecc
 
 /**
  * get all property name of an object
@@ -21,7 +23,6 @@ exports.getAllPropertyNames = function (obj) {
     })
   } while ((obj = Object.getPrototypeOf(obj)) && obj !== Object.prototype)
 
-  // console.log(props);
   return props
 }
 
@@ -324,6 +325,11 @@ exports.serialize = (obj) => {
     }
     return value
   })
+}
+
+exports.validateAddress = addr => {
+  if (sysContracts.has(addr)) return
+  validateAddress(addr)
 }
 
 exports.envIs = (n, v) => process.env[n] == v // eslint-disable-line

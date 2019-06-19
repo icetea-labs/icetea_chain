@@ -21,11 +21,11 @@
 
         <form id="form" action="/api/send_tx" method="POST" data-stay="true">
             <p>
-                <label>Signer:</label> <select id="signers" name="signers" autofocus required></select>
+                <span class="hide more-opts hide-when-1-account"><label>Account:</label> <select id="signers" name="signers" autofocus required></select></span>
                 &nbsp;&nbsp;<a href="#" class='more' data-target='.more-opts'>more</a>
             </p>
             <div class="hide more-opts">
-                <p><label>From: <input type="text" id="from" name="from" placeholder="Leave blank if same as signer"></label></p>
+                <p><label>From: <input type="text" id="from" name="from" placeholder="Leave blank if same as account"></label></p>
                 <p><label>Payer: <input type="text" id="payer" name="payer" list="payers" placeholder="Leave blank if same as from"></label></p>
                 <datalist id="payers">
                     <option value="system.faucet">

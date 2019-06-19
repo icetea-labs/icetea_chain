@@ -1,12 +1,13 @@
-const { verifyTxSignature } = require('icetea-common/src/utils')
+const { verifyTxSignature } = require('@iceteachain/common/src/utils')
 const _ = require('lodash')
 const utils = require('./helper/utils')
 const sysContracts = require('./system')
 const invoker = require('./contractinvoker')
 const did = require('./system/did')
-const { ecc, codec, AccountType } = require('icetea-common')
+const { ecc, codec, AccountType } = require('@iceteachain/common')
 const config = require('./config')
 const sizeof = require('object-sizeof')
+const debug = require('debug')('icetea:app')
 
 const { minStateGas, gasPerByte, minTxGas, maxTxGas } = config.contract
 const { setFreeGasLimit } = config
@@ -46,7 +47,7 @@ class App {
     this.initSystemContracts()
     await stateManager.load()
     const lastState = await stateManager.getLastState()
-    console.log('Last state loaded', { height: lastState.lastBlockHeight, appHash: lastState.lastBlockAppHash.toString('hex').toUpperCase() })
+    debug('Last state loaded', { height: lastState.lastBlockHeight, appHash: lastState.lastBlockAppHash.toString('hex').toUpperCase() })
     return lastState
   }
 
@@ -258,6 +259,15 @@ class App {
     addr = _ensureAddress(addr)
     const { balance = 0, system, mode, src, deployedBy } = stateManager.getAccountState(addr)
     return { balance, system, mode, hasSrc: !!src, deployedBy }
+  }
+
+  getContractSource (addr) {
+    addr = _ensureAddress(addr)
+    const src = stateManager.getAccountState(addr).src
+    if (src && Buffer.isBuffer(src)) {
+      return src.toString('base64')
+    }
+    return src
   }
 
   execTx (tx, tags) {

@@ -1,3 +1,5 @@
+// NOTE: this file is used by web folder as well, so don't use BigInt (error on Safari)
+
 const config = {
   versions: {
     node: '>=12.3.1 <13.0.0'
@@ -14,11 +16,11 @@ const config = {
   initialBalances: [
     {
       address: process.env.BANK_ADDR,
-      balance: BigInt(1000000000000)
+      balance: '1000000000000'
     },
     {
       address: 'system.faucet',
-      balance: BigInt(1000000000000000000000000000000)
+      balance: '1000000000000000000000000000000'
     }
   ],
   initialBotStore: {
@@ -28,8 +30,8 @@ const config = {
     }
   },
   whitelistModules: [
-    'lodash', 'moment', 'big.js', '@hapi/joi', 'validator', 'ajv', 'cheerio', '@icetea/polytils', 'icetea-botutils',
-    'assert', 'buffer', 'crypto', 'querystring', 'stream', 'string_decoder', 'url', 'util' ],
+    'lodash', 'moment', 'big.js', '@hapi/joi', 'validator', 'ajv', 'cheerio', '@iceteachain/utils', ';',
+    'assert', 'buffer', 'crypto', 'querystring', 'stream', 'string_decoder', 'url', 'util', 'create-hash' ],
   contract: {
     minStateGas: 200,
     freeGasLimit: 1e9,

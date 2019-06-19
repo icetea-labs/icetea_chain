@@ -166,3 +166,7 @@ button {
     padding: 8px;
     text-decoration: none;
 }
+
+.CodeMirror {
+    border: 1px solid #ddd;
+}
