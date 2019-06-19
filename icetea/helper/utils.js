@@ -1,6 +1,7 @@
 /** @module */
 
 const _ = require('lodash')
+const v8 = require('v8')
 const sysContracts = require('../system')
 const { validateAddress } = require('@iceteachain/common').ecc
 
@@ -246,37 +247,47 @@ exports.fixObject = obj => {
 
 exports.checkUnsupportTypes = o => {
   try {
-    exports.serialize(o)
+    v8.serialize(o)
   } catch (err) {
-    throw new Error('State not serializable.')
+    throw new Error('state object can not be serializable.')
   }
 
-  if (o == null) return null
-  if (Buffer.isBuffer(o)) return o
-  const t = typeof o
+  const seenSet = new Set()
 
-  if (t === 'bigint' || t === 'function' ||
-    o instanceof RegExp ||
-    o instanceof Date ||
-    o instanceof Map ||
-    o instanceof Set ||
-    o instanceof WeakMap) {
-    throw new Error(`State contains unsupported type: ${o.toString()}`)
-  }
+  function detect (o) {
+    if (o == null) return null
+    if (Buffer.isBuffer(o)) return o
+    const t = typeof o
 
-  if (t === 'object') {
-    const propNames = Object.getOwnPropertyNames(o)
-    for (let name of propNames) {
-      const value = o[name]
-      if (typeof value === 'undefined') {
-        delete o[name]
-      } else {
-        o[name] = exports.checkUnsupportTypes(o[name])
+    if (t === 'bigint' || t === 'function' ||
+      o instanceof RegExp ||
+      o instanceof Date ||
+      o instanceof Map ||
+      o instanceof Set ||
+      o instanceof WeakMap) {
+      throw new Error(`State contains unsupported type: ${o.toString()}`)
+    }
+
+    if (t === 'object') {
+      const propNames = Object.getOwnPropertyNames(o)
+      for (let name of propNames) {
+        const value = o[name]
+        if (seenSet.has(value)) {
+          continue
+        }
+        seenSet.add(value)
+        if (typeof value === 'undefined') {
+          delete o[name]
+        } else {
+          o[name] = detect(value)
+        }
       }
     }
+
+    return o
   }
 
-  return o
+  return detect(o)
 }
 
 /**

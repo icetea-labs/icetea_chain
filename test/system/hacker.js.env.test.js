@@ -85,7 +85,8 @@ describe('restart app', () => {
     const r = await hackerContract.methods.usegasView().call()
     expect(r).toBe(false)
 
-    await expect(hackerContract.methods.circular().sendCommit()).rejects.toThrow(Error)
+    const circular = await hackerContract.methods.circular().sendCommit()
+    expect(circular.hash).toBeDefined()
   })
 
   test('prevent hack on deployment', async () => {
