@@ -18,7 +18,6 @@ function fmtBlocks (blocks) {
 }
 
 function fmtTxs (txs) {
-  console.log(txs)
   txs = txs.map(utils.decodeTxResult)
   txs.forEach(t => {
     const data = t.tx
