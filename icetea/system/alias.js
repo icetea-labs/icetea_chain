@@ -31,7 +31,7 @@ const METADATA = {
     params: [
       { name: 'address', type: 'string' }
     ],
-    returnType: 'string'
+    returnType: 'Array'
   },
   'register': {
     decorators: ['transaction'],
@@ -96,7 +96,7 @@ exports.run = (context, options) => {
 
     byAddress (address) {
       const aliases = loadAliases(context)
-      return Object.keys(aliases).find(a => {
+      return Object.keys(aliases).filter(a => {
         return aliases[a].address === address
       })
     },

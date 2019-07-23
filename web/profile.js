@@ -58,7 +58,7 @@ async function loadWallet () {
 
 function loadAlias (targetAddress) {
   tweb3.contract('system.alias').methods.byAddress(targetAddress).call().then(alias => {
-    val('alias', alias || '')
+    val('alias', (alias && alias.length) ? alias[0] : '')
   })
 }
 

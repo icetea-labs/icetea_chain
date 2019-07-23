@@ -193,9 +193,11 @@ function _checkClaim (data, now) {
     return false
   }
 
-  const claimDate = new Date(data.lastClaim * 1000)
+  const claimDate = new Date(data.lastClaim)
+  // add wait period
   claimDate.setDate(claimDate.getDate() + data.waitPeriod)
-  const waitUntil = (claimDate.getTime() / 1000) | 0 // | 0 means floor()
+  // convert to millisecond
+  const waitUntil = claimDate.getTime()
   if (waitUntil >= now) {
     return false
   }
@@ -404,9 +406,9 @@ exports.run = (context) => {
       }
 
       if (data.lastRejected) {
-        const dt = new Date(data.lastRejected * 1000)
+        const dt = new Date(data.lastRejected)
         dt.setDate(dt.getDate() + data.lockPeriod)
-        const lockUntil = (dt.getTime() / 1000) | 0 // | 0 means floor()
+        const lockUntil = dt.getTime()
         if (lockUntil >= block.timestamp) {
           throw new Error('Claim permission for this inheritor was locked, please wait until ' + dt.toGMTString())
         }
