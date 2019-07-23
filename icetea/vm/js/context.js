@@ -2,6 +2,7 @@
 const utils = require('../../helper/utils')
 const invoker = require('../../contractinvoker')
 const config = require('../../config')
+const { isValidAddress } = require('../../helper/utils')
 const crypto = require('crypto')
 
 const moduleUtils = Object.freeze(require('@iceteachain/utils/utils.js'))
@@ -137,6 +138,7 @@ exports.forTransaction = (contractAddress, methodName, methodParams, options) =>
       block,
       balanceOf: tools.balanceOf,
       loadContract: _makeLoadContract(['invokeUpdate', 'invokeView', 'invokePure'], contractAddress, options),
+      isValidAddress,
       require: _require,
       addTag: (name, value) => {
         if (typeof name !== 'string' || typeof value !== 'string') {
@@ -198,6 +200,7 @@ exports.forView = (contractAddress, name, params, options) => {
       block,
       balanceOf: tools.balanceOf,
       loadContract: _makeLoadContract(['invokeView', 'invokePure'], contractAddress, options),
+      isValidAddress,
       require: _require
     })
   }
@@ -225,6 +228,7 @@ exports.forPure = (address, name, params, { from, block }) => {
         callType: 'pure'
       },
       block,
+      isValidAddress,
       require: _require
     }
   }
@@ -242,6 +246,7 @@ exports.forMetadata = address => ({
       callType: 'metadata',
       name: '__metadata' },
     block: {},
+    isValidAddress,
     require: _require,
     loadContract: () => ({})
   }
