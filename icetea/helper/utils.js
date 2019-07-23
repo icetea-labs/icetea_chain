@@ -332,6 +332,15 @@ exports.validateAddress = addr => {
   validateAddress(addr)
 }
 
+exports.isValidAddress = addr => {
+  try {
+    exports.validateAddress(addr)
+    return true
+  } catch (err) {
+    return false
+  }
+}
+
 exports.envIs = (n, v) => process.env[n] == v // eslint-disable-line
 exports.envEnabled = n => process.env[n] === '1'
 exports.isDevMode = () => process.env.NODE_ENV === 'development'
