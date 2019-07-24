@@ -90,15 +90,22 @@ const handler = {
   },
 
   async query (req) {
-    let path, data
+    let path, data, height, prove
     try {
       // TODO: handle replying merkle proof to client if requested
 
-      // const prove = !!req.prove;
+      prove = !!req.prove
+      if (prove) {
+        return { code: 4, info: 'Prove not yet supported.' }
+      }
 
       path = req.path
       data = String(req.data)
-      const height = String(req.height)
+      height = Number(req.height)
+
+      if (height && !['balance', 'state'].includes(path)) {
+        return { code: 2, info: 'Height is not supported for this path.' }
+      }
 
       switch (path) {
         case 'balance':
@@ -126,9 +133,9 @@ const handler = {
         }
       }
 
-      return { code: 1, info: 'Path not supported' }
+      return { code: 1, info: 'Path not supported.' }
     } catch (error) {
-      debug('ABCI Query error. Path: ', path, ', data: ', data)
+      debug('ABCI Query error. Path: ', path, ', data: ', data, ', height: ', height, ', prove: ', prove)
       debug(error)
       return { code: 3, info: String(error) }
     }

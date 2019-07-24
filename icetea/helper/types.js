@@ -1,6 +1,8 @@
 /** @module */
 
-module.exports = { check, checkTypes, checkMsg }
+const { validateAddress } = require('@iceteachain/common').ecc
+const sysContractNames = Object.values(require('../system/botnames'))
+const { ensureAddress } = require('../system/alias')
 
 /**
  * whether an object is expected type
@@ -10,9 +12,12 @@ module.exports = { check, checkTypes, checkMsg }
  * @param {string} t type
  * @param {string} [errorMessage = 'Incompatible type'] error message
  */
-function check (o, t, errorMessage = 'Incompatible type') {
+function check (o, t, {
+  errorMessage = 'Incompatible type',
+  sysContracts = {}
+} = {}) {
   if (!t || t === 'any') {
-    return
+    return o
   }
 
   if (typeof t !== 'string') {
@@ -20,12 +25,20 @@ function check (o, t, errorMessage = 'Incompatible type') {
   }
 
   if (o === null && t === 'null') {
-    return
+    return o
+  }
+
+  if (t === 'address' || t === 'pureaddress') {
+    if (t === 'address') {
+      o = (ensureAddress || sysContracts.Alias.ensureAddress)(o)
+    }
+    sysContractNames.includes(o) || validateAddress(o)
+    return o
   }
 
   let ot = typeof o
   if (ot === t) {
-    return
+    return o
   }
 
   if (ot === 'object') {
@@ -35,6 +48,8 @@ function check (o, t, errorMessage = 'Incompatible type') {
   if (ot !== t) {
     throw new TypeError(`${errorMessage}: expect '${t}', got '${ot}'.`)
   }
+
+  return o
 }
 
 /**
@@ -44,13 +59,13 @@ function check (o, t, errorMessage = 'Incompatible type') {
  * @param {object} o object
  * @param {Array.<string>} types types
  */
-function checkTypes (o, types) {
+function checkTypes (o, types, opts) {
   if (Array.isArray(types)) {
     if (!types.length) {
-      return
+      return o
     } else if (types.length === 1) {
       // to keep regular error with stack trace
-      return check(o, types[0])
+      return check(o, types[0], opts)
     }
 
     // Check OR, not AND
@@ -58,7 +73,7 @@ function checkTypes (o, types) {
     let errors = []
     const ok = types.some(t => {
       try {
-        check(o, t)
+        check(o, t, opts)
         return true // one type pass, stop here no need check other types
       } catch (e) {
         errors.push(e)
@@ -74,8 +89,10 @@ function checkTypes (o, types) {
       newError.errors = errors
       throw newError
     }
+
+    return o
   } else {
-    check(o, types)
+    return check(o, types, opts)
   }
 }
 
@@ -89,7 +106,8 @@ function checkTypes (o, types) {
  */
 function checkMsg ({ name, callType, params = [] }, spec, {
   strict = true,
-  whitelist = ['address', 'balance', 'deployedBy', '__metadata']
+  whitelist = ['address', 'balance', 'deployedBy', '__metadata'],
+  sysContracts = {}
 } = {}) {
   if (!name || typeof name !== 'string') {
     throw new Error(`Invalid message name: '${name}'.`)
@@ -127,8 +145,21 @@ function checkMsg ({ name, callType, params = [] }, spec, {
     throw new Error(`Wrong number of parameter for '${name}'. Expect '${specParams.length}'. Got '${params.length}'.`)
   }
 
+  const newParams = [ ...params ]
   specParams.forEach((p, index) => {
-    const o = (params.length > index) ? params[index] : undefined
-    checkTypes(o, p.type, `Incompatible type for parameter #${index} of '${name}'`)
+    const hasValue = newParams.length > index
+    const o = hasValue ? newParams[index] : undefined
+    const newValue = checkTypes(o, p.type, {
+      errorMessage: `Incompatible type for parameter #${index} of '${name}'`,
+      sysContracts
+    })
+    if (hasValue) {
+      // set satinized param
+      newParams[index] = newValue
+    }
   })
+
+  return newParams
 }
+
+module.exports = { check, checkTypes, checkMsg }

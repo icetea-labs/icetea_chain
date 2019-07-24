@@ -9,7 +9,6 @@
 
 const { Alias: ALIAS_ADDR } = require('./botnames')
 const { checkMsg } = require('../helper/types')
-const { validateAddress } = require('@iceteachain/common').ecc
 
 const METADATA = {
   'query': {
@@ -29,7 +28,7 @@ const METADATA = {
   'byAddress': {
     decorators: ['view'],
     params: [
-      { name: 'address', type: 'string' }
+      { name: 'address', type: 'pureaddress' }
     ],
     returnType: 'Array'
   },
@@ -37,7 +36,7 @@ const METADATA = {
     decorators: ['transaction'],
     params: [
       { name: 'alias', type: 'string' },
-      { name: 'address', type: 'string' },
+      { name: 'address', type: 'pureaddress' },
       { name: 'overwrite', type: ['boolean', 'undefined'] }
     ],
     returnType: 'string'
@@ -75,7 +74,7 @@ const sanitizeAlias = (alias) => {
 // standard contract interface
 exports.run = (context, options) => {
   const { msg, block } = context.runtime
-  checkMsg(msg, METADATA)
+  const msgParams = checkMsg(msg, METADATA, { sysContracts: this.systemContracts() })
 
   const contract = {
     query (textOrRegEx) {
@@ -109,8 +108,6 @@ exports.run = (context, options) => {
       if (alias.startsWith('account.') || alias.startsWith('contract.')) {
         alias = alias.split('.', 2)[1]
       }
-
-      validateAddress(address)
 
       const isOwnedAccount = msg.sender === address
       if (!isOwnedAccount) {
@@ -149,7 +146,7 @@ exports.run = (context, options) => {
   if (!contract.hasOwnProperty(msg.name)) {
     return METADATA
   } else {
-    return contract[msg.name].apply(context, msg.params)
+    return contract[msg.name].apply(context, msgParams)
   }
 }
 

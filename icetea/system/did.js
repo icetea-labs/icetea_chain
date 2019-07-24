@@ -18,14 +18,14 @@ const METADATA = {
   'query': {
     decorators: ['view'],
     params: [
-      { name: 'address', type: 'string' }
+      { name: 'address', type: 'address' }
     ],
     returnType: ['object', 'undefined']
   },
   'register': {
     decorators: ['transaction'],
     params: [
-      { name: 'address', type: 'string' },
+      { name: 'address', type: 'address' },
       { name: 'props', type: 'object' }
     ],
     returnType: 'undefined'
@@ -33,7 +33,7 @@ const METADATA = {
   'addOwner': {
     decorators: ['transaction'],
     params: [
-      { name: 'address', type: 'string' },
+      { name: 'address', type: 'address' },
       { name: 'owner', type: 'string' },
       { name: 'weight', type: ['number', 'undefined'] }
     ],
@@ -42,7 +42,7 @@ const METADATA = {
   'removeOwner': {
     decorators: ['transaction'],
     params: [
-      { name: 'address', type: 'string' },
+      { name: 'address', type: 'address' },
       { name: 'owner', type: 'string' },
       { name: 'weight', type: ['number', 'undefined'] }
     ],
@@ -51,14 +51,14 @@ const METADATA = {
   'clearOwnership': {
     decorators: ['transaction'],
     params: [
-      { name: 'address', type: 'string' }
+      { name: 'address', type: 'address' }
     ],
     returnType: 'undefined'
   },
   'setThreshold': {
     decorators: ['transaction'],
     params: [
-      { name: 'address', type: 'string' },
+      { name: 'address', type: 'address' },
       { name: 'threshold', type: ['number', 'undefined'] }
     ],
     returnType: 'undefined'
@@ -66,8 +66,8 @@ const METADATA = {
   'addInheritor': {
     decorators: ['transaction'],
     params: [
-      { name: 'address', type: 'string' },
-      { name: 'inheritor', type: 'string' },
+      { name: 'address', type: 'address' },
+      { name: 'inheritor', type: 'address' },
       { name: 'waitPeriod', type: 'number' },
       { name: 'lockPeriod', type: 'number' }
     ],
@@ -76,39 +76,39 @@ const METADATA = {
   'removeInheritor': {
     decorators: ['transaction'],
     params: [
-      { name: 'address', type: 'string' },
-      { name: 'inheritor', type: 'string' }
+      { name: 'address', type: 'address' },
+      { name: 'inheritor', type: 'address' }
     ],
     returnType: 'undefined'
   },
   'claimInheritance': {
     decorators: ['transaction'],
     params: [
-      { name: 'address', type: 'string' },
-      { name: 'claimer', type: 'string' }
+      { name: 'address', type: 'address' },
+      { name: 'claimer', type: 'address' }
     ],
     returnType: 'undefined'
   },
   'rejectInheritanceClaim': {
     decorators: ['transaction'],
     params: [
-      { name: 'address', type: 'string' },
-      { name: 'claimer', type: 'string' }
+      { name: 'address', type: 'address' },
+      { name: 'claimer', type: 'address' }
     ],
     returnType: 'undefined'
   },
   'isActiveInheritor': {
     decorators: ['transaction'],
     params: [
-      { name: 'address', type: 'string' },
-      { name: 'inheritor', type: 'string' }
+      { name: 'address', type: 'address' },
+      { name: 'inheritor', type: 'address' }
     ],
     returnType: 'undefined'
   },
   'setTag': {
     decorators: ['transaction'],
     params: [
-      { name: 'address', type: 'string' },
+      { name: 'address', type: 'address' },
       { name: 'name', type: ['string', 'object'] },
       { name: 'value', type: 'any' }
     ],
@@ -117,7 +117,7 @@ const METADATA = {
   'removeTag': {
     decorators: ['transaction'],
     params: [
-      { name: 'address', type: 'string' },
+      { name: 'address', type: 'address' },
       { name: 'name', type: 'string' }
     ],
     returnType: 'undefined'
@@ -125,8 +125,8 @@ const METADATA = {
   'checkPermission': {
     decorators: ['view'],
     params: [
-      { name: 'address', type: 'string' },
-      { name: 'signers', type: ['string', 'Array', 'undefined'] }
+      { name: 'address', type: 'address' },
+      { name: 'signers', type: ['address', 'Array', 'undefined'] }
     ],
     returnType: 'undefined'
   }
@@ -205,20 +205,13 @@ function _checkClaim (data, now) {
   return true
 }
 
-function _ensureAddress (address) {
-  const alias = exports.systemContracts().Alias
-  return alias.ensureAddress(address)
-}
-
 // standard contract interface
 exports.run = (context) => {
   const { msg, block } = context.runtime
-  checkMsg(msg, METADATA)
+  const msgParams = checkMsg(msg, METADATA, { sysContracts: this.systemContracts() })
 
   const contract = {
     query (address) {
-      address = _ensureAddress(address)
-
       const props = context.getState(address)
       return props ? _.cloneDeep(props) : undefined
     },
@@ -228,8 +221,6 @@ exports.run = (context) => {
       if (!owners && !threshold && !tags && !inheritors) {
         throw new Error('Nothing to register.')
       }
-
-      address = _ensureAddress(address)
 
       if (context.getState(address)) {
         throw new Error('This address is already registered.')
@@ -255,8 +246,6 @@ exports.run = (context) => {
     },
 
     checkPermission (address, signers) {
-      address = _ensureAddress(address)
-
       signers = signers || msg.signers
       if (typeof signers === 'string') {
         signers = [signers]
@@ -266,9 +255,6 @@ exports.run = (context) => {
     },
 
     addOwner (address, owner, weight = 1) {
-      address = _ensureAddress(address)
-      owner = _ensureAddress(owner)
-
       contract.checkPermission(address)
 
       const old = context.getState(address)
@@ -283,9 +269,6 @@ exports.run = (context) => {
     },
 
     removeOwner (address, owner) {
-      address = _ensureAddress(address)
-      owner = _ensureAddress(owner)
-
       contract.checkPermission(address)
 
       const old = context.getState(address)
@@ -308,7 +291,6 @@ exports.run = (context) => {
     },
 
     clearOwnership (address) {
-      address = _ensureAddress(address)
       contract.checkPermission(address)
 
       const old = context.getState(address)
@@ -322,8 +304,6 @@ exports.run = (context) => {
     },
 
     setThreshold (address, threshold) {
-      address = _ensureAddress(address)
-
       contract.checkPermission(address)
 
       const old = context.getState(address)
@@ -349,9 +329,6 @@ exports.run = (context) => {
         throw new Error('waitPeriod and lockPeriod must be positive number of days.')
       }
 
-      address = _ensureAddress(address)
-      inheritor = _ensureAddress(inheritor)
-
       contract.checkPermission(address)
 
       const old = context.getState(address)
@@ -369,9 +346,6 @@ exports.run = (context) => {
     },
 
     removeInheritor (address, inheritor) {
-      address = _ensureAddress(address)
-      inheritor = _ensureAddress(inheritor)
-
       contract.checkPermission(address)
 
       const old = context.getState(address)
@@ -385,10 +359,6 @@ exports.run = (context) => {
     },
 
     claimInheritance (address, claimer) {
-      // resolve alias if needed
-      address = _ensureAddress(address)
-      claimer = _ensureAddress(claimer)
-
       const did = context.getState(address)
       if (!did || !did.inheritors || !Object.keys(did.inheritors).length) {
         throw new Error('No inheritors configured for this account.')
@@ -427,10 +397,6 @@ exports.run = (context) => {
     },
 
     rejectInheritanceClaim (address, claimer) {
-      // resolve alias if needed
-      address = _ensureAddress(address)
-      claimer = _ensureAddress(claimer)
-
       // ensure only owners can call
       contract.checkPermission(address)
 
@@ -458,9 +424,6 @@ exports.run = (context) => {
     },
 
     isActiveInheritor (address, inheritor) {
-      address = _ensureAddress(address)
-      inheritor = _ensureAddress(inheritor)
-
       const did = context.getState(address)
       if (!did || !did.inheritors || !Object.keys(did.inheritors).length) {
         return false
@@ -472,8 +435,6 @@ exports.run = (context) => {
     },
 
     setTag (address, name, value) {
-      address = _ensureAddress(address)
-
       contract.checkPermission(address)
 
       const v = (typeof value === 'undefined') ? name : { [name]: value }
@@ -491,8 +452,6 @@ exports.run = (context) => {
     },
 
     removeTag (address, name) {
-      address = _ensureAddress(address)
-
       contract.checkPermission(address)
 
       const old = context.getState(address)
@@ -515,12 +474,11 @@ exports.run = (context) => {
   if (!contract.hasOwnProperty(msg.name)) {
     return METADATA
   } else {
-    return contract[msg.name].apply(context, msg.params)
+    return contract[msg.name].apply(context, msgParams)
   }
 }
 
 exports.checkPermission = function (address, signers, now) {
-  address = _ensureAddress(address)
   const storage = this.unsafeStateManager().getAccountState(DID_ADDR).storage || {}
   const props = storage[address]
   _checkPerm(address, props, signers, now)
