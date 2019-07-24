@@ -129,8 +129,18 @@ class StateManager extends EventEmitter {
     return lastBlock
   }
 
-  balanceOf (addr) {
-    return (stateTable[addr] || {}).balance || 0
+  async balanceOf (addr, height) {
+    let state = stateTable || {}
+    if (height) {
+      const block = await patricia.getBlockByHeight(height)
+      if (block.stateRoot) {
+        const stateFromTrie = await patricia.getStateByKey(addr, block.stateRoot)
+        if (stateFromTrie) {
+          state[addr] = stateFromTrie
+        }
+      }
+    }
+    return (state[addr] || {}).balance || 0
   }
 
   getContractAddresses () {
@@ -142,8 +152,14 @@ class StateManager extends EventEmitter {
     }, [])
   }
 
-  debugState () {
+  async debugState (height) {
     if (utils.isDevMode()) {
+      if (height) {
+        const block = await patricia.getBlockByHeight(height)
+        if (block.stateRoot) {
+          return patricia.getStateTable(block.stateRoot)
+        }
+      }
       return stateTable
     }
 

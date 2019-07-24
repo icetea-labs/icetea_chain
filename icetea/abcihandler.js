@@ -89,7 +89,7 @@ const handler = {
     return { data } // return the block stateRoot
   },
 
-  query (req) {
+  async query (req) {
     let path, data
     try {
       // TODO: handle replying merkle proof to client if requested
@@ -98,14 +98,15 @@ const handler = {
 
       path = req.path
       data = String(req.data)
+      const height = String(req.height)
 
       switch (path) {
         case 'balance':
           return replyQuery({
-            balance: app.balanceOf(data)
+            balance: await app.balanceOf(data, height)
           })
         case 'state':
-          return replyQuery(app.debugState())
+          return replyQuery(await app.debugState(height))
         case 'contracts':
           return replyQuery(app.getContractAddresses(data === 'true'))
         case 'metadata': {

@@ -3,6 +3,7 @@ const v8 = require('v8')
 const async = require('async')
 const newDB = require('./db')
 const rootKey = 'rootKey'
+const blockKey = 'blockKey'
 const lastBlockKey = 'lastBlockKey'
 
 let db
@@ -92,6 +93,7 @@ exports.getHash = (stateTable) => {
 exports.save = async ({ block, state, commitKeys }) => {
   const trie = await patricia()
   const opts = []
+  let persistBlock = { ...block }
   commitKeys.forEach(key => {
     opts.push({
       type: 'put',
@@ -112,13 +114,52 @@ exports.save = async ({ block, state, commitKeys }) => {
         db.put(rootKey, trie.root.toString('hex'), next)
       },
       (next) => {
-        db.put(lastBlockKey, JSON.stringify(v8.serialize(block)), next)
+        persistBlock.stateRoot = trie.root.toString('hex')
+        db.put(`${blockKey}${block.number}`, JSON.stringify(v8.serialize(persistBlock)), next)
+      },
+      (next) => {
+        db.put(lastBlockKey, JSON.stringify(v8.serialize(persistBlock)), next)
       }
     ], (err, ret) => {
       if (err) {
         return reject(err)
       }
       return resolve(trie.root.toString('hex'))
+    })
+  })
+}
+
+exports.getBlockByHeight = async (height) => {
+  return new Promise((resolve, reject) => {
+    db.get(`${blockKey}${height}`, (err, value) => {
+      if (err) {
+        if (err.notFound) {
+          return resolve(null)
+        }
+        return reject(err)
+      }
+      value = Buffer.from(JSON.parse(value).data)
+      return resolve(v8.deserialize(value))
+    })
+  })
+}
+
+exports.getStateTable = async (stateRoot) => {
+  const trie = new Trie(db, Buffer.from(stateRoot, 'hex'))
+  return dump(trie)
+}
+
+exports.getStateByKey = (key, stateRoot) => {
+  const trie = new Trie(db, Buffer.from(stateRoot, 'hex'))
+  return new Promise((resolve, reject) => {
+    trie.get(key, (err, value) => {
+      if (err) {
+        if (err.notFound) {
+          return resolve(null)
+        }
+        return reject(err)
+      }
+      return resolve(v8.deserialize(value))
     })
   })
 }
