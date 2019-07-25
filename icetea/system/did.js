@@ -218,6 +218,8 @@ exports.run = (context) => {
 
     // FIXME: should validate inside (like ensure addresses), or make it private
     register (address, { owners, threshold, tags, inheritors }) {
+      contract.checkPermission(address)
+
       if (!owners && !threshold && !tags && !inheritors) {
         throw new Error('Nothing to register.')
       }
@@ -229,7 +231,7 @@ exports.run = (context) => {
       _checkValidity(owners, threshold)
 
       const props = {}
-      if (owners && owners.length) {
+      if (owners && Object.keys(owners).length) {
         props.owners = owners
       }
       if (typeof threshold === 'number' && threshold > 0) {
@@ -255,12 +257,12 @@ exports.run = (context) => {
     },
 
     addOwner (address, owner, weight = 1) {
-      contract.checkPermission(address)
-
       const old = context.getState(address)
       if (!old) {
         contract.register(address, { owners: { [owner]: weight } })
       } else {
+        contract.checkPermission(address)
+
         old.owners = old.owners || {}
         old.owners[owner] = weight
         _checkValidity(old.owners, old.threshold)
@@ -304,14 +306,14 @@ exports.run = (context) => {
     },
 
     setThreshold (address, threshold) {
-      contract.checkPermission(address)
-
       const old = context.getState(address)
       if (!old) {
         if (threshold !== undefined && threshold !== 1) {
           contract.register(address, { threshold })
         }
       } else {
+        contract.checkPermission(address)
+
         if (threshold === undefined || threshold === 1) {
           delete old.threshold
         } else {
@@ -329,8 +331,6 @@ exports.run = (context) => {
         throw new Error('waitPeriod and lockPeriod must be positive number of days.')
       }
 
-      contract.checkPermission(address)
-
       const old = context.getState(address)
       if (!old) {
         contract.register(address, {
@@ -339,6 +339,8 @@ exports.run = (context) => {
           }
         })
       } else {
+        contract.checkPermission(address)
+
         old.inheritors = old.inheritors || {}
         old.inheritors[inheritor] = Object.assign(old.inheritors[inheritor] || {}, { waitPeriod, lockPeriod })
         context.setState(address, old)
@@ -435,8 +437,6 @@ exports.run = (context) => {
     },
 
     setTag (address, name, value) {
-      contract.checkPermission(address)
-
       const v = (typeof value === 'undefined') ? name : { [name]: value }
       if (typeof v !== 'object') {
         throw new Error('Invalid tag value.')
@@ -446,6 +446,8 @@ exports.run = (context) => {
       if (!old) {
         contract.register(address, { tags: v })
       } else {
+        contract.checkPermission(address)
+
         old.tags = Object.assign(old.tags || {}, v)
         context.setState(address, old)
       }
