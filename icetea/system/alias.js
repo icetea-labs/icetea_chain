@@ -102,33 +102,46 @@ exports.run = (context, options) => {
 
     register (alias, address, overwrite = false) {
       alias = sanitizeAlias(alias)
-      if (alias.startsWith('system.')) {
-        throw new Error("Alias cannot start with 'system.'.")
-      }
-      if (alias.startsWith('account.') || alias.startsWith('contract.')) {
-        alias = alias.split('.', 2)[1]
+      if (alias.startsWith('system.') || alias.startsWith('account.') || alias.startsWith('contract.')) {
+        throw new Error("Alias cannot start with 'system.', 'account.', or 'contract.'.")
       }
 
-      const isOwnedAccount = msg.sender === address
-      if (!isOwnedAccount) {
-        let deployedBy
+      let isOwnedAccount = false
+      const validateAddressOwner = (address, owner) => {
         try {
-          deployedBy = options.tools.getCode(address).deployedBy
+          exports.systemContracts().Did.checkPermission(address, msg.signers, block.timestamp)
+          isOwnedAccount = true
+          return
         } catch (e) {
-          throw new Error('The specified address is neither your own account nor a smart contract you deployed.')
-        }
+          // console.error('hic', e)
+          let deployedBy
+          try {
+            deployedBy = options.tools.getCode(address).deployedBy
+          } catch (e2) {
+            throw new Error('You do not have permission to register this alias.')
+          }
 
-        if (deployedBy !== msg.sender) {
-          throw new Error('You cannot register for the address you do not own.')
+          if (deployedBy !== owner) {
+            throw new Error('You do not have permission to register this alias.')
+          }
         }
       }
+
+      // this is not like DNS where anyone can map a domain to your address
+      validateAddressOwner(address)
 
       const prefix = isOwnedAccount ? 'account.' : 'contract.'
       const fullAlias = prefix + alias
 
       const aliases = loadAliases(context)
-      if (!overwrite && aliases.hasOwnProperty(fullAlias)) {
-        throw new Error(`Alias ${fullAlias} already registered.`)
+      const oldAddress = aliases[fullAlias]
+      if (oldAddress) {
+        if (!overwrite) {
+          throw new Error(`Alias ${fullAlias} already registered.`)
+        } else {
+          // need to check whether caller own this address before updating
+          validateAddressOwner(oldAddress.address)
+        }
       }
 
       aliases[fullAlias] = {

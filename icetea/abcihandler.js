@@ -1,4 +1,5 @@
 const { getBlock, getTx, replyQuery } = require('./helper/abci')
+const { codec } = require('@iceteachain/common')
 const app = require('./app')
 const utils = require('./helper/utils')
 const debug = require('debug')('icetea:abci')
@@ -100,12 +101,12 @@ const handler = {
       }
 
       path = req.path
-      data = String(req.data)
       height = Number(req.height)
-
       if (height && !['balance', 'state'].includes(path)) {
         return { code: 2, info: 'Height is not supported for this path.' }
       }
+
+      data = (req.data && req.data.length) ? codec.decode(req.data) : req.data
 
       switch (path) {
         case 'balance':
@@ -127,8 +128,7 @@ const handler = {
         }
         case 'invokeView':
         case 'invokePure': {
-          const options = JSON.parse(data)
-          const result = app[path](options.address, options.name, options.params, options.options)
+          const result = app[path](data.address, data.name, data.params, data.options)
           return replyQuery(result)
         }
       }

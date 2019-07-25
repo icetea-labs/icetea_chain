@@ -27,17 +27,7 @@ afterAll(() => {
   instance.close()
 })
 
-// test cases
-// - resolve unregistered alias
-// - register alias for account you do not own
-// - register alias for account you owns
-// - register alias for account you have permission
-// - register invalid alias
-// - resolve valid alias
-// - byAddress address with one alias
-// - byAddress address with many alias
-
-describe('did', () => {
+describe('alias', () => {
   test('resolve unregistered alias', async () => {
     const ms = tweb3.contract('system.alias').methods
 
@@ -58,7 +48,92 @@ describe('did', () => {
     const register = addr => {
       return ms.register('goodmorning', addr).sendCommit(opt)
     }
-    await expect(register('teat1ahu422tv8sjy3rdakpc7wra89ug9mplaqsffh7')).rejects.toThrowError('neither your own account nor a smart contract you deployed')
-    await expect(register('system.alias')).rejects.toThrowError('do not own')
+    await expect(register('teat1ahu422tv8sjy3rdakpc7wra89ug9mplaqsffh7')).rejects.toThrowError('permission')
+    await expect(register('system.alias')).rejects.toThrowError('permission')
+  })
+
+  test('register alias for account you owns', async () => {
+    const { privateKey, address: from } = account10k
+    tweb3.wallet.importAccount(privateKey)
+    const opt = { from }
+
+    const ms = tweb3.contract('system.alias').methods
+
+    const register = (name, addr, overwrite = false) => {
+      return ms.register(name, addr, overwrite).sendCommit(opt)
+    }
+    await expect(register('a#b', from)).rejects.toThrowError('invalid characters')
+    await expect(register('system.hello', from)).rejects.toThrowError('cannot start with')
+    await expect(register('account.hello', from)).rejects.toThrowError('cannot start with')
+    await expect(register('contract.hello', from)).rejects.toThrowError('cannot start with')
+    await register('goodmorning', from)
+    const addr = await ms.resolve('account.goodmorning').call()
+    expect(addr).toBe(from)
+
+    let list = await ms.query('mor').call()
+    expect(list['account.goodmorning'].address).toBe(from)
+    expect(list['account.goodmorning'].by).toBe(from)
+
+    list = await ms.query('mor2').call()
+    expect(list).toEqual({})
+
+    list = await ms.query(/mor/).call()
+    expect(list['account.goodmorning'].address).toBe(from)
+    expect(list['account.goodmorning'].by).toBe(from)
+
+    list = await ms.query(/mor\d/).call()
+    expect(list).toEqual({})
+
+    list = await ms.byAddress(from).call()
+    expect(list).toEqual(['account.goodmorning'])
+
+    await register('hello', from)
+    const addr2 = await ms.resolve('account.hello').call()
+    expect(addr2).toBe(from)
+
+    list = await ms.byAddress(from).call()
+    expect(list).toEqual(['account.goodmorning', 'account.hello'])
+  })
+
+  test('re-register alias', async () => {
+    const { address: addr1 } = tweb3.wallet.createBankAccount()
+    const { address: addr2 } = tweb3.wallet.createBankAccount()
+
+    const ms = tweb3.contract('system.alias').methods
+    const register = (name, addr, overwrite = false) => {
+      return ms.register(name, addr, overwrite).sendCommit({ from: addr })
+    }
+
+    let list = await ms.byAddress(addr1).call()
+    expect(list).toEqual([])
+
+    list = await ms.byAddress(addr2).call()
+    expect(list).toEqual([])
+
+    await register('abc1', addr1)
+    await expect(register('abc1', addr1)).rejects.toThrowError('already registered')
+    await register('abc1', addr1, true)
+
+    await expect(register('abc1', addr2)).rejects.toThrowError('already registered')
+    await expect(register('abc1', addr2, true)).rejects.toThrowError('permission')
+
+    // now, a case of update successfully
+    const did = tweb3.contract('system.did')
+    await did.methods.addOwner(addr1, addr2).sendCommit({ from: addr1 })
+
+    list = await ms.byAddress(addr1).call()
+    expect(list).toEqual(['account.abc1'])
+
+    list = await ms.byAddress(addr2).call()
+    expect(list).toEqual([])
+
+    await expect(register('abc1', addr2)).rejects.toThrowError('already registered')
+    await register('abc1', addr2, true)
+
+    list = await ms.byAddress(addr1).call()
+    expect(list).toEqual([])
+
+    list = await ms.byAddress(addr2).call()
+    expect(list).toEqual(['account.abc1'])
   })
 })
