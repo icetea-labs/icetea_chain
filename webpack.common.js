@@ -6,17 +6,17 @@ const CopyWebpackPlugin = require('copy-webpack-plugin')
 
 module.exports = {
   entry: {
-    index: './web/index.js',
-    transfer: './web/transfer.js',
-    deploy: './web/deploy.js',
-    contract: './web/contract.js',
-    wallet: './web/wallet.js',
-    tx: './web/tx.js',
-    bot: './web/bot.js',
-    botstore: './web/botstore.js',
-    profile: './web/profile.js',
-    address: './web/address.js',
-    block: './web/block.js'
+    index: path.resolve(__dirname, './web/index.js'),
+    transfer: path.resolve(__dirname, './web/transfer.js'),
+    deploy: path.resolve(__dirname, './web/deploy.js'),
+    contract: path.resolve(__dirname, './web/contract.js'),
+    wallet: path.resolve(__dirname, './web/wallet.js'),
+    tx: path.resolve(__dirname, './web/tx.js'),
+    bot: path.resolve(__dirname, './web/bot.js'),
+    botstore: path.resolve(__dirname, './web/botstore.js'),
+    profile: path.resolve(__dirname, './web/profile.js'),
+    address: path.resolve(__dirname, './web/address.js'),
+    block: path.resolve(__dirname, './web/block.js')
   },
   output: {
     path: path.resolve(__dirname, 'web_dist'),
@@ -30,7 +30,7 @@ module.exports = {
   },
 
   plugins: [
-    new CopyWebpackPlugin([{ from: 'web', ignore: [ '*.js' ] }])
+    new CopyWebpackPlugin([{ from: path.resolve(__dirname, 'web'), ignore: [ '*.js' ] }])
   ],
 
   node: {

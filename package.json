@@ -86,7 +86,9 @@
     "semver": "6.1.0",
     "validator": "11.0.0",
     "vue": "2.6.10",
-    "wasm-metering": "0.2.1"
+    "wasm-metering": "0.2.1",
+    "commander": "2.19.0",
+    "tendermint-node": "github:TradaTech/tendermint-node"
   },
   "devDependencies": {
     "@babel/core": "7.4.5",
@@ -106,10 +108,13 @@
     "pre-commit": "1.2.2",
     "standard": "12.0.1",
     "tempy": "0.3.0",
-    "tendermint-node": "github:TradaTech/tendermint-node",
     "webpack": "^4.32.2",
     "webpack-cli": "^3.3.2",
     "webpack-dev-server": "3.5.1",
     "webpack-merge": "4.2.1"
-  }
+  },
+  "bin": {
+    "icetea": "cli/index.js"
+  },
+  "preferGlobal": true
 }
