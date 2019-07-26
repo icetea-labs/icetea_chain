@@ -25,7 +25,7 @@ const getNetwork = (network) => {
 program
   .command('init')
   .description('initialize a blockchain node')
-  .option('-n, --network [network]', 'network')
+  .option('-n, --network <network>', 'network', 'private')
   .action(({ network }, options) => {
     network = getNetwork(network)
 
@@ -44,7 +44,7 @@ let instance
 program
   .command('start')
   .description('start a blockchain node')
-  .option('-n, --network [network]', 'network')
+  .option('-n, --network <network>', 'network', 'private')
   .option('-d, --debug', 'debug mode')
   .action(async ({ network, debug }, options) => {
     network = getNetwork(network)
@@ -72,9 +72,12 @@ program
 program
   .command('app')
   .description('start a blockchain ui for development')
-  .action(async (options) => {
-    const configFile = path.resolve(__dirname, '../webpack.dev.js')
-    const child = spawn('webpack-dev-server', ['--open', '--config', configFile])
+  .option('-h, --host <host>', 'icetea node http or ws', 'http://localhost:26657')
+  .action(async ({ host }, options) => {
+    const child = spawn('webpack-dev-server', ['--open', '--config', 'webpack.dev.js'], {
+      env: { ...process.env, ICETEA_ENDPOINT: host },
+      cwd: path.resolve(__dirname, '..')
+    })
     child.stdout.pipe(process.stdout)
     child.stderr.pipe(process.stderr)
 
