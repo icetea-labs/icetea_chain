@@ -14,7 +14,7 @@ const _ = require('lodash')
 const STATE_CLAIMING = 1
 const STATE_REJECTED = 2
 
-const METADATA = {
+const METADATA = Object.freeze({
   'query': {
     decorators: ['view'],
     params: [
@@ -130,7 +130,7 @@ const METADATA = {
     ],
     returnType: 'undefined'
   }
-}
+})
 
 function _checkValidity (owners, threshold) {
   if (threshold === undefined) {

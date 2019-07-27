@@ -13,7 +13,7 @@ const { checkMsg } = require('../helper/types')
 const { initialBotStore } = require('../config')
 const _ = require('lodash')
 
-const METADATA = {
+const METADATA = Object.freeze({
   'query': {
     decorators: ['view'],
     params: [],
@@ -36,7 +36,7 @@ const METADATA = {
     ],
     returnType: 'string'
   }
-}
+})
 
 const KEY = 'store'
 
@@ -61,7 +61,7 @@ exports.ondeploy = state => {
 
 // standard contract interface
 exports.run = (context, options) => {
-  const { msg } = context.runtime
+  const { msg, block } = context.runtime
   checkMsg(msg, METADATA)
 
   const contract = {
@@ -82,28 +82,31 @@ exports.run = (context, options) => {
         throw new Error('Require a bot alias. You must register an alias for your bot first.')
       }
 
-      const isOwnedAccount = msg.sender === address
-      if (!isOwnedAccount) {
-        let deployedBy
-        try {
-          deployedBy = options.tools.getCode(address).deployedBy
-        } catch (e) {
-          throw new Error('The specified bot is neither one of your own accounts nor a smart contract you deployed.')
-        }
-
-        if (deployedBy !== msg.sender) {
-          throw new Error('You cannot register a bot you do not own.')
-        }
-      }
-
       const store = getStore(context)
-      if (!overwrite && store.hasOwnProperty(name)) {
+      const registed = !!store[name]
+
+      if (registed && !overwrite) {
         throw new Error(`Bot ${name} already registered.`)
       }
+
+      let deployedBy
+      try {
+        deployedBy = options.tools.getCode(address).deployedBy
+      } catch (e) {
+        throw new Error('Bot must be a valid smart contract.')
+      }
+
+      // TODO: check if it 'looks like' a bot
+
+      // Only contract owners can register to the botstore
+      exports.systemContracts().Did.checkPermission(deployedBy, msg.signers, block.timestamp)
+
+      // TODO: validate category and icon?
 
       store[name] = {
         category
       }
+
       if (icon) {
         store[name].icon = icon
       }
