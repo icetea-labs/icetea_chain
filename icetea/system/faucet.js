@@ -4,7 +4,7 @@
 
 const { checkMsg } = require('../helper/types')
 
-const METADATA = {
+const METADATA = Object.freeze({
   'getQuota': {
     decorators: ['pure'],
     params: [],
@@ -15,7 +15,7 @@ const METADATA = {
     params: [],
     returnType: 'number'
   }
-}
+})
 
 const INTERNAL_METADATA = {
   '_agreeToPayFor': {
@@ -39,7 +39,7 @@ const REQUEST_QUOTA = BigInt(100e6)
 // standard contract interface
 exports.run = (context) => {
   const { msg } = context.runtime
-  checkMsg(msg, Object.assign({}, METADATA, INTERNAL_METADATA))
+  checkMsg(msg, Object.assign({}, INTERNAL_METADATA, METADATA))
 
   const contract = {
     getQuota () {
@@ -71,9 +71,12 @@ exports.run = (context) => {
       return amount
     },
 
-    _agreeToPayFor (tx) {
-      const paid = BigInt(this.getState(tx.from, BigInt(0)))
-      const requested = BigInt(tx.value) + BigInt(tx.fee)
+    _agreeToPayFor ({ from, value, fee }) {
+      const requested = BigInt(value || 0) + BigInt(fee || 0)
+      if (requested <= 0) {
+        return true
+      }
+      const paid = BigInt(this.getState(from, BigInt(0)))
       const amount = paid + requested
       if (amount > REQUEST_QUOTA) {
         // throw an error to provide more info than just false
@@ -93,16 +96,20 @@ exports.run = (context) => {
         throw new Error('This function is reserved for internal use.')
       }
 
-      const paid = BigInt(this.getState(tx.from, BigInt(0)))
       const requested = tx.value + tx.fee
+      if (requested <= 0) {
+        return
+      }
+
+      const paid = BigInt(this.getState(tx.from, BigInt(0)))
       const amount = paid + requested
       if (amount > REQUEST_QUOTA) {
-        // throw an error to provide more info than just false
+        // throw an error to provide more info than just returning false
         throw new Error('Requested amount from faucet is bigger than remaining quota.')
       }
 
       if (amount > this.balance) {
-        // throw an error to provide more info than just false
+        // throw an error to provide more info than just returning false
         throw new Error('Faucet out of money.')
       }
 

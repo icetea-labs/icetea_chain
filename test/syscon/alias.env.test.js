@@ -49,7 +49,7 @@ describe('alias', () => {
       return ms.register('goodmorning', addr).sendCommit(opt)
     }
     await expect(register('teat1ahu422tv8sjy3rdakpc7wra89ug9mplaqsffh7')).rejects.toThrowError('permission')
-    await expect(register('system.alias')).rejects.toThrowError('permission')
+    await expect(register('system.alias')).rejects.toThrowError('Permission')
   })
 
   test('register alias for account you owns', async () => {
@@ -135,5 +135,13 @@ describe('alias', () => {
 
     list = await ms.byAddress(addr2).call()
     expect(list).toEqual(['account.abc1'])
+  })
+
+  test('resolve alias misc', async () => {
+    const ms = tweb3.contract('system.alias').methods
+    const meta = await ms.__metadata().callPure()
+    expect(meta.query.decorators).toEqual(['view'])
+    expect(meta.resolve.decorators).toEqual(['view'])
+    expect(meta.register.decorators).toEqual(['transaction'])
   })
 })

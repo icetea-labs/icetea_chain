@@ -10,7 +10,7 @@
 const { Alias: ALIAS_ADDR } = require('./botnames')
 const { checkMsg } = require('../helper/types')
 
-const METADATA = {
+const METADATA = Object.freeze({
   'query': {
     decorators: ['view'],
     params: [
@@ -41,7 +41,7 @@ const METADATA = {
     ],
     returnType: 'string'
   }
-}
+})
 
 const ALIAS_KEY = 'alias'
 
@@ -60,7 +60,8 @@ const isSatisfied = (text, condition) => {
     return !!text.includes(condition)
   }
 
-  return text == condition // eslint-disable-line
+  // should never reach here
+  // return text == condition // eslint-disable-line
 }
 
 const sanitizeAlias = (alias) => {
@@ -107,13 +108,13 @@ exports.run = (context, options) => {
       }
 
       let isOwnedAccount = false
-      const validateAddressOwner = (address, owner) => {
+      const validateAddressOwner = (address) => {
+        const did = exports.systemContracts().Did
         try {
-          exports.systemContracts().Did.checkPermission(address, msg.signers, block.timestamp)
+          did.checkPermission(address, msg.signers, block.timestamp)
           isOwnedAccount = true
           return
         } catch (e) {
-          // console.error('hic', e)
           let deployedBy
           try {
             deployedBy = options.tools.getCode(address).deployedBy
@@ -121,9 +122,7 @@ exports.run = (context, options) => {
             throw new Error('You do not have permission to register this alias.')
           }
 
-          if (deployedBy !== owner) {
-            throw new Error('You do not have permission to register this alias.')
-          }
+          did.checkPermission(deployedBy, msg.signers, block.timestamp)
         }
       }
 

@@ -116,7 +116,7 @@ const handler = {
         case 'state':
           return replyQuery(await app.debugState(height))
         case 'contracts':
-          return replyQuery(app.getContractAddresses(data === 'true'))
+          return replyQuery(app.getContractAddresses(data))
         case 'metadata': {
           return replyQuery(app.getMetadata(data))
         }
