@@ -63,5 +63,33 @@ describe('faucet', () => {
     expect(r.balance).toBe(REQUEST_QUOTA_S)
 
     await expect(request(addr2)).rejects.toThrowError('No more')
+
+    // now addr2 have requested full amount, he/she could not ask the faucet to pay
+    const requestPay = () => {
+      return ms._agreeToPayFor({ from: addr2, value: 1 }).call()
+    }
+    await expect(requestPay()).rejects.toThrowError('bigger than remaining')
+  })
+
+  test('test payer', async () => {
+    const { address: regAddr } = tweb3.wallet.createRegularAccount()
+    const { address: bankAddr } = tweb3.wallet.createBankAccount()
+    let r = await tweb3.getBalance(regAddr)
+    expect(r.balance).toBe(0)
+    r = await tweb3.getBalance(bankAddr)
+    expect(r.balance).toBe(0)
+
+    const transfer = (amount, from, payer) => {
+      return tweb3.transfer(bankAddr, amount, { from, payer })
+    }
+
+    await expect(transfer(1, regAddr)).rejects.toThrowError('without specifying a payer')
+    await transfer(1, regAddr, 'system.faucet')
+    r = await tweb3.getBalance(regAddr)
+    expect(r.balance).toBe(0)
+    r = await tweb3.getBalance(bankAddr)
+    expect(+r.balance).toBe(1)
+
+    await expect(transfer(REQUEST_QUOTA, regAddr, 'system.faucet')).rejects.toThrowError('bigger than remaining quota')
   })
 })

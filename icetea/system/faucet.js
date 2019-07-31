@@ -71,12 +71,12 @@ exports.run = (context) => {
       return amount
     },
 
-    _agreeToPayFor (tx) {
-      const requested = BigInt(tx.value || 0) + BigInt(tx.fee || 0)
+    _agreeToPayFor ({ from, value, fee }) {
+      const requested = BigInt(value || 0) + BigInt(fee || 0)
       if (requested <= 0) {
         return true
       }
-      const paid = BigInt(this.getState(tx.from, BigInt(0)))
+      const paid = BigInt(this.getState(from, BigInt(0)))
       const amount = paid + requested
       if (amount > REQUEST_QUOTA) {
         // throw an error to provide more info than just false
