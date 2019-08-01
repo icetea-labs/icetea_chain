@@ -1,6 +1,7 @@
 const merge = require('webpack-merge')
 const common = require('./webpack.common.js')
 const Dotenv = require('dotenv-webpack')
+const webpack = require('webpack')
 const path = require('path')
 
 module.exports = merge(common, {
@@ -27,6 +28,9 @@ module.exports = merge(common, {
   plugins: [
     new Dotenv({
       path: path.resolve(__dirname, './.env.dev') // Path to .env file (this is the default)
+    }),
+    new webpack.DefinePlugin({
+      'process.env.ICETEA_ENDPOINT': JSON.stringify(process.env.ICETEA_ENDPOINT || 'http://localhost:26657')
     })
   ]
 })
