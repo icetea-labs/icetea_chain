@@ -6,7 +6,7 @@ const { checkMsg } = require('../helper/types')
 const crypto = require('crypto')
 const _ = require('lodash')
 
-const METADATA = {
+const METADATA = Object.freeze({
   'request': {
     decorators: ['transaction'],
     params: [
@@ -30,7 +30,7 @@ const METADATA = {
     ],
     returnType: 'undefined'
   }
-}
+})
 
 // standard contract interface
 exports.run = (context, options) => {

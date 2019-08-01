@@ -4,7 +4,7 @@
 
 const { checkMsg } = require('../helper/types')
 
-const METADATA = {
+const METADATA = Object.freeze({
   'botInfo': {
     decorators: ['pure'],
     params: [],
@@ -26,7 +26,7 @@ const METADATA = {
     ],
     returnType: 'object'
   }
-}
+})
 
 // standard contract interface
 exports.run = (context) => {
