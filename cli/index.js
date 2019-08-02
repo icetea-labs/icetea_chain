@@ -4,10 +4,10 @@ const tm = require('tendermint-node')
 const fs = require('fs')
 const path = require('path')
 const homedir = require('os').homedir()
-const server = require('abci')
 const { spawn } = require('child_process')
-const startup = require('../icetea/abcihandler')
-const { abciServerPort } = require('../icetea/config')
+// const server = require('abci')
+// const startup = require('../icetea/abcihandler')
+// const { abciServerPort } = require('../icetea/config')
 
 const program = require('commander')
 program.version('0.0.1')
@@ -50,21 +50,25 @@ program
     network = getNetwork(network)
 
     const initDir = `${homedir}/.icetea/${network}`
+    let command = 'node'
+    let runOptions = {
+      cwd: path.resolve(__dirname, '..')
+    }
 
     if (debug) {
-      const indexFile = path.resolve(__dirname, `./${network}.js`)
-      const child = spawn('ndb', [indexFile])
-      child.stdout.pipe(process.stdout)
-      child.stderr.pipe(process.stderr)
-
-      child.on('exit', code => {
-        console.log(`ndb exit code is: ${code}`)
-      })
-    } else {
-      const handler = await startup({ path: `${initDir}/state` })
-      instance = server(handler)
-      instance.listen(abciServerPort)
+      command = 'ndb'
+      runOptions.env = { ...process.env, NODE_ENV: 'development' }
     }
+
+    const indexFile = path.resolve(__dirname, `./${network}.js`)
+    const child = spawn(command, [indexFile], runOptions)
+    child.stdout.pipe(process.stdout)
+    child.stderr.pipe(process.stderr)
+
+    child.on('exit', code => {
+      console.log(`ndb exit code is: ${code}`)
+    })
+
     node = tm.node(initDir, {})
     node.stdout.pipe(process.stdout)
   })
@@ -74,7 +78,8 @@ program
   .description('start a blockchain ui for development')
   .option('-h, --host <host>', 'icetea node http or ws', 'http://localhost:26657')
   .action(async ({ host }, options) => {
-    const child = spawn('webpack-dev-server', ['--open', '--config', 'webpack.dev.js'], {
+    const daemon = path.resolve(__dirname, '../node_modules/webpack-dev-server/bin/webpack-dev-server.js')
+    const child = spawn(daemon, ['--open', '--config', 'webpack.dev.js'], {
       env: { ...process.env, ICETEA_ENDPOINT: host },
       cwd: path.resolve(__dirname, '..')
     })
