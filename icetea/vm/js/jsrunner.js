@@ -106,7 +106,7 @@ module.exports = class extends Runner {
 
     // Print source with line number - for debug
     const contractSrc = `(()=>function(__g){${srcWrapper}})()`
-    const filename = path.resolve(process.cwd(), 'contract_src', context.address + '.js')
+    const filename = path.resolve(process.cwd(), 'contract_src', `${context.address}.js`)
 
     // Print source for debug
     if (utils.isDevMode() &&
