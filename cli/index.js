@@ -5,9 +5,7 @@ const fs = require('fs')
 const path = require('path')
 const homedir = require('os').homedir()
 const { spawn } = require('child_process')
-// const server = require('abci')
-// const startup = require('../icetea/abcihandler')
-// const { abciServerPort } = require('../icetea/config')
+const rimraf = require('rimraf')
 
 const program = require('commander')
 program.version('0.0.1')
@@ -22,20 +20,22 @@ const getNetwork = (network) => {
   return network
 }
 
+const initTendemint = (initDir) => {
+  tm.initSync(initDir)
+  fs.copyFileSync(
+    path.resolve(__dirname, './private.toml'),
+    path.resolve(initDir, './config/config.toml')
+  )
+}
+
 program
   .command('init')
   .description('initialize a blockchain node')
   .option('-n, --network <network>', 'network', 'private')
   .action(({ network }, options) => {
     network = getNetwork(network)
-
     const initDir = `${homedir}/.icetea/${network}`
-    tm.initSync(initDir)
-    fs.copyFileSync(
-      path.resolve(__dirname, './private.toml'),
-      path.resolve(initDir, './config/config.toml')
-    )
-
+    initTendemint(initDir)
     console.log(`Init directory created at ${initDir}`)
   })
 
@@ -71,6 +71,22 @@ program
 
     node = tm.node(initDir, {})
     node.stdout.pipe(process.stdout)
+  })
+
+program
+  .command('reset')
+  .description('reset database')
+  .option('-n, --network <network>', 'network', 'private')
+  .action(async ({ network }, options) => {
+    network = getNetwork(network)
+    const initDir = `${homedir}/.icetea/${network}`
+    const contractSrcDir = path.resolve(__dirname, '../contract_src')
+    rimraf.sync(initDir)
+    rimraf.sync(contractSrcDir)
+    fs.mkdirSync(contractSrcDir)
+    fs.closeSync(fs.openSync(`${contractSrcDir}/.gitkeep`, 'w'))
+    initTendemint(initDir)
+    console.log(`Remove directory at ${initDir} and ${contractSrcDir}`)
   })
 
 program
