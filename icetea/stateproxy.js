@@ -42,11 +42,11 @@ const _generateContractAddress = (deployedBy, stateTable) => {
   return ecc.toContractAddress(id)
 }
 
-const _srcFor = (contractAddress, { stateTable, deployedContracts }) => {
+const _srcFor = (contractAddress, { stateTable, deployedContracts }, errorMessage) => {
   const state = (deployedContracts && deployedContracts[contractAddress]) ||
         (stateTable && stateTable[contractAddress])
   if (!state || !(state.src || state.system)) {
-    throw new Error(`The address specified is not a valid deployed contract: ${contractAddress}`)
+    throw new Error(errorMessage || `The address specified is not a valid deployed contract: ${contractAddress}`)
   }
 
   return {
@@ -138,7 +138,7 @@ const _stateforAddress = (contractAddress, readonly, {
 const getMetaProxy = (stateTable) => {
   return {
     tools: {
-      getCode: (contractAddress) => _srcFor(contractAddress, { stateTable })
+      getCode: (contractAddress, errorMessage) => _srcFor(contractAddress, { stateTable }, errorMessage)
     }
   }
 }
@@ -205,7 +205,7 @@ const getStateProxy = (stateTable) => {
       balances // balance changes, for transfer
     },
     tools: {
-      getCode: (contractAddress) => _srcFor(contractAddress, { stateTable, deployedContracts }),
+      getCode: (contractAddress, errorMessage) => _srcFor(contractAddress, { stateTable, deployedContracts }, errorMessage),
       balanceOf,
       deployContract,
       refectTxValueAndFee
