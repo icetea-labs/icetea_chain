@@ -7,6 +7,25 @@ const crypto = require('crypto')
 const _ = require('lodash')
 
 const METADATA = Object.freeze({
+  'registerProvider': {
+    decorators: ['transaction'],
+    params: [
+      { name: 'options', type: ['object', 'undefined'] }
+    ],
+    returnType: 'undefined'
+  },
+  'changeProviderOptions': {
+    decorators: ['transaction'],
+    params: [
+      { name: 'options', type: ['object', 'undefined'] }
+    ],
+    returnType: 'undefined'
+  },
+  'unregisterProvider': {
+    decorators: ['transaction'],
+    params: [],
+    returnType: 'undefined'
+  },
   'request': {
     decorators: ['transaction'],
     params: [
@@ -34,14 +53,12 @@ const METADATA = Object.freeze({
 
 // standard contract interface
 exports.run = (context, options) => {
-  const { msg, loadContract } = context.runtime
+  const { msg, loadContract, getContractInfo } = context.runtime
   checkMsg(msg, METADATA)
 
   const contract = {
     request (path, opts) {
-      if (!msg.sender.startsWith('ctea')) {
-        throw new Error('This function must be called from a contract.')
-      }
+      getContractInfo(msg.sender, 'This function must be called from a contract.')
 
       let p, d
       if (path.path) {
@@ -52,7 +69,7 @@ exports.run = (context, options) => {
         d = undefined
       }
 
-      options = Object.assign(opts || {}, { requester: msg.sender })
+      options = Object.assign({}, opts || {}, { requester: msg.sender })
       const requestData = {
         path: p,
         data: d,
@@ -61,6 +78,8 @@ exports.run = (context, options) => {
       const requestId = crypto.randomBytes(20).toString('base64')
       this.emitEvent('OffchainDataQuery', { id: requestId })
       this.setState(requestId, requestData)
+
+      // TODO: should we assign which provider to handle?
     },
 
     getRequest (requestId) {
@@ -69,12 +88,17 @@ exports.run = (context, options) => {
     },
 
     setResult (requestId, result) {
+      // TODO: check provider registered
+      // TODO: check provider conditions
+      // TODO: sanitize result
+
       const requestData = this.getState(requestId)
       if (!requestData) {
         throw new Error(`Request ${requestId} no longer exists.`)
       }
 
       const contract = loadContract(requestData.options.requester)
+      // invokeUpdate or invokeView/invokePure should be configurable
       const r = contract.onOffchainData.invokeUpdate(result)
       this.deleteState(requestId)
       return r

@@ -81,6 +81,16 @@ function _makeInvokableMethod (invokerTypes, destContract, method, options) {
   }, {})
 }
 
+function _getContractInfo (tools, address, errorMessage) {
+  const {
+    deployedBy,
+    system,
+    mode,
+    src
+  } = tools.getCode(address, errorMessage)
+  return { deployedBy, system, mode, src }
+}
+
 /**
  * context for (with invoke type)
  * @function
@@ -139,6 +149,7 @@ exports.forTransaction = (contractAddress, methodName, methodParams, options) =>
       balanceOf: tools.balanceOf,
       loadContract: _makeLoadContract(['invokeUpdate', 'invokeView', 'invokePure'], contractAddress, options),
       isValidAddress,
+      getContractInfo: (addr, errorMessage) => _getContractInfo(tools, addr, errorMessage),
       require: _require,
       addTag: (name, value) => {
         if (typeof name !== 'string' || typeof value !== 'string') {
@@ -201,6 +212,7 @@ exports.forView = (contractAddress, name, params, options) => {
       balanceOf: tools.balanceOf,
       loadContract: _makeLoadContract(['invokeView', 'invokePure'], contractAddress, options),
       isValidAddress,
+      getContractInfo: (addr, errorMessage) => _getContractInfo(tools, addr, errorMessage),
       require: _require
     })
   }
@@ -246,7 +258,6 @@ exports.forMetadata = address => ({
       callType: 'metadata',
       name: '__metadata' },
     block: {},
-    isValidAddress,
     require: _require,
     loadContract: () => ({})
   }
