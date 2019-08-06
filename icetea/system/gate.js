@@ -3,7 +3,6 @@
  */
 
 const { checkMsg } = require('../helper/types')
-const crypto = require('crypto')
 const _ = require('lodash')
 
 const METADATA = Object.freeze({
@@ -26,13 +25,20 @@ const METADATA = Object.freeze({
     params: [],
     returnType: 'undefined'
   },
+  'isProviderRegistered': {
+    decorators: ['view'],
+    params: [
+      { name: 'provider', type: 'address' }
+    ],
+    returnType: 'boolean'
+  },
   'request': {
     decorators: ['transaction'],
     params: [
       { name: 'path', type: ['string', 'object'] },
       { name: 'options', type: ['object', 'undefined'] }
     ],
-    returnType: 'undefined'
+    returnType: 'string'
   },
   'getRequest': {
     decorators: ['view'],
@@ -75,11 +81,19 @@ exports.run = (context, options) => {
         data: d,
         options
       }
-      const requestId = crypto.randomBytes(20).toString('base64')
-      this.emitEvent('OffchainDataQuery', { id: requestId })
+      const requests = this.getState('requests', {})
+      const myRequestKeys = Object.keys(requests).filter(t => t.startsWith(msg.sender + '_'))
+      const requestId = msg.sender + '_' + myRequestKeys.length
+      this.emitEvent('OffchainDataQuery', {
+        id: requestId,
+        path: p
+      }, ['path']) // index path so provider could filter the path they support
+
       this.setState(requestId, requestData)
 
       // TODO: should we assign which provider to handle?
+
+      return requestId
     },
 
     getRequest (requestId) {

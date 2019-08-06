@@ -4,35 +4,56 @@
 
 require('dotenv').config()
 const { IceteaWeb3 } = require('@iceteachain/web3')
+const fetch = require('node-fetch')
+
+const fetchCmc = data => {
+  const url = new URL('https://pro-api.coinmarketcap.com/v1/cryptocurrency/quotes/latest')
+  url.search = new URLSearchParams(data)
+  return fetch(url, {
+    headers: {
+      Accept: 'application/json',
+      'X-CMC_PRO_API_KEY': '43ca448c-5e89-41ed-8902-e72c54a6271a'
+    }
+  }).then(r => r.json())
+}
 
 setTimeout(async () => {
+  // TODO: move to config
   const tweb3 = new IceteaWeb3('ws://localhost:26657/websocket')
+
+  // TODO: gate contract should be separate from bank contract
   tweb3.wallet.importAccount(process.env.BANK_KEY)
 
-  tweb3.subscribe('OffchainDataQuery', {}, async data => {
-    const { result: ev } = JSON.parse(data)
-    if (ev.emitter !== 'system.gate') {
+  const gate = tweb3.contract('system.gate')
+  const methods = gate.methods
+
+  gate.events.OffchainDataQuery({ emitter: 'system.gate' }, async (error, ev) => {
+    if (error) {
+      console.error(error)
       return
     }
 
-    const ms = tweb3.contract('system.gate').methods
+    console.log('New request: ', ev)
 
-    const requestId = ev.eventData.id
-    const { path } = await ms.getRequest(requestId).call()
-    if (path === 'lottery') {
-      const r = [
-        [34641],
-        [56596],
-        [81188, 95672],
-        [13683, 44507, 57885],
-        [99753, 72552, 85043],
-        [3194, 7018, 6023, 5632],
-        [6205, 2598, 5631],
-        [4785, 1752, 7941],
-        [520, 759, 474],
-        [93, 81, 63, 54]
-      ]
-      tweb3.contract('system.gate').methods.setResult(requestId, r).sendAsync()
+    const requestId = ev.id
+    const { path, data } = await methods.getRequest(requestId).call()
+    if (path === 'query/finance/crypto/rate') {
+      // query coin marketcap
+      const r = await fetchCmc(data)
+
+      // build the result as required format by gate
+      // TODO: let the caller specify the fields
+      const rr = {
+        source: 'coinmarketcap.com',
+        data: {
+          ...r.data[data.symbol].quote
+        }
+      }
+
+      // set data to contract
+      methods.setResult(requestId, rr).sendAsync()
     }
   })
-}, 5000)
+
+  console.log('Icetea Gate Provider is listening for requests...')
+}, 100)
