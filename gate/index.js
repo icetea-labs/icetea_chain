@@ -12,7 +12,7 @@ const fetchCmc = data => {
   return fetch(url, {
     headers: {
       Accept: 'application/json',
-      'X-CMC_PRO_API_KEY': '43ca448c-5e89-41ed-8902-e72c54a6271a'
+      'X-CMC_PRO_API_KEY': process.env.CMC_PRO_API_KEY
     }
   }).then(r => r.json())
 }
