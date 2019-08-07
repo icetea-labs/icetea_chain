@@ -81,15 +81,19 @@ exports.run = (context, options) => {
         data: d,
         options
       }
-      const requests = this.getState('requests', {})
-      const myRequestKeys = Object.keys(requests).filter(t => t.startsWith(msg.sender + '_'))
-      const requestId = msg.sender + '_' + myRequestKeys.length
+
+      const numKey = msg.sender + '_c'
+      const lastNum = this.getState(numKey, -1)
+      const currentNum = lastNum + 1
+      const requestId = msg.sender + '_' + currentNum
+
+      this.setState(numKey, currentNum)
+      this.setState(requestId, requestData)
+
       this.emitEvent('OffchainDataQuery', {
         id: requestId,
         path: p
       }, ['path']) // index path so provider could filter the path they support
-
-      this.setState(requestId, requestData)
 
       // TODO: should we assign which provider to handle?
 
@@ -113,7 +117,7 @@ exports.run = (context, options) => {
 
       const contract = loadContract(requestData.options.requester)
       // invokeUpdate or invokeView/invokePure should be configurable
-      const r = contract.onOffchainData.invokeUpdate(result)
+      const r = contract.onOffchainData.invokeUpdate(requestId, requestData, result)
       this.deleteState(requestId)
       return r
     }

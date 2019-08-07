@@ -27,7 +27,7 @@ setTimeout(async () => {
   const gate = tweb3.contract('system.gate')
   const methods = gate.methods
 
-  gate.events.OffchainDataQuery({ emitter: 'system.gate' }, async (error, ev) => {
+  gate.events.OffchainDataQuery({ /* from: 'system.gate' */}, async (error, ev) => {
     if (error) {
       console.error(error)
       return
