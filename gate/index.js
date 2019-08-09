@@ -17,6 +17,19 @@ const fetchCmc = data => {
   }).then(r => r.json())
 }
 
+const fetchOpenWhether = data => {
+  const url = new URL('https://api.openweathermap.org/data/2.5/weather')
+  url.search = new URLSearchParams({
+    'APPID': process.env.OPEN_WHETHER_API_KEY,
+    ...data
+  })
+  return fetch(url, {
+    headers: {
+      Accept: 'application/json'
+    }
+  }).then(r => r.json())
+}
+
 setTimeout(async () => {
   // TODO: move to config
   const tweb3 = new IceteaWeb3('ws://localhost:26657/websocket')
@@ -47,6 +60,36 @@ setTimeout(async () => {
         source: 'coinmarketcap.com',
         data: {
           ...r.data[data.symbol].quote
+        }
+      }
+
+      // set data to contract
+      methods.setResult(requestId, rr).sendAsync()
+    } else if (path === 'query/weather/current') {
+      // query coin marketcap
+      const r = await fetchOpenWhether(data)
+
+      console.log(r)
+
+      // build the result as required format by gate
+      // TODO: let the caller specify the fields
+      const rr = {
+        source: 'openweathermap.org',
+        data: {
+          weather: {
+            main: r.weather[0].main,
+            description: r.weather[0].description,
+            icon: `https://openweathermap.org/img/wn/${r.weather[0].icon}@2x.png`
+          },
+          main: r.main,
+          visibility: r.visibility,
+          wind: r.wind.speed,
+          clouds: r.clouds.all,
+          country: r.sys.country,
+          timezone: r.timezone,
+          location: r.name,
+          coord: r.coord,
+          timestamp: r.dt
         }
       }
 
