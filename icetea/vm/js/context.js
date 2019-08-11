@@ -1,6 +1,7 @@
 /** @module */
 const utils = require('../../helper/utils')
 const invoker = require('../../contractinvoker')
+const libraryinvoker = require('../../libraryinvoker')
 const config = require('../../config')
 const { isValidAddress } = require('../../helper/utils')
 const crypto = require('crypto')
@@ -65,8 +66,26 @@ function _makeLoadContract (invokerTypes, srcContract, options) {
     return new Proxy({}, {
       get (obj, method) {
         const tx = { from: srcContract }
+        if (!options.origin) {
+          tx.origin = srcContract
+        }
         const newOpts = { ...options, tx, ...tx }
         return _makeInvokableMethod(invokerTypes, destContract, method, newOpts)
+      }
+    })
+  }
+}
+
+function _makeLoadLibrary (invokerTypes, srcContract, options) {
+  return destContract => {
+    return new Proxy({}, {
+      get (obj, method) {
+        const tx = { from: srcContract }
+        if (!options.origin) {
+          tx.origin = srcContract
+        }
+        const newOpts = { ...options, tx, ...tx }
+        return _makeLibraryMethod(invokerTypes, destContract, method, newOpts)
       }
     })
   }
@@ -76,6 +95,15 @@ function _makeInvokableMethod (invokerTypes, destContract, method, options) {
   return invokerTypes.reduce((obj, t) => {
     obj[t] = (...params) => {
       return invoker[t](destContract, method, params, options)
+    }
+    return obj
+  }, {})
+}
+
+function _makeLibraryMethod (invokerTypes, destContract, method, options) {
+  return invokerTypes.reduce((obj, t) => {
+    obj[t] = (...params) => {
+      return libraryinvoker[t](destContract, method, params, options)
     }
     return obj
   }, {})
@@ -148,6 +176,7 @@ exports.forTransaction = (contractAddress, methodName, methodParams, options) =>
       block,
       balanceOf: tools.balanceOf,
       loadContract: _makeLoadContract(['invokeUpdate', 'invokeView', 'invokePure'], contractAddress, options),
+      loadLibrary: _makeLoadLibrary(['invokeUpdate', 'invokeView', 'invokePure'], contractAddress, options),
       isValidAddress,
       getContractInfo: (addr, errorMessage) => _getContractInfo(tools, addr, errorMessage),
       require: _require,
@@ -211,6 +240,7 @@ exports.forView = (contractAddress, name, params, options) => {
       block,
       balanceOf: tools.balanceOf,
       loadContract: _makeLoadContract(['invokeView', 'invokePure'], contractAddress, options),
+      loadLibrary: _makeLoadLibrary(['invokeView', 'invokePure'], contractAddress, options),
       isValidAddress,
       getContractInfo: (addr, errorMessage) => _getContractInfo(tools, addr, errorMessage),
       require: _require
@@ -259,6 +289,7 @@ exports.forMetadata = address => ({
       name: '__metadata' },
     block: {},
     require: _require,
-    loadContract: () => ({})
+    loadContract: () => ({}),
+    loadLibrary: () => ({})
   }
 })

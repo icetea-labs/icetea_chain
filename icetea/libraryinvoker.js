@@ -3,7 +3,7 @@ const sysContracts = require('./system')
 const { getRunner, getContext, getGuard } = require('./vm')
 const Invoker = require('./invoker')
 
-class ContractInvoker extends Invoker {
+class LibraryInvoker extends Invoker {
   /**
      * Invoke a contract method.
      * @param {string} invokeType 'transaction', 'view', or 'pure'.
@@ -17,6 +17,8 @@ class ContractInvoker extends Invoker {
       throw new Error(`Invalid invoke type ${invokeType}. Must be 'pure', 'view', or 'transaction'.`)
     }
 
+    const { origin } = options
+
     if (methodName === 'address') {
       return contractAddress
     } else if (methodName === 'balance') {
@@ -26,7 +28,7 @@ class ContractInvoker extends Invoker {
     }
 
     const { mode, src } = options.tools.getCode(contractAddress)
-    const context = getContext(mode).for(invokeType, contractAddress, methodName, methodParams, options)
+    const context = getContext(mode).for(invokeType, origin, methodName, methodParams, options)
 
     let result
 
@@ -43,4 +45,4 @@ class ContractInvoker extends Invoker {
   }
 }
 
-module.exports = utils.newAndBind(ContractInvoker)
+module.exports = utils.newAndBind(LibraryInvoker)
