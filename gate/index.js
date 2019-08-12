@@ -17,10 +17,16 @@ const fetchCmc = data => {
   }).then(r => r.json())
 }
 
-const fetchOpenWhether = data => {
+const fetchOpenWeather = data => {
+  if (data.locale && !data.lang) {
+    // OpenWeather require a different format of locale
+    const lang = data.locale.toLowerCase().replace('_', '-')
+    data.lang = lang
+    delete data.locale
+  }
   const url = new URL('https://api.openweathermap.org/data/2.5/weather')
   url.search = new URLSearchParams({
-    'APPID': process.env.OPEN_WHETHER_API_KEY,
+    'APPID': process.env.OPEN_WEATHER_API_KEY,
     ...data
   })
   return fetch(url, {
@@ -67,7 +73,7 @@ setTimeout(async () => {
       methods.setResult(requestId, rr).sendAsync()
     } else if (path === 'query/weather/current') {
       // query coin marketcap
-      const r = await fetchOpenWhether(data)
+      const r = await fetchOpenWeather(data)
 
       console.log(r)
 

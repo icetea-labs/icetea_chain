@@ -2,12 +2,8 @@ const { Message } = require('@iceteachain/utils')
 
 const showMenu = m => {
     return (m || Message.text('This is the whether station bot.'))
-        .buttonRow()
-        // .button('Your Location', 'location')
-        .button('Hanoi', '1581130')
-        .button('Saigon', '1566083')
-        .endRow()
-        .nextStateAccess('write').done()
+        .button('Your Location', 'location')
+        .requestLocation().done()
 }
 
 @contract class WeatherBot {
@@ -20,14 +16,18 @@ const showMenu = m => {
         return showMenu()
     }
 
-    @transaction ontext(id: string, { locale }) {
-        const gate = loadContract('system.gate')
-        const requestId = gate.request.invokeUpdate({
-            path: 'query/weather/current',
-            data: { id }
-        }, { locale })
+    @transaction ontext(id: string, { locale, location }) {
+        if (location) {
+            const gate = loadContract('system.gate')
+            const requestId = gate.request.invokeUpdate({
+                path: 'query/weather/current',
+                data: { location }
+            }, { locale })
 
-        return Message.sendLoading(requestId, { type: 'html' })
+            return Message.sendLoading(requestId, { type: 'html' })
+        } else {
+            return Message.text("Please allow the chatbot to view your location first.")
+        }
     }
 
     @transaction onOffchainData(requestId, input, result) {
