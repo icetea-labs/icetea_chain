@@ -91,6 +91,21 @@ function _makeLoadLibrary (invokerTypes, srcContract, options) {
   }
 }
 
+function _makeTransfer (transferMethod, srcContract, options) {
+  return (to, value) => {
+    transferMethod(to, value)
+    let invoked = {}
+    if (options.tx && options.tx.invoked) {
+      invoked = options.tx.invoked
+    }
+    const tx = { from: srcContract, to, value, payer: srcContract, invoked: { ...invoked, [to]: true } }
+    const newOpts = { ...options, tx }
+    if (!invoked[to]) { // prevent cycle onreceive
+      return invoker['invokeUpdate'](to, '__on_received', [], newOpts)
+    }
+  }
+}
+
 function _makeInvokableMethod (invokerTypes, destContract, method, options) {
   return invokerTypes.reduce((obj, t) => {
     obj[t] = (...params) => {
@@ -99,7 +114,7 @@ function _makeInvokableMethod (invokerTypes, destContract, method, options) {
 
     if (t === 'invokeUpdate') {
       obj.value = (val) => {
-        const tx = { value: val, payer: options.from, to: destContract }
+        const tx = { value: val, fee: 0, payer: options.from, to: destContract, from: options.from }
         const newOpts = { ...options, tx }
         return {
           [t] (...params) {
@@ -182,6 +197,7 @@ exports.forTransaction = (contractAddress, methodName, methodParams, options) =>
 
   const ctx = {
     ...contractHelpers,
+    transfer: _makeTransfer(contractHelpers.transfer, contractAddress, options),
     address: contractAddress,
     deployedBy,
     get balance () {

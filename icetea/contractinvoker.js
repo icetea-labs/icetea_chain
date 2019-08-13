@@ -2,6 +2,7 @@ const utils = require('./helper/utils')
 const sysContracts = require('./system')
 const { getRunner, getContext, getGuard } = require('./vm')
 const Invoker = require('./invoker')
+const { isContract } = require('./statemanager')
 
 class ContractInvoker extends Invoker {
   /**
@@ -38,7 +39,7 @@ class ContractInvoker extends Invoker {
       const guard = getGuard(mode)(src)
       result = vm.run(src, { context, guard, info: options.info })
       const { tx } = options
-      if (tx && !tx.signers) { // tx from contract
+      if (tx && tx.from && isContract(tx.from) && tx.to && tx.value) { // tx from contract
         const txContext = getContext(mode).for(invokeType, tx.payer, methodName, methodParams, options)
         txContext.transfer(tx.to, tx.value)
       }
