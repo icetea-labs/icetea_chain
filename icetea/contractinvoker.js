@@ -37,6 +37,11 @@ class ContractInvoker extends Invoker {
       const vm = getRunner(mode)
       const guard = getGuard(mode)(src)
       result = vm.run(src, { context, guard, info: options.info })
+      const { tx } = options
+      if (tx && !tx.signers) { // tx from contract
+        const txContext = getContext(mode).for(invokeType, tx.payer, methodName, methodParams, options)
+        txContext.transfer(tx.to, tx.value)
+      }
     }
 
     return result

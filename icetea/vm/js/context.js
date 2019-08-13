@@ -96,6 +96,19 @@ function _makeInvokableMethod (invokerTypes, destContract, method, options) {
     obj[t] = (...params) => {
       return invoker[t](destContract, method, params, options)
     }
+
+    if (t === 'invokeUpdate') {
+      obj.value = (val) => {
+        const tx = { value: val, payer: options.from, to: destContract }
+        const newOpts = { ...options, tx }
+        return {
+          [t] (...params) {
+            return invoker[t](destContract, method, params, newOpts)
+          }
+        }
+      }
+    }
+
     return obj
   }, {})
 }
@@ -105,6 +118,9 @@ function _makeLibraryMethod (invokerTypes, destContract, method, options) {
     obj[t] = (...params) => {
       return libraryinvoker[t](destContract, method, params, options)
     }
+
+    // TBD: value method in loadLibrary
+
     return obj
   }, {})
 }
