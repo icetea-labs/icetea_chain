@@ -4,6 +4,7 @@ const invoker = require('../../contractinvoker')
 const libraryinvoker = require('../../libraryinvoker')
 const config = require('../../config')
 const { isValidAddress } = require('../../helper/utils')
+const { isContract } = require('../../statemanager')
 const crypto = require('crypto')
 
 const moduleUtils = Object.freeze(require('@iceteachain/utils/utils.js'))
@@ -94,6 +95,11 @@ function _makeLoadLibrary (invokerTypes, srcContract, options) {
 function _makeTransfer (transferMethod, srcContract, options) {
   return (to, value) => {
     transferMethod(to, value)
+
+    if (!isContract(to)) {
+      return
+    }
+
     let invoked = {}
     if (options.tx && options.tx.invoked) {
       invoked = options.tx.invoked
