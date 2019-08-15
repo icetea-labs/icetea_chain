@@ -4,6 +4,8 @@ const invoker = require('../../contractinvoker')
 const config = require('../../config')
 const { isValidAddress } = require('../../helper/utils')
 const crypto = require('crypto')
+const { ContractMode, TxOp } = require('@iceteachain/common')
+const { simpleTranspile } = require('@iceteachain/sunseed')
 
 const moduleUtils = Object.freeze(require('@iceteachain/utils/utils.js'))
 const moduleCrypto = Object.freeze({
@@ -79,6 +81,34 @@ function _makeInvokableMethod (invokerTypes, destContract, method, options) {
     }
     return obj
   }, {})
+}
+
+function _makeDeployContract (tools, contractHelpers, address, options) {
+  return (contractSrc, deployOptions = {}) => {
+    const { value = 0, fee = 0, params = [] } = deployOptions
+    console.log(contractSrc)
+    contractSrc = simpleTranspile(contractSrc)
+    const tx = {
+      data: {
+        op: TxOp.DEPLOY_CONTRACT,
+        mode: ContractMode.JS_DECORATED,
+        params,
+        src: Buffer.from(contractSrc).toString('base64')
+      },
+      from: address,
+      payer: address,
+      value: BigInt(value),
+      fee: BigInt(fee)
+    }
+    const contractState = invoker.prepareContract(tx)
+    const newAddress = tools.deployContract(address, contractState)
+    invoker.invokeUpdate(newAddress, '__on_deployed', tx.data.params, options)
+    if (tx.value + tx.fee > BigInt(0)) {
+      contractHelpers.transfer(newAddress, tx.value)
+      invoker.invokeUpdate(newAddress, '__on_received', [], options)
+    }
+    return newAddress
+  }
 }
 
 function _getContractInfo (tools, address, errorMessage) {
@@ -162,7 +192,8 @@ exports.forTransaction = (contractAddress, methodName, methodParams, options) =>
           throw new Error(`Tag ${name} already exists for this transaction.`)
         }
         tags[name] = value
-      }
+      },
+      deployContract: _makeDeployContract(tools, contractHelpers, contractAddress, options)
     },
     emitEvent: (eventName, eventData, indexes = []) => {
       utils.emitEvent(contractAddress, tags, eventName, eventData, indexes)
