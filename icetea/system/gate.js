@@ -3,7 +3,6 @@
  */
 
 const { checkMsg } = require('../helper/types')
-const crypto = require('crypto')
 const _ = require('lodash')
 
 const METADATA = Object.freeze({
@@ -26,13 +25,20 @@ const METADATA = Object.freeze({
     params: [],
     returnType: 'undefined'
   },
+  'isProviderRegistered': {
+    decorators: ['view'],
+    params: [
+      { name: 'provider', type: 'address' }
+    ],
+    returnType: 'boolean'
+  },
   'request': {
     decorators: ['transaction'],
     params: [
       { name: 'path', type: ['string', 'object'] },
       { name: 'options', type: ['object', 'undefined'] }
     ],
-    returnType: 'undefined'
+    returnType: 'string'
   },
   'getRequest': {
     decorators: ['view'],
@@ -75,11 +81,23 @@ exports.run = (context, options) => {
         data: d,
         options
       }
-      const requestId = crypto.randomBytes(20).toString('base64')
-      this.emitEvent('OffchainDataQuery', { id: requestId })
+
+      const numKey = msg.sender + '_c'
+      const lastNum = this.getState(numKey, -1)
+      const currentNum = lastNum + 1
+      const requestId = msg.sender + '_' + currentNum
+
+      this.setState(numKey, currentNum)
       this.setState(requestId, requestData)
 
+      this.emitEvent('OffchainDataQuery', {
+        id: requestId,
+        path: p
+      }, ['path']) // index path so provider could filter the path they support
+
       // TODO: should we assign which provider to handle?
+
+      return requestId
     },
 
     getRequest (requestId) {
@@ -99,7 +117,7 @@ exports.run = (context, options) => {
 
       const contract = loadContract(requestData.options.requester)
       // invokeUpdate or invokeView/invokePure should be configurable
-      const r = contract.onOffchainData.invokeUpdate(result)
+      const r = contract.onOffchainData.invokeUpdate(requestId, requestData, result)
       this.deleteState(requestId)
       return r
     }
