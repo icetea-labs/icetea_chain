@@ -12,6 +12,7 @@
     "start": "standard --fix && node icetea/index.js",
     "app": "standard --fix && webpack-dev-server --open --config webpack.dev.js",
     "web": "standard --fix && webpack-dev-server --config webpack.dev.js",
+    "gate": "node gate/index.js",
     "reset": "tendermint unsafe_reset_all && node ./scripts/destroy.js",
     "dump": "node ./scripts/dump.js",
     "show": "sudo lsof -i tcp:26657",

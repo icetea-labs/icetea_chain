@@ -1,10 +1,24 @@
 const { Message } = require('@iceteachain/utils')
 
+const LOCATIONS = {
+    Hanoi: {
+        lon: 105.841171,
+        lat: 21.0245
+      },
+    Saigon: {
+        lon: 106.666672,
+        lat: 10.75
+      }
+}
 const showMenu = m => {
     return (m || Message.text('This is the whether station bot.'))
-        .button('Your Location', 'location')
+        .buttonRow()
+        .button('Your Location', '_', { location: true })
+        .button('Hanoi')
+        .button('Saigon')
+        .endRow()
         .nextStateAccess('write')
-        .requestLocation().done()
+        .done()
 }
 
 @contract class WeatherBot {
@@ -18,7 +32,7 @@ const showMenu = m => {
     }
 
     @transaction ontext(id: string, { locale, location }) {
-        console.log(locale, location)
+        location = LOCATIONS[id] || location
         if (location) {
             const gate = loadContract('system.gate')
             const requestId = gate.request.invokeUpdate({
