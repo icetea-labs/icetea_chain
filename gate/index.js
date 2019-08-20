@@ -17,13 +17,17 @@ const fetchCmc = data => {
   }).then(r => r.json())
 }
 
-const fetchOpenWeather = data => {
-  if (data.locale && !data.lang) {
-    // OpenWeather require a different format of locale
-    const lang = data.locale.toLowerCase().replace('_', '-')
+const fetchOpenWeather = (data, options = {}) => {
+  if (!data.lang && options.locale) {
+    // OpenWeather requires a different format of locale
+    const lang = options.locale.toLowerCase().replace('_', '-')
     data.lang = lang
-    delete data.locale
   }
+  if (data.location) {
+    Object.assign(data, data.location)
+    delete data.location
+  }
+
   const url = new URL('https://api.openweathermap.org/data/2.5/weather')
   url.search = new URLSearchParams({
     'APPID': process.env.OPEN_WEATHER_API_KEY,
@@ -55,10 +59,11 @@ setTimeout(async () => {
     console.log('New request: ', ev)
 
     const requestId = ev.id
-    const { path, data } = await methods.getRequest(requestId).call()
+    const { path, data, options } = await methods.getRequest(requestId).call()
+
     if (path === 'query/finance/crypto/rate') {
       // query coin marketcap
-      const r = await fetchCmc(data)
+      const r = await fetchCmc(data, options)
 
       // build the result as required format by gate
       // TODO: let the caller specify the fields
@@ -73,7 +78,7 @@ setTimeout(async () => {
       methods.setResult(requestId, rr).sendAsync()
     } else if (path === 'query/weather/current') {
       // query coin marketcap
-      const r = await fetchOpenWeather(data)
+      const r = await fetchOpenWeather(data, options)
 
       console.log(r)
 

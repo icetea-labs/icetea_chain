@@ -46,7 +46,6 @@ const saySelect = (action) => {
 }
 
 const speak = (items, updateIndex) => {
-  console.log('items', items)
   if (!items) return
   if (!Array.isArray(items)) {
     items = [items]
@@ -120,6 +119,16 @@ function confirmTransfer (amount) {
   ]).then(result => (!!result && result.value === 'transfer'))
 }
 
+function confirmLocation () {
+  say('Allow this bot to access your location?', {
+    type: 'html', cssClass: 'bot-confirm'
+  })
+  return sayButton([
+    { text: 'Yes', value: 'yes' },
+    { text: 'No', value: 'no' }
+  ]).then(result => (!!result && result.value === 'yes'))
+}
+
 function callContract (method, type, value, from, ...params) {
   if (value) {
     type = 'write'
@@ -170,7 +179,7 @@ function setCommands (commands, defStateAccess) {
   })
 }
 
-function pushToQueue (type, content, stateAccess, transferValue, sendback) {
+function pushToQueue (type, content, stateAccess, transferValue, location, sendback) {
   if (content.value.indexOf(':') > 0) {
     const parts = content.value.split(':', 2)
     type = parts[0]
@@ -180,9 +189,25 @@ function pushToQueue (type, content, stateAccess, transferValue, sendback) {
     type,
     content,
     transferValue,
+    location,
     sendback,
     stateAccess
   })
+}
+
+function isLocationRequest (cr, sr) {
+  if (!cr || !cr.options) {
+    return false
+  }
+
+  if (sr && sr.value && cr.options.next && cr.options.next[sr.value]) {
+    const l = cr.options.next[sr.value].location
+    if (l != null) {
+      return !!l
+    }
+  }
+
+  return !!cr.options.location
 }
 
 function processSpeakResult (contract, contractResult, speakResult) {
@@ -190,7 +215,6 @@ function processSpeakResult (contract, contractResult, speakResult) {
   if (contractResult.options && contractResult.options.updateOnEvent) {
     return new Promise((resolve, reject) => {
       contract.events[contractResult.options.updateOnEvent]({}, (error, value) => {
-        console.log(value)
         if (error) {
           reject(error)
         } else {
@@ -215,6 +239,25 @@ function processSpeakResult (contract, contractResult, speakResult) {
       speakResult.transferValue = contractResult.options.value
       return speakResult
     })
+  } else if (isLocationRequest(contractResult, speakResult)) {
+    return confirmLocation().then(ok => {
+      if (!ok) {
+        say('Location refused. You could reconnect to this bot to start a new conversation.')
+        return sayButton({ text: 'Restart', value: 'command:start' })
+      }
+
+      return new Promise((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(function (p) {
+          speakResult.location = { lat: p.coords.latitude, lon: p.coords.longitude }
+          resolve(speakResult)
+        }, function (e) {
+          reject(e.message || String(e))
+        }, {
+          enableHighAccuracy: false,
+          maximumAge: 1000 * 60 * 15
+        })
+      })
+    })
   } else {
     return speakResult
   }
@@ -228,13 +271,13 @@ function handleQueue (contract, defStateAccess) {
       item.transferValue || 0,
       tweb3.wallet.defaultAccount,
       item.content.value,
-      { sendback: item.sendback })
+      { sendback: item.sendback, locale: navigator.language, location: item.location })
       .then(contractResult => {
         return speak(contractResult.messages || contractResult)
           .then(r => processSpeakResult(contract, contractResult, r))
           .then(r => {
             if (r && r.value) {
-              pushToQueue('text', r, r.stateAccess || defStateAccess, r.transferValue, r.sendback)
+              pushToQueue('text', r, r.stateAccess || defStateAccess, r.transferValue, r.location, r.sendback)
             }
           })
           .catch(err => {
