@@ -1,7 +1,7 @@
-const BotNames = require('./botnames')
+const SysContractNames = require('./sysconnames')
 
-const systemContracts = Object.keys(BotNames).reduce((prev, key) => {
-  prev[BotNames[key]] = exports[key] = require('./' + key.toLowerCase())
+const systemContracts = Object.keys(SysContractNames).reduce((prev, key) => {
+  prev[SysContractNames[key]] = exports[key] = require('./' + key.toLowerCase())
   return prev
 }, {})
 

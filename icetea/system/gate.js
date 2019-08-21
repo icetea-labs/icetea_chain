@@ -60,7 +60,7 @@ const METADATA = Object.freeze({
 // standard contract interface
 exports.run = (context, options) => {
   const { msg, loadContract, getContractInfo } = context.runtime
-  checkMsg(msg, METADATA)
+  const msgParams = checkMsg(msg, METADATA, { sysContracts: this.systemContracts() })
 
   const contract = {
     request (path, opts) {
@@ -126,6 +126,6 @@ exports.run = (context, options) => {
   if (!contract.hasOwnProperty(msg.name)) {
     return METADATA
   } else {
-    return contract[msg.name].apply(context, msg.params)
+    return contract[msg.name].apply(context, msgParams)
   }
 }

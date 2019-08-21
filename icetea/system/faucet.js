@@ -39,7 +39,9 @@ const REQUEST_QUOTA = BigInt(100e6)
 // standard contract interface
 exports.run = (context) => {
   const { msg } = context.runtime
-  checkMsg(msg, Object.assign({}, INTERNAL_METADATA, METADATA))
+  const msgParams = checkMsg(msg, Object.assign({}, INTERNAL_METADATA, METADATA), {
+    sysContracts: this.systemContracts()
+  })
 
   const contract = {
     getQuota () {
@@ -124,6 +126,6 @@ exports.run = (context) => {
   if (!contract.hasOwnProperty(msg.name)) {
     return METADATA
   } else {
-    return contract[msg.name].apply(context, msg.params)
+    return contract[msg.name].apply(context, msgParams)
   }
 }

@@ -259,13 +259,14 @@ exports.checkUnsupportTypes = o => {
     if (Buffer.isBuffer(o)) return o
     const t = typeof o
 
-    if (t === 'bigint' || t === 'function' ||
+    // if (t === 'bigint' || t === 'function' ||
+    if (t === 'function' ||
       o instanceof RegExp ||
       o instanceof Date ||
       o instanceof Map ||
       o instanceof Set ||
       o instanceof WeakMap) {
-      throw new Error(`State contains unsupported type: ${o.toString()}`)
+      throw new Error(`State contains unsupported type: ${t}`)
     }
 
     if (t === 'object') {
