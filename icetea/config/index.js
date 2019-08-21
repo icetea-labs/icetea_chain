@@ -11,6 +11,11 @@ const config = {
       '@babel/plugin-proposal-class-properties'
     ]
   },
+  election: {
+    numberOfValidators: 2,
+    minValidatorDeposit: 10e7,
+    minVoterValue: 10e6
+  },
   abciServerPort: 26658,
   feeCollector: process.env.FEE_COLLECTOR,
   initialBalances: [

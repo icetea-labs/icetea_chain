@@ -7,7 +7,7 @@
  * - only support direct signature, does not recursive
  */
 
-const { Did: DID_ADDR } = require('./botnames')
+const { Did: DID_ADDR } = require('./sysconnames')
 const { checkMsg } = require('../helper/types')
 const _ = require('lodash')
 

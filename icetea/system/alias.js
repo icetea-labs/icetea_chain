@@ -7,7 +7,7 @@
  * No support for UPDATE nor DELETE
  */
 
-const { Alias: ALIAS_ADDR } = require('./botnames')
+const { Alias: ALIAS_ADDR } = require('./sysconnames')
 const { checkMsg } = require('../helper/types')
 
 const METADATA = Object.freeze({
