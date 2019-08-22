@@ -17,9 +17,9 @@ module.exports = (config = {}) => {
 
 const handler = {
 
-  initChain ({ consensusParams, validators }) {
-    app.installSystemContracts()
-    return { consensusParams, validators }
+  initChain (args) {
+    app.installSystemContracts(args)
+    return args // return same consensusParams and validators as defined in consensus.json
   },
 
   async info () {

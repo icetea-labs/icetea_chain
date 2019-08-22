@@ -8,11 +8,14 @@ const _ = require('lodash')
 
 const METADATA = Object.freeze({
 
-  // self-nominate to be a validator candidate
+  // nominate a validator candidate
   // must attach minimum deposit
   'propose': {
     decorators: ['payable'],
-    params: [],
+    params: [
+      { name: 'pubkey', type: 'string' },
+      { name: 'candidateName', type: 'string' }
+    ],
     returnType: 'undefined'
   },
 
@@ -20,7 +23,9 @@ const METADATA = Object.freeze({
   // can get back deposit
   'resign': {
     decorators: ['payable'],
-    params: [],
+    params: [
+      { name: 'withdrawnAddress', type: ['address', 'undefined'] }
+    ],
     returnType: 'undefined'
   },
 
@@ -44,7 +49,7 @@ const METADATA = Object.freeze({
   'vote': {
     decorators: ['payable'],
     params: [
-      { name: 'candidate', type: 'address' }
+      { name: 'pubkey', type: 'string' }
     ],
     returnType: 'undefined'
   }
@@ -56,31 +61,57 @@ exports.run = (context, options) => {
   const msgParams = checkMsg(msg, METADATA, { sysContracts: this.systemContracts() })
 
   const contract = {
-    propose () {
+    propose (pubkey, candidateName) {
+      pubkey = pubkey.trim()
+      if (!pubkey) {
+        throw new Error('Public key is required.')
+      }
+
+      candidateName = candidateName.trim()
+      if (!candidateName) {
+        throw new Error('Validator candidate name is required.')
+      }
+
       const candidates = context.getState('candidates', {})
-      const me = candidates[msg.sender]
+
+      Object.values(candidates).forEach(({ name }) => {
+        if (name.toLowerCase() === candidateName.toLowerCase()) {
+          throw new Error(`Candidate name ${candidateName} already exists.`)
+        }
+      })
+
+      const me = candidates[pubkey]
+
       if (me) {
+        // Check if sender is a owner of operator ac permission over the operator
+        const did = exports.systemContracts().Did
+        did.checkPermission(me.operator, msg.signers, block.timestamp)
+
         // Add more deposit, it is ok
         me.deposit = (me.deposit || BigInt(0)) + msg.value
         if (me.resigned) {
           delete me.resigned
           me.block = block.number
+          me.operator = msg.sender
+          me.name = candidateName
         }
       } else {
-        candidates[msg.sender] = {
+        candidates[pubkey] = {
           deposit: msg.value,
-          block: block.number
+          block: block.number,
+          operator: msg.sender,
+          name: candidateName
         }
       }
 
-      if (candidates[msg.sender].deposit < config.minValidatorDeposit) {
+      if (candidates[pubkey].deposit < config.minValidatorDeposit) {
         throw new Error(`Validator must deposit at least ${config.minValidatorDeposit}`)
       }
 
       context.setState('candidates', candidates)
     },
 
-    resign () {
+    resign (withdrawnAddress) {
       throw new Error('Resigning is not yet supported.')
     },
 
@@ -92,23 +123,19 @@ exports.run = (context, options) => {
       return _getValidators(contract.getCandidates())
     },
 
-    vote (voteeAddress) {
-      if (msg.sender === voteeAddress) {
-        throw new Error('You cannot vote for yourself.')
-      }
-
+    vote (voteePubkey) {
       if (msg.value < config.minVoterValue) {
         throw new Error(`You must attach at least ${config.minVoterValue} when voting.`)
       }
 
       const candidates = context.getState('candidates', {})
-      const votee = candidates[voteeAddress]
+      const votee = candidates[voteePubkey]
       if (!votee) {
-        throw new Error(`${voteeAddress} is not a valid validator address.`)
+        throw new Error(`${voteePubkey} is not a valid validator candidate public key.`)
       }
 
       if (votee.resigned) {
-        throw new Error(`${voteeAddress} has already resigned.`)
+        throw new Error(`${voteePubkey} has already resigned.`)
       }
 
       votee.voters = votee.voters || {}
@@ -156,7 +183,7 @@ function _getValidators (candidates) {
 
   // sort by capacity
   // if all equal, it will be in order of insert (order of transaction)
-  candidates = _.orderBy(candidates, ['capacity', 'deposit', 'block'], ['desc', 'asc', 'asc'])
+  candidates = _.orderBy(candidates, ['capacity', 'block'], ['desc', 'asc'])
 
   // cut to max number of validator
   if (candidates.length > config.numberOfValidators) {
@@ -166,12 +193,30 @@ function _getValidators (candidates) {
   return candidates
 }
 
+exports.ondeploy = (state, { consensusParams, validators }) => {
+  state.storage = {
+    candidates: {}
+  }
+  const c = state.storage.candidates
+  validators.forEach(v => {
+    const pk = v.pubKey.data.toString('base64')
+    c[pk] = {
+      deposit: config.minValidatorDeposit,
+      block: 0,
+      operator: process.env.BANK_ADDR,
+      name: 'Icetea Validator'
+    }
+  })
+
+  return state
+}
+
 exports.getValidators = function () {
   const storage = this.unsafeStateManager().getAccountState('system.election').storage || {}
   const candidates = storage['candidates'] || {}
   return _getValidators(_getCandidates(candidates))
 }
 
-exports.slash = function (validatorAddress, slashType) {
+exports.slash = function () {
   throw new Error('Slashing is not yet supported.')
 }

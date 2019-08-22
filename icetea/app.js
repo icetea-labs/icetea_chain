@@ -51,12 +51,12 @@ class App {
     return lastState
   }
 
-  installSystemContracts () {
+  installSystemContracts (args) {
     sysContracts.all().forEach(key => {
       const state = stateManager.installSystemContract(key)
       const contract = sysContracts.get(key)
       if (typeof contract.ondeploy === 'function') {
-        contract.ondeploy(state)
+        contract.ondeploy(state, args)
       }
     })
   }
