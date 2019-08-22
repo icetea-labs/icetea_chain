@@ -37,14 +37,19 @@ describe('election', () => {
     const ms = tweb3.contract('system.election').methods
 
     let r = await ms.getCandidates().call()
-    expect(r).toEqual([])
+    expect(r.length).toBe(1)
+    expect(r[0].operator).toBe(process.env.BANK_ADDR)
+    expect(r[0].block).toBe(0)
     r = await ms.getValidators().call()
-    expect(r).toEqual([])
+    expect(r.length).toBe(1)
+    expect(r[0].operator).toBe(process.env.BANK_ADDR)
+    expect(r[0].block).toBe(0)
 
     const propose = (value, fromAddress) => {
       const opts = { from: fromAddress || from }
       if (value) opts.value = value
-      return ms.propose().sendCommit(opts)
+      // This should be a ed25519 pubkey, however, we use the from for simple testing
+      return ms.propose(opts.from, '' + Date.now() + Math.random()).sendCommit(opts)
     }
 
     // now propose without a value
@@ -57,11 +62,11 @@ describe('election', () => {
     await propose(1)
 
     r = await ms.getCandidates().call()
-    expect(r.length).toBe(1)
-    expect(r[0].address).toBe(from)
-    expect(r[0].deposit).toBe(String(config.minValidatorDeposit + 1))
+    expect(r.length).toBe(2)
+    expect(r[1].address).toBe(from)
+    expect(r[1].deposit).toBe(String(config.minValidatorDeposit + 1))
     r = await ms.getValidators().call()
-    expect(r.length).toBe(1)
+    expect(r.length).toBe(2)
     expect(r[0].address).toBe(from)
     expect(r[0].deposit).toBe(String(config.minValidatorDeposit + 1))
 
@@ -92,7 +97,6 @@ describe('election', () => {
       return ms.vote(candidate).sendCommit(opts)
     }
 
-    await expect(vote(from, config.minVoterValue)).rejects.toThrowError('cannot vote for yourself')
     await expect(vote(addr2)).rejects.toThrowError()
     await expect(vote(addr2, 0)).rejects.toThrowError()
     await expect(vote(addr2, config.minVoterValue - 1)).rejects.toThrowError('at least')
