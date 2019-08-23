@@ -44,26 +44,30 @@ class StateManager extends EventEmitter {
     validators = _validators
   }
 
-  updateValidators (newValidators) {
-    // TBD: should we set power equal or weighted
+  async getValidators (height) {
+    return patricia.getValidatorsByHeight(height)
+  }
+
+  getUpdatedValidators (newValidators) {
     let result = []
-    validators.map(validator => {
+    newValidators.map(validator => {
       result.push({
         pubKey: validator.pubKey,
-        power: 0
+        power: validator.capacity
       })
     })
-    newValidators.map(validator => {
+    validators.map(validator => {
       const index = result.findIndex(r => (r.pubKey.data === validator.pubKey.data))
       if (index < 0) {
         result.push({
           pubKey: validator.pubKey,
-          power: 10
+          power: 0
         })
       } else {
-        result[index] = {
-          pubKey: validator.pubKey,
-          power: 10
+        if (validator.capacity === result[index].capacity) {
+          result.splice(index, 1)
+        } else {
+          result[index].capacity = validator.capacity
         }
       }
     })

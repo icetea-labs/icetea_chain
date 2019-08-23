@@ -311,6 +311,10 @@ class App {
     return stateManager.setValidators(validators)
   }
 
+  async getValidators (height) {
+    return stateManager.getValidators(height)
+  }
+
   endBlock (height) {
     if (height % config.election.epoch === 0) {
       let newValidators = []
@@ -319,10 +323,7 @@ class App {
       } catch (err) {
         throw new Error('getValidators throws exception: ' + (err.stack || String(err)))
       }
-      if (newValidators.length !== config.election.numberOfValidators) {
-        return {}
-      }
-      const validatorUpdates = stateManager.updateValidator(newValidators)
+      const validatorUpdates = stateManager.getUpdatedValidators(newValidators)
       stateManager.setValidators(newValidators)
       return {
         validatorUpdates
