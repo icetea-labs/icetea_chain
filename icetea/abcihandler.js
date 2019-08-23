@@ -19,6 +19,7 @@ const handler = {
 
   initChain (args) {
     app.installSystemContracts(args)
+    app.initValidators()
     return args // return same consensusParams and validators as defined in consensus.json
   },
 
@@ -46,6 +47,11 @@ const handler = {
   beginBlock (req) {
     app.setBlock(getBlock(req))
     return {}
+  },
+
+  endBlock (req) {
+    const height = Number(req.height.toString())
+    return app.endBlock(height)
   },
 
   deliverTx (req) {

@@ -160,7 +160,10 @@ function _getCandidates (candidates, includeResigned) {
   Object.entries(candidates).forEach(([key, value]) => {
     if (includeResigned || !value.resigned) {
       const clone = _.cloneDeep(value)
-      clone.address = key
+      clone.pubKey = {
+        type: 'ed25519',
+        data: key
+      }
       result.push(clone)
     }
   })
