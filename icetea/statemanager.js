@@ -64,10 +64,10 @@ class StateManager extends EventEmitter {
           power: 0
         })
       } else {
-        if (validator.capacity === result[index].capacity) {
+        if (validator.capacity === result[index].power) {
           result.splice(index, 1)
         } else {
-          result[index].capacity = validator.capacity
+          result[index].power = validator.capacity
         }
       }
     })
