@@ -19,6 +19,7 @@ const handler = {
 
   initChain (args) {
     app.installSystemContracts(args)
+    app.initValidators()
     return args // return same consensusParams and validators as defined in consensus.json
   },
 
@@ -46,6 +47,11 @@ const handler = {
   beginBlock (req) {
     app.setBlock(getBlock(req))
     return {}
+  },
+
+  endBlock (req) {
+    const height = Number(req.height.toString())
+    return app.endBlock(height)
   },
 
   deliverTx (req) {
@@ -102,7 +108,7 @@ const handler = {
 
       path = req.path
       height = Number(req.height)
-      if (height && !['balance', 'state'].includes(path)) {
+      if (height && !['balance', 'state', 'validators'].includes(path)) {
         return { code: 2, info: 'Height is not supported for this path.' }
       }
 
@@ -115,6 +121,8 @@ const handler = {
           })
         case 'state':
           return replyQuery(await app.debugState(height))
+        case 'validators':
+          return replyQuery(await app.getValidators(height))
         case 'contracts':
           return replyQuery(app.getContractAddresses(data))
         case 'metadata': {

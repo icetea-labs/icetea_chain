@@ -2,9 +2,11 @@ const Trie = require('merkle-patricia-tree')
 const v8 = require('v8')
 const async = require('async')
 const newDB = require('./db')
+const config = require('../config')
 const rootKey = 'rootKey'
 const blockKey = 'blockKey'
 const lastBlockKey = 'lastBlockKey'
+const validatorsKey = 'validatorsKey'
 
 let db
 
@@ -59,10 +61,11 @@ exports.load = async (path) => {
   db = newDB(path)
   const trie = await patricia()
   const [state, block] = await Promise.all([dump(trie), lastBlock()])
+  const validators = await this.getValidatorsByHeight(block ? block.number : 0)
   if (!block) {
     return null
   }
-  return { state, block }
+  return { state, block, validators }
 }
 
 exports.root = async () => {
@@ -90,7 +93,7 @@ exports.getHash = (stateTable) => {
   })
 }
 
-exports.save = async ({ block, state, commitKeys }) => {
+exports.save = async ({ block, state, validators, commitKeys }) => {
   const trie = await patricia()
   const opts = []
   let persistBlock = { ...block }
@@ -118,6 +121,12 @@ exports.save = async ({ block, state, commitKeys }) => {
         db.put(`${blockKey}${block.number}`, JSON.stringify(v8.serialize(persistBlock)), next)
       },
       (next) => {
+        if (block.number % config.election.epoch !== 0) {
+          return next(null)
+        }
+        db.put(`${validatorsKey}${block.number}`, JSON.stringify(v8.serialize(validators)), next)
+      },
+      (next) => {
         db.put(lastBlockKey, JSON.stringify(v8.serialize(persistBlock)), next)
       }
     ], (err, ret) => {
@@ -135,6 +144,22 @@ exports.getBlockByHeight = async (height) => {
       if (err) {
         if (err.notFound) {
           return resolve(null)
+        }
+        return reject(err)
+      }
+      value = Buffer.from(JSON.parse(value).data)
+      return resolve(v8.deserialize(value))
+    })
+  })
+}
+
+exports.getValidatorsByHeight = async (height) => {
+  height = height - height % config.election.epoch
+  return new Promise((resolve, reject) => {
+    db.get(`${validatorsKey}${height}`, (err, value) => {
+      if (err) {
+        if (err.notFound) {
+          return resolve([])
         }
         return reject(err)
       }

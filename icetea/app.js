@@ -4,6 +4,7 @@ const utils = require('./helper/utils')
 const sysContracts = require('./system')
 const invoker = require('./contractinvoker')
 const did = require('./system/did')
+const election = require('./system/election')
 const { ecc, codec, AccountType } = require('@iceteachain/common')
 const config = require('./config')
 const sizeof = require('object-sizeof')
@@ -298,6 +299,37 @@ class App {
     stateManager.endCheckpoint()
 
     return result
+  }
+
+  initValidators () {
+    let validators = []
+    try {
+      validators = election.getValidators()
+    } catch (err) {
+      throw new Error('getValidators throws exception: ' + (err.stack || String(err)))
+    }
+    return stateManager.setValidators(validators)
+  }
+
+  async getValidators (height) {
+    return stateManager.getValidators(height)
+  }
+
+  endBlock (height) {
+    if (height % config.election.epoch === 0) {
+      let newValidators = []
+      try {
+        newValidators = election.getValidators()
+      } catch (err) {
+        throw new Error('getValidators throws exception: ' + (err.stack || String(err)))
+      }
+      const validatorUpdates = stateManager.getUpdatedValidators(newValidators)
+      stateManager.setValidators(newValidators)
+      return {
+        validatorUpdates
+      }
+    }
+    return {}
   }
 }
 

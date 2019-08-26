@@ -6,7 +6,7 @@ const stateProxy = require('./stateproxy')
 const utils = require('./helper/utils')
 
 // Declare outside class to ensure private
-let stateTable, lastBlock
+let stateTable, lastBlock, validators
 
 // address key need to commit on write opts
 const needCommitKeys = new Set()
@@ -19,6 +19,7 @@ class StateManager extends EventEmitter {
 
     stateTable = storedData.state
     lastBlock = storedData.block
+    validators = storedData.validators
   }
 
   async getLastState () {
@@ -39,15 +40,49 @@ class StateManager extends EventEmitter {
     lastBlock = Object.freeze(block)
   }
 
+  setValidators (_validators) {
+    validators = _validators
+  }
+
+  async getValidators (height) {
+    return patricia.getValidatorsByHeight(height)
+  }
+
+  getUpdatedValidators (newValidators) {
+    let result = []
+    newValidators.map(validator => {
+      result.push({
+        pubKey: validator.pubKey,
+        power: validator.capacity
+      })
+    })
+    validators.map(validator => {
+      const index = result.findIndex(r => (r.pubKey.data === validator.pubKey.data))
+      if (index < 0) {
+        result.push({
+          pubKey: validator.pubKey,
+          power: 0
+        })
+      } else {
+        if (validator.capacity === result[index].capacity) {
+          result.splice(index, 1)
+        } else {
+          result[index].capacity = validator.capacity
+        }
+      }
+    })
+    return result
+  }
+
   async persist () {
     if (!lastBlock || lastBlock.number <= 1) {
       return Buffer.alloc(0)
     }
-    // const appHash = await patricia.getHash(stateTable)
 
     const appHash = await patricia.save({
       block: lastBlock,
       state: stateTable,
+      validators,
       commitKeys: needCommitKeys
     })
     needCommitKeys.clear()
