@@ -83,11 +83,11 @@ exports.run = (context, options) => {
       const me = candidates[pubkey]
 
       if (me) {
-        // Check if sender is a owner of operator ac permission over the operator
+        // Check update permission
         const did = exports.systemContracts().Did
         did.checkPermission(me.operator, msg.signers, block.timestamp)
 
-        // Add more deposit, it is ok
+        // Add more deposit, or re-propose after resigning
         me.deposit = (me.deposit || BigInt(0)) + msg.value
         if (me.resigned) {
           delete me.resigned
@@ -198,13 +198,14 @@ exports.ondeploy = (state, { consensusParams, validators }) => {
     candidates: {}
   }
   const c = state.storage.candidates
-  validators.forEach(v => {
+  const moreThan1 = (validators.length > 1)
+  validators.forEach((v, i) => {
     const pk = v.pubKey.data.toString('base64')
     c[pk] = {
       deposit: config.minValidatorDeposit,
       block: 0,
       operator: process.env.BANK_ADDR,
-      name: 'Icetea Validator'
+      name: v.pubKey.name || ('Icetea Validator' + (moreThan1 ? (' ' + i) : ''))
     }
   })
 
