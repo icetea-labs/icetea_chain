@@ -278,6 +278,10 @@ $(document).ready(function () {
     // TODO: modify frontend, add from address
     try {
       const method = this.id === 'read' ? 'callReadonlyContractMethod' : 'callPureContractMethod'
+      console.log(address)
+      console.log(name)
+      console.log(params)
+      console.log(method)
       const result = await tweb3[method](address, name, params)
       // var ct = tweb3.contract(address, privateKey)
       // var result = await ct.methods[name].call(name, params)

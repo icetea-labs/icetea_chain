@@ -29,15 +29,13 @@
                     <th>Name</th>
                     <th>Deposit</th>
                     <th>Block</th>
-                    <th>Operator</th>
                 </tr>
                 {{#each this}}
                     <tr>
-                        <td><a href="/address.html?address={{address}}">{{address}}</a></td>
+                        <td><a href="/address.html?address={{address}}">{{addressText}}</a></td>
                         <td>{{name}}</td>
                         <td>{{deposit}}</td>
                         <td><a href="/block.html?height={{block}}">{{block}}</a></td>
-                        <td>{{operator}}</td>
                         <td>
                             <button>
                                 vote
