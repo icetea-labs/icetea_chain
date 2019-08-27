@@ -103,6 +103,16 @@ class StateManager extends EventEmitter {
   }
 
   applyDraft (patch) {
+    const balances = patch.balances
+    if (balances) {
+      Object.keys(balances).forEach(addr => {
+        const value = balances[addr]
+        if (value < 0) {
+          throw new Error(`Account ${addr} does not have enough balance, need at least ${-value} more.`)
+        }
+      })
+    }
+
     // utils.mergeStateTables(stateTable, draft)
     Object.keys(patch.storages).map(key => needCommitKeys.add(key))
     Object.keys(patch.balances).map(key => needCommitKeys.add(key))
