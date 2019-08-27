@@ -8,14 +8,27 @@ import { toTEA } from './common'
 
 const candidateTemplate = handlebars.compile(document.getElementById('candidateTemplate').innerHTML)
 
+const microTEAtoTEA = (microTEA) => {
+  return toTEA(microTEA).toLocaleString() + ' TEA'
+}
+
+const calCapacityInTEA = (candidate) => {
+  const voters = candidate.voters
+  const deposits = Object.values(voters).map(Number)
+  const capacity = deposits.reduce((sum, deposit) => {
+    return sum + deposit
+  })
+  return microTEAtoTEA(capacity)
+}
 const formatCandidates = (candidates) => {
   /**
-     * `TODO`: `handle the case when NAME is way too long`
+     * `TODO`: `handle the case when candidate's NAME is way too long` by `click hover`
      */
 
   candidates.forEach(candidate => {
     candidate.addressText = fmtHex(candidate.address, 6)
-    candidate.deposit = toTEA(candidate.deposit).toLocaleString() + ' TEA'
+    candidate.deposit = microTEAtoTEA(candidate.deposit)
+    candidate.capacity = calCapacityInTEA(candidate)
   })
   return candidates
 }

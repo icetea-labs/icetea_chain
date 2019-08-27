@@ -13,8 +13,8 @@ const config = {
   },
   election: {
     numberOfValidators: 2,
-    minValidatorDeposit: 10e7,
-    minVoterValue: 10e6
+    minValidatorDeposit: 1,
+    minVoterValue: 1
   },
   abciServerPort: 26658,
   feeCollector: process.env.FEE_COLLECTOR,

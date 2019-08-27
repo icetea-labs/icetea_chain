@@ -212,9 +212,10 @@ exports.ondeploy = (state, { consensusParams, validators }) => {
 }
 
 exports.getValidators = function () {
-  const storage = this.unsafeStateManager().getAccountState('system.election').storage || {}
-  const candidates = storage['candidates'] || {}
-  return _getValidators(_getCandidates(candidates))
+  // const storage = this.unsafeStateManager().getAccountState('system.election').storage || {}
+  // const candidates = storage['candidates'] || {}
+  // return _getValidators(_getCandidates(candidates))
+  return []
 }
 
 exports.slash = function () {

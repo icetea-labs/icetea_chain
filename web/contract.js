@@ -17,12 +17,16 @@ async function fillContracts () {
 
     if (!contracts.length) return
 
-    const address = (new URL(document.location)).searchParams.get('address')
+    // const address = (new URL(document.location)).searchParams.get('address')
     var select = document.getElementById('to')
     contracts.forEach(item => {
       const option = document.createElement('option')
       option.value = item
-      if (item === address) {
+      /**
+       * `NOTICE` : `comment this line to testing purpose`
+       */
+      // if (item === address) {
+      if (item === 'system.election') {
         option.selected = true
       }
       option.textContent = item
