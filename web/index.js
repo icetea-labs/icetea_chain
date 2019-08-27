@@ -83,7 +83,6 @@ async function loadData () {
 
     const myTxs = await tweb3.searchTransactions('tx.height>' + fromBlock, { per_page: txCount })
     if (myTxs.txs && myTxs.txs.length) {
-      // console.log(myTxs)
       document.getElementById('transactions').innerHTML = txTemplate(fmtTxs(myTxs.txs))
     }
 
