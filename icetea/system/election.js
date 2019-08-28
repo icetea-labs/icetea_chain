@@ -6,6 +6,11 @@ const { checkMsg } = require('../helper/types')
 const { election: config } = require('../config')
 const _ = require('lodash')
 
+const CONTRACT_NAME = 'system.election'
+const CANDIDATES_KEY = 'candidates'
+
+const _rawCandidates = context => context.getState(CANDIDATES_KEY, {})
+
 const METADATA = Object.freeze({
 
   // nominate a validator candidate
@@ -25,6 +30,15 @@ const METADATA = Object.freeze({
     decorators: ['payable'],
     params: [
       { name: 'withdrawnAddress', type: ['address', 'undefined'] }
+    ],
+    returnType: 'undefined'
+  },
+
+  // request unjail for a jailed candidate
+  'requestUnjail': {
+    decorators: ['transaction'],
+    params: [
+      { name: 'pubkey', type: 'string' }
     ],
     returnType: 'undefined'
   },
@@ -72,7 +86,7 @@ exports.run = (context, options) => {
         throw new Error('Validator candidate name is required.')
       }
 
-      const candidates = context.getState('candidates', {})
+      const candidates = _rawCandidates(context)
 
       Object.values(candidates).forEach(({ name }) => {
         if (name.toLowerCase() === candidateName.toLowerCase()) {
@@ -108,7 +122,7 @@ exports.run = (context, options) => {
         throw new Error(`Validator must deposit at least ${config.minValidatorDeposit}`)
       }
 
-      context.setState('candidates', candidates)
+      context.setState(CANDIDATES_KEY, candidates)
     },
 
     resign (withdrawnAddress) {
@@ -116,7 +130,7 @@ exports.run = (context, options) => {
     },
 
     getCandidates (includeResigned = false) {
-      return _getCandidates(context.getState('candidates', {}), includeResigned)
+      return _populateCapacity(_getCandidates(_rawCandidates(context), includeResigned), true)
     },
 
     getValidators () {
@@ -128,7 +142,7 @@ exports.run = (context, options) => {
         throw new Error(`You must attach at least ${config.minVoterValue} when voting.`)
       }
 
-      const candidates = context.getState('candidates', {})
+      const candidates = _rawCandidates(context)
       const votee = candidates[voteePubkey]
       if (!votee) {
         throw new Error(`${voteePubkey} is not a valid validator candidate public key.`)
@@ -143,7 +157,7 @@ exports.run = (context, options) => {
 
       // kind of stupid we set the whole object while only change small
       // in the future, maybe support setStateIn()
-      context.setState('candidates', candidates)
+      context.setState(CANDIDATES_KEY, candidates)
     }
   }
 
@@ -171,8 +185,7 @@ function _getCandidates (candidates, includeResigned) {
   return result
 }
 
-function _getValidators (candidates) {
-  // calculate capacity
+function _populateCapacity (candidates, sorted) {
   candidates.forEach(c => {
     let capacity = c.deposit
     if (c.voters) {
@@ -186,7 +199,16 @@ function _getValidators (candidates) {
 
   // sort by capacity
   // if all equal, it will be in order of insert (order of transaction)
-  candidates = _.orderBy(candidates, ['capacity', 'block'], ['desc', 'asc'])
+  if (sorted) {
+    candidates = _.orderBy(candidates, ['capacity', 'block'], ['desc', 'asc'])
+  }
+
+  return candidates
+}
+
+function _getValidators (candidates) {
+  // calculate capacity
+  candidates = _populateCapacity(candidates, true)
 
   // cut to max number of validator
   if (candidates.length > config.numberOfValidators) {
@@ -216,11 +238,57 @@ exports.ondeploy = (state, { consensusParams, validators }) => {
 }
 
 exports.getValidators = function () {
-  const storage = this.unsafeStateManager().getAccountState('system.election').storage || {}
-  const candidates = storage['candidates'] || {}
+  const storage = this.unsafeStateManager().getAccountState(CONTRACT_NAME).storage || {}
+  const candidates = storage[CANDIDATES_KEY] || {}
   return _getValidators(_getCandidates(candidates))
 }
 
-exports.slash = function () {
-  throw new Error('Slashing is not yet supported.')
+exports.punish = function (pubkey, blockNum, tags, { slashedRatePerMillion = 0, jailedBlockCount = 0 } = {}) {
+  const MILLION = 1000000; const N_MILLION = BigInt(MILLION)
+
+  if (typeof slashedRatePerMillion !== 'number' || slashedRatePerMillion < 0 ||
+    !Number.isInteger(slashedRatePerMillion) || slashedRatePerMillion > MILLION) {
+    throw new Error('Invalid slashedRatePerMillion. slashedRatePerMillion must be a number between 0 and 1.')
+  }
+
+  if (typeof jailedBlockCount !== 'number' || jailedBlockCount < 0 || !Number.isInteger(jailedBlockCount)) {
+    throw new Error('Invalid jailedBlockCount. jailedBlockCount must be a positive integer.')
+  }
+
+  if (slashedRatePerMillion === 0 || jailedBlockCount === 0) {
+    throw new Error('Either slashedRate or jailedBlockCount must be specified.')
+  }
+
+  const storage = this.unsafeStateManager().getAccountState(CONTRACT_NAME).storage || {}
+  const candidateList = storage[CANDIDATES_KEY] || {}
+  const candidate = candidateList[pubkey]
+
+  if (!candidate) {
+    throw new Error(`Validator ${pubkey} not found. Cannot punish.`)
+  }
+
+  if (slashedRatePerMillion > 0) {
+    // Currently, for simplicity, just slash the validator, not the voters
+    const slashedAmount = candidate.deposit * N_MILLION / BigInt(slashedRatePerMillion)
+    candidate.slashed = (candidate.slashed || BigInt(0)) + slashedAmount
+    candidate.deposit -= slashedAmount
+  }
+
+  if (jailedBlockCount > 0) {
+    candidate.jailed = true
+    let pendingJailedBlock = (candidate.jailedUntilBlock && (candidate.jailedUntilBlock > blockNum))
+      ? (candidate.jailedUntilBlock - blockNum) : 0
+    candidate.jailedUntilBlock = blockNum + pendingJailedBlock + jailedBlockCount
+  }
+
+  // For simplicity, we don't store punishment history
+  // Just raise an event at block level (tags are block level at begin/endBlock)
+
+  // TODO: consider using tags directly instead of events
+
+  // utils.emitEvent(CONTRACT_NAME, tags, 'ValidatorPunished', {
+  //   pubkey,
+  //   slashedRatePerMillion,
+  //   jailedBlockCount
+  // }, ['pubkey'])
 }

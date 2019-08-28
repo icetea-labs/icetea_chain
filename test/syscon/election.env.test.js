@@ -31,6 +31,10 @@ afterAll(() => {
 
 describe('election', () => {
   test('test propose', async () => {
+    process.env.NODE_ENV = 'development'
+    process.env.PRINT_STATE_DIFF = '0'
+    process.env.FIXED_VALIDATORS = '1'
+
     const { privateKey, address: from } = richAccount
     tweb3.wallet.importAccount(privateKey)
 
@@ -63,11 +67,11 @@ describe('election', () => {
 
     r = await ms.getCandidates().call()
     expect(r.length).toBe(2)
-    expect(r[1].address).toBe(from)
-    expect(r[1].deposit).toBe(String(config.minValidatorDeposit + 1))
+    expect(r[0].pubKey.data).toBe(from)
+    expect(r[0].deposit).toBe(String(config.minValidatorDeposit + 1))
     r = await ms.getValidators().call()
     expect(r.length).toBe(2)
-    expect(r[0].address).toBe(from)
+    expect(r[0].pubKey.data).toBe(from)
     expect(r[0].deposit).toBe(String(config.minValidatorDeposit + 1))
 
     const { address: addr2 } = tweb3.wallet.createBankAccount()
@@ -77,7 +81,7 @@ describe('election', () => {
 
     r = await ms.getValidators().call()
     expect(r.length).toBe(2)
-    expect(r[0].address).toBe(addr2)
+    expect(r[0].pubKey.data).toBe(addr2)
     expect(r[0].deposit).toBe(String(config.minValidatorDeposit + config.minVoterValue))
 
     const { address: addr3 } = tweb3.wallet.createBankAccount()
@@ -87,7 +91,7 @@ describe('election', () => {
 
     r = await ms.getValidators().call()
     expect(r.length).toBe(2)
-    expect(r[0].address).toBe(addr3)
+    expect(r[0].pubKey.data).toBe(addr3)
     expect(r[0].deposit).toBe(String(config.minValidatorDeposit + config.minVoterValue + 1))
 
     // now let's test some votes
@@ -105,7 +109,7 @@ describe('election', () => {
 
     r = await ms.getValidators().call()
     expect(r.length).toBe(2)
-    expect(r[0].address).toBe(from)
+    expect(r[0].pubKey.data).toBe(from)
     expect(r[0].deposit).toBe(String(config.minValidatorDeposit + 1))
     expect(r[0].capacity).toBe(String(config.minValidatorDeposit + config.minVoterValue + 1))
   })
