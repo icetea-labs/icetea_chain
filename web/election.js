@@ -1,12 +1,11 @@
-// import JSONFormatter from 'json-formatter-js'
 import handlebars from 'handlebars/dist/handlebars.min.js'
-// import { utils } from '@iceteachain/web3'
 import tweb3 from './tweb3'
 import $ from 'jquery'
 import { fmtHex, loadFromStorage } from './helper'
 import { toTEA, toUNIT } from './common'
 
 const candidateTemplate = handlebars.compile(document.getElementById('candidateTemplate').innerHTML)
+const ms = tweb3.contract('system.election').methods
 
 const microTEAtoTEA = (microTEA) => {
   return toTEA(microTEA).toLocaleString() + ' TEA'
@@ -15,6 +14,7 @@ const microTEAtoTEA = (microTEA) => {
 const formatCandidates = (candidates) => {
   /**
      * `TODO`: `handle the case when candidate's NAME is way too long` by `click hover`
+     * `address and pubKey are using interchangable`
      */
 
   candidates.forEach(candidate => {
@@ -25,48 +25,6 @@ const formatCandidates = (candidates) => {
   return candidates
 }
 
-$(document).ready(async function () {
-  const result = await tweb3['callReadonlyContractMethod']('system.election', 'getCandidates', [])
-  document.getElementById('candidates').innerHTML = candidateTemplate(formatCandidates(result))
-
-  await loadFromStorage()
-  const defaultAccount = tweb3.wallet.defaultAccount
-
-  $('button.vote[data-pubkey]').on('click', function () {
-    const pubkey = this.getAttribute('data-pubkey')
-    const value = parseInt(window.prompt('You need to deposit TEA to vote:', 1))
-    vote(pubkey, toUNIT(value), defaultAccount)
-      .then(() => {
-        window.alert('You voted for pubkey: ' + pubkey)
-        window.location.reload()
-      }, (error) => {
-        window.alert(error)
-      })
-  })
-
-  $('button.resign[data-pubkey]').on('click', function () {
-    var pubkey = this.getAttribute('data-pubkey')
-    window.alert('You resign pubkey: ' + pubkey)
-  })
-  $('button.submit').on('click', function() {
-
-    const address = $('#address').val()
-    const name = $('#name').val()
-    const deposit = $('#deposit').val()
-
-    if(address && name && deposit) {
-      propose(address, name, toUNIT(deposit) , defaultAccount)
-        .then(() => {
-          window.alert('Your proposal is approved!')
-          window.location.reload()
-        }, (error) => {
-          window.alert(error)
-        })
-    }
-  })
-})
-
-const ms = tweb3.contract('system.election').methods
 const vote = (candidate, value, fromAddress) => {
   const opts = { from: fromAddress }
   if (value) opts.value = value
@@ -75,6 +33,52 @@ const vote = (candidate, value, fromAddress) => {
 const propose = (candidateAddress, name, value, fromAddress) => {
   const opts = { from: fromAddress }
   if (value) opts.value = value
-  // This should be a ed25519 pubkey, however, we use the from for simple testing
   return ms.propose(candidateAddress, name).sendCommit(opts)
 }
+
+const sendData2Template = async () => {
+  const result = await tweb3['callReadonlyContractMethod']('system.election', 'getCandidates', [])
+  document.getElementById('candidates').innerHTML = candidateTemplate(formatCandidates(result))
+}
+const getDefaultAccount = async () => {
+  await loadFromStorage()
+  return tweb3.wallet.defaultAccount
+}
+$(document).ready(async function () {
+  await sendData2Template()
+  const defaultAccount = await getDefaultAccount()
+
+  $('button.vote[data-pubkey]').on('click', function () {
+    const pubkey = this.getAttribute('data-pubkey')
+    const value = parseInt(window.prompt('Enter an amount of TEA to vote:', 1))
+    vote(pubkey, toUNIT(value), defaultAccount)
+      .then(() => {
+        window.alert('You voted for pubkey: ' + pubkey)
+        window.location.reload()
+      }, (error) => {
+        window.alert(error)
+      })
+  })
+  $('button.submit').on('click', function () {
+    const address = $('#address').val()
+    const name = $('#name').val()
+    const deposit = $('#deposit').val()
+
+    if (address && name && deposit) {
+      propose(address, name, toUNIT(deposit), defaultAccount)
+        .then(() => {
+          window.alert('Your proposal is approved!')
+          window.location.reload()
+        }, (error) => {
+          window.alert(error)
+        })
+    }
+  })
+  /**
+ * `TODO:`
+ */
+  $('button.resign[data-pubkey]').on('click', function () {
+    var pubkey = this.getAttribute('data-pubkey')
+    window.alert('You resign pubkey: ' + pubkey)
+  })
+})
