@@ -48,11 +48,33 @@ $(document).ready(async function () {
     var pubkey = this.getAttribute('data-pubkey')
     window.alert('You resign pubkey: ' + pubkey)
   })
+  $('button.submit').on('click', function() {
+
+    const address = $('#address').val()
+    const name = $('#name').val()
+    const deposit = $('#deposit').val()
+
+    if(address && name && deposit) {
+      propose(address, name, toUNIT(deposit) , defaultAccount)
+        .then(() => {
+          window.alert('Your proposal is approved!')
+          window.location.reload()
+        }, (error) => {
+          window.alert(error)
+        })
+    }
+  })
 })
 
+const ms = tweb3.contract('system.election').methods
 const vote = (candidate, value, fromAddress) => {
-  const ms = tweb3.contract('system.election').methods
   const opts = { from: fromAddress }
   if (value) opts.value = value
   return ms.vote(candidate).sendCommit(opts)
+}
+const propose = (candidateAddress, name, value, fromAddress) => {
+  const opts = { from: fromAddress }
+  if (value) opts.value = value
+  // This should be a ed25519 pubkey, however, we use the from for simple testing
+  return ms.propose(candidateAddress, name).sendCommit(opts)
 }

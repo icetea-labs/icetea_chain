@@ -21,7 +21,10 @@
             <a href="/election.html">Election</a>
         </nav>
         <h1>Candidates</h1>
-        <section id="candidates">No candidates.</section>
+        <section id="candidates">
+            No candidates.
+            <hr size='1'>
+        </section>
         <script id="candidateTemplate" type="text/x-handlebars-template">
             <table>
                 <tr>
@@ -51,6 +54,27 @@
                 {{/each}}
             </table>
         </script>
+
+        <h1>Propose a candidate</h1>
+        <form onsubmit="return false">
+            <p>
+                <label>Public key:</label> 
+                <input id='address' placeholder="Enter candidate's public key" size=50 required>
+            </p>
+            <p>
+                <label>Name:</label> 
+                <input id='name' placeholder="Enter candidate's name" size=50 required>
+            </p>
+            <p>
+                <label>Deposit:</label> 
+                <input id='deposit' placeholder="Enter value in TEA" size=50 required>
+            </p>
+            <button class='submit'>Submit</button>
+
+        </form>
+
+
+
     </div>
 
     <script src="election.js"></script>
