@@ -16,13 +16,18 @@ async function fillContracts () {
     const contracts = await tweb3.getContracts(true)
 
     if (!contracts.length) return
-
-    const address = (new URL(document.location)).searchParams.get('address')
+    /**
+     * `Comment out the below lines for quicker testing`
+     */
+    // const address = (new URL(document.location)).searchParams.get('address')
     var select = document.getElementById('to')
     contracts.forEach(item => {
       const option = document.createElement('option')
       option.value = item
-      if (item === address) {
+      // if (item === address) {
+      //   option.selected = true
+      // }
+      if (item === 'system.election') {
         option.selected = true
       }
       option.textContent = item

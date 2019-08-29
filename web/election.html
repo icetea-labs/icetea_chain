@@ -34,7 +34,7 @@
                 </tr>
                 {{#each this}}
                     <tr>
-                        <td>{{pubkeyText}}</a></td>
+                        <td><a href="/address.html?address={{pubKey.data}}">{{pubkeyText}}</a></td>
                         <td>{{name}}</td>
                         <td>{{capacityText}}</td>
                         <td><a href="/address.html?address={{operator}}">{{operatorText}}</a></td>
@@ -48,7 +48,6 @@
                             </button>
                         </td>
                     </tr>
-                    
                 {{/each}}
             </table>
         </script>

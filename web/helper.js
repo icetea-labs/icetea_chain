@@ -162,3 +162,7 @@ export function fmtTime (tm) {
   var d = (typeof tm === 'number') ? tm * 1000 : Date.parse(tm)
   return new Date(d).toLocaleString()
 }
+
+export function loadFromStorage () {
+  return tweb3.wallet.loadFromStorage('123')
+}

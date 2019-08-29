@@ -227,7 +227,7 @@ exports.ondeploy = (state, { consensusParams, validators }) => {
   validators.forEach((v, i) => {
     const pk = v.pubKey.data.toString('base64')
     c[pk] = {
-      deposit: config.minValidatorDeposit,
+      deposit: BigInt(config.minValidatorDeposit),
       block: 0,
       operator: process.env.BANK_ADDR,
       name: v.pubKey.name || ('Icetea Validator' + (moreThan1 ? (' ' + i) : ''))
