@@ -45,13 +45,15 @@ const handler = {
   },
 
   beginBlock (req) {
+    // TODO: distribute awards and punish byzantine validators
+
     app.setBlock(getBlock(req))
     return {}
   },
 
   endBlock (req) {
     const height = Number(req.height.toString())
-    return app.endBlock(height)
+    return utils.envDevEnabled('FIXED_VALIDATORS') ? {} : app.endBlock(height)
   },
 
   deliverTx (req) {

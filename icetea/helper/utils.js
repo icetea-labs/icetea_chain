@@ -345,4 +345,5 @@ exports.isValidAddress = addr => {
 exports.envIs = (n, v) => process.env[n] == v // eslint-disable-line
 exports.envEnabled = n => process.env[n] === '1'
 exports.isDevMode = () => process.env.NODE_ENV === 'development'
+exports.envDevEnabled = n => (exports.isDevMode() && exports.envEnabled(n))
 exports.isProdMode = () => process.env.NODE_ENV === 'production'

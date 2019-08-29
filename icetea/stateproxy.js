@@ -224,9 +224,6 @@ const applyChanges = (stateTable, { deployedContracts, storages, balances }) => 
   if (balances) {
     Object.keys(balances).forEach(addr => {
       const value = balances[addr]
-      if (value < 0) {
-        throw new Error(`Account ${addr} does not have enough balance: ${value}.`)
-      }
       stateTable[addr] = stateTable[addr] || {}
       stateTable[addr].balance = value
     })

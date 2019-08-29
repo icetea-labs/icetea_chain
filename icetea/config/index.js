@@ -13,8 +13,8 @@ const config = {
   },
   election: {
     numberOfValidators: 2,
-    minValidatorDeposit: 10e7,
-    minVoterValue: 10e6,
+    minValidatorDeposit: 10e6,
+    minVoterValue: 1e6,
     epoch: 4
   },
   abciServerPort: 26658,
