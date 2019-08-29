@@ -1,0 +1,60 @@
+<html>
+
+<head>
+    <title>icetea - election</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" type="text/css" href="style.css">
+</head>
+
+<body>
+    <div id="content">
+        <section id="info"></section>
+        <section class="notice">Icetea Developer Tools</section>
+        <nav id="menu">
+            <a href="/">Scan</a>
+            <a href="/transfer.html">Transfer</a>
+            <a href="/deploy.html">Deploy Contract</a>
+            <a href="/contract.html">Call Contract</a>
+            <a href="/wallet.html">Wallet</a>
+            <a href="/botstore.html">Bot Store</a>
+            <a href="/profile.html">Profile</a>
+            <a href="/election.html">Election</a>
+        </nav>
+        <h1>Candidates</h1>
+        <section id="candidates">No candidates.</section>
+        <script id="candidateTemplate" type="text/x-handlebars-template">
+            <table>
+                <tr>
+                    <th>PubKey</th>
+                    <th>Name</th>
+                    <th>Capacity</th>
+                    <th>Operator</th>
+                    <th>Block</th>
+                    <th></th>
+                </tr>
+                {{#each this}}
+                    <tr>
+                        <td>{{pubkeyText}}</a></td>
+                        <td>{{name}}</td>
+                        <td>{{capacityText}}</td>
+                        <td><a href="/address.html?address={{operator}}">{{operatorText}}</a></td>
+                        <td><a href="/block.html?height={{block}}">{{block}}</a></td>
+                        <td>
+                            <button class='vote' data-pubkey='{{pubKey.data}}'>
+                                Vote
+                            </button>
+                            <button class='resign' data-pubkey='{{pubKey.data}}'>
+                                Resign
+                            </button>
+                        </td>
+                    </tr>
+                    
+                {{/each}}
+            </table>
+        </script>
+    </div>
+
+    <script src="election.js"></script>
+</body>
+
+</html>
