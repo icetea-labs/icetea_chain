@@ -136,7 +136,7 @@ async function fillFuncs () {
         const decorators = (meta.decorators || [])
         const decos = decorators.map(d => ('@' + d))
 
-        let option = document.createElement('option')
+        const option = document.createElement('option')
         option.value = item
         option.textContent = decorators.join(', ')
         select.appendChild(option)
@@ -148,7 +148,7 @@ async function fillFuncs () {
         signature = signature + item
 
         if (meta.params) {
-          let ps = meta.params.reduce((prev, p) => {
+          const ps = meta.params.reduce((prev, p) => {
             prev.push(p.name + ': ' + fmtType(p.type))
             return prev
           }, []).join(', ')

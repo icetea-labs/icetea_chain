@@ -5,12 +5,12 @@
 const { checkMsg } = require('../helper/types')
 
 const METADATA = Object.freeze({
-  'botInfo': {
+  botInfo: {
     decorators: ['pure'],
     params: [],
     returnType: 'object'
   },
-  'oncommand': {
+  oncommand: {
     decorators: ['pure'],
     params: [
       { name: 'command', type: ['string'] },
@@ -18,7 +18,7 @@ const METADATA = Object.freeze({
     ],
     returnType: 'object'
   },
-  'ontext': {
+  ontext: {
     decorators: ['pure'],
     params: [
       { name: 'content', type: ['string'] },
@@ -61,7 +61,7 @@ exports.run = (context) => {
     }
   }
 
-  if (!contract.hasOwnProperty(msg.name)) {
+  if (!Object.prototype.hasOwnProperty.call(contract, msg.name)) {
     return METADATA
   } else {
     return contract[msg.name].apply(context, msgParams)

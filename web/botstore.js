@@ -63,7 +63,7 @@ const store = {
   getBotInfo: async function (bots) {
     var resInfo = []
     var keys = Object.keys(bots)
-    for (let bot of keys) {
+    for (const bot of keys) {
       try {
         const botInfo = { address: '', category: 'category', name: 'name', icon: 'icon', description: 'description' }
         const contract = tweb3.contract(bot)
@@ -181,7 +181,7 @@ async function fillContracts () {
             option.textContent = item
             select.appendChild(option)
           })
-          .catch(() => void 0)
+          .catch(() => undefined)
       }
     })
   } catch (error) {

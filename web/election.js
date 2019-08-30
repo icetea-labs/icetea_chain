@@ -26,7 +26,7 @@ const formatCandidates = (candidates) => {
 }
 
 $(document).ready(async function () {
-  const result = await tweb3['callReadonlyContractMethod']('system.election', 'getCandidates', [])
+  const result = await tweb3.callReadonlyContractMethod('system.election', 'getCandidates', [])
   document.getElementById('candidates').innerHTML = candidateTemplate(formatCandidates(result))
 
   $('button.vote[data-pubkey]').on('click', function () {

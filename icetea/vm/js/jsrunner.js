@@ -121,7 +121,7 @@ module.exports = class extends Runner {
     const isDevMode = utils.isDevMode()
     const functionInSandbox = vm.runInNewContext(contractSrc, {
       console: {
-        log: isDevMode ? contractDebug : () => void 0
+        log: isDevMode ? contractDebug : () => undefined
       }
     }, {
       filename,
@@ -131,7 +131,7 @@ module.exports = class extends Runner {
       }
     })
 
-    let runCtx = { ...context }
+    const runCtx = { ...context }
     runCtx.setState = (key, value) => {
       gasUsed += minStateGas
       const oldValue = context.getState(key)
