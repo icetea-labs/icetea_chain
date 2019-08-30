@@ -73,3 +73,4 @@ typings/
 # Documentation
 docs
 web_dist
+scripts/tmp.js
