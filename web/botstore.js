@@ -152,7 +152,7 @@ $('#form').on('submit', async function (e) {
       }
 
       // register the alias
-      await tweb3.contract('system.alias').methods.register(data.alias, data.address).sendCommit()
+      await tweb3.contract('system.alias').methods.register(data.alias.split('.', 2)[1], data.address).sendCommit()
     }
 
     await tweb3.contract('system.botstore').methods.register(data.alias, data.category, data.icon, true).sendCommit()
