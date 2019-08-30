@@ -8,8 +8,10 @@ const _ = require('lodash')
 
 const CONTRACT_NAME = 'system.election'
 const CANDIDATES_KEY = 'candidates'
+const WITHDRAW_KEY = 'withdraw'
 
-const _rawCandidates = context => context.getState(CANDIDATES_KEY, {})
+const _rawCandidates = c => c.getState(CANDIDATES_KEY, {})
+const _rawWithdrawList = c => c.getState(WITHDRAW_KEY, {})
 
 const METADATA = Object.freeze({
 
@@ -24,12 +26,39 @@ const METADATA = Object.freeze({
     returnType: 'undefined'
   },
 
-  // withdraw from a candidate list
+  // resign from a candidate list
   // can get back deposit
   'resign': {
-    decorators: ['payable'],
+    decorators: ['transaction'],
     params: [
-      { name: 'withdrawnAddress', type: ['address', 'undefined'] }
+      { name: 'pubkey', type: 'string' }
+    ],
+    returnType: 'undefined'
+  },
+
+  'withdraw': {
+    decorators: ['transaction'],
+    params: [
+      { name: 'pubkey', type: 'string' },
+      { name: 'withDrawTo', type: ['address', 'undefined'] }
+    ],
+    returnType: 'undefined'
+  },
+
+  'unvote': {
+    decorators: ['transaction'],
+    params: [
+      { name: 'pubkey', type: 'string' }
+    ],
+    returnType: 'undefined'
+  },
+
+  'changeVote': {
+    decorators: ['transaction'],
+    params: [
+      { name: 'fromPubKey', type: 'string' },
+      { name: 'toPubKey', type: 'string' },
+      { name: 'amount', type: ['number', 'string', undefined] }
     ],
     returnType: 'undefined'
   },
@@ -47,7 +76,7 @@ const METADATA = Object.freeze({
   'getCandidates': {
     decorators: ['view'],
     params: [
-      { name: 'includeResigned', type: ['boolean', 'undefined'] }
+      { name: 'includeJailed', type: ['boolean', 'undefined'] }
     ],
     returnType: 'Array'
   },
@@ -101,14 +130,8 @@ exports.run = (context, options) => {
         const did = exports.systemContracts().Did
         did.checkPermission(me.operator, msg.signers, block.timestamp)
 
-        // Add more deposit, or re-propose after resigning
+        // Add more deposit
         me.deposit = (me.deposit || BigInt(0)) + msg.value
-        if (me.resigned) {
-          delete me.resigned
-          me.block = block.number
-          me.operator = msg.sender
-          me.name = candidateName
-        }
       } else {
         candidates[pubkey] = {
           deposit: msg.value,
@@ -125,12 +148,42 @@ exports.run = (context, options) => {
       context.setState(CANDIDATES_KEY, candidates)
     },
 
-    resign (withdrawnAddress) {
-      throw new Error('Resigning is not yet supported.')
+    resign (pubkey) {
+      const candidates = _rawCandidates(context)
+      const me = candidates[pubkey]
+
+      if (!me) {
+        throw new (`Validator candidate ${pubkey} not found.`)()
+      }
+
+      // Check resign permission
+      const did = exports.systemContracts().Did
+      did.checkPermission(me.operator, msg.signers, block.timestamp)
+
+      // move to withdrawal key
+      const withdrawList = _rawWithdrawList()
+
+      // add items for validator
+      const validatorWithdrawLockNumOfBlock = 10
+      _addToWithdrawList(withdrawList, pubkey, me.deposit, block.number + validatorWithdrawLockNumOfBlock)
+
+      // add items for voters
+      const voterWithdrawLockNumOfBlock = 1
+      if (me.voters) {
+        Object.entries(me.voters).forEach(([p, v]) => {
+          _addToWithdrawList(withdrawList, p, v, block.number + voterWithdrawLockNumOfBlock)
+        })
+      }
+
+      // delete from candidate list
+      delete candidates[pubkey]
+
+      context.setState(CANDIDATES_KEY, candidates)
+      context.setState(WITHDRAW_KEY)
     },
 
-    getCandidates (includeResigned = false) {
-      return _populateCapacity(_getCandidates(_rawCandidates(context), includeResigned), true)
+    getCandidates (includeJailed = false) {
+      return _populateCapacity(_getCandidates(_rawCandidates(context), includeJailed), true)
     },
 
     getValidators () {
@@ -148,8 +201,8 @@ exports.run = (context, options) => {
         throw new Error(`${voteePubkey} is not a valid validator candidate public key.`)
       }
 
-      if (votee.resigned) {
-        throw new Error(`${voteePubkey} has already resigned.`)
+      if (votee.jailed) {
+        throw new Error(`${voteePubkey} is currently jailed, please wait until it get unjail before voting.`)
       }
 
       votee.voters = votee.voters || {}
@@ -168,11 +221,11 @@ exports.run = (context, options) => {
   }
 }
 
-function _getCandidates (candidates, includeResigned) {
+function _getCandidates (candidates, includeJailed) {
   // we will need to clone it so that caller cannot modify directly
   const result = []
   Object.entries(candidates).forEach(([key, value]) => {
-    if (includeResigned || !value.resigned) {
+    if (includeJailed || !value.jailed) {
       const clone = _.cloneDeep(value)
       clone.pubKey = {
         type: 'ed25519',
@@ -189,10 +242,7 @@ function _populateCapacity (candidates, sorted) {
   candidates.forEach(c => {
     let capacity = c.deposit
     if (c.voters) {
-      capacity += Object.values(c.voters).reduce((v, sum) => {
-        sum += BigInt(v)
-        return sum
-      }, BigInt(0))
+      capacity += Object.values(c.voters).reduce((v, sum) => (v + sum), BigInt(0))
     }
     c.capacity = capacity
   })
@@ -218,7 +268,12 @@ function _getValidators (candidates) {
   return candidates
 }
 
-exports.ondeploy = (state, { consensusParams, validators }) => {
+function _addToWithdrawList (withdrawList, pubkey, amount, unlockBlock) {
+  const w = withdrawList[pubkey] || (withdrawList[pubkey] = {})
+  w[unlockBlock] = (w[unlockBlock] || BigInt(0)) + amount
+}
+
+exports.ondeploy = (state, { validators }) => {
   state.storage = {
     candidates: {}
   }
@@ -227,10 +282,10 @@ exports.ondeploy = (state, { consensusParams, validators }) => {
   validators.forEach((v, i) => {
     const pk = v.pubKey.data.toString('base64')
     c[pk] = {
-      deposit: config.minValidatorDeposit,
+      deposit: BigInt(config.minValidatorDeposit),
       block: 0,
       operator: process.env.BANK_ADDR,
-      name: v.pubKey.name || ('Icetea Validator' + (moreThan1 ? (' ' + i) : ''))
+      name: v.pubKey.name || ('Genesis Validator' + (moreThan1 ? (' ' + i) : ''))
     }
   })
 
