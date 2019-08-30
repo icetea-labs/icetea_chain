@@ -25,7 +25,7 @@ function getBlock (req) {
  * @returns {object} tx
  */
 function getTx (req) {
-  let reqTx = codec.decode(req.tx)
+  const reqTx = codec.decode(req.tx)
 
   // santitize reqTx
   if (reqTx.data == null) { // eslint-disable-line

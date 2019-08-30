@@ -70,7 +70,7 @@ function checkTypes (o, types, opts) {
 
     // Check OR, not AND
 
-    let errors = []
+    const errors = []
     const ok = types.some(t => {
       try {
         check(o, t, opts)
@@ -145,7 +145,7 @@ function checkMsg ({ name, callType, params = [] }, spec, {
     throw new Error(`Wrong number of parameter for '${name}'. Expect '${specParams.length}'. Got '${params.length}'.`)
   }
 
-  const newParams = [ ...params ]
+  const newParams = [...params]
   specParams.forEach((p, index) => {
     const hasValue = newParams.length > index
     const o = hasValue ? newParams[index] : undefined

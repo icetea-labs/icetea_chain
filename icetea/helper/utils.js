@@ -214,8 +214,8 @@ exports.deepFreeze = (object) => {
 
   // Freeze properties before freezing self
 
-  for (let name of propNames) {
-    let value = object[name]
+  for (const name of propNames) {
+    const value = object[name]
 
     object[name] = value && typeof value === 'object'
       ? exports.deepFreeze(value) : value
@@ -271,7 +271,7 @@ exports.checkUnsupportTypes = o => {
 
     if (t === 'object') {
       const propNames = Object.getOwnPropertyNames(o)
-      for (let name of propNames) {
+      for (const name of propNames) {
         const value = o[name]
         if (seenSet.has(value)) {
           continue

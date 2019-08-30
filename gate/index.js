@@ -30,7 +30,7 @@ const fetchOpenWeather = (data, options = {}) => {
 
   const url = new URL('https://api.openweathermap.org/data/2.5/weather')
   url.search = new URLSearchParams({
-    'APPID': process.env.OPEN_WEATHER_API_KEY,
+    APPID: process.env.OPEN_WEATHER_API_KEY,
     ...data
   })
   return fetch(url, {

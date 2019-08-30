@@ -84,7 +84,7 @@ class App {
       return prev
     }, {})
 
-    return addreses.map(addr => (address2Alias.hasOwnProperty(addr) ? address2Alias[addr] : addr))
+    return addreses.map(addr => (Object.prototype.hasOwnProperty.call(address2Alias, addr) ? address2Alias[addr] : addr))
   }
 
   addStateObserver ({ beforeTx, afterTx }) {

@@ -6,33 +6,33 @@ const { checkMsg } = require('../helper/types')
 const _ = require('lodash')
 
 const METADATA = Object.freeze({
-  'registerProvider': {
+  registerProvider: {
     decorators: ['transaction'],
     params: [
       { name: 'options', type: ['object', 'undefined'] }
     ],
     returnType: 'undefined'
   },
-  'changeProviderOptions': {
+  changeProviderOptions: {
     decorators: ['transaction'],
     params: [
       { name: 'options', type: ['object', 'undefined'] }
     ],
     returnType: 'undefined'
   },
-  'unregisterProvider': {
+  unregisterProvider: {
     decorators: ['transaction'],
     params: [],
     returnType: 'undefined'
   },
-  'isProviderRegistered': {
+  isProviderRegistered: {
     decorators: ['view'],
     params: [
       { name: 'provider', type: 'address' }
     ],
     returnType: 'boolean'
   },
-  'request': {
+  request: {
     decorators: ['transaction'],
     params: [
       { name: 'path', type: ['string', 'object'] },
@@ -40,14 +40,14 @@ const METADATA = Object.freeze({
     ],
     returnType: 'string'
   },
-  'getRequest': {
+  getRequest: {
     decorators: ['view'],
     params: [
       { name: 'requestId', type: 'string' }
     ],
     returnType: 'any'
   },
-  'setResult': {
+  setResult: {
     decorators: ['transaction'],
     params: [
       { name: 'requestId', type: 'string' },
@@ -123,7 +123,7 @@ exports.run = (context, options) => {
     }
   }
 
-  if (!contract.hasOwnProperty(msg.name)) {
+  if (!Object.prototype.hasOwnProperty.call(contract, msg.name)) {
     return METADATA
   } else {
     return contract[msg.name].apply(context, msgParams)

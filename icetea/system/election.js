@@ -17,7 +17,7 @@ const METADATA = Object.freeze({
 
   // nominate a validator candidate
   // must attach minimum deposit
-  'propose': {
+  propose: {
     decorators: ['payable'],
     params: [
       { name: 'pubkey', type: 'string' },
@@ -28,7 +28,7 @@ const METADATA = Object.freeze({
 
   // resign from a candidate list
   // can get back deposit
-  'resign': {
+  resign: {
     decorators: ['transaction'],
     params: [
       { name: 'pubkey', type: 'string' }
@@ -36,7 +36,7 @@ const METADATA = Object.freeze({
     returnType: 'undefined'
   },
 
-  'withdraw': {
+  withdraw: {
     decorators: ['transaction'],
     params: [
       { name: 'pubkey', type: 'string' },
@@ -45,7 +45,7 @@ const METADATA = Object.freeze({
     returnType: 'undefined'
   },
 
-  'unvote': {
+  unvote: {
     decorators: ['transaction'],
     params: [
       { name: 'pubkey', type: 'string' }
@@ -53,7 +53,7 @@ const METADATA = Object.freeze({
     returnType: 'undefined'
   },
 
-  'changeVote': {
+  changeVote: {
     decorators: ['transaction'],
     params: [
       { name: 'fromPubKey', type: 'string' },
@@ -64,7 +64,7 @@ const METADATA = Object.freeze({
   },
 
   // request unjail for a jailed candidate
-  'requestUnjail': {
+  requestUnjail: {
     decorators: ['transaction'],
     params: [
       { name: 'pubkey', type: 'string' }
@@ -73,7 +73,7 @@ const METADATA = Object.freeze({
   },
 
   // Get all validator candidates
-  'getCandidates': {
+  getCandidates: {
     decorators: ['view'],
     params: [
       { name: 'includeJailed', type: ['boolean', 'undefined'] }
@@ -81,7 +81,7 @@ const METADATA = Object.freeze({
     returnType: 'Array'
   },
 
-  'getValidators': {
+  getValidators: {
     decorators: ['view'],
     params: [],
     returnType: 'Array'
@@ -89,7 +89,7 @@ const METADATA = Object.freeze({
 
   // Vote for a candidate
   // can attach any value (minimum configurable)
-  'vote': {
+  vote: {
     decorators: ['payable'],
     params: [
       { name: 'pubkey', type: 'string' }
@@ -214,7 +214,7 @@ exports.run = (context, options) => {
     }
   }
 
-  if (!contract.hasOwnProperty(msg.name)) {
+  if (!Object.prototype.hasOwnProperty.call(contract, msg.name)) {
     return METADATA
   } else {
     return contract[msg.name].apply(context, msgParams)
@@ -331,7 +331,7 @@ exports.punish = function (pubkey, blockNum, tags, { slashedRatePerMillion = 0, 
 
   if (jailedBlockCount > 0) {
     candidate.jailed = true
-    let pendingJailedBlock = (candidate.jailedUntilBlock && (candidate.jailedUntilBlock > blockNum))
+    const pendingJailedBlock = (candidate.jailedUntilBlock && (candidate.jailedUntilBlock > blockNum))
       ? (candidate.jailedUntilBlock - blockNum) : 0
     candidate.jailedUntilBlock = blockNum + pendingJailedBlock + jailedBlockCount
   }
