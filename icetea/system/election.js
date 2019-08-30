@@ -39,7 +39,6 @@ const METADATA = Object.freeze({
   withdraw: {
     decorators: ['transaction'],
     params: [
-      { name: 'pubkey', type: 'string' },
       { name: 'withDrawTo', type: ['address', 'undefined'] }
     ],
     returnType: 'undefined'
@@ -85,6 +84,14 @@ const METADATA = Object.freeze({
     decorators: ['view'],
     params: [],
     returnType: 'Array'
+  },
+
+  getWithdrawalList: {
+    decorators: ['view'],
+    params: [
+      { name: 'addressOrAlias', type: ['address', 'undefined'] }
+    ],
+    returnType: 'object'
   },
 
   // Vote for a candidate
@@ -153,7 +160,7 @@ exports.run = (context, options) => {
       const me = candidates[pubkey]
 
       if (!me) {
-        throw new (`Validator candidate ${pubkey} not found.`)()
+        throw new Error(`Validator candidate ${pubkey} not found.`)
       }
 
       // Check resign permission
@@ -161,17 +168,15 @@ exports.run = (context, options) => {
       did.checkPermission(me.operator, msg.signers, block.timestamp)
 
       // move to withdrawal key
-      const withdrawList = _rawWithdrawList()
+      const withdrawList = _rawWithdrawList(context)
 
       // add items for validator
-      const validatorWithdrawLockNumOfBlock = 10
-      _addToWithdrawList(withdrawList, pubkey, me.deposit, block.number + validatorWithdrawLockNumOfBlock)
+      _addToWithdrawList(withdrawList, me.operator, me.deposit, block.number + config.resignValidatorLock)
 
       // add items for voters
-      const voterWithdrawLockNumOfBlock = 1
       if (me.voters) {
-        Object.entries(me.voters).forEach(([p, v]) => {
-          _addToWithdrawList(withdrawList, p, v, block.number + voterWithdrawLockNumOfBlock)
+        Object.entries(me.voters).forEach(([addr, amount]) => {
+          _addToWithdrawList(withdrawList, addr, amount, block.number + config.resignVoterLock)
         })
       }
 
@@ -179,7 +184,88 @@ exports.run = (context, options) => {
       delete candidates[pubkey]
 
       context.setState(CANDIDATES_KEY, candidates)
-      context.setState(WITHDRAW_KEY)
+      context.setState(WITHDRAW_KEY, withdrawList)
+    },
+
+    changeVote (fromPubKey, toPubKey, amount) {
+      const candidates = _rawCandidates(context)
+      const from = candidates[fromPubKey]
+      if (!from) {
+        throw new Error(`Validator candidate ${fromPubKey} not found.`)
+      }
+      if (!from.voters || !from.voters[msg.sender]) {
+        throw new Error(`You did not vote for ${fromPubKey}.`)
+      }
+
+      const oldAmount = from.voters[msg.sender]
+      if (amount == null) {
+        amount = oldAmount
+      } else {
+        if (amount > oldAmount) {
+          throw new Error(`Amount to large. Amount must be no greater than ${oldAmount}.`)
+        }
+        amount = BigInt(amount)
+      }
+
+      from.voters[msg.sender] -= amount
+      if (!from.voters[msg.sender]) {
+        delete from.voters[msg.sender]
+        if (!Object.keys(from.voters).length) {
+          delete from.voters
+        }
+      }
+
+      const to = candidates[toPubKey]
+      if (!to) {
+        throw new Error(`Validator candidate ${toPubKey} not found.`)
+      }
+      const toVoters = to.voters || (to.voters = {})
+      toVoters[msg.sender] = (toVoters[msg.sender] || BigInt(0)) + amount
+
+      // save things
+      context.setState(CANDIDATES_KEY, candidates)
+    },
+
+    getWithdrawalList (addrOrAlias = msg.sender) {
+      if (!addrOrAlias || typeof addrOrAlias !== 'string') {
+        throw new Error('Invalid address or alias.')
+      }
+      const withdrawList = _rawWithdrawList(context)
+      const me = withdrawList[addrOrAlias]
+
+      if (!me) {
+        return {}
+      }
+
+      return _.cloneDeep(me)
+    },
+
+    withdraw (withDrawTo = msg.sender) {
+      // move to withdrawal key
+      const withdrawList = _rawWithdrawList(context)
+      const me = withdrawList[msg.sender]
+
+      if (!me) {
+        throw new Error('You do not have any pending asset to withdraw.')
+      }
+
+      let amount = BigInt(0)
+      Object.entries(me).forEach(([blockNum, value]) => {
+        if (block.number >= blockNum) {
+          amount += value
+          delete me[blockNum]
+        }
+      })
+
+      if (!amount) {
+        throw new Error('No asset eligible for withdrawal. Call getWithdrawalList to see when you can withdraw.')
+      }
+
+      if (!Object.keys(me).length) {
+        delete withdrawList[msg.sender]
+      }
+
+      context.transfer(withDrawTo, amount)
     },
 
     getCandidates (includeJailed = false) {
@@ -190,19 +276,19 @@ exports.run = (context, options) => {
       return _getValidators(contract.getCandidates())
     },
 
-    vote (voteePubkey) {
+    vote (pubkey) {
       if (msg.value < config.minVoterValue) {
         throw new Error(`You must attach at least ${config.minVoterValue} when voting.`)
       }
 
       const candidates = _rawCandidates(context)
-      const votee = candidates[voteePubkey]
+      const votee = candidates[pubkey]
       if (!votee) {
-        throw new Error(`${voteePubkey} is not a valid validator candidate public key.`)
+        throw new Error(`${pubkey} is not a valid validator candidate public key.`)
       }
 
       if (votee.jailed) {
-        throw new Error(`${voteePubkey} is currently jailed, please wait until it get unjail before voting.`)
+        throw new Error(`${pubkey} is currently jailed, please wait until it get unjail before voting.`)
       }
 
       votee.voters = votee.voters || {}
@@ -211,6 +297,34 @@ exports.run = (context, options) => {
       // kind of stupid we set the whole object while only change small
       // in the future, maybe support setStateIn()
       context.setState(CANDIDATES_KEY, candidates)
+    },
+
+    unvote (pubkey) {
+      const candidates = _rawCandidates(context)
+      const votee = candidates[pubkey]
+      if (!votee) {
+        throw new Error(`${pubkey} is not a valid validator candidate public key.`)
+      }
+
+      const amount = (votee.voters || {})[msg.sender]
+
+      if (!amount) {
+        throw new Error('You did not vote for this node, so no need to unvote.')
+      }
+
+      // move to withdrawal key
+      const withdrawList = _rawWithdrawList(context)
+      _addToWithdrawList(withdrawList, msg.sender, amount, block.number + config.unvoteLock)
+
+      // delete the voter
+      delete votee.voters[msg.sender]
+      if (!Object.keys(votee.voters).length) {
+        delete votee.voters
+      }
+
+      // save things
+      context.setState(CANDIDATES_KEY, candidates)
+      context.setState(WITHDRAW_KEY, withdrawList)
     }
   }
 
@@ -268,8 +382,8 @@ function _getValidators (candidates) {
   return candidates
 }
 
-function _addToWithdrawList (withdrawList, pubkey, amount, unlockBlock) {
-  const w = withdrawList[pubkey] || (withdrawList[pubkey] = {})
+function _addToWithdrawList (withdrawList, address, amount, unlockBlock) {
+  const w = withdrawList[address] || (withdrawList[address] = {})
   w[unlockBlock] = (w[unlockBlock] || BigInt(0)) + amount
 }
 
