@@ -5,6 +5,7 @@ import { fmtHex, loadFromStorage } from './helper'
 import { toTEA, toUNIT } from './common'
 
 const candidateTemplate = handlebars.compile(document.getElementById('candidateTemplate').innerHTML)
+const withdrawalTemplate = handlebars.compile(document.getElementById('withdrawalTemplate').innerHTML)
 const ms = tweb3.contract('system.election').methods
 
 const microTEAtoTEA = (microTEA) => {
@@ -25,6 +26,18 @@ const formatCandidates = (candidates) => {
   })
   return candidates
 }
+const formatWithdrawals = (withdrawals) => {
+  /**
+   * `TODO`: `showing what withdrawals can be made`
+   */
+  const keys = Object.keys(withdrawals)
+  return keys.map((value) => {
+    return {
+      block: value,
+      amount: microTEAtoTEA(withdrawals[value])
+    }
+  })
+}
 
 const vote = (candidate, value, from) => {
   const opts = { from: from }
@@ -44,17 +57,30 @@ const resign = (candidate, from) => {
   const opts = { from: from }
   return ms.resign(candidate).sendCommit(opts)
 }
-const sendData2Template = async () => {
-  const result = await tweb3['callReadonlyContractMethod']('system.election', 'getCandidates', [])
-  document.getElementById('candidates').innerHTML = candidateTemplate(formatCandidates(result))
+const withdraw = (candidate) => {
+  const opts = { from: candidate }
+  return ms.withdraw(candidate).sendCommit(opts)
+}
+const fetchCandidates = async () => {
+  const candidates = await tweb3['callReadonlyContractMethod']('system.election', 'getCandidates', [])
+  document.getElementById('candidates').innerHTML = candidateTemplate(formatCandidates(candidates))
+}
+const fetchWithdrawals = async (defaultAccount) => {
+  const withdrawals = await tweb3['callReadonlyContractMethod']('system.election', 'getWithdrawalList', [defaultAccount])
+  if (!$.isEmptyObject(withdrawals)) {
+    const withdrawalsHTML = document.getElementById('withdrawals')
+    withdrawalsHTML.innerHTML = withdrawalTemplate(formatWithdrawals(withdrawals))
+    console.log($('#withdraw').show())
+  }
 }
 const getDefaultAccount = async () => {
   await loadFromStorage()
   return tweb3.wallet.defaultAccount
 }
 $(document).ready(async function () {
-  await sendData2Template()
+  await fetchCandidates()
   const defaultAccount = await getDefaultAccount()
+  await fetchWithdrawals(defaultAccount)
 
   $('button.vote[data-pubkey]').on('click', function () {
     const pubkey = this.getAttribute('data-pubkey')
@@ -92,14 +118,20 @@ $(document).ready(async function () {
         window.alert(error)
       })
   })
-  /**
- * `TODO:`
- */
   $('button.resign[data-pubkey]').on('click', function () {
     const pubkey = this.getAttribute('data-pubkey')
     resign(pubkey, defaultAccount)
       .then(() => {
         window.alert('You resigned for pubkey: ' + pubkey)
+        window.location.reload()
+      }, (error) => {
+        window.alert(error)
+      })
+  })
+  $('#withdraw').on('click', () => {
+    withdraw(defaultAccount)
+      .then(() => {
+        window.alert('You withdraw successfully')
         window.location.reload()
       }, (error) => {
         window.alert(error)

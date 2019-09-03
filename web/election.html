@@ -75,6 +75,27 @@
             <button class='submit'>Submit</button>
 
         </form>
+        <hr size='1'>
+        <h1>Your withdrawals</h1>
+        <section id="withdrawals">
+            Nothing to withdraw.
+        </section>
+        <button id='withdraw' style="display: none;">Withdraw</button>
+        <script id="withdrawalTemplate" type="text/x-handlebars-template">
+            <table>
+                <tr>
+                    <th>Block</th>
+                    <th>Amount</th>
+                </tr>
+                {{#each this}}
+                    <tr>
+                        <td><a href="/block.html?height={{block}}">{{block}}</a></td>
+                        <td>{{amount}}</td>
+                    </tr>
+                {{/each}}
+            </table>
+        </script>
+
 
 
 
