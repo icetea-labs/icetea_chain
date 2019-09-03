@@ -28,7 +28,7 @@ const formatCandidates = (candidates) => {
 }
 const formatWithdrawals = (withdrawals) => {
   /**
-   * `TODO`: `showing what withdrawals can be made`
+   * `TODO`: `showing which withdrawals can be made`
    */
   const keys = Object.keys(withdrawals)
   return keys.map((value) => {
@@ -43,6 +43,10 @@ const vote = (candidate, value, from) => {
   const opts = { from: from }
   if (value) opts.value = value
   return ms.vote(candidate).sendCommit(opts)
+}
+function changeVote (fromPubkey, toPubkey, amount, from) {
+  const opts = { from: from }
+  return ms.changeVote(fromPubkey, toPubkey, amount).sendCommit(opts)
 }
 const propose = (candidate, name, value, from) => {
   const opts = { from: from }
@@ -62,16 +66,48 @@ const withdraw = (candidate) => {
   return ms.withdraw(candidate).sendCommit(opts)
 }
 const fetchCandidates = async () => {
-  const candidates = await tweb3['callReadonlyContractMethod']('system.election', 'getCandidates', [])
+  const candidates = await getCandidates()
   document.getElementById('candidates').innerHTML = candidateTemplate(formatCandidates(candidates))
 }
 const fetchWithdrawals = async (defaultAccount) => {
-  const withdrawals = await tweb3['callReadonlyContractMethod']('system.election', 'getWithdrawalList', [defaultAccount])
+  const withdrawals = await tweb3.callReadonlyContractMethod('system.election', 'getWithdrawalList', [defaultAccount])
   if (!$.isEmptyObject(withdrawals)) {
     const withdrawalsHTML = document.getElementById('withdrawals')
     withdrawalsHTML.innerHTML = withdrawalTemplate(formatWithdrawals(withdrawals))
-    console.log($('#withdraw').show())
+    $('#withdraw').show()
   }
+}
+async function getVotedCandidate (fromPubkey) {
+  const candidates = await getCandidates()
+  const votedCandidates = []
+  candidates.forEach((candidate) => {
+    if (candidate.voters) {
+      if (candidate.voters[fromPubkey]) {
+        votedCandidates.push(candidate.pubKey.data)
+      }
+    }
+  })
+  return votedCandidates
+}
+async function getCandidates () {
+  return tweb3.callReadonlyContractMethod('system.election', 'getCandidates', [])
+}
+const fillChangeVoteArea = async (defaultAccount) => {
+  const toPubkey = $('select.toPubkey')
+  const candidates = await getCandidates()
+  candidates.forEach((candidate) => {
+    const option = document.createElement('option')
+    option.textContent = candidate.pubKey.data
+    toPubkey.append(option)
+  })
+
+  const fromPubkey = $('select.fromPubkey')
+  const votedCandidates = await getVotedCandidate(defaultAccount)
+  votedCandidates.forEach((candidate) => {
+    const option = document.createElement('option')
+    option.textContent = candidate
+    fromPubkey.append(option)
+  })
 }
 const getDefaultAccount = async () => {
   await loadFromStorage()
@@ -81,6 +117,7 @@ $(document).ready(async function () {
   await fetchCandidates()
   const defaultAccount = await getDefaultAccount()
   await fetchWithdrawals(defaultAccount)
+  await fillChangeVoteArea(defaultAccount)
 
   $('button.vote[data-pubkey]').on('click', function () {
     const pubkey = this.getAttribute('data-pubkey')
@@ -93,7 +130,7 @@ $(document).ready(async function () {
         window.alert(error)
       })
   })
-  $('button.submit').on('click', function () {
+  $('#submitProposal').on('click', function () {
     const address = $('#address').val()
     const name = $('#name').val()
     const deposit = $('#deposit').val()
@@ -136,5 +173,20 @@ $(document).ready(async function () {
       }, (error) => {
         window.alert(error)
       })
+  })
+  $('#submitChangeVote').on('click', function () {
+    const amount = $('#changeAmount').val()
+    const from = $('select.fromPubkey').val()
+    const to = $('select.toPubkey').val()
+
+    if (amount && from && to) {
+      changeVote(from, to, amount)
+        .then(() => {
+          window.alert('You changed vote successfully')
+          window.location.reload()
+        }, (error) => {
+          window.alert(error)
+        })
+    }
   })
 })

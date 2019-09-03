@@ -72,14 +72,34 @@
                 <label>Deposit:</label> 
                 <input id='deposit' placeholder="Enter value in TEA" size=50 required>
             </p>
-            <button class='submit'>Submit</button>
+            <button id='submitProposal' class='submit'>Submit</button>
 
+        </form>
+        <hr size='1'>
+
+        <h1>Change your vote</h1>
+        <form onsubmit="return false">
+                <p>
+                    <label>From Public Key:</label> 
+                    <select class='fromPubkey' autofocus required></select>
+                </p>
+                <p>
+                    <label>To Public Key:</label> 
+                    <select class='toPubkey' autofocus required></select>
+                </p>
+                <p>
+                    <label>Amount:</label> 
+                    <input id='changeAmount' placeholder="Enter value in TEA" size=50 required>
+                </p>
+                <button id='submitChangeVote' class='submit'>Change Vote</button>
+    
         </form>
         <hr size='1'>
         <h1>Your withdrawals</h1>
         <section id="withdrawals">
             Nothing to withdraw.
         </section>
+        <br/>
         <button id='withdraw' style="display: none;">Withdraw</button>
         <script id="withdrawalTemplate" type="text/x-handlebars-template">
             <table>

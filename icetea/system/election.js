@@ -188,6 +188,7 @@ exports.run = (context, options) => {
     },
 
     changeVote (fromPubKey, toPubKey, amount) {
+      console.log('ahihi')
       const candidates = _rawCandidates(context)
       const from = candidates[fromPubKey]
       if (!from) {
@@ -202,7 +203,7 @@ exports.run = (context, options) => {
         amount = oldAmount
       } else {
         if (amount > oldAmount) {
-          throw new Error(`Amount to large. Amount must be no greater than ${oldAmount}.`)
+          throw new Error(`Amount too large. Amount must be no greater than ${oldAmount}.`)
         }
         amount = BigInt(amount)
       }
