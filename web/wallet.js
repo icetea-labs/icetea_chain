@@ -58,7 +58,7 @@ function fillWallet () {
   var select = document.getElementById('wallet')
   $('#wallet').empty()
   wallets.forEach(item => {
-    let option = document.createElement('option')
+    const option = document.createElement('option')
     option.value = item.address
     if (d === item.address) {
       option.selected = true

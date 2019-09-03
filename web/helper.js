@@ -29,7 +29,7 @@ export function fieldToBase64 (selector) {
 export function parseParamList (pText) {
   pText = replaceAll(pText, '\r', '\n')
   pText = replaceAll(pText, '\n\n', '\n')
-  let params = pText.split('\n').filter(e => e.trim()).map(tryParseJson)
+  const params = pText.split('\n').filter(e => e.trim()).map(tryParseJson)
 
   return params
 }
@@ -125,7 +125,7 @@ export async function loadAddresses () {
     var select = document.getElementById('signers')
     select.innerHTML = ''
     wallet.accounts.forEach(item => {
-      let option = document.createElement('option')
+      const option = document.createElement('option')
       option.value = item.address
       option.textContent = item.address
       select.appendChild(option)

@@ -18,7 +18,7 @@ class IceteaEnvironment extends NodeEnvironment {
   async setup () {
     await super.setup()
 
-    let home = createTempDir()
+    const home = createTempDir()
     tm.initSync(home)
     const ports = {
       p2p: await getPort(),

@@ -49,7 +49,7 @@ class StateManager extends EventEmitter {
   }
 
   getUpdatedValidators (newValidators) {
-    let result = []
+    const result = []
     newValidators.map(validator => {
       result.push({
         pubKey: validator.pubKey,
@@ -175,7 +175,7 @@ class StateManager extends EventEmitter {
   }
 
   async balanceOf (addr, height) {
-    let state = stateTable || {}
+    const state = stateTable || {}
     if (height) {
       const block = await patricia.getBlockByHeight(height)
       if (block.stateRoot) {

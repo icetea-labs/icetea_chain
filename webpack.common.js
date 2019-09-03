@@ -31,7 +31,7 @@ module.exports = {
   },
 
   plugins: [
-    new CopyWebpackPlugin([{ from: path.resolve(__dirname, 'web'), ignore: [ '*.js' ] }])
+    new CopyWebpackPlugin([{ from: path.resolve(__dirname, 'web'), ignore: ['*.js'] }])
   ],
 
   node: {

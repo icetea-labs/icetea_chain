@@ -134,9 +134,9 @@ function callContract (method, type, value, from, ...params) {
     type = 'write'
   }
   const map = {
-    'none': 'callPure',
-    'read': 'call',
-    'write': 'sendCommit'
+    none: 'callPure',
+    read: 'call',
+    write: 'sendCommit'
   }
   return method(...params)[map[type]]({ value, from }).then(r => type === 'write' ? r.returnValue : r)
 }

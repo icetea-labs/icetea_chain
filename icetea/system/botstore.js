@@ -14,19 +14,19 @@ const { initialBotStore } = require('../config')
 const _ = require('lodash')
 
 const METADATA = Object.freeze({
-  'query': {
+  query: {
     decorators: ['view'],
     params: [],
     returnType: 'object'
   },
-  'resolve': {
+  resolve: {
     decorators: ['view'],
     params: [
       { name: 'name', type: 'string' }
     ],
     returnType: 'object'
   },
-  'register': {
+  register: {
     decorators: ['transaction'],
     params: [
       { name: 'name', type: 'string' },
@@ -117,7 +117,7 @@ exports.run = (context, options) => {
     }
   }
 
-  if (!contract.hasOwnProperty(msg.name)) {
+  if (!Object.prototype.hasOwnProperty.call(contract, msg.name)) {
     return METADATA
   } else {
     return contract[msg.name].apply(context, msgParams)

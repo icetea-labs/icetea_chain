@@ -176,7 +176,7 @@ function typeColor (value, raw = false) {
   }
   if (typeof value === 'object') {
     if (Buffer.isBuffer(value)) {
-      return `(buffer)`
+      return '(buffer)'
     }
     return value
   }
@@ -200,7 +200,7 @@ function deepEqual (x, y) {
     if (Object.keys(x).length !== Object.keys(y).length) { return false }
 
     for (var prop in x) {
-      if (y.hasOwnProperty(prop)) {
+      if (Object.prototype.hasOwnProperty.call(y, prop)) {
         if (!deepEqual(x[prop], y[prop])) { return false }
       } else { return false }
     }
@@ -245,14 +245,14 @@ exports.afterTx = (stateTable) => {
   yellow('--- STATE DIFF ---')
   let noDiff = true
   Object.keys(stateTable).forEach(addr => {
-    if (!oldStateTable.hasOwnProperty(addr)) {
+    if (!Object.prototype.hasOwnProperty.call(oldStateTable, addr)) {
       noDiff = false
       diff(undefined, stateTable[addr], `DEPLOYED: ${addr}`)
     }
   })
 
   Object.keys(oldStateTable).forEach(addr => {
-    if (!stateTable.hasOwnProperty(addr)) {
+    if (!Object.prototype.hasOwnProperty.call(stateTable, addr)) {
       noDiff = false
       diff(oldStateTable[addr], undefined, `DELETED: ${addr}`)
     } else if (!deepEqual(oldStateTable[addr], stateTable[addr])) {

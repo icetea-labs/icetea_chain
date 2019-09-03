@@ -91,7 +91,7 @@ const _stateforAddress = (contractAddress, readonly, {
     if (!key || typeof key !== 'string') {
       throw new Error(`Expect key to be an non-empty string, but got ${key}`)
     }
-    return storage ? storage.hasOwnProperty(key) : false
+    return storage ? Object.prototype.hasOwnProperty.call(storage, key) : false
   }
 
   let transfer, setState, deleteState
@@ -157,7 +157,7 @@ const getStateProxy = (stateTable) => {
     if (!value) return
     value = BigInt(value)
 
-    if (balances.hasOwnProperty(addr)) {
+    if (Object.prototype.hasOwnProperty.call(balances, addr)) {
       balances[addr] += value
     } else {
       balances[addr] = balanceOf(addr) + value
@@ -165,7 +165,7 @@ const getStateProxy = (stateTable) => {
   }
 
   const balanceOf = (addr) => {
-    if (balances.hasOwnProperty(addr)) {
+    if (Object.prototype.hasOwnProperty.call(balances, addr)) {
       return balances[addr]
     }
     return (deployedContracts[addr] || stateTable[addr] || {}).balance || BigInt(0)

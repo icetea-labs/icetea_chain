@@ -11,28 +11,28 @@ const { Alias: ALIAS_ADDR } = require('./sysconnames')
 const { checkMsg } = require('../helper/types')
 
 const METADATA = Object.freeze({
-  'query': {
+  query: {
     decorators: ['view'],
     params: [
       { name: 'partOfAlias', type: ['string', 'RegExp'] }
     ],
     returnType: ['object', 'Array']
   },
-  'resolve': {
+  resolve: {
     decorators: ['view'],
     params: [
       { name: 'alias', type: 'string' }
     ],
     returnType: 'string'
   },
-  'byAddress': {
+  byAddress: {
     decorators: ['view'],
     params: [
       { name: 'address', type: 'pureaddress' }
     ],
     returnType: 'Array'
   },
-  'register': {
+  register: {
     decorators: ['transaction'],
     params: [
       { name: 'alias', type: 'string' },
@@ -155,7 +155,7 @@ exports.run = (context, options) => {
     }
   }
 
-  if (!contract.hasOwnProperty(msg.name)) {
+  if (!Object.prototype.hasOwnProperty.call(contract, msg.name)) {
     return METADATA
   } else {
     return contract[msg.name].apply(context, msgParams)

@@ -96,7 +96,7 @@ exports.getHash = (stateTable) => {
 exports.save = async ({ block, state, validators, commitKeys }) => {
   const trie = await patricia()
   const opts = []
-  let persistBlock = { ...block }
+  const persistBlock = { ...block }
   commitKeys.forEach(key => {
     opts.push({
       type: 'put',

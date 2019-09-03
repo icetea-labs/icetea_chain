@@ -5,12 +5,12 @@
 const { checkMsg } = require('../helper/types')
 
 const METADATA = Object.freeze({
-  'getQuota': {
+  getQuota: {
     decorators: ['pure'],
     params: [],
     returnType: 'number'
   },
-  'request': {
+  request: {
     decorators: ['transaction'],
     params: [],
     returnType: 'number'
@@ -18,14 +18,14 @@ const METADATA = Object.freeze({
 })
 
 const INTERNAL_METADATA = {
-  '_agreeToPayFor': {
+  _agreeToPayFor: {
     decorators: ['view'],
     params: [
       { name: 'tx', type: 'object' }
     ],
     returnType: 'boolean'
   },
-  '_beforePayFor': {
+  _beforePayFor: {
     decorators: ['transaction'],
     params: [
       { name: 'tx', type: 'object' }
@@ -123,7 +123,7 @@ exports.run = (context) => {
     }
   }
 
-  if (!contract.hasOwnProperty(msg.name)) {
+  if (!Object.prototype.hasOwnProperty.call(contract, msg.name)) {
     return METADATA
   } else {
     return contract[msg.name].apply(context, msgParams)

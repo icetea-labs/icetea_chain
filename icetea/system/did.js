@@ -15,14 +15,14 @@ const STATE_CLAIMING = 1
 const STATE_REJECTED = 2
 
 const METADATA = Object.freeze({
-  'query': {
+  query: {
     decorators: ['view'],
     params: [
       { name: 'address', type: 'address' }
     ],
     returnType: ['object', 'undefined']
   },
-  'register': {
+  register: {
     decorators: ['transaction'],
     params: [
       { name: 'address', type: 'address' },
@@ -30,7 +30,7 @@ const METADATA = Object.freeze({
     ],
     returnType: 'undefined'
   },
-  'addOwner': {
+  addOwner: {
     decorators: ['transaction'],
     params: [
       { name: 'address', type: 'address' },
@@ -39,7 +39,7 @@ const METADATA = Object.freeze({
     ],
     returnType: 'undefined'
   },
-  'removeOwner': {
+  removeOwner: {
     decorators: ['transaction'],
     params: [
       { name: 'address', type: 'address' },
@@ -48,14 +48,14 @@ const METADATA = Object.freeze({
     ],
     returnType: 'undefined'
   },
-  'clearOwnership': {
+  clearOwnership: {
     decorators: ['transaction'],
     params: [
       { name: 'address', type: 'address' }
     ],
     returnType: 'undefined'
   },
-  'setThreshold': {
+  setThreshold: {
     decorators: ['transaction'],
     params: [
       { name: 'address', type: 'address' },
@@ -63,7 +63,7 @@ const METADATA = Object.freeze({
     ],
     returnType: 'undefined'
   },
-  'addInheritor': {
+  addInheritor: {
     decorators: ['transaction'],
     params: [
       { name: 'address', type: 'address' },
@@ -73,7 +73,7 @@ const METADATA = Object.freeze({
     ],
     returnType: 'undefined'
   },
-  'removeInheritor': {
+  removeInheritor: {
     decorators: ['transaction'],
     params: [
       { name: 'address', type: 'address' },
@@ -81,7 +81,7 @@ const METADATA = Object.freeze({
     ],
     returnType: 'undefined'
   },
-  'claimInheritance': {
+  claimInheritance: {
     decorators: ['transaction'],
     params: [
       { name: 'address', type: 'address' },
@@ -89,7 +89,7 @@ const METADATA = Object.freeze({
     ],
     returnType: 'undefined'
   },
-  'rejectInheritanceClaim': {
+  rejectInheritanceClaim: {
     decorators: ['transaction'],
     params: [
       { name: 'address', type: 'address' },
@@ -97,7 +97,7 @@ const METADATA = Object.freeze({
     ],
     returnType: 'undefined'
   },
-  'isActiveInheritor': {
+  isActiveInheritor: {
     decorators: ['transaction'],
     params: [
       { name: 'address', type: 'address' },
@@ -105,7 +105,7 @@ const METADATA = Object.freeze({
     ],
     returnType: 'undefined'
   },
-  'setTag': {
+  setTag: {
     decorators: ['transaction'],
     params: [
       { name: 'address', type: 'address' },
@@ -114,7 +114,7 @@ const METADATA = Object.freeze({
     ],
     returnType: 'undefined'
   },
-  'removeTag': {
+  removeTag: {
     decorators: ['transaction'],
     params: [
       { name: 'address', type: 'address' },
@@ -122,7 +122,7 @@ const METADATA = Object.freeze({
     ],
     returnType: 'undefined'
   },
-  'checkPermission': {
+  checkPermission: {
     decorators: ['view'],
     params: [
       { name: 'address', type: 'address' },
@@ -473,7 +473,7 @@ exports.run = (context) => {
     }
   }
 
-  if (!contract.hasOwnProperty(msg.name)) {
+  if (!Object.prototype.hasOwnProperty.call(contract, msg.name)) {
     return METADATA
   } else {
     return contract[msg.name].apply(context, msgParams)

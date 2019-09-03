@@ -80,7 +80,7 @@ describe('election', () => {
     await propose(config.minValidatorDeposit + config.minVoterValue, addr2)
 
     r = await ms.getValidators().call()
-    expect(r.length).toBe(2)
+    expect(r.length).toBe(Math.min(3, config.numberOfValidators))
     expect(r[0].pubKey.data).toBe(addr2)
     expect(r[0].deposit).toBe(String(config.minValidatorDeposit + config.minVoterValue))
 
@@ -90,7 +90,7 @@ describe('election', () => {
     await propose(config.minValidatorDeposit + config.minVoterValue + 1, addr3)
 
     r = await ms.getValidators().call()
-    expect(r.length).toBe(2)
+    expect(r.length).toBe(Math.min(4, config.numberOfValidators))
     expect(r[0].pubKey.data).toBe(addr3)
     expect(r[0].deposit).toBe(String(config.minValidatorDeposit + config.minVoterValue + 1))
 
@@ -108,7 +108,7 @@ describe('election', () => {
     await vote(from, config.minVoterValue, addr2)
 
     r = await ms.getValidators().call()
-    expect(r.length).toBe(2)
+    expect(r.length).toBe(Math.min(4, config.numberOfValidators))
     expect(r[0].pubKey.data).toBe(from)
     expect(r[0].deposit).toBe(String(config.minValidatorDeposit + 1))
     expect(r[0].capacity).toBe(String(config.minValidatorDeposit + config.minVoterValue + 1))
