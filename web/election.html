@@ -43,10 +43,13 @@
                         <td><a href="/address.html?address={{operator}}">{{operatorText}}</a></td>
                         <td><a href="/block.html?height={{block}}">{{block}}</a></td>
                         <td>
-                            <button disabled class='vote' data-pubkey='{{pubKey.data}}'>
+                            <button class='vote' data-pubkey='{{pubKey.data}}'>
                                 Vote
                             </button>
-                            <button disabled class='resign' data-pubkey='{{pubKey.data}}'>
+                            <button class='unvote' data-pubkey='{{pubKey.data}}'>
+                                Unvote
+                            </button>
+                            <button class='resign' data-pubkey='{{pubKey.data}}'>
                                 Resign
                             </button>
                         </td>

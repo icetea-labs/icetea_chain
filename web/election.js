@@ -15,6 +15,7 @@ const formatCandidates = (candidates) => {
   /**
      * `TODO`: `handle the case when candidate's NAME is way too long` by `click hover`
      * `address and pubKey are using interchangable`
+     * `ISSUE`: when user click 'cancel' on VOTE button clicked popup
      */
 
   candidates.forEach(candidate => {
@@ -25,17 +26,24 @@ const formatCandidates = (candidates) => {
   return candidates
 }
 
-const vote = (candidate, value, fromAddress) => {
-  const opts = { from: fromAddress }
+const vote = (candidate, value, from) => {
+  const opts = { from: from }
   if (value) opts.value = value
   return ms.vote(candidate).sendCommit(opts)
 }
-const propose = (candidateAddress, name, value, fromAddress) => {
-  const opts = { from: fromAddress }
+const propose = (candidate, name, value, from) => {
+  const opts = { from: from }
   if (value) opts.value = value
-  return ms.propose(candidateAddress, name).sendCommit(opts)
+  return ms.propose(candidate, name).sendCommit(opts)
 }
-
+const unvote = (candidate, from) => {
+  const opts = { from: from }
+  return ms.unvote(candidate).sendCommit(opts)
+}
+const resign = (candidate, from) => {
+  const opts = { from: from }
+  return ms.resign(candidate).sendCommit(opts)
+}
 const sendData2Template = async () => {
   const result = await tweb3['callReadonlyContractMethod']('system.election', 'getCandidates', [])
   document.getElementById('candidates').innerHTML = candidateTemplate(formatCandidates(result))
@@ -74,11 +82,27 @@ $(document).ready(async function () {
         })
     }
   })
+  $('button.unvote').on('click', function () {
+    const pubkey = this.getAttribute('data-pubkey')
+    unvote(pubkey, defaultAccount)
+      .then(() => {
+        window.alert('You unvoted for pubkey: ' + pubkey)
+        window.location.reload()
+      }, (error) => {
+        window.alert(error)
+      })
+  })
   /**
  * `TODO:`
  */
   $('button.resign[data-pubkey]').on('click', function () {
-    var pubkey = this.getAttribute('data-pubkey')
-    window.alert('You resign pubkey: ' + pubkey)
+    const pubkey = this.getAttribute('data-pubkey')
+    resign(pubkey, defaultAccount)
+      .then(() => {
+        window.alert('You resigned for pubkey: ' + pubkey)
+        window.location.reload()
+      }, (error) => {
+        window.alert(error)
+      })
   })
 })
