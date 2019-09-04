@@ -42,7 +42,7 @@ const showMenu = m => {
 
             return Message.sendLoading(requestId, { type: 'html' })
         } else {
-            return Message.text("Please allow the chatbot to view your location first.")
+            return Message.text('Please allow the chatbot to view your location first.')
         }
     }
 

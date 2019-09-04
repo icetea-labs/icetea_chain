@@ -201,10 +201,10 @@ exports.run = (context, options) => {
       if (amount == null) {
         amount = oldAmount
       } else {
-        if (amount > oldAmount) {
-          throw new Error(`Amount to large. Amount must be no greater than ${oldAmount}.`)
-        }
         amount = BigInt(amount)
+        if (amount > oldAmount) {
+          throw new Error(`Amount too large. Amount must be no greater than ${oldAmount}.`)
+        }
       }
 
       from.voters[msg.sender] -= amount
