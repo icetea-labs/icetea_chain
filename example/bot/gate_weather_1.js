@@ -2,7 +2,7 @@ const { Message } = require('@iceteachain/utils')
 
 const showMenu = m => {
     return (m || Message.text('This is the whether station bot.'))
-        .button('Your Location', 'location')
+        .button('My Location', 'location')
         .nextStateAccess('write')
         .requestLocation().done()
 }

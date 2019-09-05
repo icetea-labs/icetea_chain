@@ -393,6 +393,7 @@ function closeNav () {
   var address = getUrlParameter('address')
   if (address) {
     try {
+      address = await tweb3.ensureAddress(address)
       await connectBot(address)
     } catch (error) {
       console.log(error)
