@@ -1,24 +1,29 @@
-class Element {
-    @state value
-
-    constructor(value) {
-        this.value = value
+const CONTRACT_SRC = `
+const msg = this.runtime.msg;
+console.log(msg)
+switch (msg.name) {
+case 'getValue':
+    return this.getState('value');
+case 'setValue':
+    if (!msg.params || !msg.params.length) {
+        throw new Error('Invalid value');
     }
-
-    @transaction setValue(value) {
-        this.value = value
+    this.setState('value', msg.params[0]);
+    this.emitEvent('ValueChanged', {value: msg.params[0]})
+    break;
+default:
+    // call unsupported function -> inform caller our function list
+    return {
+        'getValue': { decorators: ['view'] },
+        'setValue': { decorators: ['transaction'] }
     }
-
-    @view getValue() {
-        return this.value
-    }
-}
+}`
 
 @contract class Factory {
     @state elements = []
 
-    @transaction newElement(value) {
-        const element = deployContract(`@contract ${Element.toString()}`, {params: [value]})
+    @payable newElement(value) {
+        const element = deployContract(CONTRACT_SRC, { value })
         this.elements = [...this.elements, element]
         return element
     }

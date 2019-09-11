@@ -89,9 +89,9 @@ function _makeDeployContract (tools, contractHelpers, address, options) {
     const defMode = isBuf ? ContractMode.JS_WASM : ContractMode.JS_RAW
     let src
     const { mode = defMode, value = 0, params = [] } = deployOptions
-    if ( mode === ContractMode.JS_RAW ) {
+    if (mode === ContractMode.JS_RAW) {
       src = srcBuffer.toString('base64')
-    } else if ( mode === ContractMode.JS_WASM ) {
+    } else if (mode === ContractMode.JS_WASM) {
       src = srcBuffer
     } else {
       throw new Error(`deployContract with unsupported mode: ${mode}`)
@@ -104,16 +104,21 @@ function _makeDeployContract (tools, contractHelpers, address, options) {
         src
       },
       from: address,
+      signers: [address],
       payer: address,
-      value: BigInt(value),
+      value: BigInt(value)
     }
     const contractState = invoker.prepareContract(tx)
     const newAddress = tools.deployContract(address, contractState)
-    invoker.invokeUpdate(newAddress, '__on_deployed', tx.data.params, options)
+
+    // NOTE: No call __on_received when deploying
+    // Should transfer before call ondeploy
     if (tx.value > 0) {
       contractHelpers.transfer(newAddress, tx.value)
-      invoker.invokeUpdate(newAddress, '__on_received', [], options)
     }
+
+    // must include tx into the options so that __on_deployed can access tx.value, etc.
+    invoker.invokeUpdate(newAddress, '__on_deployed', tx.data.params, { ...options, tx })
     return newAddress
   }
 }
