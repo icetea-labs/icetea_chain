@@ -5,7 +5,6 @@ const config = require('../../config')
 const { isValidAddress } = require('../../helper/utils')
 const crypto = require('crypto')
 const { ContractMode, TxOp } = require('@iceteachain/common')
-const { simpleTranspile } = require('@iceteachain/sunseed')
 
 const moduleUtils = Object.freeze(require('@iceteachain/utils/utils.js'))
 const moduleCrypto = Object.freeze({
@@ -85,25 +84,33 @@ function _makeInvokableMethod (invokerTypes, destContract, method, options) {
 
 function _makeDeployContract (tools, contractHelpers, address, options) {
   return (contractSrc, deployOptions = {}) => {
-    const { value = 0, fee = 0, params = [] } = deployOptions
-    console.log(contractSrc)
-    contractSrc = simpleTranspile(contractSrc)
+    const isBuf = Buffer.isBuffer(contractSrc)
+    const srcBuffer = isBuf ? contractSrc : Buffer.from(contractSrc)
+    const defMode = isBuf ? ContractMode.JS_WASM : ContractMode.JS_RAW
+    let src
+    const { mode = defMode, value = 0, params = [] } = deployOptions
+    if ( mode === ContractMode.JS_RAW ) {
+      src = srcBuffer.toString('base64')
+    } else if ( mode === ContractMode.JS_WASM ) {
+      src = srcBuffer
+    } else {
+      throw new Error(`deployContract with unsupported mode: ${mode}`)
+    }
     const tx = {
       data: {
         op: TxOp.DEPLOY_CONTRACT,
-        mode: ContractMode.JS_DECORATED,
+        mode,
         params,
-        src: Buffer.from(contractSrc).toString('base64')
+        src
       },
       from: address,
       payer: address,
       value: BigInt(value),
-      fee: BigInt(fee)
     }
     const contractState = invoker.prepareContract(tx)
     const newAddress = tools.deployContract(address, contractState)
     invoker.invokeUpdate(newAddress, '__on_deployed', tx.data.params, options)
-    if (tx.value + tx.fee > BigInt(0)) {
+    if (tx.value > 0) {
       contractHelpers.transfer(newAddress, tx.value)
       invoker.invokeUpdate(newAddress, '__on_received', [], options)
     }
