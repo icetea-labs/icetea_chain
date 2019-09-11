@@ -38,7 +38,7 @@ async function testSimpleStoreCaller (mode, calleeSrc, callerSrc) {
   expect(caller.address).toBeTruthy()
 
   let r = await caller.methods.getValue(callee.address).call()
-  expect(r).toBe(undefined)
+  expect(r).toBe(null)
 
   r = await caller.methods.setValue(callee.address, 1).sendCommit({ from })
   expect(r.deliver_tx.code).toBeFalsy()

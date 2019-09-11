@@ -27,7 +27,7 @@ const botui = BotUI('my-botui-app', {
 })
 
 const say = (text, options) => {
-  botui.message.add(Object.assign({ content: String(text) }, options || {}))
+  return botui.message.add(Object.assign({ content: String(text) }, options || {}))
 }
 
 /**
@@ -45,23 +45,41 @@ const saySelect = (action) => {
   return botui.action.select({ action })
 }
 
-const speak = items => {
+const speak = (items, updateIndex) => {
   if (!items) return
   if (!Array.isArray(items)) {
     items = [items]
   }
   if (!items.length) return
 
+  // return the last item
+
+  let isFirst = typeof updateIndex === 'number'
   return items.reduce((prev, item) => {
+    const shouldUpdate = isFirst
+    isFirst = false
     if (typeof item === 'string') {
-      return say(item)
+      if (shouldUpdate) {
+        return botui.message.update(updateIndex, {
+          loading: false,
+          content: item
+        })
+      } else {
+        return say(item)
+      }
     }
 
     item.type = item.type || 'text'
     switch (item.type) {
       case 'text':
       case 'html': {
-        return botui.message.add(item)
+        if (shouldUpdate) {
+          return botui.message.update(updateIndex, Object.assign({
+            loading: false
+          }, item))
+        } else {
+          return botui.message.add(item)
+        }
       }
       case 'input':
         return botui.action.text({
@@ -101,14 +119,24 @@ function confirmTransfer (amount) {
   ]).then(result => (!!result && result.value === 'transfer'))
 }
 
+function confirmLocation () {
+  say('Allow this bot to access your location?', {
+    type: 'html', cssClass: 'bot-confirm'
+  })
+  return sayButton([
+    { text: 'Yes', value: 'yes' },
+    { text: 'No', value: 'no' }
+  ]).then(result => (!!result && result.value === 'yes'))
+}
+
 function callContract (method, type, value, from, ...params) {
   if (value) {
     type = 'write'
   }
   const map = {
-    'none': 'callPure',
-    'read': 'call',
-    'write': 'sendCommit'
+    none: 'callPure',
+    read: 'call',
+    write: 'sendCommit'
   }
   return method(...params)[map[type]]({ value, from }).then(r => type === 'write' ? r.returnValue : r)
 }
@@ -151,7 +179,7 @@ function setCommands (commands, defStateAccess) {
   })
 }
 
-function pushToQueue (type, content, stateAccess, transferValue, sendback) {
+function pushToQueue (type, content, stateAccess, transferValue, location, sendback) {
   if (content.value.indexOf(':') > 0) {
     const parts = content.value.split(':', 2)
     type = parts[0]
@@ -161,9 +189,78 @@ function pushToQueue (type, content, stateAccess, transferValue, sendback) {
     type,
     content,
     transferValue,
+    location,
     sendback,
     stateAccess
   })
+}
+
+function isLocationRequest (cr, sr) {
+  if (!cr || !cr.options) {
+    return false
+  }
+
+  if (sr && sr.value && cr.options.next && cr.options.next[sr.value]) {
+    const l = cr.options.next[sr.value].location
+    if (l != null) {
+      return !!l
+    }
+  }
+
+  return !!cr.options.location
+}
+
+function processSpeakResult (contract, contractResult, speakResult) {
+  // we not yet support setting both 'options.updateOnEvent' and 'options.value'
+  if (contractResult.options && contractResult.options.updateOnEvent) {
+    return new Promise((resolve, reject) => {
+      contract.events[contractResult.options.updateOnEvent]({}, (error, value) => {
+        if (error) {
+          reject(error)
+        } else {
+          resolve(speak(value.messages || value, speakResult).then(r => processSpeakResult(contract, value, r)))
+        }
+      })
+    })
+  }
+
+  if (typeof speakResult === 'object') {
+    speakResult.sendback = contractResult.sendback
+    speakResult.stateAccess = (contractResult.options || {}).nextStateAccess
+  }
+
+  if (contractResult.options && contractResult.options.value) {
+    return confirmTransfer(contractResult.options.value).then(ok => {
+      if (!ok) {
+        say('Transfer canceled. You could reconnect to this bot to start a new conversation.')
+        return sayButton({ text: 'Restart', value: 'command:start' })
+      }
+
+      speakResult.transferValue = contractResult.options.value
+      return speakResult
+    })
+  } else if (isLocationRequest(contractResult, speakResult)) {
+    return confirmLocation().then(ok => {
+      if (!ok) {
+        say('Location refused. You could reconnect to this bot to start a new conversation.')
+        return sayButton({ text: 'Restart', value: 'command:start' })
+      }
+
+      return new Promise((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(function (p) {
+          speakResult.location = { lat: p.coords.latitude, lon: p.coords.longitude }
+          resolve(speakResult)
+        }, function (e) {
+          reject(e.message || String(e))
+        }, {
+          enableHighAccuracy: false,
+          maximumAge: 1000 * 60 * 15
+        })
+      })
+    })
+  } else {
+    return speakResult
+  }
 }
 
 function handleQueue (contract, defStateAccess) {
@@ -174,36 +271,19 @@ function handleQueue (contract, defStateAccess) {
       item.transferValue || 0,
       tweb3.wallet.defaultAccount,
       item.content.value,
-      { sendback: item.sendback })
+      { sendback: item.sendback, locale: navigator.language, location: item.location })
       .then(contractResult => {
-        return speak(contractResult.messages || contractResult).then(speakResult => {
-          if (typeof speakResult === 'object') {
-            speakResult.sendback = contractResult.sendback
-            speakResult.stateAccess = (contractResult.options || {}).nextStateAccess
-          }
-          if (contractResult.options && contractResult.options.value) {
-            return confirmTransfer(contractResult.options.value).then(ok => {
-              if (!ok) {
-                say('Transfer canceled. You could reconnect to this bot to start a new conversation.')
-                return sayButton({ text: 'Restart', value: 'command:start' })
-              }
-
-              speakResult.transferValue = contractResult.options.value
-              return speakResult
-            })
-          } else {
-            return speakResult
-          }
-        })
-      })
-      .then(r => {
-        if (r && r.value) {
-          pushToQueue('text', r, r.stateAccess || defStateAccess, r.transferValue, r.sendback)
-        }
-      })
-      .catch(err => {
-        console.error(err)
-        say('An error has occured: ' + err, { type: 'html', cssClass: 'bot-error' })
+        return speak(contractResult.messages || contractResult)
+          .then(r => processSpeakResult(contract, contractResult, r))
+          .then(r => {
+            if (r && r.value) {
+              pushToQueue('text', r, r.stateAccess || defStateAccess, r.transferValue, r.location, r.sendback)
+            }
+          })
+          .catch(err => {
+            console.error(err)
+            say('An error has occured: ' + err, { type: 'html', cssClass: 'bot-error' })
+          })
       })
   }
 }
@@ -313,6 +393,7 @@ function closeNav () {
   var address = getUrlParameter('address')
   if (address) {
     try {
+      address = await tweb3.ensureAddress(address)
       await connectBot(address)
     } catch (error) {
       console.log(error)

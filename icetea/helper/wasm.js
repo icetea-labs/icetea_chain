@@ -11,7 +11,7 @@ const { traverse } = require('@webassemblyjs/ast')
 exports.parseMetadata = (buffer) => {
   let importTableName
   let mainFnFound
-  let operations = []
+  const operations = []
   const ast = decode(buffer, { dump: false, ignoreCodeSection: true })
   traverse(ast, {
     ModuleExport (path) {

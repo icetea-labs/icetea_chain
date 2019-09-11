@@ -6,7 +6,7 @@ const stateProxy = require('./stateproxy')
 const utils = require('./helper/utils')
 
 // Declare outside class to ensure private
-let stateTable, lastBlock
+let stateTable, lastBlock, validators
 
 // address key need to commit on write opts
 const needCommitKeys = new Set()
@@ -19,6 +19,7 @@ class StateManager extends EventEmitter {
 
     stateTable = storedData.state
     lastBlock = storedData.block
+    validators = storedData.validators
   }
 
   async getLastState () {
@@ -39,15 +40,49 @@ class StateManager extends EventEmitter {
     lastBlock = Object.freeze(block)
   }
 
+  setValidators (_validators) {
+    validators = _validators
+  }
+
+  async getValidators (height) {
+    return patricia.getValidatorsByHeight(height)
+  }
+
+  getUpdatedValidators (newValidators) {
+    const result = []
+    newValidators.map(validator => {
+      result.push({
+        pubKey: validator.pubKey,
+        power: validator.capacity
+      })
+    })
+    validators.map(validator => {
+      const index = result.findIndex(r => (r.pubKey.data === validator.pubKey.data))
+      if (index < 0) {
+        result.push({
+          pubKey: validator.pubKey,
+          power: 0
+        })
+      } else {
+        if (validator.capacity === result[index].power) {
+          result.splice(index, 1)
+        } else {
+          result[index].power = validator.capacity
+        }
+      }
+    })
+    return result
+  }
+
   async persist () {
     if (!lastBlock || lastBlock.number <= 1) {
       return Buffer.alloc(0)
     }
-    // const appHash = await patricia.getHash(stateTable)
 
     const appHash = await patricia.save({
       block: lastBlock,
       state: stateTable,
+      validators,
       commitKeys: needCommitKeys
     })
     needCommitKeys.clear()
@@ -68,6 +103,16 @@ class StateManager extends EventEmitter {
   }
 
   applyDraft (patch) {
+    const balances = patch.balances
+    if (balances) {
+      Object.keys(balances).forEach(addr => {
+        const value = balances[addr]
+        if (value < 0) {
+          throw new Error(`Account ${addr} does not have enough balance, need at least ${-value} more.`)
+        }
+      })
+    }
+
     // utils.mergeStateTables(stateTable, draft)
     Object.keys(patch.storages).map(key => needCommitKeys.add(key))
     Object.keys(patch.balances).map(key => needCommitKeys.add(key))
@@ -130,7 +175,7 @@ class StateManager extends EventEmitter {
   }
 
   async balanceOf (addr, height) {
-    let state = stateTable || {}
+    const state = stateTable || {}
     if (height) {
       const block = await patricia.getBlockByHeight(height)
       if (block.stateRoot) {

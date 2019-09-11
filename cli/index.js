@@ -51,7 +51,7 @@ program
 
     const initDir = `${homedir}/.icetea/${network}`
     let command = 'node'
-    let runOptions = {
+    const runOptions = {
       cwd: path.resolve(__dirname, '..')
     }
 

@@ -6,6 +6,7 @@ const config = require('../../config')
 const { isValidAddress } = require('../../helper/utils')
 const { isContract } = require('../../statemanager')
 const crypto = require('crypto')
+const { ContractMode, TxOp } = require('@iceteachain/common')
 
 const moduleUtils = Object.freeze(require('@iceteachain/utils/utils.js'))
 const moduleCrypto = Object.freeze({
@@ -146,6 +147,47 @@ function _makeLibraryMethod (invokerTypes, destContract, method, options) {
   }, {})
 }
 
+function _makeDeployContract (tools, contractHelpers, address, options) {
+  return (contractSrc, deployOptions = {}) => {
+    const isBuf = Buffer.isBuffer(contractSrc)
+    const srcBuffer = isBuf ? contractSrc : Buffer.from(contractSrc)
+    const defMode = isBuf ? ContractMode.JS_WASM : ContractMode.JS_RAW
+    let src
+    const { mode = defMode, value = 0, params = [] } = deployOptions
+    if (mode === ContractMode.JS_RAW) {
+      src = srcBuffer.toString('base64')
+    } else if (mode === ContractMode.JS_WASM) {
+      src = srcBuffer
+    } else {
+      throw new Error(`deployContract with unsupported mode: ${mode}`)
+    }
+    const tx = {
+      data: {
+        op: TxOp.DEPLOY_CONTRACT,
+        mode,
+        params,
+        src
+      },
+      from: address,
+      signers: [address],
+      payer: address,
+      value: BigInt(value)
+    }
+    const contractState = invoker.prepareContract(tx)
+    const newAddress = tools.deployContract(address, contractState)
+
+    // NOTE: No call __on_received when deploying
+    // Should transfer before call ondeploy
+    if (tx.value > 0) {
+      contractHelpers.transfer(newAddress, tx.value)
+    }
+
+    // must include tx into the options so that __on_deployed can access tx.value, etc.
+    invoker.invokeUpdate(newAddress, '__on_deployed', tx.data.params, { ...options, tx })
+    return newAddress
+  }
+}
+
 function _getContractInfo (tools, address, errorMessage) {
   const {
     deployedBy,
@@ -229,7 +271,8 @@ exports.forTransaction = (contractAddress, methodName, methodParams, options) =>
           throw new Error(`Tag ${name} already exists for this transaction.`)
         }
         tags[name] = value
-      }
+      },
+      deployContract: _makeDeployContract(tools, contractHelpers, contractAddress, options)
     },
     emitEvent: (eventName, eventData, indexes = []) => {
       utils.emitEvent(contractAddress, tags, eventName, eventData, indexes)
@@ -324,7 +367,8 @@ exports.forMetadata = address => ({
   runtime: {
     msg: {
       callType: 'metadata',
-      name: '__metadata' },
+      name: '__metadata'
+    },
     block: {},
     require: _require,
     loadContract: () => ({}),

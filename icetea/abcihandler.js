@@ -17,9 +17,10 @@ module.exports = (config = {}) => {
 
 const handler = {
 
-  initChain ({ consensusParams, validators }) {
-    app.installSystemContracts()
-    return { consensusParams, validators }
+  initChain (args) {
+    app.installSystemContracts(args)
+    app.initValidators()
+    return args // return same consensusParams and validators as defined in consensus.json
   },
 
   async info () {
@@ -44,8 +45,15 @@ const handler = {
   },
 
   beginBlock (req) {
+    // TODO: distribute awards and punish byzantine validators
+
     app.setBlock(getBlock(req))
     return {}
+  },
+
+  endBlock (req) {
+    const height = Number(req.height.toString())
+    return utils.envDevEnabled('FIXED_VALIDATORS') ? {} : app.endBlock(height)
   },
 
   deliverTx (req) {
@@ -58,16 +66,21 @@ const handler = {
 
       const result = {}
       if (typeof data !== 'undefined') {
-        result.data = Buffer.from(utils.serialize(data))
+        result.data = utils.serialize(data)
       }
 
       result.tags = []
       if (typeof tags !== 'undefined' && Object.keys(tags).length) {
         Object.keys(tags).forEach((key) => {
-          if (typeof tags[key] !== 'string') {
-            throw new Error(`Tag value for key ${key} is has wrong type, expect: string, got: ${typeof tags[key]}`)
+          let value = tags[key]
+          if (Buffer.isBuffer(value)) {
+            // juse keep
+          } else if (typeof value === 'string') {
+            value = Buffer.from(value)
+          } else {
+            throw new Error(`Tag value for key ${key} is has wrong type, expect: Buffer or string, got: ${typeof tags[key]}`)
           }
-          result.tags.push({ key: Buffer.from(key), value: Buffer.from(tags[key]) })
+          result.tags.push({ key: Buffer.from(key), value })
         })
       }
 
@@ -102,7 +115,7 @@ const handler = {
 
       path = req.path
       height = Number(req.height)
-      if (height && !['balance', 'state'].includes(path)) {
+      if (height && !['balance', 'state', 'validators'].includes(path)) {
         return { code: 2, info: 'Height is not supported for this path.' }
       }
 
@@ -115,6 +128,8 @@ const handler = {
           })
         case 'state':
           return replyQuery(await app.debugState(height))
+        case 'validators':
+          return replyQuery(await app.getValidators(height))
         case 'contracts':
           return replyQuery(app.getContractAddresses(data))
         case 'metadata': {
@@ -137,7 +152,7 @@ const handler = {
     } catch (error) {
       debug('ABCI Query error. Path: ', path, ', data: ', data, ', height: ', height, ', prove: ', prove)
       debug(error)
-      return { code: 3, info: String(error) }
+      return { code: 3, info: String(error), log: error.stack }
     }
   }
 }

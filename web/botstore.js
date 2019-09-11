@@ -63,7 +63,7 @@ const store = {
   getBotInfo: async function (bots) {
     var resInfo = []
     var keys = Object.keys(bots)
-    for (let bot of keys) {
+    for (const bot of keys) {
       try {
         const botInfo = { address: '', category: 'category', name: 'name', icon: 'icon', description: 'description' }
         const contract = tweb3.contract(bot)
@@ -152,7 +152,7 @@ $('#form').on('submit', async function (e) {
       }
 
       // register the alias
-      await tweb3.contract('system.alias').methods.register(data.alias, data.address).sendCommit()
+      await tweb3.contract('system.alias').methods.register(data.alias.split('.', 2)[1], data.address).sendCommit()
     }
 
     await tweb3.contract('system.botstore').methods.register(data.alias, data.category, data.icon, true).sendCommit()
@@ -181,7 +181,7 @@ async function fillContracts () {
             option.textContent = item
             select.appendChild(option)
           })
-          .catch(() => void 0)
+          .catch(() => undefined)
       }
     })
   } catch (error) {

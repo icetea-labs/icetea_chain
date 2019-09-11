@@ -16,7 +16,8 @@ module.exports = {
     botstore: path.resolve(__dirname, './web/botstore.js'),
     profile: path.resolve(__dirname, './web/profile.js'),
     address: path.resolve(__dirname, './web/address.js'),
-    block: path.resolve(__dirname, './web/block.js')
+    block: path.resolve(__dirname, './web/block.js'),
+    election: path.resolve(__dirname, './web/election.js')
   },
   output: {
     path: path.resolve(__dirname, 'web_dist'),
@@ -30,7 +31,7 @@ module.exports = {
   },
 
   plugins: [
-    new CopyWebpackPlugin([{ from: path.resolve(__dirname, 'web'), ignore: [ '*.js' ] }])
+    new CopyWebpackPlugin([{ from: path.resolve(__dirname, 'web'), ignore: ['*.js'] }])
   ],
 
   node: {

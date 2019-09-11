@@ -66,7 +66,7 @@ describe('gate', () => {
         })
       }
 
-      @transaction onOffchainData(result) {
+      @transaction onOffchainData(requestId, requestData, result) {
         this.emitEvent('gotIt', result)
         this.result = result
       }
