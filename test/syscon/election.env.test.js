@@ -68,11 +68,11 @@ describe('election', () => {
     r = await ms.getCandidates().call()
     expect(r.length).toBe(2)
     expect(r[0].pubKey.data).toBe(from)
-    expect(r[0].deposit).toBe(String(config.minValidatorDeposit + 1))
+    expect(String(r[0].deposit)).toBe(String(config.minValidatorDeposit + 1))
     r = await ms.getValidators().call()
     expect(r.length).toBe(2)
     expect(r[0].pubKey.data).toBe(from)
-    expect(r[0].deposit).toBe(String(config.minValidatorDeposit + 1))
+    expect(String(r[0].deposit)).toBe(String(config.minValidatorDeposit + 1))
 
     const { address: addr2 } = tweb3.wallet.createBankAccount()
     await tweb3.transfer(addr2, config.minValidatorDeposit * 2, { from })
@@ -82,7 +82,7 @@ describe('election', () => {
     r = await ms.getValidators().call()
     expect(r.length).toBe(Math.min(3, config.numberOfValidators))
     expect(r[0].pubKey.data).toBe(addr2)
-    expect(r[0].deposit).toBe(String(config.minValidatorDeposit + config.minVoterValue))
+    expect(String(r[0].deposit)).toBe(String(config.minValidatorDeposit + config.minVoterValue))
 
     const { address: addr3 } = tweb3.wallet.createBankAccount()
     await tweb3.transfer(addr3, config.minValidatorDeposit * 2, { from })
@@ -92,7 +92,7 @@ describe('election', () => {
     r = await ms.getValidators().call()
     expect(r.length).toBe(Math.min(4, config.numberOfValidators))
     expect(r[0].pubKey.data).toBe(addr3)
-    expect(r[0].deposit).toBe(String(config.minValidatorDeposit + config.minVoterValue + 1))
+    expect(String(r[0].deposit)).toBe(String(config.minValidatorDeposit + config.minVoterValue + 1))
 
     // now let's test some votes
     const vote = (candidate, value, fromAddress) => {
@@ -110,7 +110,7 @@ describe('election', () => {
     r = await ms.getValidators().call()
     expect(r.length).toBe(Math.min(4, config.numberOfValidators))
     expect(r[0].pubKey.data).toBe(from)
-    expect(r[0].deposit).toBe(String(config.minValidatorDeposit + 1))
-    expect(r[0].capacity).toBe(String(config.minValidatorDeposit + config.minVoterValue + 1))
+    expect(String(r[0].deposit)).toBe(String(config.minValidatorDeposit + 1))
+    expect(String(r[0].capacity)).toBe(String(config.minValidatorDeposit + config.minVoterValue + 1))
   })
 })

@@ -49,7 +49,7 @@ async function fetchTxDetails (template, hash) {
     tx.result = tryStringifyJson(tx.returnValue, undefined, 2)
 
     tx.txType = 'transfer'
-    data.data = JSON.parse(data.data) || {}
+    data.data = data.data || {}
     if (data.data.op === 0) {
       tx.txType = 'deploy'
       tx.to = tx.result
