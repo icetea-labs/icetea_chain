@@ -32,7 +32,7 @@ describe('alias', () => {
     const ms = tweb3.contract('system.alias').methods
 
     const addr = await ms.resolve('goodmorning').call()
-    expect(addr).toBe(undefined)
+    expect(addr).toBe(null)
 
     const aliases = await ms.query('partOfAlias').call()
     expect(aliases).toEqual({})

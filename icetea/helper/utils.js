@@ -3,7 +3,7 @@
 const _ = require('lodash')
 const v8 = require('v8')
 const sysContracts = require('../system')
-const { validateAddress } = require('@iceteachain/common').ecc
+const { ecc, codec } = require('@iceteachain/common')
 
 /**
  * get all property name of an object
@@ -24,6 +24,17 @@ exports.getAllPropertyNames = function (obj) {
   } while ((obj = Object.getPrototypeOf(obj)) && obj !== Object.prototype)
 
   return props
+}
+
+exports.stringifyWithBigInt = function (obj) {
+  if (obj == null) return ''
+
+  return JSON.stringify(obj, (key, value) => {
+    if (typeof value === 'bigint') { // eslint-disable-line
+      return value.toString()
+    }
+    return value
+  })
 }
 
 /**
@@ -66,15 +77,23 @@ exports.emitEvent = function (emitter, tags, eventName, eventData, indexes = [])
     if (typeof indexedKey !== 'string') {
       throw new Error("Event's indexed key must be string")
     }
-    // if (typeof eventData[indexedKey] === "undefined") {
-    //    throw new Error("Event's indexed value is not provided");
-    // }
-    tags[eventName + EVENTNAME_INDEX_SEP + indexedKey] = String(JSON.stringify(eventData[indexedKey]))
+    if (typeof eventData[indexedKey] === 'object') {
+      throw new Error("Event's indexed value cannot be an object.")
+    }
+    tags[eventName + EVENTNAME_INDEX_SEP + indexedKey] = eventData[indexedKey] == null ? '' : String(eventData[indexedKey])
 
     // it is a copy, safely to delete
     delete eventData[indexedKey]
   })
-  tags[eventName] = String(exports.serialize(eventData))
+
+  try {
+    tags[eventName] = exports.stringifyWithBigInt(eventData)
+  } catch (e) {
+    console.log(e)
+    const newE = new Error('Cannot serialize event data to string. Make sure it is compatible with JSON.stringify.')
+    newE.error = e
+    throw newE
+  }
 
   return tags
 }
@@ -214,8 +233,8 @@ exports.deepFreeze = (object) => {
 
   // Freeze properties before freezing self
 
-  for (let name of propNames) {
-    let value = object[name]
+  for (const name of propNames) {
+    const value = object[name]
 
     object[name] = value && typeof value === 'object'
       ? exports.deepFreeze(value) : value
@@ -245,11 +264,11 @@ exports.fixObject = obj => {
   return obj
 }
 
-exports.checkUnsupportTypes = o => {
+exports.sanitizeState = o => {
   try {
     v8.serialize(o)
   } catch (err) {
-    throw new Error('state object can not be serializable.')
+    throw new Error('State object is not serializable.')
   }
 
   const seenSet = new Set()
@@ -259,18 +278,19 @@ exports.checkUnsupportTypes = o => {
     if (Buffer.isBuffer(o)) return o
     const t = typeof o
 
-    if (t === 'bigint' || t === 'function' ||
-      o instanceof RegExp ||
+    // if (t === 'bigint' || t === 'function' ||
+    if (t === 'function' ||
+    //  o instanceof RegExp ||
       o instanceof Date ||
       o instanceof Map ||
       o instanceof Set ||
       o instanceof WeakMap) {
-      throw new Error(`State contains unsupported type: ${o.toString()}`)
+      throw new Error(`State contains unsupported type: ${t}`)
     }
 
     if (t === 'object') {
       const propNames = Object.getOwnPropertyNames(o)
-      for (let name of propNames) {
+      for (const name of propNames) {
         const value = o[name]
         if (seenSet.has(value)) {
           continue
@@ -318,18 +338,22 @@ exports.newAndBind = (SomeClass, ...params) => {
   return instance
 }
 
-exports.serialize = (obj) => {
-  return JSON.stringify(obj, (key, value) => {
-    if (typeof value === 'bigint') { // eslint-disable-line
-      return value.toString()
-    }
-    return value
-  })
+exports.serialize = obj => {
+  if (obj && typeof obj.__getPackingContent === 'function') {
+    obj = obj.__getPackingContent()
+  }
+  return codec.encode(obj)
+  // return JSON.stringify(obj, (key, value) => {
+  //   if (typeof value === 'bigint') { // eslint-disable-line
+  //     return value.toString()
+  //   }
+  //   return value
+  // })
 }
 
 exports.validateAddress = addr => {
   if (sysContracts.has(addr)) return
-  validateAddress(addr)
+  ecc.validateAddress(addr)
 }
 
 exports.isValidAddress = addr => {
@@ -344,4 +368,5 @@ exports.isValidAddress = addr => {
 exports.envIs = (n, v) => process.env[n] == v // eslint-disable-line
 exports.envEnabled = n => process.env[n] === '1'
 exports.isDevMode = () => process.env.NODE_ENV === 'development'
+exports.envDevEnabled = n => (exports.isDevMode() && exports.envEnabled(n))
 exports.isProdMode = () => process.env.NODE_ENV === 'production'

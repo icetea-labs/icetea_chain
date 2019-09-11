@@ -1,6 +1,6 @@
 const _ = require('lodash')
 const config = require('./config')
-const { deepFreeze, checkUnsupportTypes, validateAddress } = require('./helper/utils')
+const { deepFreeze, sanitizeState, validateAddress } = require('./helper/utils')
 
 const { ecc, codec } = require('@iceteachain/common')
 
@@ -91,7 +91,7 @@ const _stateforAddress = (contractAddress, readonly, {
     if (!key || typeof key !== 'string') {
       throw new Error(`Expect key to be an non-empty string, but got ${key}`)
     }
-    return storage ? storage.hasOwnProperty(key) : false
+    return storage ? Object.prototype.hasOwnProperty.call(storage, key) : false
   }
 
   let transfer, setState, deleteState
@@ -103,7 +103,7 @@ const _stateforAddress = (contractAddress, readonly, {
       if (!key || typeof key !== 'string') {
         throw new Error(`Expect key to be an non-empty string, but got ${key}`)
       }
-      value = checkUnsupportTypes(value)
+      value = sanitizeState(value)
       if (!storage) {
         storage = { [key]: value }
         storages[contractAddress] = storage
@@ -157,7 +157,7 @@ const getStateProxy = (stateTable) => {
     if (!value) return
     value = BigInt(value)
 
-    if (balances.hasOwnProperty(addr)) {
+    if (Object.prototype.hasOwnProperty.call(balances, addr)) {
       balances[addr] += value
     } else {
       balances[addr] = balanceOf(addr) + value
@@ -165,7 +165,7 @@ const getStateProxy = (stateTable) => {
   }
 
   const balanceOf = (addr) => {
-    if (balances.hasOwnProperty(addr)) {
+    if (Object.prototype.hasOwnProperty.call(balances, addr)) {
       return balances[addr]
     }
     return (deployedContracts[addr] || stateTable[addr] || {}).balance || BigInt(0)
@@ -224,9 +224,6 @@ const applyChanges = (stateTable, { deployedContracts, storages, balances }) => 
   if (balances) {
     Object.keys(balances).forEach(addr => {
       const value = balances[addr]
-      if (value < 0) {
-        throw new Error(`Account ${addr} does not have enough balance: ${value}.`)
-      }
       stateTable[addr] = stateTable[addr] || {}
       stateTable[addr].balance = value
     })

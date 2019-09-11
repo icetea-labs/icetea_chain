@@ -2,14 +2,24 @@
 
 const config = {
   versions: {
-    node: '>=12.3.1 <13.0.0'
+    node: '>=12.9.1 <13.0.0'
   },
   rawJs: {
     transpile: [
+      '@babel/plugin-proposal-nullish-coalescing-operator',
       '@babel/plugin-proposal-optional-chaining',
       '@babel/plugin-proposal-private-methods',
       '@babel/plugin-proposal-class-properties'
     ]
+  },
+  election: {
+    numberOfValidators: 4,
+    minValidatorDeposit: 10e6,
+    minVoterValue: 1e6,
+    epoch: 4,
+    resignValidatorLock: 10,
+    resignVoterLock: 1,
+    unvoteLock: 5
   },
   abciServerPort: 26658,
   feeCollector: process.env.FEE_COLLECTOR,
@@ -31,7 +41,7 @@ const config = {
   },
   whitelistModules: [
     'lodash', 'moment', 'big.js', '@hapi/joi', 'validator', 'ajv', 'cheerio', '@iceteachain/utils', ';',
-    'assert', 'buffer', 'crypto', 'querystring', 'stream', 'string_decoder', 'url', 'util', 'create-hash' ],
+    'assert', 'buffer', 'crypto', 'querystring', 'stream', 'string_decoder', 'url', 'util', 'create-hash'],
   contract: {
     minStateGas: 200,
     freeGasLimit: 1e9,

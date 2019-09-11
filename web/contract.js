@@ -85,9 +85,11 @@ function fmtType (t, convert) {
 
 let signatures = {}
 
-function setVisible (selector, signature, stateAccess) {
+function setVisible (selector, signature, stateAccess, stateAccess2) {
   var $item = $(selector)
-  if (!signature || signature.indexOf('@') < 0 || signature.indexOf(stateAccess) >= 0) {
+  if (!signature || signature.indexOf('@') < 0 ||
+    signature.indexOf(stateAccess) >= 0 ||
+    (stateAccess2 && signature.indexOf(stateAccess2) >= 0)) {
     $item.show()
   } else {
     $item.hide()
@@ -102,7 +104,7 @@ function fillSignature () {
     document.getElementById('funcInfo').innerHTML = signatures[fn]
     Prism.highlightElement(document.getElementById('funcInfo'))
   }
-  setVisible('#submit_btn', signatures[fn], '@transaction')
+  setVisible('#submit_btn', signatures[fn], '@transaction', '@payable')
   setVisible('#read', signatures[fn], '@view')
   setVisible('#pure', signatures[fn], '@pure')
 }
@@ -134,7 +136,7 @@ async function fillFuncs () {
         const decorators = (meta.decorators || [])
         const decos = decorators.map(d => ('@' + d))
 
-        let option = document.createElement('option')
+        const option = document.createElement('option')
         option.value = item
         option.textContent = decorators.join(', ')
         select.appendChild(option)
@@ -146,7 +148,7 @@ async function fillFuncs () {
         signature = signature + item
 
         if (meta.params) {
-          let ps = meta.params.reduce((prev, p) => {
+          const ps = meta.params.reduce((prev, p) => {
             prev.push(p.name + ': ' + fmtType(p.type))
             return prev
           }, []).join(', ')

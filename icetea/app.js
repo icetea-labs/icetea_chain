@@ -4,6 +4,7 @@ const utils = require('./helper/utils')
 const sysContracts = require('./system')
 const invoker = require('./contractinvoker')
 const did = require('./system/did')
+const election = require('./system/election')
 const { ecc, codec, AccountType } = require('@iceteachain/common')
 const config = require('./config')
 const sizeof = require('object-sizeof')
@@ -51,12 +52,12 @@ class App {
     return lastState
   }
 
-  installSystemContracts () {
+  installSystemContracts (args) {
     sysContracts.all().forEach(key => {
       const state = stateManager.installSystemContract(key)
       const contract = sysContracts.get(key)
       if (typeof contract.ondeploy === 'function') {
-        contract.ondeploy(state)
+        contract.ondeploy(state, args)
       }
     })
   }
@@ -83,7 +84,7 @@ class App {
       return prev
     }, {})
 
-    return addreses.map(addr => (address2Alias.hasOwnProperty(addr) ? address2Alias[addr] : addr))
+    return addreses.map(addr => (Object.prototype.hasOwnProperty.call(address2Alias, addr) ? address2Alias[addr] : addr))
   }
 
   addStateObserver ({ beforeTx, afterTx }) {
@@ -298,6 +299,37 @@ class App {
     stateManager.endCheckpoint()
 
     return result
+  }
+
+  initValidators () {
+    let validators = []
+    try {
+      validators = election.getValidators()
+    } catch (err) {
+      throw new Error('getValidators throws exception: ' + (err.stack || String(err)))
+    }
+    return stateManager.setValidators(validators)
+  }
+
+  async getValidators (height) {
+    return stateManager.getValidators(height)
+  }
+
+  endBlock (height) {
+    if (height % config.election.epoch === 0) {
+      let newValidators = []
+      try {
+        newValidators = election.getValidators()
+      } catch (err) {
+        throw new Error('getValidators throws exception: ' + (err.stack || String(err)))
+      }
+      const validatorUpdates = stateManager.getUpdatedValidators(newValidators)
+      stateManager.setValidators(newValidators)
+      return {
+        validatorUpdates
+      }
+    }
+    return {}
   }
 }
 

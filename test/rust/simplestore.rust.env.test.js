@@ -38,7 +38,7 @@ async function testSimpleStore (mode, contractPath) {
 
   const value = 2
   const fee = 1
-  let src = fs.readFileSync(contractPath, 'base64')
+  const src = fs.readFileSync(contractPath, 'base64')
 
   const data = {
     op: TxOp.DEPLOY_CONTRACT,

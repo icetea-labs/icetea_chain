@@ -56,19 +56,19 @@ describe('rust wasm context', () => {
     expect(typeof transfer.hash).toBe('string')
 
     const balance = await contract.methods.get_balance().call({ from })
-    expect(balance).toBe(value.toString())
+    expect(String(balance)).toBe(value.toString())
 
     const refund = await contract.methods.transfer(from, value).sendCommit({ from })
     expect(refund.hash).toBeDefined()
 
     const afterBalance = await contract.methods.get_balance().call({ from })
-    expect(afterBalance).toBe('0')
+    expect(String(afterBalance)).toBe('0')
 
     const returnValue = await contract.methods.get_msg_value().sendCommit({ from, value })
-    expect(returnValue.returnValue).toBe(value.toString())
+    expect(String(returnValue.returnValue)).toBe(value.toString())
 
     const returnFee = await contract.methods.get_msg_fee().sendCommit({ from, fee: value })
-    expect(returnFee.returnValue).toBe(value.toString())
+    expect(String(returnFee.returnValue)).toBe(value.toString())
   })
 
   test('state opts', async () => {
