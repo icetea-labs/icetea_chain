@@ -28,13 +28,9 @@ function getTx (req) {
   const reqTx = codec.decode(req.tx)
 
   // santitize reqTx
+
   if (reqTx.data == null) { // eslint-disable-line
     reqTx.data = {}
-  } else if (typeof reqTx.data === 'string') {
-    try {
-      reqTx.data = JSON.parse(reqTx.data)
-    } catch (err) {
-    }
   }
 
   const tx = new Tx(reqTx).setEvidence(reqTx.evidence)
@@ -51,7 +47,7 @@ function getTx (req) {
  * @returns {object} response object
  */
 function replyQuery (data) {
-  return { code: 0, info: serialize(data) }
+  return { code: 0, value: serialize(data) }
 }
 
 module.exports = { getBlock, getTx, replyQuery }
