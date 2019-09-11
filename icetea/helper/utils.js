@@ -34,7 +34,7 @@ exports.stringifyWithBigInt = function (obj) {
       return value.toString()
     }
     return value
-  }) 
+  })
 }
 
 /**
@@ -80,7 +80,7 @@ exports.emitEvent = function (emitter, tags, eventName, eventData, indexes = [])
     if (typeof eventData[indexedKey] === 'object') {
       throw new Error("Event's indexed value cannot be an object.")
     }
-    tags[eventName + EVENTNAME_INDEX_SEP + indexedKey] = String(eventData[indexedKey] == null ? '' : eventData[indexedKey])
+    tags[eventName + EVENTNAME_INDEX_SEP + indexedKey] = eventData[indexedKey] == null ? '' : String(eventData[indexedKey])
 
     // it is a copy, safely to delete
     delete eventData[indexedKey]
