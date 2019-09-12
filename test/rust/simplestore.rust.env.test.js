@@ -3,7 +3,7 @@
 const fs = require('fs')
 const { sleep, randomAccountWithBalance } = require('../helper')
 const { TxOp, ContractMode } = require('@iceteachain/common')
-const startup = require('../../icetea/abcihandler')
+const startup = require('../../icetea/app/abcihandler')
 const { IceteaWeb3 } = require('@iceteachain/web3')
 const server = require('abci')
 const createTempDir = require('tempy').directory

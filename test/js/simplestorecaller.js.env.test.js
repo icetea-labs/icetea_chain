@@ -1,7 +1,7 @@
 /* global jest describe test expect beforeAll afterAll */
 
 const { sleep, randomAccountWithBalance } = require('../helper')
-const startup = require('../../icetea/abcihandler')
+const startup = require('../../icetea/app/abcihandler')
 const { ContractMode } = require('@iceteachain/common')
 const { IceteaWeb3 } = require('@iceteachain/web3')
 const server = require('abci')

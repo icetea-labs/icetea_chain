@@ -1,5 +1,5 @@
 const utils = require('../helper/utils')
-const sysContracts = require('../system')
+const sysContracts = require('../syscon')
 const { getRunner, getContext, getGuard } = require('../vm')
 const Invoker = require('./invoker')
 

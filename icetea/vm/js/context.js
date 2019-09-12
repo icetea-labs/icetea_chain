@@ -4,7 +4,7 @@ const invoker = require('../../invoker/contractinvoker')
 const libraryinvoker = require('../../invoker/libraryinvoker')
 const config = require('../../config')
 const { isValidAddress } = require('../../helper/utils')
-const { isContract } = require('../../statemanager')
+const { isContract } = require('../../state/statemanager')
 const crypto = require('crypto')
 const { ContractMode, TxOp } = require('@iceteachain/common')
 

@@ -1,12 +1,12 @@
-const { getBlock, getTx, replyQuery } = require('./helper/abci')
+const { getBlock, getTx, replyQuery } = require('../helper/abci')
 const { codec } = require('@iceteachain/common')
 const app = require('./app')
-const utils = require('./helper/utils')
+const utils = require('../helper/utils')
 const debug = require('debug')('icetea:abci')
 
 // turn on logging state diff to console
 if (utils.isDevMode() && utils.envEnabled('PRINT_STATE_DIFF')) {
-  app.addStateObserver(require('./helper/diff'))
+  app.addStateObserver(require('../helper/diff'))
 }
 
 module.exports = (config = {}) => {
