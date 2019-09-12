@@ -2,7 +2,7 @@
 
 const _ = require('lodash')
 const v8 = require('v8')
-const sysContracts = require('../system')
+const sysContracts = require('../syscon')
 const { ecc, codec } = require('@iceteachain/common')
 
 /**

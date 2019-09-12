@@ -1,8 +1,6 @@
-const utils = require('./helper/utils')
-const sysContracts = require('./system')
-const { getRunner, getContext, getGuard } = require('./vm')
+const { getRunner } = require('../vm')
 
-class ContractInvoker {
+class Invoker {
   /**
      * Invoke a contract method.
      * @param {string} invokeType 'transaction', 'view', or 'pure'.
@@ -12,33 +10,7 @@ class ContractInvoker {
      * @param {{tx, block, stateAccess, tools}} options additional options, depending on invokeType.
      */
   invoke (invokeType, contractAddress, methodName, methodParams, options) {
-    if (!['pure', 'view', 'transaction', 'metadata'].includes(invokeType)) {
-      throw new Error(`Invalid invoke type ${invokeType}. Must be 'pure', 'view', or 'transaction'.`)
-    }
-
-    if (methodName === 'address') {
-      return contractAddress
-    } else if (methodName === 'balance') {
-      return options.tools.balanceOf(contractAddress)
-    } else if (methodName === 'deployedBy') {
-      return options.tools.getCode(contractAddress).deployedBy
-    }
-
-    const { mode, src } = options.tools.getCode(contractAddress)
-    const context = getContext(mode).for(invokeType, contractAddress, methodName, methodParams, options)
-
-    let result
-
-    const sysContract = sysContracts.get(contractAddress)
-    if (sysContract) {
-      result = sysContract.run(context, options)
-    } else {
-      const vm = getRunner(mode)
-      const guard = getGuard(mode)(src)
-      result = vm.run(src, { context, guard, info: options.info })
-    }
-
-    return result
+    throw new Error('Implement me.')
   }
 
   /**
@@ -94,7 +66,7 @@ class ContractInvoker {
   prepareContract (tx) {
     // analyze and compile source
     const mode = tx.data.mode
-    const src = Buffer.from(tx.data.src, 'base64')
+    const src = typeof tx.data.src === 'string' ? Buffer.from(tx.data.src, 'base64') : tx.data.src
     const deployedBy = tx.from
     const vm = getRunner(mode)
     const compiledSrc = vm.compile(src)
@@ -119,4 +91,4 @@ class ContractInvoker {
   }
 }
 
-module.exports = utils.newAndBind(ContractInvoker)
+module.exports = Invoker

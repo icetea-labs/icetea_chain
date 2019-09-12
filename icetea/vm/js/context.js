@@ -1,8 +1,10 @@
 /** @module */
 const utils = require('../../helper/utils')
-const invoker = require('../../contractinvoker')
+const invoker = require('../../invoker/contractinvoker')
+const libraryinvoker = require('../../invoker/libraryinvoker')
 const config = require('../../config')
 const { isValidAddress } = require('../../helper/utils')
+const { isContract } = require('../../state/statemanager')
 const crypto = require('crypto')
 const { ContractMode, TxOp } = require('@iceteachain/common')
 
@@ -66,10 +68,48 @@ function _makeLoadContract (invokerTypes, srcContract, options) {
     return new Proxy({}, {
       get (obj, method) {
         const tx = { from: srcContract }
+        if (!options.origin) {
+          tx.origin = srcContract
+        }
         const newOpts = { ...options, tx, ...tx }
         return _makeInvokableMethod(invokerTypes, destContract, method, newOpts)
       }
     })
+  }
+}
+
+function _makeLoadLibrary (invokerTypes, srcContract, options) {
+  return destContract => {
+    return new Proxy({}, {
+      get (obj, method) {
+        const tx = { from: srcContract }
+        if (!options.origin) {
+          tx.origin = srcContract
+        }
+        const newOpts = { ...options, tx, ...tx }
+        return _makeLibraryMethod(invokerTypes, destContract, method, newOpts)
+      }
+    })
+  }
+}
+
+function _makeTransfer (transferMethod, srcContract, options) {
+  return (to, value) => {
+    transferMethod(to, value)
+
+    if (!isContract(to)) {
+      return
+    }
+
+    let invoked = {}
+    if (options.tx && options.tx.invoked) {
+      invoked = options.tx.invoked
+    }
+    const tx = { from: srcContract, to, value, payer: srcContract, invoked: { ...invoked, [to]: true } }
+    const newOpts = { ...options, tx }
+    if (!invoked[to]) { // prevent cycle onreceive
+      return invoker.invokeUpdate(to, '__on_received', [], newOpts)
+    }
   }
 }
 
@@ -78,6 +118,31 @@ function _makeInvokableMethod (invokerTypes, destContract, method, options) {
     obj[t] = (...params) => {
       return invoker[t](destContract, method, params, options)
     }
+
+    if (t === 'invokeUpdate') {
+      obj.value = (val) => {
+        const tx = { value: val, fee: 0, payer: options.from, to: destContract, from: options.from }
+        const newOpts = { ...options, tx }
+        return {
+          [t] (...params) {
+            return invoker[t](destContract, method, params, newOpts)
+          }
+        }
+      }
+    }
+
+    return obj
+  }, {})
+}
+
+function _makeLibraryMethod (invokerTypes, destContract, method, options) {
+  return invokerTypes.reduce((obj, t) => {
+    obj[t] = (...params) => {
+      return libraryinvoker[t](destContract, method, params, options)
+    }
+
+    // TBD: value method in loadLibrary
+
     return obj
   }, {})
 }
@@ -178,8 +243,11 @@ exports.forTransaction = (contractAddress, methodName, methodParams, options) =>
   const contractHelpers = stateAccess.forUpdate(contractAddress)
   const { deployedBy } = tools.getCode(contractAddress)
 
+  const isStringOrBuf = v => (typeof v === 'string' || Buffer.isBuffer(v))
+
   const ctx = {
     ...contractHelpers,
+    transfer: _makeTransfer(contractHelpers.transfer, contractAddress, options),
     address: contractAddress,
     deployedBy,
     get balance () {
@@ -190,12 +258,13 @@ exports.forTransaction = (contractAddress, methodName, methodParams, options) =>
       block,
       balanceOf: tools.balanceOf,
       loadContract: _makeLoadContract(['invokeUpdate', 'invokeView', 'invokePure'], contractAddress, options),
+      loadLibrary: _makeLoadLibrary(['invokeUpdate', 'invokeView', 'invokePure'], contractAddress, options),
       isValidAddress,
       getContractInfo: (addr, errorMessage) => _getContractInfo(tools, addr, errorMessage),
       require: _require,
       addTag: (name, value) => {
-        if (typeof name !== 'string' || typeof value !== 'string') {
-          throw new Error('Tag name and value must be strings.')
+        if (typeof name !== 'string' || !isStringOrBuf(value)) {
+          throw new Error('Tag name must be string and tag value must be string or Buffer.')
         }
         if (['tx.from', 'tx.to', 'tx.payer', 'tx.gasused'].includes(name)) {
           throw new Error(`Tag name ${name} is reserved for system use only.`)
@@ -254,6 +323,7 @@ exports.forView = (contractAddress, name, params, options) => {
       block,
       balanceOf: tools.balanceOf,
       loadContract: _makeLoadContract(['invokeView', 'invokePure'], contractAddress, options),
+      loadLibrary: _makeLoadLibrary(['invokeView', 'invokePure'], contractAddress, options),
       isValidAddress,
       getContractInfo: (addr, errorMessage) => _getContractInfo(tools, addr, errorMessage),
       require: _require
@@ -303,6 +373,7 @@ exports.forMetadata = address => ({
     },
     block: {},
     require: _require,
-    loadContract: () => ({})
+    loadContract: () => ({}),
+    loadLibrary: () => ({})
   }
 })

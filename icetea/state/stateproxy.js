@@ -1,6 +1,6 @@
 const _ = require('lodash')
-const config = require('./config')
-const { deepFreeze, sanitizeState, validateAddress } = require('./helper/utils')
+const config = require('../config')
+const { deepFreeze, sanitizeState, validateAddress } = require('../helper/utils')
 
 const { ecc, codec } = require('@iceteachain/common')
 

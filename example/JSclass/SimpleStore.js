@@ -5,7 +5,7 @@
         this.#value = value
     }
 
-    getValue() {
+    @view getValue() {
         return this.#value;
     }
 }
