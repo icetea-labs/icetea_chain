@@ -1,8 +1,7 @@
 {
-  "name": "icetea",
+  "name": "@iceteachain/node",
   "version": "0.1.0",
-  "description": "Tendermint-based icetea",
-  "main": "server.js",
+  "description": "Icetea Blockchain",
   "scripts": {
     "fix": "standard --fix",
     "lint": "standard",

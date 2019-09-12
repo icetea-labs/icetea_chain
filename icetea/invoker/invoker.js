@@ -1,4 +1,4 @@
-const { getRunner } = require('./vm')
+const { getRunner } = require('../vm')
 
 class Invoker {
   /**
@@ -66,10 +66,10 @@ class Invoker {
   prepareContract (tx) {
     // analyze and compile source
     const mode = tx.data.mode
-    const src = Buffer.from(tx.data.src, 'base64')
+    const src = typeof tx.data.src === 'string' ? Buffer.from(tx.data.src, 'base64') : tx.data.src
     const deployedBy = tx.from
     const vm = getRunner(mode)
-    let compiledSrc = vm.compile(src)
+    const compiledSrc = vm.compile(src)
 
     const meta = vm.analyze(compiledSrc) // linter & halt-problem checking included
 

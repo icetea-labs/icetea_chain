@@ -1,7 +1,7 @@
 /** @module */
 const utils = require('../../helper/utils')
-const invoker = require('../../contractinvoker')
-const libraryinvoker = require('../../libraryinvoker')
+const invoker = require('../../invoker/contractinvoker')
+const libraryinvoker = require('../../invoker/libraryinvoker')
 const config = require('../../config')
 const { isValidAddress } = require('../../helper/utils')
 const { isContract } = require('../../statemanager')
@@ -108,7 +108,7 @@ function _makeTransfer (transferMethod, srcContract, options) {
     const tx = { from: srcContract, to, value, payer: srcContract, invoked: { ...invoked, [to]: true } }
     const newOpts = { ...options, tx }
     if (!invoked[to]) { // prevent cycle onreceive
-      return invoker['invokeUpdate'](to, '__on_received', [], newOpts)
+      return invoker.invokeUpdate(to, '__on_received', [], newOpts)
     }
   }
 }
@@ -243,6 +243,8 @@ exports.forTransaction = (contractAddress, methodName, methodParams, options) =>
   const contractHelpers = stateAccess.forUpdate(contractAddress)
   const { deployedBy } = tools.getCode(contractAddress)
 
+  const isStringOrBuf = v => (typeof v === 'string' || Buffer.isBuffer(v))
+
   const ctx = {
     ...contractHelpers,
     transfer: _makeTransfer(contractHelpers.transfer, contractAddress, options),
@@ -261,8 +263,8 @@ exports.forTransaction = (contractAddress, methodName, methodParams, options) =>
       getContractInfo: (addr, errorMessage) => _getContractInfo(tools, addr, errorMessage),
       require: _require,
       addTag: (name, value) => {
-        if (typeof name !== 'string' || typeof value !== 'string') {
-          throw new Error('Tag name and value must be strings.')
+        if (typeof name !== 'string' || !isStringOrBuf(value)) {
+          throw new Error('Tag name must be string and tag value must be string or Buffer.')
         }
         if (['tx.from', 'tx.to', 'tx.payer', 'tx.gasused'].includes(name)) {
           throw new Error(`Tag name ${name} is reserved for system use only.`)
