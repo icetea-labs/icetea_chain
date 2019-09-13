@@ -1,7 +1,6 @@
 /**
  * An MVP implementation of election contract.
  */
-
 const { checkMsg } = require('../helper/types')
 const { election: config } = require('../config')
 const _ = require('lodash')
@@ -188,7 +187,6 @@ exports.run = (context, options) => {
     },
 
     changeVote (fromPubKey, toPubKey, amount) {
-      console.log('ahihi')
       const candidates = _rawCandidates(context)
       const from = candidates[fromPubKey]
       if (!from) {

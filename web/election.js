@@ -108,6 +108,25 @@ const fillChangeVoteArea = async (defaultAccount) => {
     option.textContent = candidate
     fromPubkey.append(option)
   })
+  await setChangeAmountPlaceHolder(defaultAccount)
+
+  fromPubkey.on('change', async function () {
+    await setChangeAmountPlaceHolder(defaultAccount)
+  })
+}
+async function setChangeAmountPlaceHolder (defaultAccount) {
+  const votedAmount = await getVotedAmount(defaultAccount, $('select.fromPubkey').val())
+  document.getElementById('changeAmount').placeholder = `Not larger than ${votedAmount} TEA`
+}
+async function getVotedAmount (from, to) {
+  const candidates = await getCandidates()
+  let votedAmount = 0
+  candidates.forEach((candidate) => {
+    if (candidate.pubKey.data === to) {
+      votedAmount = candidate.voters[from]
+    }
+  })
+  return toTEA(votedAmount)
 }
 const getDefaultAccount = async () => {
   await loadFromStorage()
@@ -180,7 +199,7 @@ $(document).ready(async function () {
     const to = $('select.toPubkey').val()
 
     if (amount && from && to) {
-      changeVote(from, to, amount)
+      changeVote(from, to, toUNIT(amount))
         .then(() => {
           window.alert('You changed vote successfully')
           window.location.reload()

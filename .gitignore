@@ -74,3 +74,6 @@ typings/
 docs
 web_dist
 scripts/tmp.js
+
+#Playground
+playground/
