@@ -1,6 +1,6 @@
 const _ = require('lodash')
-const config = require('./config')
-const { deepFreeze, checkUnsupportTypes, validateAddress } = require('./helper/utils')
+const config = require('../config')
+const { deepFreeze, sanitizeState, validateAddress } = require('../helper/utils')
 
 const { ecc, codec } = require('@iceteachain/common')
 
@@ -103,7 +103,7 @@ const _stateforAddress = (contractAddress, readonly, {
       if (!key || typeof key !== 'string') {
         throw new Error(`Expect key to be an non-empty string, but got ${key}`)
       }
-      value = checkUnsupportTypes(value)
+      value = sanitizeState(value)
       if (!storage) {
         storage = { [key]: value }
         storages[contractAddress] = storage

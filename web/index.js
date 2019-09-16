@@ -34,7 +34,7 @@ function fmtTxs (txs) {
     t.status = t.tx_result.code ? 'Error' : 'Success'
 
     t.txType = 'transfer'
-    data.data = JSON.parse(data.data) || {}
+    data.data = data.data || {}
     if (data.data.op === 0) {
       t.txType = 'deploy'
     } else if (data.data.op === 1) {

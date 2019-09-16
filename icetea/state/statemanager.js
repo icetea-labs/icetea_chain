@@ -1,9 +1,9 @@
-const config = require('./config')
+const config = require('../config')
 // const merkle = require('./helper/merkle')
-const patricia = require('./helper/patricia')
+const patricia = require('../helper/patricia')
 const EventEmitter = require('events')
 const stateProxy = require('./stateproxy')
-const utils = require('./helper/utils')
+const utils = require('../helper/utils')
 
 // Declare outside class to ensure private
 let stateTable, lastBlock, validators

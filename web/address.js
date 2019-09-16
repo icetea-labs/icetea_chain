@@ -1,7 +1,7 @@
 import handlebars from 'handlebars/dist/handlebars.min.js'
 import tweb3 from './tweb3'
 import { toTEA } from './common'
-import { tryParseJson, fmtHex } from './helper'
+import { fmtHex } from './helper'
 
 const getAccountInfo = async address => {
   const info = await tweb3.getAccountInfo(address)
@@ -34,7 +34,7 @@ const getTxHistory = async address => {
         x.toText = fmtHex(x.to)
         x.payer = x.tx.payer || x.tags['tx.payer']
         x.payerText = fmtHex(x.payer)
-        x.tx.data = x.tx.data ? (tryParseJson(x.tx.data) || {}) : {}
+        x.tx.data = x.tx.data || {}
 
         x.status = x.tx_result.code ? 'Error' : 'Success'
         x.shash = fmtHex(x.hash)

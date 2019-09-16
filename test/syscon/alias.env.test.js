@@ -1,7 +1,7 @@
 /* global jest describe test expect beforeAll afterAll */
 
 const { randomAccountWithBalance, sleep } = require('../helper')
-const startup = require('../../icetea/abcihandler')
+const startup = require('../../icetea/app/abcihandler')
 const { IceteaWeb3 } = require('@iceteachain/web3')
 const server = require('abci')
 const createTempDir = require('tempy').directory
@@ -32,7 +32,7 @@ describe('alias', () => {
     const ms = tweb3.contract('system.alias').methods
 
     const addr = await ms.resolve('goodmorning').call()
-    expect(addr).toBe(undefined)
+    expect(addr).toBe(null)
 
     const aliases = await ms.query('partOfAlias').call()
     expect(aliases).toEqual({})

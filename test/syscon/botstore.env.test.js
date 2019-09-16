@@ -1,7 +1,7 @@
 /* global jest describe test expect beforeAll afterAll */
 
 const { randomAccountWithBalance, sleep } = require('../helper')
-const startup = require('../../icetea/abcihandler')
+const startup = require('../../icetea/app/abcihandler')
 const { IceteaWeb3 } = require('@iceteachain/web3')
 const server = require('abci')
 const createTempDir = require('tempy').directory
@@ -45,7 +45,7 @@ describe('botstore', () => {
     expect(meta.register.decorators).toEqual(['transaction'])
 
     const bot = await ms.resolve('goodmorning').call()
-    expect(bot).toBe(undefined)
+    expect(bot).toBe(null)
 
     const bots = await ms.query().call()
     expect(Object.keys(bots).length).toBe(1)

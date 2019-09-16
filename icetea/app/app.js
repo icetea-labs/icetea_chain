@@ -1,19 +1,19 @@
 const { verifyTxSignature } = require('@iceteachain/common/src/utils')
 const _ = require('lodash')
-const utils = require('./helper/utils')
-const sysContracts = require('./system')
-const invoker = require('./contractinvoker')
-const did = require('./system/did')
-const election = require('./system/election')
+const utils = require('../helper/utils')
+const sysContracts = require('../syscon')
+const invoker = require('../invoker/contractinvoker')
+const did = require('../syscon/did')
+const election = require('../syscon/election')
 const { ecc, codec, AccountType } = require('@iceteachain/common')
-const config = require('./config')
+const config = require('../config')
 const sizeof = require('object-sizeof')
 const debug = require('debug')('icetea:app')
 
 const { minStateGas, gasPerByte, minTxGas, maxTxGas } = config.contract
 const { setFreeGasLimit } = config
 
-const stateManager = require('./statemanager')
+const stateManager = require('../state/statemanager')
 
 function _ensureAddress (addr) {
   // resolve alias

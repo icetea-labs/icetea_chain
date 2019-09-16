@@ -3,7 +3,7 @@
 
     constructor(other) {this.otherContract = other}
 
-    test() {
+    @view test() {
         const contract = loadContract(this.otherContract);
         console.log(`I am ${this.address}, calling ${this.otherContract}`);
         contract.test.invokeView()

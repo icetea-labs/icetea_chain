@@ -13,7 +13,7 @@ const LOCATIONS = {
 const showMenu = m => {
     return (m || Message.text('This is the whether station bot.'))
         .buttonRow()
-        .button('Your Location', '_', { location: true })
+        .button('My Location', '_', { location: true })
         .button('Hanoi')
         .button('Saigon')
         .endRow()
@@ -42,7 +42,7 @@ const showMenu = m => {
 
             return Message.sendLoading(requestId, { type: 'html' })
         } else {
-            return Message.text("Please allow the chatbot to view your location first.")
+            return Message.text('Please allow the chatbot to view your location first.')
         }
     }
 

@@ -14,13 +14,18 @@
       "watch": false
     },
     {
-      "name": "pm2-monitor",
+      "name": "icetea-monitor",
       "script": "common/pm2-monitor.js",
       "watch": false,
       "env": {
         "ICETEA_NAME": "icetea",
         "TENDERMINT_NAME": "tendermint"
       }
+    },
+    {
+      "name": "icetea-gate",
+      "script": "gate/index.js",
+      "watch": false
     }
   ]
 }

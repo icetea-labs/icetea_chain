@@ -2,7 +2,7 @@
 
 // const { randomAccountWithBalance, sleep } = require('../helper')
 const { sleep } = require('../helper')
-const startup = require('../../icetea/abcihandler')
+const startup = require('../../icetea/app/abcihandler')
 const { IceteaWeb3 } = require('@iceteachain/web3')
 const server = require('abci')
 const createTempDir = require('tempy').directory
@@ -39,7 +39,7 @@ describe('faucet', () => {
     expect(meta.request.decorators).toEqual(['transaction'])
 
     let r = await ms.getQuota().callPure()
-    expect(r).toBe(REQUEST_QUOTA_S)
+    expect(String(r)).toBe(REQUEST_QUOTA_S)
 
     const { address: addr1 } = tweb3.wallet.createRegularAccount()
     r = await tweb3.getBalance(addr1)
@@ -52,7 +52,7 @@ describe('faucet', () => {
 
     const { address: addr2 } = tweb3.wallet.createBankAccount()
     r = await request(addr2)
-    expect(r.returnValue).toBe(REQUEST_QUOTA_S)
+    expect(String(r.returnValue)).toBe(REQUEST_QUOTA_S)
     expect(r.events.length).toBe(1)
     expect(r.events[0].emitter).toBe('system.faucet')
     expect(r.events[0].eventName).toBe('FaucetTransferred')
@@ -60,7 +60,7 @@ describe('faucet', () => {
     expect(r.events[0].eventData.requester).toBe(addr2)
 
     r = await tweb3.getBalance(addr2)
-    expect(r.balance).toBe(REQUEST_QUOTA_S)
+    expect(String(r.balance)).toBe(REQUEST_QUOTA_S)
 
     await expect(request(addr2)).rejects.toThrowError('No more')
 
@@ -88,7 +88,7 @@ describe('faucet', () => {
     r = await tweb3.getBalance(regAddr)
     expect(r.balance).toBe(0)
     r = await tweb3.getBalance(bankAddr)
-    expect(+r.balance).toBe(1)
+    expect(String(r.balance)).toBe('1')
 
     await expect(transfer(REQUEST_QUOTA, regAddr, 'system.faucet')).rejects.toThrowError('bigger than remaining quota')
   })

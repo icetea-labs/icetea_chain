@@ -1,8 +1,8 @@
 /** @module */
 
 const { validateAddress } = require('@iceteachain/common').ecc
-const sysContractNames = Object.values(require('../system/sysconnames'))
-const { ensureAddress } = require('../system/alias')
+const sysContractNames = Object.values(require('../syscon/sysconnames'))
+const { ensureAddress } = require('../syscon/alias')
 
 /**
  * whether an object is expected type
