@@ -3,12 +3,18 @@
  */
 
 const { checkMsg } = require('../helper/types')
+const { gate: config } = require('../config')
 const _ = require('lodash')
+
+const PROVIDERS_KEY = 'prividers'
+const _getProviders = c => c.getState(PROVIDERS_KEY, {})
+const _saveProviders = (c, p) => c.setState(PROVIDERS_KEY, p)
 
 const METADATA = Object.freeze({
   registerProvider: {
-    decorators: ['transaction'],
+    decorators: ['payable'],
     params: [
+      { name: 'providerId', type: 'string' },
       { name: 'options', type: ['object', 'undefined'] }
     ],
     returnType: 'undefined'
@@ -16,7 +22,8 @@ const METADATA = Object.freeze({
   changeProviderOptions: {
     decorators: ['transaction'],
     params: [
-      { name: 'options', type: ['object', 'undefined'] }
+      { name: 'providerId', type: 'string' },
+      { name: 'options', type: 'object' }
     ],
     returnType: 'undefined'
   },
@@ -63,6 +70,43 @@ exports.run = (context, options) => {
   const msgParams = checkMsg(msg, METADATA, { sysContracts: this.systemContracts() })
 
   const contract = {
+    registerProvider (providerId, options = {}) {
+      if (msg.value < config.minProviderDeposit) {
+        throw new Error(`Gate Provider must deposit at least ${config.minProviderDeposit}.`)
+      }
+
+      if (!config.providerIdRegEx.test(providerId)) {
+        throw new Error('ProviderId must contain only word character (A-Za-z0-9), cannot start with a digit, and have appropriate length.')
+      }
+
+      const providers = _getProviders(context)
+      if (Object.prototype.hasOwnProperty.call(providers, providerId)) {
+        throw new Error(`Provider ${providerId} already exists.`)
+      }
+
+      const p = {
+        deposit: msg.value,
+        operator: msg.sender
+      }
+
+      if (options.awardAddress) {
+        // TODO: validate address
+        p.awardAddress = options.awardAddress
+      }
+
+      if (options.encryptionPubKey) {
+        // TODO: valoidate pubkey
+        p.encryptionPubKey = options.encryptionPubKey
+      }
+
+      if (options.topics) {
+        // TODO: valoidate topics
+        p.encryptionPubKey = options.topics
+      }
+
+      _saveProviders(context, p)
+    },
+
     request (path, opts) {
       getContractInfo(msg.sender, 'This function must be called from a contract.')
 

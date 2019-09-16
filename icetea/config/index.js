@@ -21,6 +21,10 @@ const config = {
     resignVoterLock: 1,
     unvoteLock: 5
   },
+  gate: {
+    minProviderDeposit: 10e6,
+    providerIdRegEx: /^[A-Za-z]\w{7,31}$/
+  },
   abciServerPort: 26658,
   feeCollector: process.env.FEE_COLLECTOR,
   initialBalances: [

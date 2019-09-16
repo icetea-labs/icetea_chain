@@ -1,6 +1,6 @@
 require('dotenv').config()
 const server = require('abci')
-const startup = require('./abcihandler')
+const startup = require('./app/abcihandler')
 const { versions, abciServerPort } = require('./config')
 const semver = require('semver')
 const debug = require('debug')('icetea')
