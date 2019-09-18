@@ -6,15 +6,11 @@ const { checkMsg } = require('../helper/types')
 const { gate: config } = require('../config')
 const _ = require('lodash')
 
-const PROVIDERS_KEY = 'prividers'
-const _getProviders = c => c.getState(PROVIDERS_KEY, {})
-const _saveProviders = (c, p) => c.setState(PROVIDERS_KEY, p)
-
 const METADATA = Object.freeze({
   registerProvider: {
     decorators: ['payable'],
     params: [
-      { name: 'providerId', type: 'string' },
+      { name: 'providerAddr', type: ['address', 'undefined'] },
       { name: 'options', type: ['object', 'undefined'] }
     ],
     returnType: 'undefined'
@@ -22,22 +18,45 @@ const METADATA = Object.freeze({
   changeProviderOptions: {
     decorators: ['transaction'],
     params: [
-      { name: 'providerId', type: 'string' },
+      { name: 'providerAddr', type: ['address', 'undefined'] },
       { name: 'options', type: 'object' }
+    ],
+    returnType: 'undefined'
+  },
+  pauseProvider: {
+    decorators: ['transaction'],
+    params: [
+      { name: 'providerAddr', type: ['address', 'undefined'] }
+    ],
+    returnType: 'undefined'
+  },
+  unpauseProvider: {
+    decorators: ['transaction'],
+    params: [
+      { name: 'providerAddr', type: ['address', 'undefined'] }
     ],
     returnType: 'undefined'
   },
   unregisterProvider: {
     decorators: ['transaction'],
-    params: [],
+    params: [
+      { name: 'providerAddr', type: ['address', 'undefined'] }
+    ],
     returnType: 'undefined'
   },
-  isProviderRegistered: {
+  withdrawForProvider: {
+    decorators: ['transaction'],
+    params: [
+      { name: 'providerAddr', type: ['address', 'undefined'] }
+    ],
+    returnType: 'undefined'
+  },
+  getProvider: {
     decorators: ['view'],
     params: [
-      { name: 'provider', type: 'address' }
+      { name: 'providerAddr', type: ['address', 'undefined'] }
     ],
-    returnType: 'boolean'
+    returnType: ['object', 'undefined']
   },
   request: {
     decorators: ['transaction'],
@@ -64,47 +83,140 @@ const METADATA = Object.freeze({
   }
 })
 
+const PROVIDERS_KEY = 'prividers'
+const _getProviders = c => c.getState(PROVIDERS_KEY, {})
+const _saveProviders = (c, p) => c.setState(PROVIDERS_KEY, p)
+const _assignOptions = (p, options) => {
+  if (options.awardAddress) {
+    // TODO: validate address
+    p.awardAddress = options.awardAddress
+  }
+
+  if (options.encryptionPubKey) {
+    // TODO: valoidate pubkey
+    p.encryptionPubKey = options.encryptionPubKey
+  }
+
+  if (options.topics) {
+    // TODO: valoidate topics
+    p.encryptionPubKey = options.topics
+  }
+
+  return p
+}
+const _getProviderWithCheck = (context, providerAddr, block, msg) => {
+  const providers = _getProviders(context)
+  const p = providers[providerAddr]
+  if (!p || !p.operator) {
+    throw new Error(`Invalid provider address ${providerAddr}.`)
+  }
+
+  const did = exports.systemContracts().Did
+  did.checkPermission(p.operator, msg.signers, block.timestamp)
+
+  return [p, providers]
+}
+
+const _setProviderProp = (context, providerAddr, prop, value) => {
+  const [p] = _getProviderWithCheck(context, providerAddr)
+  p[prop] = value
+  _saveProviders(context, p)
+  return p
+}
+
 // standard contract interface
 exports.run = (context, options) => {
-  const { msg, loadContract, getContractInfo } = context.runtime
+  const { msg, block, loadContract, getContractInfo } = context.runtime
   const msgParams = checkMsg(msg, METADATA, { sysContracts: this.systemContracts() })
 
   const contract = {
-    registerProvider (providerId, options = {}) {
+    registerProvider (providerAddr, options = {}) {
+      providerAddr = providerAddr || msg.sender
+
       if (msg.value < config.minProviderDeposit) {
         throw new Error(`Gate Provider must deposit at least ${config.minProviderDeposit}.`)
       }
 
-      if (!config.providerIdRegEx.test(providerId)) {
-        throw new Error('ProviderId must contain only word character (A-Za-z0-9), cannot start with a digit, and have appropriate length.')
-      }
-
       const providers = _getProviders(context)
-      if (Object.prototype.hasOwnProperty.call(providers, providerId)) {
-        throw new Error(`Provider ${providerId} already exists.`)
+      if (Object.prototype.hasOwnProperty.call(providers, providerAddr)) {
+        throw new Error(`Provider ${providerAddr} already exists.`)
       }
 
-      const p = {
+      const p = _assignOptions({
         deposit: msg.value,
         operator: msg.sender
-      }
-
-      if (options.awardAddress) {
-        // TODO: validate address
-        p.awardAddress = options.awardAddress
-      }
-
-      if (options.encryptionPubKey) {
-        // TODO: valoidate pubkey
-        p.encryptionPubKey = options.encryptionPubKey
-      }
-
-      if (options.topics) {
-        // TODO: valoidate topics
-        p.encryptionPubKey = options.topics
-      }
+      }, options)
 
       _saveProviders(context, p)
+
+      context.emitEvent('ProviderRegistered', p)
+    },
+
+    getProvider (providerAddr) {
+      const providers = _getProviders(context)
+      const p = providers[providerAddr]
+      if (typeof p === 'object') {
+        return _.cloneDeep(p)
+      }
+
+      return p
+    },
+
+    changeProviderOptions (providerAddr, options) {
+      providerAddr = providerAddr || msg.sender
+      const [p] = _assignOptions(_getProviderWithCheck(context, providerAddr, block, msg), options)
+      _saveProviders(context, p)
+      context.emitEvent('ProviderOptionsChanged', p)
+    },
+
+    pauseProvider (providerAddr) {
+      providerAddr = providerAddr || msg.sender
+      const p = _setProviderProp(context, providerAddr, 'paused', block.number)
+      context.emitEvent('ProviderPaused', p)
+    },
+
+    unpauseProvider (providerAddr) {
+      providerAddr = providerAddr || msg.sender
+      const [p] = _getProviderWithCheck(context, providerAddr, block, msg)
+
+      if (!p.paused) {
+        throw new Error('Provider is not paused.')
+      }
+
+      delete p.paused
+      _saveProviders(context, p)
+
+      context.emitEvent('ProviderUnpaused', p)
+    },
+
+    unregisterProvider (providerAddr) {
+      providerAddr = providerAddr || msg.sender
+      const p = _setProviderProp(context, providerAddr, 'unregistered', block.number)
+      context.emitEvent('ProviderUnregistered', p)
+    },
+
+    withdrawForProvider (providerAddr, receivingAddr) {
+      providerAddr = providerAddr || msg.sender
+      const [p, providers] = _getProviderWithCheck(context, providerAddr, block, msg)
+
+      if (!p.unregistered) {
+        throw new Error('You must unregister the provider first.')
+      }
+
+      const waitTill = p.unregistered + config.unregistrationLock
+      if (waitTill < block.number) {
+        throw new Error(`Please wait to block ${waitTill} to withdraw, current block is ${block.number}.`)
+      }
+
+      const rAddr = receivingAddr || msg.sender
+      this.transfer(rAddr)
+      delete providers[providerAddr]
+      _saveProviders(context, p)
+
+      context.emitEvent('ProviderWithdrawn', {
+        receivingAddress: rAddr,
+        provider: p
+      })
     },
 
     request (path, opts) {
@@ -150,8 +262,12 @@ exports.run = (context, options) => {
     },
 
     setResult (requestId, result) {
-      // TODO: check provider registered
-      // TODO: check provider conditions
+      const providers = _getProviders(context)
+      if (!Object.prototype.hasOwnProperty.call(providers, msg.sender)) {
+        throw new Error(`Provider not registered: ${msg.sender}.`)
+      }
+
+      // TODO: check provider conditions/topics
       // TODO: sanitize result
 
       const requestData = this.getState(requestId)

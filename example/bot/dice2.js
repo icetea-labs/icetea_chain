@@ -112,7 +112,7 @@ const DiceTypes = [{
     fail_amount(amount) {
         const max = this.getMaxBet()
         const tea = utils.toStandardUnit(max)
-        return Message.text(`Invalid amount ${amount}.Please enter a valid amount(maximum ${tea} TEA).`)
+        return Message.text(`Invalid amount ${amount}. Please enter a valid amount(maximum ${tea} TEA).`)
             .input('Bet amount', {
                 value: tea,
                 sub_type: 'text'

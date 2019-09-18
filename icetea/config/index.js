@@ -23,7 +23,7 @@ const config = {
   },
   gate: {
     minProviderDeposit: 10e6,
-    providerIdRegEx: /^[A-Za-z]\w{7,31}$/
+    unregistrationLock: 10
   },
   abciServerPort: 26658,
   feeCollector: process.env.FEE_COLLECTOR,

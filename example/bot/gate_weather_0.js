@@ -6,7 +6,7 @@ const showMenu = m => {
         .button('Hanoi', '1581130')
         .button('Saigon', '1566083')
         .endRow()
-        .nextStateAccess('write').done()
+        .nextStateAccess('write')
 }
 
 @contract class WeatherBot {
