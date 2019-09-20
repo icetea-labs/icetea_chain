@@ -45,7 +45,7 @@ describe('botstore', () => {
     expect(meta.register.decorators).toEqual(['transaction'])
 
     const bot = await ms.resolve('goodmorning').call()
-    expect(bot).toBe(null)
+    expect(bot).toBe(undefined)
 
     const bots = await ms.query().call()
     expect(Object.keys(bots).length).toBe(1)

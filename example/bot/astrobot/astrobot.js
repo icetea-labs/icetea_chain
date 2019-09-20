@@ -21,14 +21,12 @@ const { toLunar } = require('https://github.com/TradaTech/icetea/example/bot/ast
             ' chuyên hành nghề bói Tử Vi trên Icetea blockchain.', 'html')
             .text('Nếu bạn muốn xem thì bấm nút phía dưới. Không muốn thì thôi.')
             .button('Tôi là người Việt và sinh ở Việt Nam', 'start')
-            .done()
     }
 
     succeedTerms() {
         return Message.text('Tốt quá. Vì tôi không biết xem cho người nước ngoài hoặc sinh ở nước ngoài.')
             .text('Đầu tiên, hãy cho biết tên (bao gồm cả tên lót nếu nó là riêng của bạn)')
             .input('Ngọc Trinh')
-            .done()
     }
 
     collectName(name, collector) {
@@ -42,7 +40,6 @@ const { toLunar } = require('https://github.com/TradaTech/icetea/example/bot/ast
             .button('Nam', 'male')
             .button('Nữ', 'female')
             .endRow()
-            .done()
     }
 
     collectGender(genderText, collector) {
@@ -54,7 +51,6 @@ const { toLunar } = require('https://github.com/TradaTech/icetea/example/bot/ast
         return Message.text('Tiếp tục.')
             .text('Ngày tháng năm sinh theo dạng ngày/tháng/năm.')
             .input('dd/mm/yyyy')
-            .done() 
     }
 
     collectDob(dateString, collector) {
@@ -82,14 +78,12 @@ const { toLunar } = require('https://github.com/TradaTech/icetea/example/bot/ast
                 '11pm ~ 12pm'
             ])
             .endSelect()
-            .done()
     }
 
     failDob(data, collector, error) {
         return Message.text('Ngày nhập sai định dạng.')
             .text('Ví dụ nhập đúng: 23/8/2001')
             .input('dd/mm/yyyy')
-            .done()
     }
 
     collectHour(hour, collector) {
@@ -100,6 +94,5 @@ const { toLunar } = require('https://github.com/TradaTech/icetea/example/bot/ast
     succeedHour(hour, collector) {
         return Message.text('Đợi thầy tí.')
             .text('Phần luận giải thầy lại chưa code :(', { loading: true, delay: 1000 })
-            .done()
     }
 }

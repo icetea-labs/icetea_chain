@@ -4,7 +4,7 @@ const showMenu = m => {
     return (m || Message.text('This is the whether station bot.'))
         .button('My Location', 'location')
         .nextStateAccess('write')
-        .requestLocation().done()
+        .requestLocation()
 }
 
 @contract class WeatherBot {

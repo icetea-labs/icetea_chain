@@ -3,7 +3,7 @@ const coins = ['BTC', 'ETH', 'XRP', 'EOS', 'KNC', 'TOMO']
 
 const showMenu = m => {
     return (m || Message.text('Click a coin to see its current price.'))
-        .buttons(...coins).nextStateAccess('write').done()
+        .buttons(...coins).nextStateAccess('write')
 }
 
 const format = (n, locale) => (+n).toLocaleString(locale || 'en-US')

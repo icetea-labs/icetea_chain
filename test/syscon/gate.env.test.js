@@ -11,7 +11,7 @@ const { transpile } = global
 jest.setTimeout(30000)
 
 let tweb3
-let account10k // this key should have 10k of coins before running test suite
+let richAccount // this key should have lots of coins before running test suite
 let instance
 beforeAll(async () => {
   const handler = await startup({ path: createTempDir() })
@@ -20,7 +20,7 @@ beforeAll(async () => {
   await sleep(4000)
 
   tweb3 = new IceteaWeb3(`ws://127.0.0.1:${global.ports.rpc}/websocket`)
-  account10k = await randomAccountWithBalance(tweb3, 10000)
+  richAccount = await randomAccountWithBalance(tweb3, 10e8)
 })
 
 afterAll(() => {
@@ -30,7 +30,7 @@ afterAll(() => {
 
 describe('gate', () => {
   test('gate call from client', async () => {
-    const { privateKey, address: from } = account10k
+    const { privateKey, address: from } = richAccount
     tweb3.wallet.importAccount(privateKey)
     const opt = { from }
 
@@ -44,10 +44,11 @@ describe('gate', () => {
 
   test('gate call from contract', async () => {
     // process.env.NODE_ENV = 'development'
-    const { privateKey, address: from } = account10k
+    const { privateKey, address: from } = richAccount
     tweb3.wallet.importAccount(privateKey)
     const opt = { from }
     const gate = tweb3.contract('system.gate')
+    await gate.methods.registerProvider().sendCommit({ from, value: 10e6 })
     gate.events.OffchainDataQuery({}, async (error, { id }) => {
       if (error) {
         throw error
