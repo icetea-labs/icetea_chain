@@ -83,9 +83,9 @@ const METADATA = Object.freeze({
   }
 })
 
-const PROVIDERS_KEY = 'prividers'
+const PROVIDERS_KEY = 'providers'
 const _getProviders = c => c.getState(PROVIDERS_KEY, {})
-const _saveProviders = (c, p) => c.setState(PROVIDERS_KEY, p)
+const _saveProviders = (c, ps) => c.setState(PROVIDERS_KEY, ps)
 const _assignOptions = (p, options) => {
   if (options.awardAddress) {
     // TODO: validate address
@@ -118,9 +118,9 @@ const _getProviderWithCheck = (context, providerAddr, block, msg) => {
 }
 
 const _setProviderProp = (context, providerAddr, prop, value) => {
-  const [p] = _getProviderWithCheck(context, providerAddr)
+  const [p, ps] = _getProviderWithCheck(context, providerAddr)
   p[prop] = value
-  _saveProviders(context, p)
+  _saveProviders(context, ps)
   return p
 }
 
@@ -146,10 +146,10 @@ exports.run = (context, options) => {
         deposit: msg.value,
         operator: msg.sender
       }, options)
+      providers[providerAddr] = p
+      _saveProviders(context, providers)
 
-      _saveProviders(context, p)
-
-      context.emitEvent('ProviderRegistered', p)
+      context.emitEvent('ProviderRegistered', { providerAddress: providerAddr, ...p })
     },
 
     getProvider (providerAddr) {
@@ -164,29 +164,30 @@ exports.run = (context, options) => {
 
     changeProviderOptions (providerAddr, options) {
       providerAddr = providerAddr || msg.sender
-      const [p] = _assignOptions(_getProviderWithCheck(context, providerAddr, block, msg), options)
-      _saveProviders(context, p)
-      context.emitEvent('ProviderOptionsChanged', p)
+      const [p, ps] = _getProviderWithCheck(context, providerAddr, block, msg)
+      _assignOptions(p, options)
+      _saveProviders(context, ps)
+      context.emitEvent('ProviderOptionsChanged', { providerAddress: providerAddr, ...p })
     },
 
     pauseProvider (providerAddr) {
       providerAddr = providerAddr || msg.sender
       const p = _setProviderProp(context, providerAddr, 'paused', block.number)
-      context.emitEvent('ProviderPaused', p)
+      context.emitEvent('ProviderPaused', { providerAddress: providerAddr, ...p })
     },
 
     unpauseProvider (providerAddr) {
       providerAddr = providerAddr || msg.sender
-      const [p] = _getProviderWithCheck(context, providerAddr, block, msg)
+      const [p, ps] = _getProviderWithCheck(context, providerAddr, block, msg)
 
       if (!p.paused) {
         throw new Error('Provider is not paused.')
       }
 
       delete p.paused
-      _saveProviders(context, p)
+      _saveProviders(context, ps)
 
-      context.emitEvent('ProviderUnpaused', p)
+      context.emitEvent('ProviderUnpaused', { providerAddress: providerAddr, ...p })
     },
 
     unregisterProvider (providerAddr) {
@@ -211,11 +212,12 @@ exports.run = (context, options) => {
       const rAddr = receivingAddr || msg.sender
       this.transfer(rAddr)
       delete providers[providerAddr]
-      _saveProviders(context, p)
+      _saveProviders(context, providers)
 
       context.emitEvent('ProviderWithdrawn', {
+        providerAddress: providerAddr,
         receivingAddress: rAddr,
-        provider: p
+        ...p
       })
     },
 

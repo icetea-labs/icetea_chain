@@ -67,7 +67,7 @@ const DiceTypes = [{
                 t = 'Select a number and bet. It is easy!'
                 break
         }
-        return Message.html(t, { cssClass: 'bot-help' }).done()
+        return Message.html(t, { cssClass: 'bot-help' })
     }
 
     succeed_intro() {
@@ -80,7 +80,7 @@ const DiceTypes = [{
             m.button(String(i))
         }
 
-        return m.endRow().done()
+        return m.endRow()
     }
 
     collect_number(number, collector) {
@@ -98,7 +98,6 @@ const DiceTypes = [{
                 value: tea,
                 sub_type: 'text'
             })
-            .done()
     }
 
     collect_amount(amount, collector) {
@@ -117,7 +116,6 @@ const DiceTypes = [{
                 value: tea,
                 sub_type: 'text'
             })
-            .done()
     }
 
     succeed_amount(amount, collector) {
@@ -125,7 +123,6 @@ const DiceTypes = [{
         return Message.html(`Your picked number: <b>${collector.number}</b> <br>Your bet amount: <b>${tea}</b> TEA.`)
             .button('Confirm', 'confirm')
             .requestTransfer(amount)
-            .done()
     }
 
     succeed_confirm(confirm, collector) {
@@ -140,7 +137,6 @@ const DiceTypes = [{
             You sent: <b>${utils.toStandardUnit(msg.value)}</b> TEA<br>
                 You received: <b>${utils.toStandardUnit(receiveAmount)}</b> TEA.`)
             .button('Play Again', 'start')
-            .done()
     }
 
     @pure randomize(diceType) {

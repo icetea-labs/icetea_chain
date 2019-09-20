@@ -18,7 +18,6 @@ const showMenu = m => {
         .button('Saigon')
         .endRow()
         .nextStateAccess('write')
-        .done()
 }
 
 @contract class WeatherBot {
