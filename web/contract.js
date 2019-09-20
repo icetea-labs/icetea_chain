@@ -16,7 +16,6 @@ async function fillContracts () {
     const contracts = await tweb3.getContracts(true)
 
     if (!contracts.length) return
-
     const address = (new URL(document.location)).searchParams.get('address')
     var select = document.getElementById('to')
     contracts.forEach(item => {

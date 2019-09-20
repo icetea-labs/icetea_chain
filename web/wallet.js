@@ -1,6 +1,7 @@
 import $ from 'jquery'
 import { ecc, AccountType } from '@iceteachain/common'
 import tweb3 from './tweb3'
+import { loadFromStorage } from './helper'
 // import { functionTypeAnnotation } from '@babel/types'
 // import bip39 from 'bip39'
 // import HDKey from 'hdkey'
@@ -52,6 +53,7 @@ document.getElementById('clear').addEventListener('click', function () {
 function fillWallet () {
   var wallets = tweb3.wallet.accounts
   var d = tweb3.wallet.defaultAccount
+  console.log(tweb3.wallet)
   $('#currentDefaultAcc').text(d)
   var select = document.getElementById('wallet')
   $('#wallet').empty()
@@ -74,7 +76,7 @@ function showMessage (text, time = 4000) {
 }
 
 $(document).ready(async function () {
-  await tweb3.wallet.loadFromStorage('123')
+  await loadFromStorage()
   fillWallet()
   $('#setDefaultAcc').on('click', async () => {
     try {

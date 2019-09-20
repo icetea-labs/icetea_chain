@@ -1,7 +1,6 @@
 /**
  * An MVP implementation of election contract.
  */
-
 const { checkMsg } = require('../helper/types')
 const { election: config } = require('../config')
 const _ = require('lodash')
