@@ -36,7 +36,7 @@ describe('did', () => {
 
     // the address should not have did
     let did = await ms.query(from).call({ from })
-    expect(did).toBe(null)
+    expect(did).toBe(undefined)
 
     // now add a tag
     await ms.setTag(from, 'testName', 'testValue').sendCommit({ from })
@@ -50,7 +50,7 @@ describe('did', () => {
     // then remove it
     await ms.removeTag(from, 'testName').sendCommit({ from })
     did = await ms.query(from).call({ from })
-    expect(did).toBe(null)
+    expect(did).toBe(undefined)
 
     // add again, using object
     await ms.setTag(from, { testName: 'testValue' }).sendCommit({ from })
@@ -139,7 +139,7 @@ describe('did', () => {
     // remove the tag for short code
     await ms.removeTag(from, 'testName').sendCommit({ from })
     did = await ms.query(from).call({ from })
-    expect(did).toBe(null)
+    expect(did).toBe(undefined)
 
     const claimFromNewAccount = () => {
       return ms.claimInheritance(from, newAccount.address).sendCommit({ from })
