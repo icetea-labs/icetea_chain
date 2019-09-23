@@ -85,8 +85,23 @@ const METADATA = Object.freeze({
 })
 
 const PROVIDERS_KEY = 'providers'
+// const TOPICS_KEY = 'topics'
+
 const _getProviders = c => c.getState(PROVIDERS_KEY, {})
 const _saveProviders = (c, ps) => c.setState(PROVIDERS_KEY, ps)
+
+// const _getTopics = c => c.getState(TOPICS_KEY, {})
+// const _saveTopics = (c, ts) => c.setState(TOPICS_KEY, ts)
+
+// topicId: {
+//  createdBy: address,
+//  providers: {
+//   address1: {
+//     encryptionKey: pubkey
+//   }
+//  }
+// }
+
 const _assignOptions = (p, options) => {
   if (options.awardAddress) {
     utils.validateAddress(options.awardAddress)
