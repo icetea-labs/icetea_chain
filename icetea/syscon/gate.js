@@ -5,6 +5,7 @@
 const { checkMsg } = require('../helper/types')
 const { gate: config } = require('../config')
 const _ = require('lodash')
+const utils = require('../helper/utils')
 
 const METADATA = Object.freeze({
   registerProvider: {
@@ -88,19 +89,20 @@ const _getProviders = c => c.getState(PROVIDERS_KEY, {})
 const _saveProviders = (c, ps) => c.setState(PROVIDERS_KEY, ps)
 const _assignOptions = (p, options) => {
   if (options.awardAddress) {
-    // TODO: validate address
+    utils.validateAddress(options.awardAddress)
     p.awardAddress = options.awardAddress
   }
 
   if (options.encryptionPubKey) {
-    // TODO: valoidate pubkey
+    // NOTE: we only support secp256k1 uncompressed pubkey (65 bytes)
+    utils.validatePublicKey(options.encryptionPubKey)
     p.encryptionPubKey = options.encryptionPubKey
   }
 
-  if (options.topics) {
-    // TODO: valoidate topics
-    p.encryptionPubKey = options.topics
-  }
+  // Do not support topics at the moment
+  // if (options.topics) {
+  //   p.encryptionPubKey = options.topics
+  // }
 
   return p
 }

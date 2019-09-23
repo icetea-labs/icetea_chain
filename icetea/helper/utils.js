@@ -365,6 +365,13 @@ exports.isValidAddress = addr => {
   }
 }
 
+exports.validatePubKey = pubkey => {
+  const b = codec.toKeyBuffer(pubkey)
+  if (b.length !== 65) {
+    throw new Error('The public key must be an uncompressed 64-byte length.')
+  }
+}
+
 exports.envIs = (n, v) => process.env[n] == v // eslint-disable-line
 exports.envEnabled = n => process.env[n] === '1'
 exports.isDevMode = () => process.env.NODE_ENV === 'development'
