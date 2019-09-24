@@ -93,14 +93,17 @@ const _saveProviders = (c, ps) => c.setState(PROVIDERS_KEY, ps)
 // const _getTopics = c => c.getState(TOPICS_KEY, {})
 // const _saveTopics = (c, ts) => c.setState(TOPICS_KEY, ts)
 
-// topicId: {
+// [{
+//  type: default/exact/regex
+//  match: '/xxxx/',
 //  createdBy: address,
+//  createdAt: blockNumber
 //  providers: {
 //   address1: {
 //     encryptionKey: pubkey
 //   }
 //  }
-// }
+// ]
 
 const _assignOptions = (p, options) => {
   if (options.awardAddress) {
