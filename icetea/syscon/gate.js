@@ -5,6 +5,7 @@
 const { checkMsg } = require('../helper/types')
 const { gate: config } = require('../config')
 const _ = require('lodash')
+const utils = require('../helper/utils')
 
 const METADATA = Object.freeze({
   registerProvider: {
@@ -84,23 +85,42 @@ const METADATA = Object.freeze({
 })
 
 const PROVIDERS_KEY = 'providers'
+// const TOPICS_KEY = 'topics'
+
 const _getProviders = c => c.getState(PROVIDERS_KEY, {})
 const _saveProviders = (c, ps) => c.setState(PROVIDERS_KEY, ps)
+
+// const _getTopics = c => c.getState(TOPICS_KEY, {})
+// const _saveTopics = (c, ts) => c.setState(TOPICS_KEY, ts)
+
+// [{
+//  type: default/exact/regex
+//  match: '/xxxx/',
+//  createdBy: address,
+//  createdAt: blockNumber
+//  providers: {
+//   address1: {
+//     encryptionKey: pubkey
+//   }
+//  }
+// ]
+
 const _assignOptions = (p, options) => {
   if (options.awardAddress) {
-    // TODO: validate address
+    utils.validateAddress(options.awardAddress)
     p.awardAddress = options.awardAddress
   }
 
   if (options.encryptionPubKey) {
-    // TODO: valoidate pubkey
+    // NOTE: we only support secp256k1 uncompressed pubkey (65 bytes)
+    utils.validatePublicKey(options.encryptionPubKey)
     p.encryptionPubKey = options.encryptionPubKey
   }
 
-  if (options.topics) {
-    // TODO: valoidate topics
-    p.encryptionPubKey = options.topics
-  }
+  // Do not support topics at the moment
+  // if (options.topics) {
+  //   p.encryptionPubKey = options.topics
+  // }
 
   return p
 }

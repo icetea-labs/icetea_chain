@@ -4,6 +4,7 @@ const _ = require('lodash')
 const v8 = require('v8')
 const sysContracts = require('../syscon')
 const { ecc, codec } = require('@iceteachain/common')
+const { types } = require('util')
 
 /**
  * get all property name of an object
@@ -268,7 +269,7 @@ exports.sanitizeState = o => {
   try {
     v8.serialize(o)
   } catch (err) {
-    throw new Error('State object is not serializable.')
+    throw new Error(`State object is not serializable: ${String(err)}`)
   }
 
   const seenSet = new Set()
@@ -281,11 +282,12 @@ exports.sanitizeState = o => {
     // if (t === 'bigint' || t === 'function' ||
     if (t === 'function' ||
     //  o instanceof RegExp ||
-      o instanceof Date ||
+    //  o instanceof Date ||
       o instanceof Map ||
       o instanceof Set ||
-      o instanceof WeakMap) {
-      throw new Error(`State contains unsupported type: ${t}`)
+      o instanceof WeakMap ||
+      types.isProxy(o)) {
+      throw new Error(`State contains unsupported type: ${types.isProxy(o) ? 'Proxy' : t}`)
     }
 
     if (t === 'object') {
@@ -362,6 +364,13 @@ exports.isValidAddress = addr => {
     return true
   } catch (err) {
     return false
+  }
+}
+
+exports.validatePubKey = pubkey => {
+  const b = codec.toKeyBuffer(pubkey)
+  if (b.length !== 65) {
+    throw new Error('The public key must be an uncompressed 64-byte length.')
   }
 }
 
