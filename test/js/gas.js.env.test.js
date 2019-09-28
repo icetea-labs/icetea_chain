@@ -53,7 +53,7 @@ describe('simple store contract', () => {
     await expect(tweb3.deploy(ContractMode.JS_RAW, await transpile(src), [], { from })).rejects.toThrow(Error)
 
     // deploy with fee
-    const fee = 20000
+    const fee = 30000
     const result = await tweb3.deploy(ContractMode.JS_RAW, await transpile(src), [], { from, fee })
     expect(result.address).toBeDefined()
     const simplestoreContract = tweb3.contract(result.address)

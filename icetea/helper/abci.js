@@ -13,7 +13,7 @@ function getBlock (req) {
   const hash = req.hash.toString('hex')
   const number = typeof req.header.height === 'number' ? req.header.height : req.header.height.toNumber()
   const time = req.header.time
-  const timestamp = time.seconds.toNumber() * 1000 + ((time.nanos / 1_000_000) | 0)
+  const timestamp = time.seconds.toNumber() * 1000 + ((time.nanos / 1000000) | 0)
   return { hash, number, timestamp }
 }
 
