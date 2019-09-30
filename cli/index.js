@@ -4,8 +4,11 @@ const tm = require('tendermint-node')
 const fs = require('fs')
 const path = require('path')
 const homedir = require('os').homedir()
-const { spawn } = require('child_process')
+const { fork, spawn } = require('child_process')
 const rimraf = require('rimraf')
+const debugFactory = require('debug')
+debugFactory.enable('icetea*')
+const debug = debugFactory('icetea:cli')
 
 const program = require('commander')
 program.version('0.0.1')
@@ -36,7 +39,7 @@ program
     network = getNetwork(network)
     const initDir = `${homedir}/.icetea/${network}`
     initTendemint(initDir)
-    console.log(`Init directory created at ${initDir}`)
+    debug(`Init directory created at ${initDir}`)
   })
 
 let node
@@ -46,31 +49,52 @@ program
   .description('start a blockchain node')
   .option('-n, --network <network>', 'network', 'private')
   .option('-d, --debug', 'debug mode')
-  .action(async ({ network, debug }, options) => {
+  .action(async ({ network, debug: debugMode }, options) => {
+    debug(`Prepare to start Icetea. Network: ${network}. Debug mode: ${!!debugMode}`)
+
     network = getNetwork(network)
 
-    const initDir = `${homedir}/.icetea/${network}`
-    let command = 'node'
     const runOptions = {
       cwd: path.resolve(__dirname, '..')
     }
 
-    if (debug) {
-      command = 'ndb'
-      runOptions.env = { ...process.env, NODE_ENV: 'development' }
+    const indexFile = path.resolve(__dirname, `./${network}.js`)
+
+    const initDir = `${homedir}/.icetea/${network}`
+    const startTm = () => {
+      node = tm.node(initDir, {})
+      node.stdout.pipe(process.stdout)
+      node.stderr.pipe(process.stderr)
+      debug(`Iceteamint started, initial directory is ${initDir}`)
+      node.on('exit', code => {
+        debug(`Iceteamint exit code: ${code}`)
+      })
     }
 
-    const indexFile = path.resolve(__dirname, `./${network}.js`)
-    const child = spawn(command, [indexFile], runOptions)
-    child.stdout.pipe(process.stdout)
-    child.stderr.pipe(process.stderr)
+    if (debugMode) {
+      runOptions.env = { ...process.env, NODE_ENV: 'development' }
+      instance = spawn('ndb', [indexFile], runOptions)
+      instance.stdout.pipe(process.stdout)
+      instance.stderr.pipe(process.stderr)
+      setTimeout(() => startTm(), 2000)
+    } else {
+      instance = fork(indexFile, [], runOptions)
+      instance.on('message', ({ event } = {}) => {
+        if (event === 'listen') {
+          startTm()
+        }
+      })
+    }
 
-    child.on('exit', code => {
-      console.log(`ndb exit code is: ${code}`)
+    instance.on('exit', code => {
+      debug(`Icetea${debugMode ? ' debug' : ''} node exit code: ${code}`)
+
+      // handle the case when user click on the (x) button of debug window
+      if (debugMode) {
+        node && node.kill()
+        process.exit(code)
+      }
     })
-
-    node = tm.node(initDir, {})
-    node.stdout.pipe(process.stdout)
   })
 
 program
@@ -86,7 +110,7 @@ program
     fs.mkdirSync(contractSrcDir)
     fs.closeSync(fs.openSync(`${contractSrcDir}/.gitkeep`, 'w'))
     initTendemint(initDir)
-    console.log(`Remove directory at ${initDir} and ${contractSrcDir}`)
+    debug(`Directories ${initDir} and ${contractSrcDir} removed.`)
   })
 
 program
@@ -103,13 +127,13 @@ program
     child.stderr.pipe(process.stderr)
 
     child.on('exit', code => {
-      console.log(`Exit code is: ${code}`)
+      debug(`Web server exit code: ${code}`)
     })
   })
 
 program.parse(process.argv)
 
 process.on('SIGINT', () => {
+  // let tm clean-up, or it will lock the DB
   node && node.kill()
-  instance && instance.close()
 })
