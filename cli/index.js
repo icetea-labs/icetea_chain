@@ -72,7 +72,6 @@ program
     }
 
     if (debugMode) {
-      runOptions.env = { ...process.env, NODE_ENV: 'development' }
       instance = spawn('ndb', [indexFile], runOptions)
       instance.stdout.pipe(process.stdout)
       instance.stderr.pipe(process.stderr)
@@ -116,7 +115,7 @@ program
 program
   .command('app')
   .description('start a blockchain ui for development')
-  .option('-h, --host <host>', 'icetea node http or ws', 'http://localhost:26657')
+  .option('-h, --host <host>', 'icetea node http or ws', 'ws://localhost:26657/websocket')
   .action(async ({ host }, options) => {
     const daemon = path.resolve(__dirname, '../node_modules/webpack-dev-server/bin/webpack-dev-server.js')
     const child = spawn(daemon, ['--open', '--config', 'webpack.dev.js'], {
