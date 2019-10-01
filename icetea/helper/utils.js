@@ -340,17 +340,16 @@ exports.newAndBind = (SomeClass, ...params) => {
   return instance
 }
 
+/**
+ * Serialize data to a byte buffer to return to client when querying.
+ * This is not serialize blockchain state to leveldb
+ * nor serialize TX content for sending to tendermint.
+ */
 exports.serialize = obj => {
   if (obj && typeof obj.__getPackingContent === 'function') {
     obj = obj.__getPackingContent()
   }
   return codec.encode(obj)
-  // return JSON.stringify(obj, (key, value) => {
-  //   if (typeof value === 'bigint') { // eslint-disable-line
-  //     return value.toString()
-  //   }
-  //   return value
-  // })
 }
 
 exports.validateAddress = addr => {
