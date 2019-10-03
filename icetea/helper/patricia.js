@@ -1,5 +1,5 @@
 const Trie = require('merkle-patricia-tree')
-const v8 = require('v8')
+const serializer = require('../state/serializer').getSerializer()
 const async = require('async')
 const newDB = require('./db')
 const config = require('../config')
@@ -25,7 +25,7 @@ const patricia = () => {
 }
 
 const getState = (stateBuffer) => {
-  const state = v8.deserialize(stateBuffer)
+  const state = serializer.deserialize(stateBuffer)
   return state
 }
 
@@ -52,7 +52,7 @@ const lastBlock = () => {
         return reject(err)
       }
       value = Buffer.from(JSON.parse(value).data)
-      return resolve(v8.deserialize(value))
+      return resolve(serializer.deserialize(value))
     })
   })
 }
@@ -61,10 +61,10 @@ exports.load = async (path) => {
   db = newDB(path)
   const trie = await patricia()
   const [state, block] = await Promise.all([dump(trie), lastBlock()])
-  const validators = await this.getValidatorsByHeight(block ? block.number : 0)
   if (!block) {
     return null
   }
+  const validators = await this.getValidatorsByHeight(block ? block.number : 0)
   return { state, block, validators }
 }
 
@@ -80,7 +80,7 @@ exports.getHash = (stateTable) => {
     opts.push({
       type: 'put',
       key,
-      value: v8.serialize(stateTable[key])
+      value: serializer.serialize(stateTable[key])
     })
   })
   return new Promise((resolve, reject) => {
@@ -101,7 +101,7 @@ exports.save = async ({ block, state, validators, commitKeys }) => {
     opts.push({
       type: 'put',
       key,
-      value: v8.serialize(state[key])
+      value: serializer.serialize(state[key])
     })
   })
   return new Promise((resolve, reject) => {
@@ -118,16 +118,16 @@ exports.save = async ({ block, state, validators, commitKeys }) => {
       },
       (next) => {
         persistBlock.stateRoot = trie.root.toString('hex')
-        db.put(`${blockKey}${block.number}`, JSON.stringify(v8.serialize(persistBlock)), next)
+        db.put(`${blockKey}${block.number}`, JSON.stringify(serializer.serialize(persistBlock)), next)
       },
       (next) => {
         if (block.number % config.election.epoch !== 0) {
           return next(null)
         }
-        db.put(`${validatorsKey}${block.number}`, JSON.stringify(v8.serialize(validators)), next)
+        db.put(`${validatorsKey}${block.number}`, JSON.stringify(serializer.serialize(validators)), next)
       },
       (next) => {
-        db.put(lastBlockKey, JSON.stringify(v8.serialize(persistBlock)), next)
+        db.put(lastBlockKey, JSON.stringify(serializer.serialize(persistBlock)), next)
       }
     ], (err, ret) => {
       if (err) {
@@ -148,7 +148,7 @@ exports.getBlockByHeight = async (height) => {
         return reject(err)
       }
       value = Buffer.from(JSON.parse(value).data)
-      return resolve(v8.deserialize(value))
+      return resolve(serializer.deserialize(value))
     })
   })
 }
@@ -164,7 +164,7 @@ exports.getValidatorsByHeight = async (height) => {
         return reject(err)
       }
       value = Buffer.from(JSON.parse(value).data)
-      return resolve(v8.deserialize(value))
+      return resolve(serializer.deserialize(value))
     })
   })
 }
@@ -184,7 +184,7 @@ exports.getStateByKey = (key, stateRoot) => {
         }
         return reject(err)
       }
-      return resolve(v8.deserialize(value))
+      return resolve(serializer.deserialize(value))
     })
   })
 }

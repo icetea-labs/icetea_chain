@@ -1,13 +1,17 @@
 const msgpack = require('msgpack-lite')
-const { BaseSerializer } = require('./base')
+const { BaseSerializer } = require('.')
 
 class MsgPackSerializer extends BaseSerializer {
   serialize (o) {
     return msgpack.encode(o)
   }
 
-  deserializer (o) {
+  deserialize (o) {
     return msgpack.decode(o)
+  }
+
+  supportCircularRef () {
+    return false
   }
 
   getUnsupportedTypes () {

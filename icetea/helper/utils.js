@@ -1,10 +1,8 @@
 /** @module */
 
 const _ = require('lodash')
-const v8 = require('v8')
 const sysContracts = require('../syscon')
 const { ecc, codec } = require('@iceteachain/common')
-const { types } = require('util')
 
 /**
  * get all property name of an object
@@ -263,53 +261,6 @@ exports.fixObject = obj => {
   }
 
   return obj
-}
-
-exports.sanitizeState = o => {
-  try {
-    v8.serialize(o)
-  } catch (err) {
-    throw new Error(`State object is not serializable: ${String(err)}`)
-  }
-
-  const seenSet = new Set()
-
-  function detect (o) {
-    if (o == null) return null
-    if (Buffer.isBuffer(o)) return o
-    const t = typeof o
-
-    // if (t === 'bigint' || t === 'function' ||
-    if (t === 'function' ||
-    //  o instanceof RegExp ||
-    //  o instanceof Date ||
-      o instanceof Map ||
-      o instanceof Set ||
-      o instanceof WeakMap ||
-      types.isProxy(o)) {
-      throw new Error(`State contains unsupported type: ${types.isProxy(o) ? 'Proxy' : t}`)
-    }
-
-    if (t === 'object') {
-      const propNames = Object.getOwnPropertyNames(o)
-      for (const name of propNames) {
-        const value = o[name]
-        if (seenSet.has(value)) {
-          continue
-        }
-        seenSet.add(value)
-        if (typeof value === 'undefined') {
-          delete o[name]
-        } else {
-          o[name] = detect(value)
-        }
-      }
-    }
-
-    return o
-  }
-
-  return detect(o)
 }
 
 /**

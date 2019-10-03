@@ -1,4 +1,7 @@
-const { BaseSerializer } = require('./base')
+const { BaseSerializer } = require('.')
+
+// NOTE: this class is here just for performance and size comparation
+// It is NOT suitable to use JSON-based state serialization due to many JSON limitations
 
 class JsonSerializer extends BaseSerializer {
   serialize (o) {
@@ -6,12 +9,16 @@ class JsonSerializer extends BaseSerializer {
     return Buffer.from(JSON.stringify(o) || '')
   }
 
-  deserializer (o) {
+  deserialize (o) {
     if (!o) return o
     if (Buffer.isBuffer(o) && o.length === 0) {
       return undefined
     }
     return JSON.parse(o.toString())
+  }
+
+  supportCircularRef () {
+    return false
   }
 
   getUnsupportedTypes () {

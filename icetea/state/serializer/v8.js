@@ -1,17 +1,17 @@
 const v8 = require('v8')
-const { BaseSerializer } = require('./base')
+const { BaseSerializer } = require('.')
 
 class V8Serializer extends BaseSerializer {
   serialize (o) {
     return v8.serialize(o)
   }
 
-  deserializer (o) {
+  deserialize (o) {
     return v8.deserialize(o)
   }
 
   getUnsupportedTypes () {
-    return ['Function', 'Symbol', 'Map', 'Set', 'WeakMap']
+    return ['Function', 'Symbol', 'WeakMap']
   }
 }
 

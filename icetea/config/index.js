@@ -25,6 +25,9 @@ const config = {
     minProviderDeposit: 10e6,
     unregistrationLock: 10
   },
+  state: {
+    serializer: 'v8'
+  },
   abciServerPort: 26658,
   feeCollector: process.env.FEE_COLLECTOR,
   initialBalances: [
