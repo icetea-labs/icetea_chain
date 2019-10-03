@@ -1,6 +1,7 @@
 const _ = require('lodash')
 const config = require('../config')
-const { deepFreeze, sanitizeState, validateAddress } = require('../helper/utils')
+const { deepFreeze, validateAddress } = require('../helper/utils')
+const stateSerializer = require('./serializer').getSerializer()
 
 const { ecc, codec } = require('@iceteachain/common')
 
@@ -103,7 +104,7 @@ const _stateforAddress = (contractAddress, readonly, {
       if (!key || typeof key !== 'string') {
         throw new Error(`Expect key to be an non-empty string, but got ${key}`)
       }
-      value = sanitizeState(value)
+      value = stateSerializer.sanitize(value)
       if (!storage) {
         storage = { [key]: value }
         storages[contractAddress] = storage

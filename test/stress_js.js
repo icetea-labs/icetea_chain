@@ -1,6 +1,7 @@
 require('dotenv').config()
 const { web3, switchEncoding } = require('./helper')
 const { TxOp, ContractMode } = require('@iceteachain/common')
+const { transpile } = require('@iceteachain/sunseed')
 
 const tweb3 = web3.default()
 
@@ -49,7 +50,7 @@ async function test (times) {
         }`
 
   try {
-    await testSimpleStore(ContractMode.JS_DECORATED, CONTRACT_SRC, times)
+    await testSimpleStore(ContractMode.JS_RAW, await transpile(CONTRACT_SRC), times)
   } catch (error) {
     console.error(error)
   }

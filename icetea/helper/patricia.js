@@ -1,5 +1,5 @@
 const Trie = require('merkle-patricia-tree')
-const v8 = require('v8')
+const serializer = require('../state/serializer').getSerializer()
 const async = require('async')
 const newDB = require('./db')
 const config = require('../config')
@@ -19,14 +19,9 @@ const patricia = () => {
         }
         return reject(err)
       }
-      return resolve(new Trie(db, Buffer.from(value, 'hex')))
+      return resolve(new Trie(db, value))
     })
   })
-}
-
-const getState = (stateBuffer) => {
-  const state = v8.deserialize(stateBuffer)
-  return state
 }
 
 const dump = (trie) => {
@@ -34,7 +29,7 @@ const dump = (trie) => {
     const state = {}
     const stream = trie.createReadStream()
     stream.on('data', function (d) {
-      state[d.key.toString()] = getState(d.value)
+      state[d.key.toString()] = serializer.deserialize(d.value)
     })
     stream.on('end', function () {
       resolve(state)
@@ -51,8 +46,7 @@ const lastBlock = () => {
         }
         return reject(err)
       }
-      value = Buffer.from(JSON.parse(value).data)
-      return resolve(v8.deserialize(value))
+      return resolve(serializer.deserialize(value))
     })
   })
 }
@@ -61,16 +55,16 @@ exports.load = async (path) => {
   db = newDB(path)
   const trie = await patricia()
   const [state, block] = await Promise.all([dump(trie), lastBlock()])
-  const validators = await this.getValidatorsByHeight(block ? block.number : 0)
   if (!block) {
     return null
   }
+  const validators = await this.getValidatorsByHeight(block ? block.number : 0)
   return { state, block, validators }
 }
 
 exports.root = async () => {
   const trie = await patricia()
-  return trie.root.toString('hex')
+  return trie.root
 }
 
 exports.getHash = (stateTable) => {
@@ -80,7 +74,7 @@ exports.getHash = (stateTable) => {
     opts.push({
       type: 'put',
       key,
-      value: v8.serialize(stateTable[key])
+      value: serializer.serialize(stateTable[key])
     })
   })
   return new Promise((resolve, reject) => {
@@ -88,7 +82,7 @@ exports.getHash = (stateTable) => {
       if (err) {
         return reject(err)
       }
-      return resolve(trie.root.toString('hex'))
+      return resolve(trie.root)
     })
   })
 }
@@ -101,7 +95,7 @@ exports.save = async ({ block, state, validators, commitKeys }) => {
     opts.push({
       type: 'put',
       key,
-      value: v8.serialize(state[key])
+      value: serializer.serialize(state[key])
     })
   })
   return new Promise((resolve, reject) => {
@@ -114,26 +108,26 @@ exports.save = async ({ block, state, validators, commitKeys }) => {
         trie.commit(next)
       },
       (ret, next) => {
-        db.put(rootKey, trie.root.toString('hex'), next)
+        db.put(rootKey, trie.root, next)
       },
       (next) => {
-        persistBlock.stateRoot = trie.root.toString('hex')
-        db.put(`${blockKey}${block.number}`, JSON.stringify(v8.serialize(persistBlock)), next)
+        persistBlock.stateRoot = trie.root
+        db.put(`${blockKey}${block.number}`, serializer.serialize(persistBlock), next)
       },
       (next) => {
         if (block.number % config.election.epoch !== 0) {
           return next(null)
         }
-        db.put(`${validatorsKey}${block.number}`, JSON.stringify(v8.serialize(validators)), next)
+        db.put(`${validatorsKey}${block.number}`, serializer.serialize(validators), next)
       },
       (next) => {
-        db.put(lastBlockKey, JSON.stringify(v8.serialize(persistBlock)), next)
+        db.put(lastBlockKey, serializer.serialize(persistBlock), next)
       }
     ], (err, ret) => {
       if (err) {
         return reject(err)
       }
-      return resolve(trie.root.toString('hex'))
+      return resolve(trie.root)
     })
   })
 }
@@ -147,8 +141,7 @@ exports.getBlockByHeight = async (height) => {
         }
         return reject(err)
       }
-      value = Buffer.from(JSON.parse(value).data)
-      return resolve(v8.deserialize(value))
+      return resolve(serializer.deserialize(value))
     })
   })
 }
@@ -163,19 +156,18 @@ exports.getValidatorsByHeight = async (height) => {
         }
         return reject(err)
       }
-      value = Buffer.from(JSON.parse(value).data)
-      return resolve(v8.deserialize(value))
+      return resolve(serializer.deserialize(value))
     })
   })
 }
 
 exports.getStateTable = async (stateRoot) => {
-  const trie = new Trie(db, Buffer.from(stateRoot, 'hex'))
+  const trie = new Trie(db, stateRoot)
   return dump(trie)
 }
 
 exports.getStateByKey = (key, stateRoot) => {
-  const trie = new Trie(db, Buffer.from(stateRoot, 'hex'))
+  const trie = new Trie(db, stateRoot)
   return new Promise((resolve, reject) => {
     trie.get(key, (err, value) => {
       if (err) {
@@ -184,7 +176,7 @@ exports.getStateByKey = (key, stateRoot) => {
         }
         return reject(err)
       }
-      return resolve(v8.deserialize(value))
+      return resolve(serializer.deserialize(value))
     })
   })
 }
