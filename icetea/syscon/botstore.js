@@ -99,7 +99,10 @@ exports.run = (context, options) => {
       // TODO: check if it 'looks like' a bot
 
       // Only contract owners can register to the botstore
-      exports.systemContracts().Did.checkPermission(deployedBy, msg.signers, block.timestamp)
+      exports.systemContracts().Did.checkPermission(deployedBy, {
+        signers: msg.signers,
+        to: context.address
+      }, block)
 
       // TODO: validate category and icon?
 

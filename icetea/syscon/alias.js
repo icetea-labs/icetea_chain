@@ -110,8 +110,11 @@ exports.run = (context, options) => {
       let isOwnedAccount = false
       const validateAddressOwner = (address) => {
         const did = exports.systemContracts().Did
+        const checkPerm = address =>
+          did.checkPermission(address, { signers: msg.signers, to: context.address }, block)
+
         try {
-          did.checkPermission(address, msg.signers, block.timestamp)
+          checkPerm(address)
           isOwnedAccount = true
           return
         } catch (e) {
@@ -122,7 +125,7 @@ exports.run = (context, options) => {
             throw new Error('You do not have permission to register this alias.')
           }
 
-          did.checkPermission(deployedBy, msg.signers, block.timestamp)
+          checkPerm(deployedBy)
         }
       }
 

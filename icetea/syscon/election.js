@@ -134,7 +134,10 @@ exports.run = (context, options) => {
       if (me) {
         // Check update permission
         const did = exports.systemContracts().Did
-        did.checkPermission(me.operator, msg.signers, block.timestamp)
+        did.checkPermission(me.operator, {
+          signers: msg.signers,
+          to: context.address
+        }, block)
 
         // Add more deposit
         me.deposit = (me.deposit || BigInt(0)) + msg.value
@@ -164,7 +167,10 @@ exports.run = (context, options) => {
 
       // Check resign permission
       const did = exports.systemContracts().Did
-      did.checkPermission(me.operator, msg.signers, block.timestamp)
+      did.checkPermission(me.operator, {
+        signers: msg.signers,
+        to: context.address
+      }, block)
 
       // move to withdrawal key
       const withdrawList = _rawWithdrawList(context)
