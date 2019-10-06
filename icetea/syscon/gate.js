@@ -132,10 +132,7 @@ const _getProviderWithCheck = (context, providerAddr, block, msg) => {
   }
 
   const did = exports.systemContracts().Did
-  did.checkPermission(p.operator, {
-    signers: msg.signers,
-    to: context.address
-  }, block)
+  did.checkPermissionFromContract(p.operator, context)
 
   return [p, providers]
 }

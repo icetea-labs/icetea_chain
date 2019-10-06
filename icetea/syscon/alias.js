@@ -111,7 +111,7 @@ exports.run = (context, options) => {
       const validateAddressOwner = (address) => {
         const did = exports.systemContracts().Did
         const checkPerm = address =>
-          did.checkPermission(address, { signers: msg.signers, to: context.address }, block)
+          did.checkPermissionFromContract(address, context)
 
         try {
           checkPerm(address)

@@ -105,6 +105,25 @@ const METADATA = Object.freeze({
     ],
     returnType: 'undefined'
   },
+  grantAccessToken: { // (ownerAddr, contractAddr, tokenAddr, ms)
+    decorators: ['transaction'],
+    params: [
+      { name: 'ownerAddr', type: 'address' },
+      { name: 'contractAddr', type: 'address' },
+      { name: 'tokenAddr', type: 'address' },
+      { name: 'ms', type: 'number' }
+    ],
+    returnType: 'undefined'
+  },
+  revokeAccessToken: {
+    decorators: ['transaction'],
+    params: [
+      { name: 'ownerAddr', type: 'address' },
+      { name: 'contractAddr', type: 'address' },
+      { name: 'tokenAddr', type: 'address' }
+    ],
+    returnType: 'undefined'
+  },
   setTag: {
     decorators: ['transaction'],
     params: [
@@ -174,7 +193,7 @@ function _checkPerm (address, props, tx, block, asAdmin) {
   const isAdmin = _checkOwner(address, props, tx) || _checkInheritance(props, tx, now)
   if (isAdmin) return
 
-  if (asAdmin || !_checkAccessToken(props, tx, now)) {
+  if (asAdmin || tx.value > 0 || !_checkAccessToken(props, tx, now)) {
     throw new Error('Permission denied.')
   }
 }
@@ -250,7 +269,7 @@ exports.run = (context) => {
 
     // FIXME: should validate inside (like ensure addresses), or make it private
     register (address, { owners, threshold, tokens, tags, inheritors }) {
-      contract.checkAdminPermission(address)
+      contract.checkPermission(address, undefined, owners || threshold || tokens || inheritors)
 
       if (!owners && !threshold && !tags && !inheritors) {
         throw new Error('Nothing to register.')
@@ -291,6 +310,9 @@ exports.run = (context) => {
       tx.signers = tx.signers || msg.signers
       if (!Array.isArray(tx.signers)) {
         tx.signers = [tx.signers]
+      }
+      if (!tx.to) {
+        tx.to = context.address
       }
       const props = context.getState(address)
       _checkPerm(address, props, tx, block, asAdmin)
@@ -364,14 +386,19 @@ exports.run = (context) => {
       }
     },
 
-    addAccessToken (ownerAddr, contractAddr, tokenAddr, ms) {
+    grantAccessToken (ownerAddr, contractAddr, tokenAddr, ms) {
       // tokens
       //  contract
       //    token
       //      validTil
+      //      match (name, params, value) - not yet support
       //      perms: ['sign', { type: 'spend', data: {quota: 10000, dailyQuota: 1000, txQuota: 100 }} ]
 
       // FOR NOW, we will skip the spend perm and only allow signing
+
+      if (ms < 1 || !Number.isInteger(ms)) {
+        throw new Error('Duration must be a valid integer of milliseconds.')
+      }
 
       const old = context.getState(ownerAddr)
       if (!old) {
@@ -403,6 +430,19 @@ exports.run = (context) => {
 
         context.setState(ownerAddr, old)
       }
+    },
+
+    revokeAccessToken (ownerAddr, contractAddr, tokenAddr) {
+      contract.checkAdminPermission(ownerAddr)
+      const old = context.getState(ownerAddr)
+      if (!old || !old.tokens || !old.tokens[contractAddr] || !old.tokens[contractAddr][tokenAddr]) return
+
+      if (!Object.keys(old.tokens[contractAddr]).length === 1) {
+        delete old.tokens[contractAddr]
+      } else {
+        delete old.tokens[contractAddr][tokenAddr]
+      }
+      context.setState(ownerAddr, old)
     },
 
     addInheritor (address, inheritor, waitPeriod, lockPeriod) {
@@ -530,7 +570,7 @@ exports.run = (context) => {
       if (!old) {
         contract.register(address, { tags: v })
       } else {
-        contract.checkAdminPermission(address)
+        contract.checkPermission(address)
 
         old.tags = Object.assign(old.tags || {}, v)
         context.setState(address, old)
@@ -538,7 +578,7 @@ exports.run = (context) => {
     },
 
     removeTag (address, name) {
-      contract.checkAdminPermission(address)
+      contract.checkPermission(address)
 
       const old = context.getState(address)
       if (!old || !old.tags || !old.tags[name]) {
@@ -568,4 +608,15 @@ exports.checkPermission = function (address, tx, block) {
   const storage = this.unsafeStateManager().getAccountState(DID_ADDR).storage || {}
   const props = storage[address]
   _checkPerm(address, props, tx, block)
+}
+
+exports.checkPermissionFromContract = function (address, contract) {
+  const { msg, block } = contract.runtime
+  const tx = {
+    ...msg,
+    from: msg.sender,
+    to: contract.address
+  }
+
+  exports.checkPermission(address, tx, block)
 }

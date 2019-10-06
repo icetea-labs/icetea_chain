@@ -61,7 +61,7 @@ exports.ondeploy = state => {
 
 // standard contract interface
 exports.run = (context, options) => {
-  const { msg, block } = context.runtime
+  const { msg } = context.runtime
   const msgParams = checkMsg(msg, METADATA, { sysContracts: this.systemContracts() })
 
   const contract = {
@@ -99,10 +99,7 @@ exports.run = (context, options) => {
       // TODO: check if it 'looks like' a bot
 
       // Only contract owners can register to the botstore
-      exports.systemContracts().Did.checkPermission(deployedBy, {
-        signers: msg.signers,
-        to: context.address
-      }, block)
+      exports.systemContracts().Did.checkPermissionFromContract(deployedBy, context)
 
       // TODO: validate category and icon?
 
