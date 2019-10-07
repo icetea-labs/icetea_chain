@@ -1,6 +1,6 @@
 /** @module */
 
-const { validateAddress } = require('@iceteachain/common').ecc
+const { ecc, codec } = require('@iceteachain/common')
 const sysContractNames = Object.values(require('../syscon/sysconnames'))
 const { ensureAddress } = require('../syscon/alias')
 
@@ -28,11 +28,34 @@ function check (o, t, {
     return o
   }
 
-  if (t === 'address' || t === 'pureaddress') {
-    if (t === 'address') {
+  // address, pureaddress, raddress, baddress
+  if (['address', 'pureaddress', 'raddress', 'baddress'].includes(t)) {
+    const isSys = sysContractNames.includes(o)
+    if (isSys) {
+      if (isSys && t === 'raddress') {
+        throw new TypeError(`${errorMessage}: expect regular address, got system address '${o}'.`)
+      }
+      return o
+    }
+
+    if (t !== 'pureaddress') {
+      // resolve alias if needed
       o = (ensureAddress || sysContracts.Alias.ensureAddress)(o)
     }
-    sysContractNames.includes(o) || validateAddress(o)
+
+    // validate non-system
+    ecc.validateAddress(o)
+
+    // check regular address
+    if (t === 'raddress' && !codec.isRegularAddress(o)) {
+      throw new TypeError(`${errorMessage}: expect regular address, got bank address '${o}'.`)
+    }
+
+    // check bank address
+    if (t === 'baddress' && !codec.isBankAddress(o)) {
+      throw new TypeError(`${errorMessage}: expect bank address, got regular address '${o}'.`)
+    }
+
     return o
   }
 

@@ -22,6 +22,9 @@ const METADATA = Object.freeze({
     ],
     returnType: ['object', 'undefined']
   },
+  // Change register to private, since it is complicated to expose
+  // (we must validate structure carefully if exposed)
+  /*
   register: {
     decorators: ['transaction'],
     params: [
@@ -29,7 +32,7 @@ const METADATA = Object.freeze({
       { name: 'props', type: 'object' }
     ],
     returnType: 'undefined'
-  },
+  }, */
   addOwner: {
     decorators: ['transaction'],
     params: [
@@ -105,6 +108,36 @@ const METADATA = Object.freeze({
     ],
     returnType: 'undefined'
   },
+  grantAccessToken: {
+    decorators: ['transaction'],
+    params: [
+      { name: 'ownerAddr', type: 'address' },
+      { name: 'contractAddr', type: ['Array', 'address'] },
+      { name: 'tokenAddr', type: 'address' },
+      { name: 'ms', type: 'number' }
+    ],
+    returnType: 'undefined'
+  },
+  // comment out revoke because not tested yet
+  /*
+  revokeAccessToken: {
+    decorators: ['transaction'],
+    params: [
+      { name: 'ownerAddr', type: 'address' },
+      { name: 'contractAddr', type: 'address' },
+      { name: 'tokenAddr', type: 'address' }
+    ],
+    returnType: 'undefined'
+  },
+  revokeAllAccessTokens: {
+    decorators: ['transaction'],
+    params: [
+      { name: 'ownerAddr', type: 'address' },
+      { name: 'contractAddr', type: 'address' }
+    ],
+    returnType: 'undefined'
+  },
+  */
   setTag: {
     decorators: ['transaction'],
     params: [
@@ -126,7 +159,16 @@ const METADATA = Object.freeze({
     decorators: ['view'],
     params: [
       { name: 'address', type: 'address' },
-      { name: 'signers', type: ['address', 'Array', 'undefined'] }
+      { name: 'tx', type: ['object', 'undefined'] },
+      { name: 'asAdmin', type: ['boolean', 'undefined'] }
+    ],
+    returnType: 'undefined'
+  },
+  checkAdminPermission: {
+    decorators: ['view'],
+    params: [
+      { name: 'address', type: 'address' },
+      { name: 'tx', type: ['object', 'undefined'] }
     ],
     returnType: 'undefined'
   }
@@ -160,13 +202,17 @@ function _checkValidity (owners, threshold) {
   }
 }
 
-function _checkPerm (address, props, signers, now) {
-  if (!_checkOwner(address, props, signers) && !_checkInheritance(props, signers, now)) {
+function _checkPerm (address, props, tx, block, asAdmin) {
+  const now = (block && block.timestamp) || 0
+  const isAdmin = _checkOwner(address, props, tx) || _checkInheritance(props, tx, now)
+  if (isAdmin) return
+
+  if (asAdmin || tx.value > 0 || !_checkAccessToken(props, tx, now)) {
     throw new Error('Permission denied.')
   }
 }
 
-function _checkOwner (address, props, signers) {
+function _checkOwner (address, props, { signers }) {
   if (!props || !props.owners || !Object.keys(props.owners).length) {
     return signers.includes(address)
   }
@@ -179,13 +225,24 @@ function _checkOwner (address, props, signers) {
   return signWeight >= threshold
 }
 
-function _checkInheritance (props, signers, now) {
+function _checkInheritance (props, { signers }, now) {
   if (!props || !props.inheritors || !Object.keys(props.inheritors).length) {
     return false
   }
 
   const inheritors = props.inheritors
   return signers.some(s => _checkClaim(inheritors[s], now))
+}
+
+function _checkAccessToken (props, { signers, to }, now) {
+  if (!to) return false
+  if (!props || !props.tokens || !Object.keys(props.tokens).length) {
+    return false
+  }
+
+  const tokens = props.tokens[to]
+  if (!tokens) return false
+  return signers.some(s => _checkTokenValid(tokens[s], now))
 }
 
 function _checkClaim (data, now) {
@@ -205,6 +262,14 @@ function _checkClaim (data, now) {
   return true
 }
 
+function _checkTokenValid (data, now) {
+  if (!data || !data.expireAfter) {
+    return false
+  }
+
+  return now <= data.expireAfter
+}
+
 // standard contract interface
 exports.run = (context) => {
   const { msg, block } = context.runtime
@@ -216,11 +281,11 @@ exports.run = (context) => {
       return props ? _.cloneDeep(props) : undefined
     },
 
-    // FIXME: should validate inside (like ensure addresses), or make it private
-    register (address, { owners, threshold, tags, inheritors }) {
-      contract.checkPermission(address)
+    // NOTE: this method is private (not exposed via metadata, so we won't validate parameter structure)
+    register (address, { owners, threshold, tokens, tags, inheritors }) {
+      contract.checkPermission(address, undefined, owners || threshold || tokens || inheritors)
 
-      if (!owners && !threshold && !tags && !inheritors) {
+      if (!owners && !threshold && !tags && !inheritors && !tokens) {
         throw new Error('Nothing to register.')
       }
 
@@ -237,6 +302,10 @@ exports.run = (context) => {
       if (typeof threshold === 'number' && threshold > 0) {
         props.threshold = threshold
       }
+      if (tokens) {
+        props.tokens = tokens
+      }
+
       if (tags) {
         props.tags = tags
       }
@@ -247,13 +316,20 @@ exports.run = (context) => {
       context.setState(address, props)
     },
 
-    checkPermission (address, signers) {
-      signers = signers || msg.signers
-      if (typeof signers === 'string') {
-        signers = [signers]
+    checkAdminPermission (address, tx) {
+      return this.checkPermission(address, tx, true)
+    },
+
+    checkPermission (address, tx = {}, asAdmin) {
+      tx.signers = tx.signers || msg.signers
+      if (!Array.isArray(tx.signers)) {
+        tx.signers = [tx.signers]
+      }
+      if (!tx.to) {
+        tx.to = context.address
       }
       const props = context.getState(address)
-      _checkPerm(address, props, signers, block.timestamp)
+      _checkPerm(address, props, tx, block, asAdmin)
     },
 
     addOwner (address, owner, weight = 1) {
@@ -261,7 +337,7 @@ exports.run = (context) => {
       if (!old) {
         contract.register(address, { owners: { [owner]: weight } })
       } else {
-        contract.checkPermission(address)
+        contract.checkAdminPermission(address)
 
         old.owners = old.owners || {}
         old.owners[owner] = weight
@@ -271,7 +347,7 @@ exports.run = (context) => {
     },
 
     removeOwner (address, owner) {
-      contract.checkPermission(address)
+      contract.checkAdminPermission(address)
 
       const old = context.getState(address)
       if (!old || !old.owners || !old.owners[owner]) {
@@ -293,7 +369,7 @@ exports.run = (context) => {
     },
 
     clearOwnership (address) {
-      contract.checkPermission(address)
+      contract.checkAdminPermission(address)
 
       const old = context.getState(address)
       if (!old) {
@@ -312,7 +388,7 @@ exports.run = (context) => {
           contract.register(address, { threshold })
         }
       } else {
-        contract.checkPermission(address)
+        contract.checkAdminPermission(address)
 
         if (threshold === undefined || threshold === 1) {
           delete old.threshold
@@ -322,6 +398,71 @@ exports.run = (context) => {
         _checkValidity(old.owners, old.threshold)
         context.setState(address, old)
       }
+    },
+
+    grantAccessToken (ownerAddr, contracts, tokenAddr, ms) {
+      // tokens
+      //  contract
+      //    token
+      //      expireAfter
+      //      match (name, params, value) - not yet support
+      //      perms: ['sign', { type: 'spend', data: {quota: 10000, dailyQuota: 1000, txQuota: 100 }} ]
+
+      // FOR NOW, we will skip the spend perm and only allow signing
+
+      if (ms < 1 || !Number.isInteger(ms)) {
+        throw new Error('Duration must be a valid integer of milliseconds.')
+      }
+
+      if (!Array.isArray(contracts)) {
+        contracts = [contracts]
+      }
+
+      const expireAfter = block.timestamp + ms
+
+      const old = context.getState(ownerAddr)
+      if (!old) {
+        const data = {}
+        contracts.forEach(c => {
+          data[c] = { [tokenAddr]: { expireAfter } }
+        })
+        contract.register(ownerAddr, {
+          tokens: data
+        })
+      } else {
+        contract.checkAdminPermission(ownerAddr)
+
+        old.tokens = old.tokens || {}
+        contracts.forEach(contractAddr => {
+          const oldContract = old.tokens[contractAddr] = old.tokens[contractAddr] || {}
+
+          // delete expired tokens
+          const now = block.timestamp
+          Object.entries(oldContract).forEach(([t, value]) => {
+            if (now > value.expireAfter) {
+              delete oldContract[t]
+            }
+          })
+
+          const oldToken = oldContract[tokenAddr] = oldContract[tokenAddr] || {}
+          oldToken.expireAfter = expireAfter
+        })
+
+        context.setState(ownerAddr, old)
+      }
+    },
+
+    revokeAccessToken (ownerAddr, contractAddr, tokenAddr) {
+      contract.checkAdminPermission(ownerAddr)
+      const old = context.getState(ownerAddr)
+      if (!old || !old.tokens || !old.tokens[contractAddr] || !old.tokens[contractAddr][tokenAddr]) return
+
+      if (!Object.keys(old.tokens[contractAddr]).length === 1) {
+        delete old.tokens[contractAddr]
+      } else {
+        delete old.tokens[contractAddr][tokenAddr]
+      }
+      context.setState(ownerAddr, old)
     },
 
     addInheritor (address, inheritor, waitPeriod, lockPeriod) {
@@ -339,7 +480,7 @@ exports.run = (context) => {
           }
         })
       } else {
-        contract.checkPermission(address)
+        contract.checkAdminPermission(address)
 
         old.inheritors = old.inheritors || {}
         old.inheritors[inheritor] = Object.assign(old.inheritors[inheritor] || {}, { waitPeriod, lockPeriod })
@@ -348,7 +489,7 @@ exports.run = (context) => {
     },
 
     removeInheritor (address, inheritor) {
-      contract.checkPermission(address)
+      contract.checkAdminPermission(address)
 
       const old = context.getState(address)
       if (!old || !old.inheritors || !old.inheritors[inheritor]) {
@@ -388,8 +529,11 @@ exports.run = (context) => {
 
       // ensure that the account is idle for at least [minIdle] days
       // THIS IS HARD, WE DO NOT STORE LAST TX ANYWARE INSIDE ICETEA
-      // SO MUST QUERY TENDERMINT!!!
-      // PENDING
+      // 1. store in account storage
+      // 2. store in did (so did must receive every tx)
+      // lastTx: { txHash, block: height & timestamp }
+      // maybe we should have onTxCompleted event on bus for system component to listen
+      // or maybe we should store them separately in a leveldb
 
       // set last claim timestamp
       data.state = STATE_CLAIMING
@@ -400,7 +544,7 @@ exports.run = (context) => {
 
     rejectInheritanceClaim (address, claimer) {
       // ensure only owners can call
-      contract.checkPermission(address)
+      contract.checkAdminPermission(address)
 
       const did = context.getState(address)
       if (!did || !did.inheritors || !Object.keys(did.inheritors).length) {
@@ -480,8 +624,19 @@ exports.run = (context) => {
   }
 }
 
-exports.checkPermission = function (address, signers, now) {
+exports.checkPermission = function (address, tx, block) {
   const storage = this.unsafeStateManager().getAccountState(DID_ADDR).storage || {}
   const props = storage[address]
-  _checkPerm(address, props, signers, now)
+  _checkPerm(address, props, tx, block)
+}
+
+exports.checkPermissionFromContract = function (address, contract) {
+  const { msg, block } = contract.runtime
+  const tx = {
+    ...msg,
+    from: msg.sender,
+    to: contract.address
+  }
+
+  exports.checkPermission(address, tx, block)
 }

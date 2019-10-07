@@ -166,8 +166,8 @@ class App {
     }
 
     tx.from = tx.from || tx.signers[0]
-    const blockTimestamp = (stateManager.getBlock() || {}).timestamp || 0
-    did.checkPermission(tx.from, tx.signers, blockTimestamp)
+    const block = stateManager.getBlock()
+    did.checkPermission(tx.from, tx, block)
 
     // check payer
     const hasPayer = !!tx.payer && (tx.payer !== tx.from)
@@ -198,7 +198,7 @@ class App {
           throw new Error('Payer does not agree to pay.')
         }
       } else {
-        did.checkPermission(tx.payer, tx.signers, blockTimestamp)
+        did.checkPermission(tx.payer, tx, block)
       }
     }
 

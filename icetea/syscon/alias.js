@@ -36,7 +36,7 @@ const METADATA = Object.freeze({
     decorators: ['transaction'],
     params: [
       { name: 'alias', type: 'string' },
-      { name: 'address', type: 'pureaddress' },
+      { name: 'address', type: ['pureaddress', 'undefined'] },
       { name: 'overwrite', type: ['boolean', 'undefined'] }
     ],
     returnType: 'string'
@@ -107,13 +107,18 @@ exports.run = (context, options) => {
         throw new Error("Alias cannot start with 'system.', 'account.', or 'contract.'.")
       }
 
-      let isOwnedAccount = false
+      if (address == null) {
+        address = msg.sender
+      }
+
       const validateAddressOwner = (address) => {
         const did = exports.systemContracts().Did
+        const checkPerm = address =>
+          did.checkPermissionFromContract(address, context)
+
         try {
-          did.checkPermission(address, msg.signers, block.timestamp)
-          isOwnedAccount = true
-          return
+          checkPerm(address)
+          return true
         } catch (e) {
           let deployedBy
           try {
@@ -122,12 +127,16 @@ exports.run = (context, options) => {
             throw new Error('You do not have permission to register this alias.')
           }
 
-          did.checkPermission(deployedBy, msg.signers, block.timestamp)
+          checkPerm(deployedBy)
+          return false
         }
       }
 
-      // this is not like DNS where anyone can map a domain to your address
-      validateAddressOwner(address)
+      let isOwnedAccount = (address === msg.sender)
+      if (!isOwnedAccount) {
+        // this is not like DNS where anyone can map a domain to your address
+        isOwnedAccount = validateAddressOwner(address)
+      }
 
       const prefix = isOwnedAccount ? 'account.' : 'contract.'
       const fullAlias = prefix + alias

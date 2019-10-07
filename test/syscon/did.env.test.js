@@ -184,4 +184,116 @@ describe('did', () => {
     // reclaim - should be locked
     await expect(claimFromNewAccount()).rejects.toThrowError('locked')
   })
+
+  test('did access token', async () => {
+    const { privateKey, address: from } = account10k
+    tweb3.wallet.importAccount(privateKey)
+
+    const ms = tweb3.contract('system.did').methods
+
+    // token account
+    const account1 = ecc.newBankKeys()
+    tweb3.wallet.importAccount(account1.privateKey)
+
+    // token account
+    const token = ecc.newKeys()
+    tweb3.wallet.importAccount(token.privateKey)
+
+    // will use the token to call this function
+    const registerAlias = (alias, addr, fromAddr, signers) => {
+      fromAddr = fromAddr || from
+      signers = signers || token
+      return tweb3.contract('system.alias').methods.register(alias, addr).sendCommit({
+        from: fromAddr.address || fromAddr,
+        signers: signers.address || signers
+      })
+    }
+
+    const queryAlias = alias => {
+      return tweb3.contract('system.alias').methods.query(alias).call()
+    }
+
+    const grant = (ownerAddr, contractAddr, tokenAddr, duration, fromAddr) => {
+      fromAddr = fromAddr || from
+      tokenAddr = tokenAddr.address || tokenAddr
+      return ms.grantAccessToken(ownerAddr, contractAddr, tokenAddr, duration).sendCommit({ from: fromAddr.address || fromAddr })
+    }
+
+    // const revoke = (ownerAddr, contractAddr, tokenAddr, fromAddr) => {
+    //   fromAddr = fromAddr || from
+    //   tokenAddr = tokenAddr.address || tokenAddr
+    //   return ms.revokeAccessToken(ownerAddr, contractAddr, tokenAddr).sendCommit({ from: fromAddr.address || fromAddr })
+    // }
+
+    // use the token without grant first, it should fail
+    await expect(registerAlias('test1', from)).rejects.toThrowError('Permission denied')
+
+    // grant token from non-owner, it should fail
+    const DURATION = 5 * 60 * 1000
+    await expect(grant(from, 'system.alias', token, DURATION, account1)).rejects.toThrowError('Permission denied')
+
+    // grant token from owner, should ok
+    await grant(from, 'system.alias', token, DURATION, from)
+    let did = await ms.query(from).call()
+    expect(did.tokens['system.alias'][token.address]).toBeDefined()
+
+    // grant other token from the token, it should fail, because token does not have admin right
+    await expect(grant(from, 'system.alias', account1, DURATION, token)).rejects.toThrowError('Permission denied')
+
+    // transfer from a token, it should fail, token can only sign
+    const transfer = (from, to, amount, signers) => {
+      return tweb3.transfer(to, amount, { from, signers })
+    }
+    await expect(transfer(from, account1.address, 1, token.address)).rejects.toThrowError('Permission denied')
+
+    // use the token to call without attaching any value, should ok
+    await registerAlias('test1', from)
+    const alias = await queryAlias('account.test1')
+    expect(alias['account.test1'].address).toBe(from)
+
+    // test grant 2 contracts at a time
+    const token1 = ecc.newKeys().address
+    await grant(from, ['system.did', 'system.faucet'], token1, DURATION, from)
+    did = await ms.query(from).call()
+    expect(Object.keys(did.tokens).length).toBe(3)
+    expect(did.tokens['system.did'][token1]).toBeDefined()
+    expect(did.tokens['system.faucet'][token1]).toBeDefined()
+
+    // test grant 2 contracts at a time for blank account (register)
+    const token2 = ecc.newKeys().address
+    await grant(account1.address, ['system.did', 'system.faucet'], token2, DURATION, account1)
+    did = await ms.query(account1.address).call()
+    expect(Object.keys(did.tokens).length).toBe(2)
+    expect(did.tokens['system.did'][token2]).toBeDefined()
+    expect(did.tokens['system.faucet'][token2]).toBeDefined()
+
+    // revoke a token from non-owner, should fail
+
+    // revoke token from other token, should fail
+
+    // revoke token from admin, should ok
+
+    // try to sign from the revoke token, should fail
+
+    // register a short live token
+    const shortToken = ecc.newKeys()
+    const shortToken1 = ecc.newKeys()
+    tweb3.wallet.importAccount(shortToken.privateKey)
+    // 1 millisecond
+    await grant(account1.address, 'system.alias', shortToken1, 1, account1)
+    await grant(account1.address, 'system.alias', shortToken, 1, account1)
+    did = await ms.query(account1.address).call()
+    expect(Object.keys(did.tokens['system.alias']).length).toBe(1) // the shortToken1 is expired and should be deleted
+    await sleep(100)
+    // try to sign from the token, should fail because it is expired
+    await expect(registerAlias('test2', account1.address, account1, shortToken)).rejects.toThrowError('Permission denied')
+
+    // re-grant for longer life
+    await grant(account1.address, 'system.alias', shortToken, DURATION, account1)
+    await sleep(100)
+    // try to sign from the token, should ok because we refresh the token
+    await registerAlias('test2', account1.address, account1, shortToken)
+    did = await ms.query(account1.address).call()
+    expect(Object.keys(did.tokens['system.alias']).length).toBe(1)
+  })
 })
