@@ -36,7 +36,7 @@ const METADATA = Object.freeze({
     decorators: ['transaction'],
     params: [
       { name: 'alias', type: 'string' },
-      { name: 'address', type: 'pureaddress' },
+      { name: 'address', type: ['pureaddress', 'undefined'] },
       { name: 'overwrite', type: ['boolean', 'undefined'] }
     ],
     returnType: 'string'
@@ -107,7 +107,10 @@ exports.run = (context, options) => {
         throw new Error("Alias cannot start with 'system.', 'account.', or 'contract.'.")
       }
 
-      let isOwnedAccount = false
+      if (address == null) {
+        address = msg.sender
+      }
+
       const validateAddressOwner = (address) => {
         const did = exports.systemContracts().Did
         const checkPerm = address =>
@@ -115,8 +118,7 @@ exports.run = (context, options) => {
 
         try {
           checkPerm(address)
-          isOwnedAccount = true
-          return
+          return true
         } catch (e) {
           let deployedBy
           try {
@@ -126,11 +128,15 @@ exports.run = (context, options) => {
           }
 
           checkPerm(deployedBy)
+          return false
         }
       }
 
-      // this is not like DNS where anyone can map a domain to your address
-      validateAddressOwner(address)
+      let isOwnedAccount = (address === msg.sender)
+      if (!isOwnedAccount) {
+        // this is not like DNS where anyone can map a domain to your address
+        isOwnedAccount = validateAddressOwner(address)
+      }
 
       const prefix = isOwnedAccount ? 'account.' : 'contract.'
       const fullAlias = prefix + alias

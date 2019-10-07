@@ -22,6 +22,9 @@ const METADATA = Object.freeze({
     ],
     returnType: ['object', 'undefined']
   },
+  // Change register to private, since it is complicated to expose
+  // (we must validate structure carefully if exposed)
+  /*
   register: {
     decorators: ['transaction'],
     params: [
@@ -29,7 +32,7 @@ const METADATA = Object.freeze({
       { name: 'props', type: 'object' }
     ],
     returnType: 'undefined'
-  },
+  }, */
   addOwner: {
     decorators: ['transaction'],
     params: [
@@ -105,16 +108,18 @@ const METADATA = Object.freeze({
     ],
     returnType: 'undefined'
   },
-  grantAccessToken: { // (ownerAddr, contractAddr, tokenAddr, ms)
+  grantAccessToken: {
     decorators: ['transaction'],
     params: [
       { name: 'ownerAddr', type: 'address' },
-      { name: 'contractAddr', type: 'address' },
+      { name: 'contractAddr', type: ['Array', 'address'] },
       { name: 'tokenAddr', type: 'address' },
       { name: 'ms', type: 'number' }
     ],
     returnType: 'undefined'
   },
+  // comment out revoke because not tested yet
+  /*
   revokeAccessToken: {
     decorators: ['transaction'],
     params: [
@@ -124,6 +129,15 @@ const METADATA = Object.freeze({
     ],
     returnType: 'undefined'
   },
+  revokeAllAccessTokens: {
+    decorators: ['transaction'],
+    params: [
+      { name: 'ownerAddr', type: 'address' },
+      { name: 'contractAddr', type: 'address' }
+    ],
+    returnType: 'undefined'
+  },
+  */
   setTag: {
     decorators: ['transaction'],
     params: [
@@ -249,11 +263,11 @@ function _checkClaim (data, now) {
 }
 
 function _checkTokenValid (data, now) {
-  if (!data || !data.validTil) {
+  if (!data || !data.expireAfter) {
     return false
   }
 
-  return now <= data.validTil
+  return now <= data.expireAfter
 }
 
 // standard contract interface
@@ -267,11 +281,11 @@ exports.run = (context) => {
       return props ? _.cloneDeep(props) : undefined
     },
 
-    // FIXME: should validate inside (like ensure addresses), or make it private
+    // NOTE: this method is private (not exposed via metadata, so we won't validate parameter structure)
     register (address, { owners, threshold, tokens, tags, inheritors }) {
       contract.checkPermission(address, undefined, owners || threshold || tokens || inheritors)
 
-      if (!owners && !threshold && !tags && !inheritors) {
+      if (!owners && !threshold && !tags && !inheritors && !tokens) {
         throw new Error('Nothing to register.')
       }
 
@@ -386,11 +400,11 @@ exports.run = (context) => {
       }
     },
 
-    grantAccessToken (ownerAddr, contractAddr, tokenAddr, ms) {
+    grantAccessToken (ownerAddr, contracts, tokenAddr, ms) {
       // tokens
       //  contract
       //    token
-      //      validTil
+      //      expireAfter
       //      match (name, params, value) - not yet support
       //      perms: ['sign', { type: 'spend', data: {quota: 10000, dailyQuota: 1000, txQuota: 100 }} ]
 
@@ -400,33 +414,39 @@ exports.run = (context) => {
         throw new Error('Duration must be a valid integer of milliseconds.')
       }
 
+      if (!Array.isArray(contracts)) {
+        contracts = [contracts]
+      }
+
+      const expireAfter = block.timestamp + ms
+
       const old = context.getState(ownerAddr)
       if (!old) {
+        const data = {}
+        contracts.forEach(c => {
+          data[c] = { [tokenAddr]: { expireAfter } }
+        })
         contract.register(ownerAddr, {
-          tokens: {
-            [contractAddr]: {
-              [tokenAddr]: {
-                validTil: block.timestamp + ms
-              }
-            }
-          }
+          tokens: data
         })
       } else {
         contract.checkAdminPermission(ownerAddr)
 
         old.tokens = old.tokens || {}
-        const oldContract = old.tokens[contractAddr] = old.tokens[contractAddr] || {}
+        contracts.forEach(contractAddr => {
+          const oldContract = old.tokens[contractAddr] = old.tokens[contractAddr] || {}
 
-        // delete expired token
-        const now = block.timestamp
-        Object.entries(oldContract).forEach(([t, value]) => {
-          if (now > value.validTil) {
-            delete value[t]
-          }
+          // delete expired tokens
+          const now = block.timestamp
+          Object.entries(oldContract).forEach(([t, value]) => {
+            if (now > value.expireAfter) {
+              delete oldContract[t]
+            }
+          })
+
+          const oldToken = oldContract[tokenAddr] = oldContract[tokenAddr] || {}
+          oldToken.expireAfter = expireAfter
         })
-
-        const oldToken = oldContract[tokenAddr] = oldContract[tokenAddr] || {}
-        oldToken.validTill = now + parseInt(ms)
 
         context.setState(ownerAddr, old)
       }
