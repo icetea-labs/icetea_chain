@@ -50,6 +50,12 @@
                 <p>Inheritance list</p>
                 <div id="inheList"></div>
                 <input id='newInhe' placeholder='inheritor address or alias'> <input id='waitPeriod' type='number' placeholder='wait days' style="width: 96px"> <input id='lockPeriod' type='number' placeholder='lock days' style="width: 96px"> <button id="addInhe">Add</button>
+
+                <h3>Access tokens</h3>
+                <p>Access token list</p>
+                <div id="tokenList"></div>
+                <input id='tokenContract' placeholder='contract address' style="width: 229px"> <input id='tokenAddr' placeholder='token address' style="width: 229px"> <input id='tokenDuration' type='number' placeholder='minutes' style="width: 96px"> <button id="addToken">Add</button>
+            
             </section>
         </section>
     </div>
@@ -64,6 +70,15 @@
         <ul>
             {{#each this}}
             <li>{{@key}} - wait: {{this.waitPeriod}} - lock: {{this.lockPeriod}} &nbsp;&nbsp;<a href="#" data-inheritor={{@key}}>&times;</a></li>
+            {{/each}}
+        </ul>
+    </script>
+    <script id="tokensTemplate" type="text/x-handlebars-template">
+        <ul>
+            {{#each this}}
+              {{#each this}}
+                <li>contract: {{@../key}} - token: {{@key}} - expire: {{this.expireString}} &nbsp;&nbsp;<a href="#" data-token={{@../key}}/{{@key}}>&times;</a></li>
+              {{/each}}
             {{/each}}
         </ul>
     </script>
