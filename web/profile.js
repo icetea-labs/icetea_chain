@@ -5,6 +5,7 @@ import { toTEA } from './common'
 const ownersTemplate = handlebars.compile(document.getElementById('ownersTemplate').innerHTML)
 const inheritorsTemplate = handlebars.compile(document.getElementById('inheritorsTemplate').innerHTML)
 const tagsTemplate = handlebars.compile(document.getElementById('tagsTemplate').innerHTML)
+const tokensTemplate = handlebars.compile(document.getElementById('tokensTemplate').innerHTML)
 
 function byId (x) {
   return document.getElementById(x)
@@ -66,7 +67,7 @@ function loadDid (targetAddress) {
   tweb3.contract('system.did').methods.query(targetAddress).call()
     .then(props => {
       if (props) {
-        const { owners, threshold, inheritors, tags } = props // eslint-disable-line
+        const { owners, threshold, inheritors, tags, tokens } = props // eslint-disable-line
         if (threshold) {
           val('threshold', threshold || 1)
         }
@@ -85,10 +86,22 @@ function loadDid (targetAddress) {
         } else {
           text('tagList', '')
         }
+        if (tokens && Object.keys(tokens).length) {
+          // convert expireAfter to date
+          Object.values(tokens).forEach(c => {
+            Object.values(c).forEach(v => {
+              v.expireString = new Date(v.expireAfter).toLocaleString()
+            })
+          })
+          byId('tokenList').innerHTML = tokensTemplate(tokens)
+        } else {
+          text('tokenList', '')
+        }
       } else {
         text('ownerList', '')
         text('inheList', '')
         text('tagList', '')
+        text('tokenList', '')
       }
     })
 }
@@ -373,6 +386,80 @@ function registerRemoveTagEvent () {
   })
 }
 
+function registerAddTokenEvent () {
+  const button = byId('addToken')
+  button.addEventListener('click', function () {
+    const address = byId('from').value
+    if (!address) {
+      window.alert('Please select "sign-in as" first.')
+      return
+    }
+
+    const contract = byId('tokenContract').value.trim()
+    if (!contract) {
+      window.alert('Please enter token contract address.')
+      return
+    }
+
+    const tokenAddr = byId('tokenAddr').value.trim()
+    if (!tokenAddr) {
+      window.alert('Please enter token address.')
+      return
+    }
+
+    const duration = parseInt(Number(byId('tokenDuration').value.trim()) * 60000) // minute to ms
+    if (duration < 1) {
+      window.alert('Please enter a duration in minutes.')
+      return
+    }
+
+    tweb3.contract('system.did').methods.grantAccessToken(address, contract, tokenAddr, duration).sendCommit({ from: address })
+      .then(r => {
+        loadDid(address)
+        window.alert('Success.')
+      })
+      .catch(error => {
+        console.error(error)
+        window.alert(String(error))
+      })
+  })
+}
+
+function registerRemoveTokenEvent () {
+  const button = byId('tokenList')
+  button.addEventListener('click', function (e) {
+    e.preventDefault()
+
+    const address = byId('from').value
+    if (!address) {
+      window.alert('Please select "sign-in as" first.')
+      return
+    }
+
+    const target = e.target
+    if (target.tagName !== 'A') {
+      return
+    }
+
+    const tokenData = target.getAttribute('data-token')
+
+    if (!window.confirm('Sure to delete ' + tokenData + '?')) {
+      return
+    }
+
+    const [contract, tokenAddr] = tokenData.split('/')
+    tweb3.contract('system.did').methods.revokeAccessToken(address, contract, tokenAddr).sendCommit({ from: address })
+      .then(r => {
+        loadDid(address)
+        window.alert('Success.')
+      })
+      .catch(error => {
+        console.error(error)
+        window.alert(String(error))
+      })
+  })
+}
+
 function registerEvents () {
   registerFromEvent()
   registerFaucetEvent()
@@ -384,6 +471,8 @@ function registerEvents () {
   registerRemoveInheEvent()
   registerAddTagEvent()
   registerRemoveTagEvent()
+  registerAddTokenEvent()
+  registerRemoveTokenEvent()
 }
 
 ; (function () {
