@@ -118,13 +118,11 @@ const METADATA = Object.freeze({
     ],
     returnType: 'undefined'
   },
-  // comment out revoke because not tested yet
-  /*
   revokeAccessToken: {
     decorators: ['transaction'],
     params: [
       { name: 'ownerAddr', type: 'address' },
-      { name: 'contractAddr', type: 'address' },
+      { name: 'contractAddr', type: ['Array', 'address'] },
       { name: 'tokenAddr', type: 'address' }
     ],
     returnType: 'undefined'
@@ -133,11 +131,10 @@ const METADATA = Object.freeze({
     decorators: ['transaction'],
     params: [
       { name: 'ownerAddr', type: 'address' },
-      { name: 'contractAddr', type: 'address' }
+      { name: 'contractAddr', type: ['Array', 'address'] }
     ],
     returnType: 'undefined'
   },
-  */
   setTag: {
     decorators: ['transaction'],
     params: [
@@ -452,16 +449,43 @@ exports.run = (context) => {
       }
     },
 
-    revokeAccessToken (ownerAddr, contractAddr, tokenAddr) {
+    revokeAccessToken (ownerAddr, contracts, tokenAddr) {
       contract.checkAdminPermission(ownerAddr)
       const old = context.getState(ownerAddr)
-      if (!old || !old.tokens || !old.tokens[contractAddr] || !old.tokens[contractAddr][tokenAddr]) return
+      if (!old || !old.tokens) return
+      const tokens = old.tokens
 
-      if (!Object.keys(old.tokens[contractAddr]).length === 1) {
-        delete old.tokens[contractAddr]
-      } else {
-        delete old.tokens[contractAddr][tokenAddr]
+      if (!Array.isArray(contracts)) {
+        contracts = [contracts]
       }
+
+      contracts.forEach(contractAddr => {
+        if (!tokens[contractAddr][tokenAddr]) return
+
+        if (!Object.keys(tokens[contractAddr]).length === 1) {
+          delete tokens[contractAddr]
+        } else {
+          delete tokens[contractAddr][tokenAddr]
+        }
+      })
+
+      context.setState(ownerAddr, old)
+    },
+
+    revokeAllAccessTokens (ownerAddr, contracts) {
+      contract.checkAdminPermission(ownerAddr)
+      const old = context.getState(ownerAddr)
+      if (!old || !old.tokens) return
+      const tokens = old.tokens
+
+      if (!Array.isArray(contracts)) {
+        contracts = [contracts]
+      }
+
+      contracts.forEach(contractAddr => {
+        delete tokens[contractAddr]
+      })
+
       context.setState(ownerAddr, old)
     },
 

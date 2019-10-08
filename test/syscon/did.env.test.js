@@ -219,11 +219,11 @@ describe('did', () => {
       return ms.grantAccessToken(ownerAddr, contractAddr, tokenAddr, duration).sendCommit({ from: fromAddr.address || fromAddr })
     }
 
-    // const revoke = (ownerAddr, contractAddr, tokenAddr, fromAddr) => {
-    //   fromAddr = fromAddr || from
-    //   tokenAddr = tokenAddr.address || tokenAddr
-    //   return ms.revokeAccessToken(ownerAddr, contractAddr, tokenAddr).sendCommit({ from: fromAddr.address || fromAddr })
-    // }
+    const revoke = (ownerAddr, contractAddr, tokenAddr, fromAddr) => {
+      fromAddr = fromAddr || from
+      tokenAddr = tokenAddr.address || tokenAddr
+      return ms.revokeAccessToken(ownerAddr, contractAddr, tokenAddr).sendCommit({ from: fromAddr.address || fromAddr })
+    }
 
     // use the token without grant first, it should fail
     await expect(registerAlias('test1', from)).rejects.toThrowError('Permission denied')
@@ -268,12 +268,17 @@ describe('did', () => {
     expect(did.tokens['system.faucet'][token2]).toBeDefined()
 
     // revoke a token from non-owner, should fail
+    await expect(revoke(from, 'system.alias', token, account1)).rejects.toThrowError('Permission denied')
 
     // revoke token from other token, should fail
+    await grant(from, 'system.alias', token1, DURATION, from)
+    await expect(revoke(from, 'system.alias', token1, token)).rejects.toThrowError('Permission denied')
 
     // revoke token from admin, should ok
+    await revoke(from, 'system.alias', token, from)
 
     // try to sign from the revoke token, should fail
+    await expect(registerAlias('test2', from, from, token)).rejects.toThrowError('Permission denied')
 
     // register a short live token
     const shortToken = ecc.newKeys()
