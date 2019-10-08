@@ -26,7 +26,8 @@ const config = {
     unregistrationLock: 10
   },
   state: {
-    serializer: 'v8'
+    serializer: 'v8',
+    stripUndefined: true
   },
   abciServerPort: 26658,
   feeCollector: process.env.FEE_COLLECTOR,

@@ -33,7 +33,7 @@ exports.BaseSerializer = class BaseSerializer {
   }
 
   stripUndefined () {
-    return (process.STATE_STRIP_UNDEFINED === '1') || config.state.stripUndefined || true
+    return (process.env.STATE_STRIP_UNDEFINED === '1') || config.state.stripUndefined
   }
 
   selfValidate (o) {
@@ -58,26 +58,35 @@ exports.BaseSerializer = class BaseSerializer {
     }
 
     if (t === 'object') {
+      seenSet.add(o)
+
       const propNames = Object.getOwnPropertyNames(o)
       for (const name of propNames) {
         const value = o[name]
         const vt = typeof value
 
-        if (seenSet.has(value)) {
-          if (circularOk || vt !== 'object') {
-            continue
-          } else {
-            throw new Error(`State contains circular reference to ${value}`)
+        if (vt === 'object') {
+          if (seenSet.has(value)) {
+            if (!circularOk) {
+              throw new Error(`State contains circular reference to ${value}`)
+            } else {
+              return o
+            }
           }
         }
-        seenSet.add(value)
 
         // these lines would 'sanitize' state, which might
         // throw error if object is frozen
 
         if (vt === 'undefined') {
           if (stripUndef) {
-            if (Array.isArray(o)) {
+            const desc = Object.getOwnPropertyDescriptor(o, name)
+            const isArray = Array.isArray(o)
+            // It is rare to see non-writable but configuarable, so no need handle that case
+            if (!desc.writable) {
+              o = isArray ? [...o] : { ...o }
+            }
+            if (isArray) {
               // should not delete if it is an array element, just turn it into null
               o[name] = null
             } else {
@@ -100,7 +109,7 @@ let instance
 exports.getSerializer = name => {
   if (instance) return instance
 
-  name = process.STATE_SERIALIZER || config.state.serializer || 'v8'
+  name = process.env.STATE_SERIALIZER || config.state.serializer || 'v8'
   instance = require(`./${name}`)
   return instance
 }

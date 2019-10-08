@@ -61,7 +61,6 @@
     "@babel/plugin-transform-flow-strip-types": "7.4.4",
     "@babel/preset-env": "7.6.0",
     "@hapi/joi": "16.1.2",
-    "@iceteachain/common": "^0.1.4",
     "@iceteachain/sunseed": "github:TradaTech/sunseed",
     "@iceteachain/utils": "github:TradaTech/icetea-utils",
     "@iceteachain/web3": "^0.1.14",
