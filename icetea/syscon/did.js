@@ -116,7 +116,7 @@ const METADATA = Object.freeze({
       { name: 'tokenAddr', type: 'address' },
       { name: 'ms', type: 'number' }
     ],
-    returnType: 'undefined'
+    returnType: 'number'
   },
   revokeAccessToken: {
     decorators: ['transaction'],
@@ -447,6 +447,8 @@ exports.run = (context) => {
 
         context.setState(ownerAddr, old)
       }
+
+      return expireAfter
     },
 
     revokeAccessToken (ownerAddr, contracts, tokenAddr) {
