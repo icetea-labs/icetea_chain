@@ -86,10 +86,15 @@ const getTop10 = (winningNumber, players) => {
     }
 
     intro() {
+        if (block.timestamp > deadline) {
+            return Message.html('<b>NOTE</b> You must join the <a href="https://t.me/iceteachainvn" target="_blank">@iceteachainvn</a> Telegram group in order to get the gift.')
+            .text('This lucky draw is already closed.')
+        }
         return Message
             .html('<b>NOTE</b> You must join the <a href="https://t.me/iceteachainvn" target="_blank">@iceteachainvn</a> Telegram group in order to get the gift.')
             .html('Input a <b>3-digit</b> number. Example: 001, 699')
             .input('nnn')
+
     }
     
     validate_number({ text, chatData }) {
@@ -97,7 +102,6 @@ const getTop10 = (winningNumber, players) => {
         if (value.length !== 3 || !/\d\d\d/.test(value)) {
             throw new Error('Please input a valid number with 3 digits, e.g 012, 123.')
         }
-
         return chatData.number = value
     }
 
@@ -108,16 +112,20 @@ const getTop10 = (winningNumber, players) => {
     }
 
     after_number() {
+        if (block.timestamp > deadline) {
+            return Message.text('This lucky draw is already closed.')
+        }
         return Message
             .html('Input your telegram username to receive gift. E.g <b>@nick</b> or just <b>nick</b>')
             .input('@nick')
     }
 
     validate_telegram({ text, chatData }) {
-        const value = text.trim().toLowerCase()
+        let value = text.trim().toLowerCase()
         if (value.startsWith('@')) {
             value = value.slice(1)
         }
+
         if (!value) {
             throw new Error('Please input your telegram username. If you don\'t have one, please register.')
         }
