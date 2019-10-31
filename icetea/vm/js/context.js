@@ -255,7 +255,11 @@ exports.forTransaction = (contractAddress, methodName, methodParams, options) =>
     },
     runtime: {
       msg,
-      block,
+      block: {
+        hash: block.hash,
+        number: block.number,
+        timestamp: block.timestamp
+      },
       balanceOf: tools.balanceOf,
       loadContract: _makeLoadContract(['invokeUpdate', 'invokeView', 'invokePure'], contractAddress, options),
       loadLibrary: _makeLoadLibrary(['invokeUpdate', 'invokeView', 'invokePure'], contractAddress, options),
@@ -320,7 +324,11 @@ exports.forView = (contractAddress, name, params, options) => {
     },
     runtime: Object.freeze({
       msg,
-      block,
+      block: Object.freeze({
+        hash: block.hash,
+        number: block.number,
+        timestamp: block.timestamp
+      }),
       balanceOf: tools.balanceOf,
       loadContract: _makeLoadContract(['invokeView', 'invokePure'], contractAddress, options),
       loadLibrary: _makeLoadLibrary(['invokeView', 'invokePure'], contractAddress, options),
@@ -342,7 +350,7 @@ exports.forView = (contractAddress, name, params, options) => {
  * @param {object} option - method option.
  * @returns {object} context
  */
-exports.forPure = (address, name, params, { from, block }) => {
+exports.forPure = (address, name, params, { from, block = {} }) => {
   const ctx = {
     address,
     runtime: {
@@ -352,7 +360,11 @@ exports.forPure = (address, name, params, { from, block }) => {
         params,
         callType: 'pure'
       },
-      block,
+      block: {
+        hash: block.hash,
+        number: block.number,
+        timestamp: block.timestamp
+      },
       isValidAddress,
       require: _require
     }
