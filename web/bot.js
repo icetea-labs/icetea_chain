@@ -1,14 +1,20 @@
 import Vue from 'vue'
 import BotUI from 'botui'
 import tweb3 from './tweb3'
+import { ecc, AccountType } from '@iceteachain/common'
 
 const initWeb3 = async (showAlert = true) => {
   try {
     var resp = await tweb3.wallet.loadFromStorage('123', undefined, tweb3.wallet.defaultAccount)
     if (resp === 0) {
-      window.alert('Wallet empty! Please go to Wallet tab to create account.')
-      return
+      // window.alert('Wallet empty! Please go to Wallet tab to create account1.')
+      // return
+      var keyInfo = ecc.newKeys(AccountType.BANK_ACCOUNT)
+      tweb3.wallet.importAccount(keyInfo.privateKey)
+      tweb3.wallet.defaultAccount = keyInfo.address
+      await tweb3.wallet.saveToStorage('123')
     }
+
     byId('address').textContent = tweb3.wallet.defaultAccount
     return true
   } catch (error) {
