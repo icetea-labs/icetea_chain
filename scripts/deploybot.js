@@ -20,7 +20,7 @@ if (process.argv.length > 2) {
 botFile = './example/bot/' + botFile
 
 const { IceteaWeb3 } = require('@iceteachain/web3')
-const tweb3 = new IceteaWeb3('ws://localhost:26657/websocket')
+const tweb3 = new IceteaWeb3('wss://rpc.icetea.io/websocket')
 
 async function deploy () {
   const key = process.env.BANK_KEY
