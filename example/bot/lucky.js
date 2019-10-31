@@ -4,8 +4,6 @@ const { orderBy } = require('lodash')
 const formatTime = ms => {
     const asiaTime = new Date(ms).toLocaleString("en-US", {timeZone: "Asia/Ho_Chi_Minh"});
     const d = new Date(asiaTime)
-    const zone = -d.getTimezoneOffset() / 60
-    const zoneText = zone < 0 ? String(zone) : '+' + zone
     return `${d.getDate()}/${d.getMonth() + 1}/${d.getFullYear()} ${d.getHours()}:${String(d.getMinutes()).padEnd(2, '0')}:${String(d.getSeconds()).padEnd(2, '0')} GMT+7`
 }
 
