@@ -47,33 +47,37 @@ let Math = new Proxy(__sysmath, {
     }
 })
 
-let Date = class {
-    constructor(...args) {
-        let d
-        if (args.length === 0) {
-            const bl = __systhis.runtime.block
-            if (!bl) {
-                throw new Error('Cannot call new Date() in this context.')
-            }
-            d = new __sysdate(bl.timestamp)
-        } else {
-            d = new __sysdate(...args)
+function Date(...args) {
+    if (!new.target) return __sysdate(...args)
+
+    let d
+    if (args.length === 0) {
+        const bl = __systhis.runtime.block
+        if (!bl) {
+            throw new Error('Cannot call new Date() in this context.')
         }
-        
-        return new Proxy(d, {
-            get(obj, prop) {
-                const fn = Reflect.get(obj, prop)
-                return typeof fn === 'function' ? fn.bind(obj) : fn
-            }
-        })
+        d = new __sysdate(bl.timestamp)
+    } else {
+        d = new __sysdate(...args)
     }
+
+    d.constructor = Date
+    return d
 }
+
+Date.prototype = __sysdate.prototype
 Date.now = () => {
-    const bl = __systhis.runtime.block
-    if (!bl) {
-        throw new Error('Cannot call Date.now() in this context.')
-    }
-    return bl.timestamp
+  const bl = __systhis.runtime.block
+  if (!bl) {
+      throw new Error('Cannot call Date.now() in this context.')
+  }
+  return bl.timestamp
+}
+
+Date.UTC = __sysdate.UTC
+Date.parse = (...args) => {
+  const d = __sysdate.parse(...args)
+  return new Date(d.getTime())
 }
 
 const __guard = __g;
