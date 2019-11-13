@@ -1,10 +1,7 @@
 /**
- * A registry mapping aliases (domains) to addresses.
- *
- * SIMPLE VERSION - WILL IMPROVE LATER
- *
- * Current version only allows register alias for your owned account/contract.
- * No support for UPDATE nor DELETE
+ * A registry mapping aliases to addresses.
+ * This is 1-1 mapping. Think of it like username rather than DNS.
+ * To register for a address, you must be one of its owners.
  */
 
 const { Alias: ALIAS_ADDR } = require('./sysconnames')
@@ -30,7 +27,7 @@ const METADATA = Object.freeze({
     params: [
       { name: 'address', type: 'pureaddress' }
     ],
-    returnType: 'Array'
+    returnType: ['string', 'undefined']
   },
   register: {
     decorators: ['transaction'],
@@ -44,6 +41,7 @@ const METADATA = Object.freeze({
 })
 
 const ALIAS_KEY = 'alias'
+const ADDR_KEY = 'addr2alias'
 
 const loadAliases = (context) => {
   return context.getState(ALIAS_KEY, {})
@@ -51,6 +49,14 @@ const loadAliases = (context) => {
 
 const saveAliases = (context, aliases) => {
   return context.setState(ALIAS_KEY, aliases)
+}
+
+const loadAddrMap = (context) => {
+  return context.getState(ADDR_KEY, {})
+}
+
+const saveAddrMap = (context, map) => {
+  return context.setState(ADDR_KEY, map)
 }
 
 const isSatisfied = (text, condition) => {
@@ -95,10 +101,8 @@ exports.run = (context, options) => {
     },
 
     byAddress (address) {
-      const aliases = loadAliases(context)
-      return Object.keys(aliases).filter(a => {
-        return aliases[a].address === address
-      })
+      const map = loadAddrMap(context)
+      return map[address]
     },
 
     register (alias, address, overwrite = false) {
@@ -143,22 +147,40 @@ exports.run = (context, options) => {
 
       const aliases = loadAliases(context)
       const oldAddress = aliases[fullAlias]
+
+      // we don't support 'renew'
+      if (oldAddress && (oldAddress.address === address)) return
+
       if (oldAddress) {
         if (!overwrite) {
-          throw new Error(`Alias ${fullAlias} already registered.`)
+          throw new Error(`${fullAlias} already maps to ${oldAddress.address}. Specify 'overwrite' argument if you want to overwrite.`)
         } else {
-          // need to check whether caller own this address before updating
+          // need to check whether caller own this alias before updating
           validateAddressOwner(oldAddress.address)
         }
       }
 
+      const map = loadAddrMap(context)
+      const oldAlias = map[address]
+
+      if (oldAlias && !overwrite) {
+        throw new Error(`${address} already maps to ${oldAlias}. Specify 'overwrite' argument if you want to overwrite.`)
+      }
+
+      // alias to address
       aliases[fullAlias] = {
         address,
         by: msg.sender,
         blockNumber: block.number
       }
-
       saveAliases(context, aliases)
+
+      // address to alias
+      map[address] = fullAlias
+      if (oldAddress) {
+        delete map[oldAddress.address]
+      }
+      saveAddrMap(context, map)
 
       return fullAlias
     }

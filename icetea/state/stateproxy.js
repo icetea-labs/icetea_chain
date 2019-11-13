@@ -70,6 +70,10 @@ const _stateforAddress = (contractAddress, readonly, {
     const contractStorage = (stateTable[contractAddress] || {}).storage
     if (contractStorage) {
       // consider using immer instead of cloneDeep to improve performance
+      // or use serialization to avoid the Proxy which often introduces problems
+      // or don't allow regular object access (like ImmutableJS),
+      // which make state objects less "suger" but more controllable without Proxy
+      // in the end, should consider write-on-copy somehow
       storage = contractStorage.system ? contractStorage : _.cloneDeep(contractStorage)
       storages[contractAddress] = storage
     }

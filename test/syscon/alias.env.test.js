@@ -85,14 +85,15 @@ describe('alias', () => {
     expect(list).toEqual({})
 
     list = await ms.byAddress(from).call()
-    expect(list).toEqual(['account.goodmorning'])
+    expect(list).toBe('account.goodmorning')
 
-    await register('hello', from)
+    await expect(register('hello', from, false)).rejects.toThrowError('already maps')
+    await register('hello', from, true)
     const addr2 = await ms.resolve('account.hello').call()
     expect(addr2).toBe(from)
 
     list = await ms.byAddress(from).call()
-    expect(list).toEqual(['account.goodmorning', 'account.hello'])
+    expect(list).toBe('account.hello')
   })
 
   test('re-register alias', async () => {
@@ -105,16 +106,15 @@ describe('alias', () => {
     }
 
     let list = await ms.byAddress(addr1).call()
-    expect(list).toEqual([])
+    expect(list).toBe(undefined)
 
     list = await ms.byAddress(addr2).call()
-    expect(list).toEqual([])
+    expect(list).toBe(undefined)
 
     await register('abc1', addr1)
-    await expect(register('abc1', addr1)).rejects.toThrowError('already registered')
     await register('abc1', addr1, true)
 
-    await expect(register('abc1', addr2)).rejects.toThrowError('already registered')
+    await expect(register('abc1', addr2)).rejects.toThrowError('already maps')
     await expect(register('abc1', addr2, true)).rejects.toThrowError('permission')
 
     // now, a case of update successfully
@@ -122,19 +122,19 @@ describe('alias', () => {
     await did.methods.addOwner(addr1, addr2).sendCommit({ from: addr1 })
 
     list = await ms.byAddress(addr1).call()
-    expect(list).toEqual(['account.abc1'])
+    expect(list).toEqual('account.abc1')
 
     list = await ms.byAddress(addr2).call()
-    expect(list).toEqual([])
+    expect(list).toEqual(undefined)
 
-    await expect(register('abc1', addr2)).rejects.toThrowError('already registered')
+    await expect(register('abc1', addr2)).rejects.toThrowError('already maps')
     await register('abc1', addr2, true)
 
     list = await ms.byAddress(addr1).call()
-    expect(list).toEqual([])
+    expect(list).toBe(undefined)
 
     list = await ms.byAddress(addr2).call()
-    expect(list).toEqual(['account.abc1'])
+    expect(list).toBe('account.abc1')
   })
 
   test('resolve alias misc', async () => {
