@@ -78,6 +78,12 @@ const _stateforAddress = (contractAddress, readonly, {
     }
   }
 
+  const getStateKeys = () => {
+    if (!storage) return []
+
+    return Object.keys(storage)
+  }
+
   const getState = (key, defaultValue) => {
     if (!key || typeof key !== 'string') {
       throw new Error(`Expect key to be an non-empty string, but got ${key}`)
@@ -128,6 +134,7 @@ const _stateforAddress = (contractAddress, readonly, {
   }
 
   return {
+    getStateKeys,
     hasState,
     getState,
     setState,
