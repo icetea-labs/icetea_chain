@@ -1,6 +1,7 @@
 const _ = require('lodash')
 const config = require('../config')
-const { deepFreeze, validateAddress } = require('../helper/utils')
+// const { deepFreeze, validateAddress } = require('../helper/utils')
+const { validateAddress } = require('../helper/utils')
 const stateSerializer = require('./serializer').getSerializer()
 
 const { ecc, codec } = require('@iceteachain/common')
@@ -19,6 +20,14 @@ const { ecc, codec } = require('@iceteachain/common')
 
  Contracts not allow to touch other state (src, meta, etc.).
 */
+
+const _checkPath = path => {
+  if (!path || (!Array.isArray(path) && typeof path !== 'string')) {
+    throw new Error(`Expect path to be an non-empty string or array, but got ${path}`)
+  }
+
+  return typeof path === 'string' ? [path] : path
+}
 
 const _makeNotAllowed = (operations, mode = 'view') => {
   return operations.reduce((funcs, op) => {
@@ -77,9 +86,9 @@ const _stateforAddress = (contractAddress, readonly, {
       storage = contractStorage.system ? contractStorage : _.cloneDeep(contractStorage)
       storages[contractAddress] = storage
     }
-    if (readonly && storage && !storage.system) {
-      deepFreeze(storage) // this is a trade-off, dev (debug) over user (performance)
-    }
+    // if (readonly && storage && !storage.system) {
+    //   deepFreeze(storage) // this is a trade-off, dev (debug) over user (performance)
+    // }
   }
 
   const getStateKeys = () => {
@@ -88,45 +97,62 @@ const _stateforAddress = (contractAddress, readonly, {
     return Object.keys(storage)
   }
 
-  const getState = (key, defaultValue) => {
-    if (!key || typeof key !== 'string') {
-      throw new Error(`Expect key to be an non-empty string, but got ${key}`)
-    }
+  const getState = (path, defaultValue) => {
     if (!storage) return defaultValue
-
-    const value = storage[key]
-    return typeof value !== 'undefined' ? value : defaultValue
+    return _.get(storage, _checkPath(path), defaultValue)
   }
 
-  const hasState = key => {
-    if (!key || typeof key !== 'string') {
-      throw new Error(`Expect key to be an non-empty string, but got ${key}`)
-    }
-    return storage ? Object.prototype.hasOwnProperty.call(storage, key) : false
+  const hasState = path => {
+    if (!storage) return false
+    return _.has(storage, _checkPath(path))
   }
 
-  let transfer, setState, deleteState
+  let transfer, setState, deleteState, ensureState, invokeState
 
   if (readonly) {
-    [transfer, setState, deleteState] = _makeNotAllowed(['transfer', 'setState', 'deleteState'])
+    [transfer, setState, deleteState, ensureState, invokeState] =
+      _makeNotAllowed(['transfer', 'setState', 'deleteState', 'ensureState', 'invokeState'])
   } else {
-    setState = (key, value) => {
-      if (!key || typeof key !== 'string') {
-        throw new Error(`Expect key to be an non-empty string, but got ${key}`)
-      }
-      value = stateSerializer.sanitize(value)
+    setState = (path, value, customizer) => {
+      path = _checkPath(path)
       if (!storage) {
-        storage = { [key]: value }
+        storage = { }
         storages[contractAddress] = storage
+      }
+      if (typeof value === 'function') {
+        _.updateWith(storage, path, oldValue => stateSerializer.sanitize(value(oldValue)), customizer)
       } else {
-        storage[key] = value
+        _.setWith(storage, path, stateSerializer.sanitize(value), customizer)
       }
     }
 
-    deleteState = key => {
-      if (storage) {
-        delete storage[key]
+    // similar to getState but create if not exist
+    ensureState = (path, value, customizer) => {
+      if (!hasState(path)) {
+        setState(path, value, customizer)
       }
+
+      return getState(path)
+    }
+
+    // e.g. push to an array
+    // invokeState('key', [], 'push', 'some value')
+    // e.g. push to a Set
+    // invokeState('key', new Set(), 'add', 'some value')
+    invokeState = (path, initialValue, funcName, stateValue, ...args) => {
+      const o = ensureState(path, initialValue)
+      if (o != null && typeof o[funcName] === 'function') {
+        return o[funcName](stateSerializer.sanitize(stateValue), ...args)
+      }
+
+      throw new Error('Cannot invoke the function name specified.')
+    }
+
+    deleteState = path => {
+      if (storage) {
+        return _.unset(storage, path)
+      }
+      return false
     }
 
     transfer = (to, value) => {
@@ -141,8 +167,10 @@ const _stateforAddress = (contractAddress, readonly, {
     getStateKeys,
     hasState,
     getState,
+    ensureState,
     setState,
     deleteState,
+    invokeState,
     transfer
   }
 }
