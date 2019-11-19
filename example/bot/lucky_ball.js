@@ -149,7 +149,7 @@ class LuckyBallBot extends SurveyBot {
       ) => {
         reply += "<tr>";
         reply += `<td>${index +
-          1}. <a href='https://t.me/{telegram}' target='_blank'>@${telegram}</a></td>`;
+          1}. <a href='https://t.me/${telegram}' target='_blank'>@${telegram}</a></td>`;
         reply += `<td>${team}</td>`;
         reply += `<td>${number} (±${delta})</td>`;
         reply += `<td>${formatTime(timestamp).replace("GMT+7", "")}</td>`;
@@ -169,7 +169,7 @@ class LuckyBallBot extends SurveyBot {
     loses.forEach(({ team, number, telegram, timestamp }, index) => {
       reply += "<tr>";
       reply += `<td>${index +
-        1}. <a href='https://t.me/{telegram}' target='_blank'>@${telegram}</a></td>`;
+        1}. <a href='https://t.me/${telegram}' target='_blank'>@${telegram}</a></td>`;
       reply += `<td>${team}</td>`;
       reply += `<td>${number}</td>`;
       reply += `<td>${formatTime(timestamp).replace("GMT+7", "")}</td>`;
