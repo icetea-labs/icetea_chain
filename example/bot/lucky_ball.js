@@ -1,6 +1,13 @@
 const { SurveyBot, Message } = require("@iceteachain/utils");
 const { orderBy } = require("lodash");
-
+const createHash = require("create-hash");
+const hashToInt = hash => parseInt(hash.substr(-10), 16);
+const randInt = username => {
+  const hex = createHash("sha256")
+    .update(username + block.hash, "utf8")
+    .digest("hex");
+  return hashToInt(hex);
+};
 const formatTime = ms => {
   const asiaTime = new Date(ms).toLocaleString("en-US", {
     timeZone: "Asia/Ho_Chi_Minh"
@@ -21,7 +28,7 @@ const RESULT = {
   3: "Thái Lan"
 };
 const ADMIN = ["teat0xdehhhgghkvc5l8r68vd3w7xssskwx9tl8ucxh"];
-const getTop20 = (winningTeam, winningNumber, players) => {
+const getTop20 = (winningTeam, winningNumber, players, luckyNumber) => {
   let winners = {};
   let loses = {};
 
@@ -36,10 +43,11 @@ const getTop20 = (winningTeam, winningNumber, players) => {
   winners = Object.entries(winners).map(([address, p]) => ({
     address,
     ...p,
-    delta: Math.abs(winningNumber - p.number)
+    delta: Math.abs(winningNumber - p.number),
+    deltaLucky: Math.abs(luckyNumber - p.luckyNum)
   }));
   return {
-    winners: orderBy(winners, ["delta", "timestamp"]).slice(0, 20),
+    winners: orderBy(winners, ["delta", "deltaLucky"]).slice(0, 20),
     loses: orderBy(loses, ["timestamp"]).slice(0, 100)
   };
 };
@@ -49,6 +57,7 @@ class LuckyBallBot extends SurveyBot {
   @state @view players = {};
   @state @view winningTeam;
   @state @view winningNumber;
+  @state @view luckyNumber;
 
   @pure getName() {
     return `DỰ ĐOÁN KẾT QUẢ VÒNG LOẠI WORLD CUP 2022`;
@@ -64,16 +73,16 @@ class LuckyBallBot extends SurveyBot {
 
   @pure getCommands() {
     return [
-      { text: "Restart", value: "start" },
-      { text: "My Kèo", value: "mynumber", stateAccess: "write" },
-      { text: "View Result", value: "result", stateAccess: "write" }
+      { text: "Chơi lại", value: "start" },
+      { text: "Kèo đã chọn", value: "mynumber", stateAccess: "write" },
+      { text: "Xem kết quả", value: "result", stateAccess: "write" }
     ];
   }
 
   @transaction oncommand_mynumber() {
     const mynumber = this.players[msg.sender];
     if (!mynumber) {
-      return Message.text("You did not participate yet.");
+      return Message.text("Bạn chưa chọn kèo nào.");
     }
 
     return Message.html(`Telegram: <b>@${mynumber.telegram}</b><br>
@@ -111,17 +120,21 @@ class LuckyBallBot extends SurveyBot {
     //   return Message.text(`Please wait until ${deadlineText}`);
     // }
     if (this.winningTeam == null || this.winningNumber == null) {
-      return Message.text(`Chưa có kết quả, xin hãy đợi chút!`);
+      return Message.text(
+        `Hình như bạn đến hơi sớm. Kết quả sẽ có ngay sau khi trận đấu kết thúc. Chúc bạn may mắn nhé!`
+      );
     }
-
+    if (this.luckyNumber == null) {
+      this.luckyNumber = randInt("");
+    }
     const { winners, loses } = getTop20(
       this.winningTeam,
       this.winningNumber,
-      this.players
+      this.players,
+      this.luckyNumber
     );
     let reply = `Đội chiến thắng: <b>${this.winningTeam}</b> 
-            -- Tổng bàn thắng 2 đội: <b>${this.winningNumber}</b><br>
-            Tổng số người chơi: <b>${Object.keys(this.players).length}</b>`;
+            -- Tổng bàn thắng: <b>${this.winningNumber}</b><br><br>`;
     reply += "<table style='font-size: 14px' >";
     reply += "<tr>";
     reply += "<th>Telegram</th>";
@@ -129,15 +142,20 @@ class LuckyBallBot extends SurveyBot {
     reply += "<th>Bàn Thắng</th>";
     reply += "<th>Time</th>";
     reply += "</tr>";
-    winners.forEach(({ team, number, telegram, timestamp, delta }, index) => {
-      reply += "<tr>";
-      reply += `<td>${index +
-        1}. <a href='https://t.me/{telegram}' target='_blank'>@${telegram}</a></td>`;
-      reply += `<td>${team}</td>`;
-      reply += `<td>${number} (±${delta})</td>`;
-      reply += `<td>${formatTime(timestamp).replace("GMT+7", "")}</td>`;
-      reply += "</tr>";
-    });
+    winners.forEach(
+      (
+        { team, number, telegram, luckyNum, timestamp, delta, deltaLucky },
+        index
+      ) => {
+        reply += "<tr>";
+        reply += `<td>${index +
+          1}. <a href='https://t.me/{telegram}' target='_blank'>@${telegram}</a></td>`;
+        reply += `<td>${team}</td>`;
+        reply += `<td>${number} (±${delta})</td>`;
+        reply += `<td>${formatTime(timestamp).replace("GMT+7", "")}</td>`;
+        reply += "</tr>";
+      }
+    );
     reply += "</table>";
 
     reply += "<br>--- Nhóm dự đoán sai ---";
@@ -277,6 +295,7 @@ class LuckyBallBot extends SurveyBot {
       return Message.text("This lucky draw is already closed.");
     }
     const { team, number, telegram, oldTeam, oldNumber } = chatData;
+    const luckyNum = randInt(telegram);
     let reply = `Bạn đã dự đoán : <b>${team}</b> 
              <br>Tổng bàn thắng 2 đội là: <b>${number}</b> 
              <br>Tài khoản Telegram của bạn: <b>@${telegram}</b>
@@ -291,6 +310,7 @@ class LuckyBallBot extends SurveyBot {
       team,
       number,
       telegram,
+      luckyNum,
       timestamp: block.timestamp
     };
     return Message.html(reply);
