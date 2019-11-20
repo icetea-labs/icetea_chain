@@ -29,6 +29,12 @@ const _checkPath = path => {
   return typeof path === 'string' ? [path] : path
 }
 
+const _checkCustomizer = customizer => {
+  if (customizer == null) return Object
+  if (customizer === false) return undefined
+  return customizer
+}
+
 const _makeNotAllowed = (operations, mode = 'view') => {
   return operations.reduce((funcs, op) => {
     funcs.push(() => {
@@ -83,7 +89,8 @@ const _stateforAddress = (contractAddress, readonly, {
       // or don't allow regular object access (like ImmutableJS),
       // which make state objects less "suger" but more controllable without Proxy
       // in the end, should consider write-on-copy somehow
-      storage = contractStorage.system ? contractStorage : _.cloneDeep(contractStorage)
+      // storage = contractStorage.system ? contractStorage : _.cloneDeep(contractStorage)
+      storage = contractStorage
       storages[contractAddress] = storage
     }
     // if (readonly && storage && !storage.system) {
@@ -91,15 +98,11 @@ const _stateforAddress = (contractAddress, readonly, {
     // }
   }
 
-  const getStateKeys = () => {
-    if (!storage) return []
-
-    return Object.keys(storage)
-  }
-
   const getState = (path, defaultValue) => {
     if (!storage) return defaultValue
-    return _.get(storage, _checkPath(path), defaultValue)
+    const v = _.get(storage, _checkPath(path))
+    if (v === undefined) return defaultValue
+    return _.cloneDeep(v)
   }
 
   const hasState = path => {
@@ -107,23 +110,147 @@ const _stateforAddress = (contractAddress, readonly, {
     return _.has(storage, _checkPath(path))
   }
 
-  let transfer, setState, deleteState, ensureState, invokeState
+  const getStateKeys = ({ path, filter } = {}) => {
+    const o = path == null ? storage : getState(path)
+    if (o == null) return []
+
+    const keys = Object.keys(o)
+    if (filter && typeof filter !== 'function') {
+      throw new Error('Filter is not a function.')
+    }
+
+    return filter ? keys : keys.filter(filter)
+  }
+
+  const countState = (path, filter) => {
+    const results = getState(path)
+    if (results == null) {
+      return 0
+    }
+
+    if (filter == null) {
+      // event if it is an array, we will use Object.keys
+      // to skip empty (deleted) item in the middle
+      return Object.keys(results).length
+    } else {
+      if (typeof results.filter === 'function') {
+        // filter always removes empty array item, so can use length
+        return results.filter(filter).length
+      } else {
+        const entries = typeof results.entries === 'function' ? results.entries() : Object.entries(results)
+        let count = 0
+        for (const [key, value] of entries) {
+          if (filter(value, key)) count++
+        }
+        return count
+      }
+    }
+  }
+
+  // a powerful version of getState, used to query list (object, array, Map, Set)
+  // this func always return array
+  const queryState = (path, options) => {
+    let results = getState(path)
+
+    if (results == null) {
+      // since this fn is for list query, always return array
+      return []
+    }
+
+    if (options == null) {
+      return results
+    }
+
+    const {
+      fields,
+      map,
+      filter,
+      orderBy,
+      begin,
+      end,
+      noTransform,
+      keyName = 'id',
+      valueName = 'value'
+    } = options
+
+    const actLikeArray = typeof results.filter === 'function' &&
+      typeof results.map === 'function' &&
+      typeof results.slice === 'function'
+
+    if (!actLikeArray) {
+      // convert it to array
+
+      // Note: if 'results' cannot be converted, caller should not specify 'options' anyway
+      // Note: string will be convert to array of chars
+
+      results = Array.from(
+        typeof results[Symbol.iterator] === 'function' ? results : Object.entries(results),
+        noTransform ? undefined : v => {
+          if (v && v.length === 2) {
+            const [key, value] = v
+            const valueObj = typeof value === 'object' ? value : { [valueName]: value }
+            return { ...valueObj, [keyName]: key }
+          }
+          return v
+        })
+    }
+
+    if (map != null) {
+      results = results.map(map)
+    }
+    if (filter != null) {
+      results = results.filter(filter)
+    }
+    if (orderBy != null) {
+      results = _.orderBy(results, orderBy)
+    }
+    if (begin != null || end != null) {
+      results = results.slice(begin, end)
+    }
+    if (fields != null) {
+      const fn = typeof fields !== 'function' ? _.pick : _.pickBy
+      results = results.map(o => fn(o, fields))
+    }
+
+    return results
+  }
+
+  let transfer, setState, deleteState, ensureState, invokeState, patchState, mergeState
 
   if (readonly) {
-    [transfer, setState, deleteState, ensureState, invokeState] =
-      _makeNotAllowed(['transfer', 'setState', 'deleteState', 'ensureState', 'invokeState'])
+    [transfer, setState, deleteState, ensureState, invokeState, patchState, mergeState] =
+      _makeNotAllowed(['transfer', 'setState', 'deleteState', 'ensureState', 'invokeState', 'patchState', 'mergeState'])
   } else {
     setState = (path, value, customizer) => {
+      path = _checkPath(path)
+      if (!storage) {
+        storage = {}
+        storages[contractAddress] = storage
+      }
+      if (typeof value === 'function') {
+        _.updateWith(storage, path, oldValue => stateSerializer.sanitize(value(oldValue)), _checkCustomizer(customizer))
+      } else {
+        const newValue = stateSerializer.sanitize(value)
+        _.setWith(storage, path, newValue, _checkCustomizer(customizer))
+      }
+    }
+
+    mergeState = (path, value, customizer) => {
       path = _checkPath(path)
       if (!storage) {
         storage = { }
         storages[contractAddress] = storage
       }
-      if (typeof value === 'function') {
-        _.updateWith(storage, path, oldValue => stateSerializer.sanitize(value(oldValue)), customizer)
-      } else {
-        _.setWith(storage, path, stateSerializer.sanitize(value), customizer)
-      }
+      _.updateWith(
+        storage,
+        path,
+        oldValue => {
+          const value2Merge = typeof value !== 'function' ? value : value(oldValue)
+          const sanitizedValue = stateSerializer.sanitize(value(value2Merge))
+          return { ...oldValue, sanitizedValue }
+        },
+        _checkCustomizer(customizer)
+      )
     }
 
     // similar to getState but create if not exist
@@ -139,20 +266,68 @@ const _stateforAddress = (contractAddress, readonly, {
     // invokeState('key', [], 'push', 'some value')
     // e.g. push to a Set
     // invokeState('key', new Set(), 'add', 'some value')
-    invokeState = (path, initialValue, funcName, stateValue, ...args) => {
+    invokeState = (path, initialValue, funcName, ...args) => {
       const o = ensureState(path, initialValue)
       if (o != null && typeof o[funcName] === 'function') {
-        return o[funcName](stateSerializer.sanitize(stateValue), ...args)
+        return o[funcName](...stateSerializer.sanitize(args))
       }
 
       throw new Error('Cannot invoke the function name specified.')
     }
 
-    deleteState = path => {
-      if (storage) {
-        return _.unset(storage, path)
+    deleteState = (path, subKeys) => {
+      if (!storage) return false
+
+      if (subKeys == null) {
+        return _.unset(storage, _checkPath(path))
       }
-      return false
+
+      const o = getState(path)
+      let deleted = false
+      subKeys.forEach(key => {
+        deleted = deleted || (delete o[key])
+      })
+
+      return deleted
+    }
+
+    /*
+      [
+        { type = 'set' path='5' value='100'/params=[] }
+      ]
+    */
+    patchState = (operations, basePath) => {
+      if (!operations || Array.isArray(operations)) {
+        throw new Error('operations must be an array of operations.')
+      }
+      if (basePath != null) {
+        basePath = _checkPath(basePath)
+      }
+
+      const mapTypes = {
+        set: setState,
+        ensure: ensureState,
+        invoke: invokeState,
+        delete: deleteState,
+        push: (path, value) => invokeState(path, [], 'push', value),
+        splice: (path, ...params) => invokeState(path, [], 'splice', ...params)
+      }
+
+      operations.forEach(op => {
+        if (op != null) {
+          const fn = typeof op.type === 'function' ? op.type : mapTypes[op.type]
+          if (typeof fn !== 'function') {
+            throw new Error('Operation type is not valid.')
+          }
+
+          const path = basePath == null ? op.path : basePath.concat(Array.isArray(op.path) ? op.path : [op.path])
+          if (op.params) {
+            fn(path, ...op.params)
+          } else {
+            fn(path, op.value)
+          }
+        }
+      })
     }
 
     transfer = (to, value) => {
@@ -167,10 +342,14 @@ const _stateforAddress = (contractAddress, readonly, {
     getStateKeys,
     hasState,
     getState,
+    countState,
+    queryState,
     ensureState,
     setState,
+    mergeState,
     deleteState,
     invokeState,
+    patchState,
     transfer
   }
 }

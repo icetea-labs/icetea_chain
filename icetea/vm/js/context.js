@@ -44,23 +44,7 @@ const _require = (name) => {
     throw new Error(`require('${name}') is not supported. If you want to load a contract, use loadContract function instead.`)
   }
 
-  let module = reload(name)
-
-  // filter bad functions should not used in blockchain
-  if (name === 'crypto') {
-    module = {
-
-      // What hash algos available depends on OpenSSL
-      // In the future, we might linit the number of hash algos supported
-      // to a safe and frequently-used list only.
-
-      createHash: module.createHash,
-      getHashes: module.getHashes,
-      timingSafeEqual: module.timingSafeEqual
-    }
-  }
-
-  return module
+  return reload(name)
 }
 
 function _makeLoadContract (invokerTypes, srcContract, options) {

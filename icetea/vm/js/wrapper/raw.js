@@ -39,7 +39,7 @@ let Math = new Proxy(__sysmath, {
                 if (!bl) {
                     throw new Error('Cannot call Math.random() in this context.')
                 }
-                return parseInt(bl.hash.substr(-16), 16) / 18446744073709552000
+                return parseInt(bl.hash.substr(-12), 16) / 281474976710656
             }
         }
         const fn = Reflect.get(obj, prop)
