@@ -1,4 +1,5 @@
 <html>
+
 <head>
     <title>icetea - bot zoo</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -6,23 +7,27 @@
     <link rel="stylesheet" href="botui-theme-default.css" />
     <link rel="stylesheet" type="text/css" href="style.css">
     <link rel="stylesheet" type="text/css" href="bot.css">
+    <meta property="og:url" content="https://icetea.io/">
+    <meta property="og:title" content="Icetea Botstore">
+    <meta property="og:type" content="website">
+    <meta name="description" content="Brings dApps to the Real World">
+    <meta property="og:image" content="https://trada.tech/assets/img/logo.svg">
+    <meta property="og:description" content="Brings dApps to the Real World">
 </head>
+
 <body>
     <div id="content">
-        <table class='table-form'>
-            <tr>
-                <td style="width: 36px">You:</td>
-                <td><span id="address"></span></td>
-            </tr>
-            <!-- <tr>
-                <td><button id="restart">Restart</button></td>
-            </tr> -->
-        </table>
-        <br>
         <div id="my-botui-app">
+            <div id="user-address">
+                <span>You: </span>
+                <span id="address" />
+            </div>
             <bot-ui></bot-ui>
         </div>
-        <div id='bot-option'><a href='#' id='show-bot-option'>MENU</a></div>
+
+        <div id='bot-option'>
+            <a href='#' id='show-bot-option'>MENU</a>
+        </div>
         <div id='bot-menu'>
             <a href="#" class="closebtn" id='hide-bot-option'>&times;</a>
             <div id='bot-menu-items'>
