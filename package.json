@@ -81,7 +81,7 @@
     "dotenv": "8.1.0",
     "dotenv-webpack": "1.7.0",
     "graceful-fs": "4.2.2",
-    "handlebars": "4.2.0",
+    "handlebars": "^4.5.3",
     "jquery": ">=3.4.0",
     "json-formatter-js": "2.2.1",
     "level": "5.0.1",
