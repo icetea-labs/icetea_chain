@@ -9,7 +9,7 @@ const transpilePlugins = require('../../config').rawJs.transpile
 const utils = require('../../helper/utils')
 const config = require('../../config')
 
-const { freeGasLimit, minStateGas, gasPerByte, maxTxGas } = config.contract
+const { freeGasLimit, minStateGas, gasPerByte, maxTxGas } = config.gas
 const path = require('path')
 const fs = require('fs')
 const debugFactory = require('debug')
@@ -111,7 +111,7 @@ module.exports = class extends Runner {
     // Print source for debug
     if (utils.isDevMode() &&
       typeof srcWrapper === 'string' &&
-      context.runtime.msg.name === '__on_deployed') {
+      context.runtime.msg.name === config.messages.ondeploy) {
       fs.writeFile(filename, contractSrc, err => {
         if (err) debug(err)
       })

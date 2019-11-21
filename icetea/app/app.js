@@ -1,5 +1,4 @@
 const { verifyTxSignature } = require('@iceteachain/common/src/utils')
-const _ = require('lodash')
 const utils = require('../helper/utils')
 const sysContracts = require('../syscon')
 const invoker = require('../invoker/contractinvoker')
@@ -10,8 +9,7 @@ const config = require('../config')
 const sizeof = require('object-sizeof')
 const debug = require('debug')('icetea:app')
 
-const { minStateGas, gasPerByte, minTxGas, maxTxGas } = config.contract
-const { setFreeGasLimit } = config
+const { minStateGas, gasPerByte, minTxGas, maxTxGas } = config.gas
 
 const stateManager = require('../state/statemanager')
 
@@ -35,12 +33,7 @@ class App {
     })
   }
 
-  loadState ({ freeGasLimit: _freeGasLimit, path }) {
-    // TBD: now use global config for convenience
-    // prefer to save it in app and pass to other component
-    if (!_.isNil(_freeGasLimit)) {
-      setFreeGasLimit(_freeGasLimit)
-    }
+  loadState (path) {
     return stateManager.load(path)
   }
 
@@ -93,7 +86,7 @@ class App {
   }
 
   checkTx (tx) {
-    const { freeGasLimit } = config.contract
+    const { freeGasLimit } = config.gas
     // NOTE:
     // CheckTX should not modify state
     // This way, we could avoid make a copy of state
@@ -381,26 +374,26 @@ function doExecTx (options) {
     // call constructor
     invoker.invokeUpdate(
       tx.to,
-      '__on_deployed',
+      config.messages.ondeploy,
       tx.data.params,
       options
     )
 
     // Skip this check because Wasm currently returns boolean
     // if (typeof result !== 'undefined') {
-    //   throw new Error('Constructor or __on_deployed function could not return non-undefined value.')
+    //   throw new Error('Constructor or ondeploy function could not return non-undefined value.')
     // }
 
     // Result of ondeploy should be address
     result = tx.to
   } else if (tx.isContractCall()) {
-    if (['constructor', '__on_received', '__on_deployed', 'getState', 'setState', 'deleteState', 'runtime'].includes(tx.data.name)) {
+    if (['constructor', config.messages.onreceive, config.messages.ondeploy, 'getState', 'setState', 'deleteState', 'runtime'].includes(tx.data.name)) {
       throw new Error('Calling this method directly is not allowed')
     }
     result = invoker.invokeTx(options)
   } else if (tx.value && stateManager.isContract(tx.to)) {
-    // call __on_received for regular transfer
-    result = invoker.invokeUpdate(tx.to, '__on_received', tx.data.params, options)
+    // call onreceive for regular transfer
+    result = invoker.invokeUpdate(tx.to, config.messages.onreceive, tx.data.params, options)
   }
 
   let actualFee = minTxGas
@@ -412,7 +405,7 @@ function doExecTx (options) {
       }
     }
 
-    const { freeGasLimit } = config.contract
+    const { freeGasLimit } = config.gas
     actualFee = actualFee > freeGasLimit ? (actualFee - freeGasLimit) : 0
     if (tx.fee < BigInt(actualFee)) {
       throw new Error('Insufficient fee')

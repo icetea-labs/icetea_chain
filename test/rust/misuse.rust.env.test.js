@@ -1,6 +1,6 @@
 const fs = require('fs')
 const { sleep, randomAccountWithBalance } = require('../helper')
-const startup = require('../../icetea/app/abcihandler')
+const { startupWith } = require('../../icetea/app/abcihandler')
 const { IceteaWeb3 } = require('@iceteachain/web3')
 const server = require('abci')
 const createTempDir = require('tempy').directory
@@ -11,7 +11,7 @@ let tweb3
 let account10k // this key should have 10k of coins before running test suite
 let instance
 beforeAll(async () => {
-  const handler = await startup({ path: createTempDir() })
+  const handler = await startupWith({ path: createTempDir() })
   instance = server(handler)
   instance.listen(global.ports.abci)
   await sleep(4000)

@@ -3,17 +3,38 @@ const { codec } = require('@iceteachain/common')
 const app = require('./app')
 const utils = require('../helper/utils')
 const debug = require('debug')('icetea:abci')
+const config = require('../config')
+const { merge } = require('lodash')
 
 // turn on logging state diff to console
 if (utils.isDevMode() && utils.envEnabled('PRINT_STATE_DIFF')) {
   app.addStateObserver(require('../helper/diff'))
 }
 
-module.exports = (config = {}) => {
-  const path = config.path || './state'
-  const freeGasLimit = config.freeGasLimit
-  return app.loadState({ path, freeGasLimit }).then(() => handler)
+exports.startup = extraConfig => {
+  if (extraConfig) {
+    const t = typeof extraConfig
+    if (t === 'object') {
+      merge(config, extraConfig)
+    } else if (t === 'function') {
+      extraConfig(config)
+    }
+  }
+  // no more change to config from now on
+  utils.deepFreeze(config)
+
+  return app.loadState(config.state.path).then(() => handler)
 }
+
+// A shortcut version of startup with commonly used params
+exports.startupWith = ({ path, freeGasLimit }) => exports.startup(cfg => {
+  if (path != null) {
+    cfg.state.path = path
+  }
+  if (freeGasLimit != null) {
+    cfg.gas.freeGasLimit = freeGasLimit
+  }
+})
 
 const handler = {
 

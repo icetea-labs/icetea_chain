@@ -92,7 +92,7 @@ function _makeTransfer (transferMethod, srcContract, options) {
     const tx = { from: srcContract, to, value, payer: srcContract, invoked: { ...invoked, [to]: true } }
     const newOpts = { ...options, tx }
     if (!invoked[to]) { // prevent cycle onreceive
-      return invoker.invokeUpdate(to, '__on_received', [], newOpts)
+      return invoker.invokeUpdate(to, config.messages.onreceive, [], newOpts)
     }
   }
 }
@@ -166,8 +166,8 @@ function _makeDeployContract (tools, contractHelpers, address, options) {
       contractHelpers.transfer(newAddress, tx.value)
     }
 
-    // must include tx into the options so that __on_deployed can access tx.value, etc.
-    invoker.invokeUpdate(newAddress, '__on_deployed', tx.data.params, { ...options, tx })
+    // must include tx into the options so that ondeploy can access tx.value, etc.
+    invoker.invokeUpdate(newAddress, config.messages.ondeploy, tx.data.params, { ...options, tx })
     return newAddress
   }
 }

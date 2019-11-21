@@ -1,7 +1,7 @@
 /* global jest describe test expect beforeAll afterAll */
 
 const { randomAccountWithBalance, sleep } = require('../helper')
-const startup = require('../../icetea/app/abcihandler')
+const { startupWith } = require('../../icetea/app/abcihandler')
 const { ContractMode } = require('@iceteachain/common')
 const { IceteaWeb3 } = require('@iceteachain/web3')
 const server = require('abci')
@@ -14,7 +14,7 @@ let tweb3
 let account10k // this key should have 10k of coins before running test suite
 let instance
 beforeAll(async () => {
-  const handler = await startup({ path: createTempDir(), freeGasLimit: 0 })
+  const handler = await startupWith({ path: createTempDir(), freeGasLimit: 0 })
   instance = server(handler)
   instance.listen(global.ports.abci)
   await sleep(4000)
@@ -30,15 +30,15 @@ afterAll(() => {
 
 const src = `const { expect } = require(';')
   @contract class SimpleStore  {
-    @state #owner = msg.sender
-    @state #value
-    getOwner() { return this.#owner }
-    getValue() { return this.#value }
+    @state owner = msg.sender
+    @state value
+    getOwner() { return this.owner }
+    getValue() { return this.value }
     @transaction setValue(value) {
-      expect(this.#owner == msg.sender, 'Only contract owner can set value')
+      expect(this.owner == msg.sender, 'Only contract owner can set value')
       expect(value, 'Invalid value')
-      this.#value = value
-      this.emitEvent("ValueChanged", {value: this.#value})
+      this.value = value
+      this.emitEvent("ValueChanged", {value: this.value})
     }
   }
 `

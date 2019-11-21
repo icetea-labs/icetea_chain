@@ -79,7 +79,7 @@ const makeMemoryHelper = (contract, { validate, Joi }) => {
     }
 
     @transaction addMemory(lockId: string, memory) {
-        return this.memoryHelper.address(lockId, memory)
+        return this.memoryHelper.addMemory(lockId, memory)
     }
 
     @transaction removeMemory(id: number) {

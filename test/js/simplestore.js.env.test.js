@@ -1,7 +1,7 @@
 /* global jest describe test expect beforeAll afterAll */
 
 const { sleep, randomAccountWithBalance, switchEncoding } = require('../helper')
-const startup = require('../../icetea/app/abcihandler')
+const { startupWith } = require('../../icetea/app/abcihandler')
 const { TxOp, ContractMode } = require('@iceteachain/common')
 const { IceteaWeb3 } = require('@iceteachain/web3')
 const server = require('abci')
@@ -14,7 +14,7 @@ let tweb3
 let account10k // this key should have 10k of coins before running test suite
 let instance
 beforeAll(async () => {
-  const handler = await startup({ path: createTempDir() })
+  const handler = await startupWith({ path: createTempDir() })
   instance = server(handler)
   instance.listen(global.ports.abci)
   await sleep(4000)
@@ -154,17 +154,21 @@ describe('SimpleStore', () => {
   })
 
   test('decorated JS valid-syntax simple store', async () => {
-    const CONTRACT_SRC = `const { expect } = require(';')
+    const CONTRACT_SRC = `const { expect, stateUtil } = require(';')
+        const { path } = stateUtil(this)
         @contract class SimpleStore  {
-            @state #owner = msg.sender
-            @state #value
-            @view getOwner() { return this.#owner }
-            @view getValue() { return this.#value }
+            #owner = path('#owner')
+            #value = path('#value')
+            constructor() {
+              this.#owner.value(msg.sender)
+            }
+            @view getOwner() { return this.#owner.value() }
+            @view getValue() { return this.#value.value() }
             @transaction setValue(value) {
-                expect(this.#owner == msg.sender, 'Only contract owner can set value')
+                expect(this.#owner.value() === msg.sender, 'Only contract owner can set value')
                 expect(value, 'Invalid value')
-                this.#value = value
-                this.emitEvent("ValueChanged", {value: this.#value})
+                this.#value.value(value)
+                this.emitEvent("ValueChanged", {value: this.#value.value()})
             }
         }`
 

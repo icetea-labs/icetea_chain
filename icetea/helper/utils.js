@@ -3,6 +3,7 @@
 const _ = require('lodash')
 const sysContracts = require('../syscon')
 const { ecc, codec } = require('@iceteachain/common')
+const { ondeploy, onreceive } = require('../config')
 
 /**
  * get all property name of an object
@@ -208,7 +209,7 @@ exports.unifyMetadata = meta => {
     }, {})
   }
 
-  const excepts = ['constructor', '__on_deployed', '__on_received', 'runtime', 'getState', 'setState']
+  const excepts = ['constructor', ondeploy, onreceive, 'runtime', 'getState', 'setState']
   Object.keys(meta).forEach(k => {
     if (excepts.includes(k) || k.startsWith('#') ||
       (meta[k].decorators && meta[k].decorators.includes('internal'))) {

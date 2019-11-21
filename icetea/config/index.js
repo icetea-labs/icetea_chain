@@ -4,6 +4,10 @@ const config = {
   versions: {
     node: '>=12.9.1 <13.0.0'
   },
+  messages: {
+    ondeploy: '__on_deployed',
+    onreceive: '__on_received'
+  },
   rawJs: {
     transpile: [
       '@babel/plugin-proposal-nullish-coalescing-operator',
@@ -24,6 +28,7 @@ const config = {
     unregistrationLock: 10
   },
   state: {
+    path: './state',
     serializer: 'v8',
     stripUndefined: true
   },
@@ -48,16 +53,12 @@ const config = {
   whitelistModules: [
     'lodash', 'moment', 'big.js', '@hapi/joi', 'validator', 'ajv', 'cheerio', '@iceteachain/utils', ';',
     'assert', 'buffer', 'crypto', 'querystring', 'stream', 'string_decoder', 'url', 'util', 'create-hash'],
-  contract: {
+  gas: {
     minStateGas: 200,
     freeGasLimit: 1e9,
     gasPerByte: 1,
     minTxGas: 0,
     maxTxGas: 1e12
-  },
-  // method
-  setFreeGasLimit: (freeGasLimit = 0) => {
-    config.contract.freeGasLimit = freeGasLimit
   }
 }
 
