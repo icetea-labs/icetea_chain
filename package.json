@@ -80,6 +80,7 @@
     "debug": "4.1.1",
     "dotenv": "8.1.0",
     "dotenv-webpack": "1.7.0",
+    "eciesjs": "^0.3.1",
     "graceful-fs": "4.2.2",
     "handlebars": "^4.5.3",
     "jquery": ">=3.4.0",

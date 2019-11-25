@@ -25,7 +25,8 @@ document.getElementById('generateBankKey').addEventListener('click', function ()
 async function generateKeys (type) {
   var keyInfo = newKeyPairWithAddress(type)
   document.getElementById('generated_private_key').textContent = keyInfo.privateKey
-  document.getElementById('generated_public_key').textContent = keyInfo.address
+  document.getElementById('generated_public_key').textContent = keyInfo.publicKey
+  document.getElementById('generated_address').textContent = keyInfo.address
   if (document.getElementById('autoAdd').checked) {
     tweb3.wallet.importAccount(keyInfo.privateKey)
     tweb3.wallet.defaultAccount = keyInfo.address
