@@ -1,7 +1,8 @@
 import Vue from 'vue'
 import BotUI from 'botui'
 import tweb3 from './tweb3'
-import { ecc, AccountType } from '@iceteachain/common'
+import { ecc, AccountType, codec } from '@iceteachain/common'
+import { encrypt as ecencrypt } from 'eciesjs'
 
 const initWeb3 = async (showAlert = true) => {
   try {
@@ -135,16 +136,17 @@ function confirmLocation () {
   ]).then(result => (!!result && result.value === 'yes'))
 }
 
-function callContract (method, type, value, from, ...params) {
-  if (value) {
-    type = 'write'
+function callContract (method, stateAccess, transferValue, ...params) {
+  if (transferValue) {
+    stateAccess = 'write'
   }
   const map = {
     none: 'callPure',
     read: 'call',
     write: 'sendCommit'
   }
-  return method(...params)[map[type]]({ value, from }).then(r => type === 'write' ? r.returnValue : r)
+  return method(...params)[map[stateAccess]]({ value: transferValue, from: tweb3.wallet.defaultAccount })
+    .then(r => stateAccess === 'write' ? r.returnValue : r)
 }
 
 async function getBotInfoFromStore (alias) {
@@ -185,7 +187,7 @@ function setCommands (commands, defStateAccess) {
   })
 }
 
-function pushToQueue (type, content, stateAccess, transferValue, location, sendback) {
+function pushToQueue (type, content, stateAccess, { transferValue, encrypt, location, sendback } = {}) {
   if (content.value.indexOf(':') > 0) {
     const parts = content.value.split(':', 2)
     type = parts[0]
@@ -195,6 +197,7 @@ function pushToQueue (type, content, stateAccess, transferValue, location, sendb
     type,
     content,
     transferValue,
+    encrypt,
     location,
     sendback,
     stateAccess
@@ -233,6 +236,7 @@ function processSpeakResult (contract, contractResult, speakResult) {
   if (typeof speakResult === 'object') {
     speakResult.sendback = contractResult.sendback
     speakResult.stateAccess = (contractResult.options || {}).nextStateAccess
+    speakResult.encrypt = (contractResult.options || {}).encrypt
   }
 
   if (contractResult.options && contractResult.options.value) {
@@ -269,13 +273,55 @@ function processSpeakResult (contract, contractResult, speakResult) {
   }
 }
 
+function doEncrypt (msg, bufKey) {
+  if (msg == null) return msg
+  if (typeof msg !== 'string') {
+    try {
+      msg = JSON.stringify(msg)
+    } catch (e) {
+      console.warn(e)
+      msg = String(msg)
+    }
+  }
+  return ecencrypt(bufKey.toString('hex'), Buffer.from(msg)).toString('base64')
+}
+
+function encryptData ({ key, items }, { value, sendback }) {
+  if (!key || !items || !items.length) return { value, sendback }
+
+  // public key should be base58
+  const bufKey = codec.toKeyBuffer(key)
+
+  const encrypted = {}
+  const lastChat = sendback.lastChat
+  items.forEach(field => {
+    if (lastChat[field]) {
+      encrypted[field] = lastChat[field]
+      delete lastChat[field]
+    }
+  })
+
+  lastChat._ = doEncrypt(encrypted, bufKey)
+  if (items.includes('.')) {
+    value = doEncrypt(value, bufKey)
+  }
+
+  return { value, sendback }
+}
+
 function handleQueue (contract, defStateAccess) {
   if (queue.length) {
     var item = queue.shift()
+
+    if (item.encrypt && item.stateAccess === 'write') {
+      const { value, sendback } = encryptData(item.encrypt, { value: item.content.value, sendback: item.sendback })
+      item.content.value = value
+      item.sendback = sendback
+    }
+
     callContract(contract.methods['on' + item.type],
       item.stateAccess,
       item.transferValue || 0,
-      tweb3.wallet.defaultAccount,
       item.content.value,
       { sendback: item.sendback, locale: navigator.language, location: item.location })
       .then(contractResult => {
@@ -283,7 +329,8 @@ function handleQueue (contract, defStateAccess) {
           .then(r => processSpeakResult(contract, contractResult, r))
           .then(r => {
             if (r && r.value) {
-              pushToQueue('text', r, r.stateAccess || defStateAccess, r.transferValue, r.location, r.sendback)
+              const { stateAccess, transferValue, encrypt, location, sendback } = r
+              pushToQueue('text', r, stateAccess || defStateAccess, { transferValue, encrypt, location, sendback })
             }
           })
           .catch(err => {
