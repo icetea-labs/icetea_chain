@@ -7,6 +7,7 @@ const { isValidAddress } = require('../../helper/utils')
 const { isContract } = require('../../state/statemanager')
 const crypto = require('crypto')
 const { ContractMode, TxOp } = require('@iceteachain/common')
+const { ensureAddress } = require('../../syscon/alias')
 
 const moduleUtils = Object.freeze(require('@iceteachain/utils/utils.js'))
 const moduleCrypto = Object.freeze({
@@ -98,6 +99,8 @@ function _makeTransfer (transferMethod, srcContract, options) {
 }
 
 function _makeInvokableMethod (invokerTypes, destContract, method, options) {
+  destContract = ensureAddress(destContract)
+
   return invokerTypes.reduce((obj, t) => {
     obj[t] = (...params) => {
       return invoker[t](destContract, method, params, options)

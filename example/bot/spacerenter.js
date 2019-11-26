@@ -12,20 +12,35 @@
         }
     }
 
+    @transaction exportState(path) {
+        this.expectAdmin()
+        if (path != null) return this.getState(path, {})
+
+        return this.getStateKeys().reduce((p, k) => {
+            p[k] = this.getState(k)
+            return p
+        }, {})
+    }
+
     @transaction addAdmin(addr: address) {
         this.expectAdmin()
         this.admins.push(addr)
     }
 
-    expectRenter(msg) {
+    expectRenter(errorMessage) {
         if (!this.renters.includes(msg.sender)) {
-            throw new Error(msg || 'Unauthorized')
+            throw new Error(errorMessage || 'Unauthorized')
         }
     }
 
     @transaction addRenter(renter: address) {
         this.expectAdmin()
         this.renters.push(renter)
+    }
+
+    @transaction setOnlyRenter(renter: address) {
+        this.expectAdmin()
+        this.renters = [renter]
     }
 
     _getState(namespace, name, defaultValue) {
@@ -35,6 +50,7 @@
         }
         // The following function will throw if msg.sender is not a contract
         // This is still not enough though, as a caller can fake
+
         this.runtime.getContractInfo(msg.sender, errorMsg)
         this.expectRenter(errorMsg)
 
@@ -60,7 +76,7 @@
         return this._getState('shared', name, defaultValue)
     }
 
-    @transaction setLocalState(name, value) {
+    @transaction setGlobalState(name, value) {
         return this._setState('shared', name, value)
     }
 }
