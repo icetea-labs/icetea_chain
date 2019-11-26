@@ -45,11 +45,11 @@ const sayButton = (action) => {
   if (!Array.isArray(action)) {
     action = [action]
   }
-  return botui.action.button({ action })
+  return botui.action.button({ delay: 500, action })
 }
 
 const saySelect = (action) => {
-  return botui.action.select({ action })
+  return botui.action.select({ delay: 500, action })
 }
 
 const speak = (items, updateIndex) => {
@@ -85,11 +85,12 @@ const speak = (items, updateIndex) => {
             loading: false
           }, item))
         } else {
-          return botui.message.add(item)
+          return botui.message.add({ delay: 500, ...item })
         }
       }
       case 'input':
         return botui.action.text({
+          delay: 500,
           action: item.content
         })
       case 'button':
@@ -151,7 +152,7 @@ function callContract (method, stateAccess, transferValue, ...params) {
 
 async function getBotInfoFromStore (alias) {
   try {
-    return await tweb3.contract('system.botstore').methods.query(alias)
+    return await tweb3.contract('system.botstore').methods.query(alias).call({ from: tweb3.wallet.defaultAccount })
   } catch {
     return {}
   }
@@ -159,7 +160,7 @@ async function getBotInfoFromStore (alias) {
 
 async function getBotInfoFromBot (alias) {
   try {
-    return await tweb3.contract(alias).methods.botInfo().callPure()
+    return await tweb3.contract(alias).methods.botInfo().call({ from: tweb3.wallet.defaultAccount })
   } catch {
     return {}
   }
@@ -443,7 +444,7 @@ function closeNav () {
 // do not remove this semicolon
 ; (async () => {
   showBotOptionBtn()
-  var address = getUrlParameter('address')
+  var address = getUrlParameter('address') || window.botAddress
   if (address) {
     try {
       address = await tweb3.ensureAddress(address)

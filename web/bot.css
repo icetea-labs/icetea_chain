@@ -38,10 +38,10 @@
   z-index: 1; /* Stay on top */
   top: 0; /* Stay at the top */
   right: 0;
-  background-color: #111; /* Black*/
+  background-color: #28635a; /* Black*/
   overflow-x: hidden; /* Disable horizontal scroll */
   padding-top: 0;
-  transition: 0.5s; /* 0.5 second transition effect to slide in the sidenav */
+  transition: 0.3s; /* 0.5 second transition effect to slide in the sidenav */
   text-transform: uppercase;
 }
 
@@ -49,13 +49,13 @@
   padding: 8px 8px 8px 32px;
   text-decoration: none;
   font-size: 25px;
-  color: #818181;
+  color: #ccc;
   display: block;
   transition: 0.3s;
 }
 
 #bot-menu a:hover {
-  color: #f1f1f1;
+  color: #fff;
 }
 
 #bot-menu .closebtn {

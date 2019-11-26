@@ -119,7 +119,7 @@ const _stateforAddress = (contractAddress, readonly, {
       throw new Error('Filter is not a function.')
     }
 
-    return filter ? keys : keys.filter(filter)
+    return !filter ? keys : keys.filter(filter)
   }
 
   const countState = (path, filter) => {
