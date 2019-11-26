@@ -123,6 +123,7 @@ function _makeInvokableMethod (invokerTypes, destContract, method, options) {
 }
 
 function _makeLibraryMethod (invokerTypes, destContract, method, options) {
+  destContract = ensureAddress(destContract)
   return invokerTypes.reduce((obj, t) => {
     obj[t] = (...params) => {
       return libraryinvoker[t](destContract, method, params, options)
