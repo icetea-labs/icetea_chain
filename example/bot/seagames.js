@@ -81,7 +81,6 @@ class LuckyBot extends SurveyBot {
   }
 
   @view botInfo() {
-    console.log(this.getPlayer(msg.sender), this.getPlayers(), msg.sender)
     const oldPredict = this.getPlayer(msg.sender).predict
     return {
       name: this.name,
@@ -411,8 +410,7 @@ class LuckyBot extends SurveyBot {
       predict: chatData.predict,
       timestamp: block.timestamp
     }
-    console.log(chatData)
-    console.log('setPlayer', chat)
+
     this.setPlayer(chat)
     if (!chatData.oldUser) {
       const user = {
@@ -421,7 +419,7 @@ class LuckyBot extends SurveyBot {
         hashPhone: chatData.hashPhone,
         _: chatData._
       }
-      console.log('setUser', user)
+
       this.setUser(user)
     }
 
