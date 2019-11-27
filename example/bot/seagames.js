@@ -300,7 +300,7 @@ class LuckyBot extends SurveyBot {
   sayAbout(m) {
     m = m || Message.create()
     return m.html(`Bot này chạy trên <b>Icetea Platform</b>. Liên lạc ${linkIcetea} hoặc đặt câu hỏi Telegram ${linkTelegram}.`)
-      .html('<img src="https://icetea.io/wp-content/uploads/2019/07/Logo-Blue-185x50.png"></img>')
+      .html('<a href="https://icetea.io" target="_blank"><img src="https://icetea.io/wp-content/uploads/2019/07/Logo-Blue-185x50.png"></a>')
   }
 
   @view oncommand_about() {
