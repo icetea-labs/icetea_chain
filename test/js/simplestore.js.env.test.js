@@ -1,11 +1,9 @@
 /* global jest describe test expect beforeAll afterAll */
 
-const { sleep, randomAccountWithBalance, switchEncoding } = require('../helper')
-const { startupWith } = require('../../icetea/app/abcihandler')
+const { sleep, randomAccountWithBalance, switchEncoding, startupWithGas } = require('../helper')
 const { TxOp, ContractMode } = require('@iceteachain/common')
 const { IceteaWeb3 } = require('@iceteachain/web3')
 const server = require('abci')
-const createTempDir = require('tempy').directory
 const { transpile } = global
 
 jest.setTimeout(30000)
@@ -14,7 +12,7 @@ let tweb3
 let account10k // this key should have 10k of coins before running test suite
 let instance
 beforeAll(async () => {
-  const handler = await startupWith({ path: createTempDir() })
+  const handler = await startupWithGas()
   instance = server(handler)
   instance.listen(global.ports.abci)
   await sleep(4000)

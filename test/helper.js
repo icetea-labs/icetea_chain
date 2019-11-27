@@ -1,6 +1,13 @@
 require('dotenv').config()
 const { ecc } = require('@iceteachain/common')
 const { IceteaWeb3 } = require('@iceteachain/web3')
+const { startupWith } = require('../icetea/app/abcihandler')
+const createTempDir = require('tempy').directory
+
+exports.startupWithGas = gas => {
+  if (gas == null) gas = 1e9
+  return startupWith({ path: createTempDir(), freeGasLimit: gas })
+}
 
 exports.switchEncoding = function (text, from, to) {
   const buf = Buffer.isBuffer(text) ? text : Buffer.from(text, from)

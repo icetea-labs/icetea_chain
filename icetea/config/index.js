@@ -55,7 +55,7 @@ const config = {
     'assert', 'buffer', 'crypto', 'querystring', 'stream', 'string_decoder', 'url', 'util', 'create-hash'],
   gas: {
     minStateGas: 200,
-    freeGasLimit: 1e9,
+    freeGasLimit: 0,
     gasPerByte: 1,
     minTxGas: 0,
     maxTxGas: 1e12
