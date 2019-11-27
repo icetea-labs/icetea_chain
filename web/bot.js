@@ -4,6 +4,13 @@ import tweb3 from './tweb3'
 import { ecc, AccountType, codec } from '@iceteachain/common'
 import { encrypt as ecencrypt } from 'eciesjs'
 
+const touchDevice = ('ontouchstart' in window.document.documentElement)
+const touchButton = touchDevice ? {
+  button: {
+    label: 'OK'
+  }
+} : {}
+
 const initWeb3 = async (showAlert = true) => {
   try {
     var resp = await tweb3.wallet.loadFromStorage('123', undefined, tweb3.wallet.defaultAccount)
@@ -91,7 +98,10 @@ const speak = (items, updateIndex) => {
       case 'input':
         return botui.action.text({
           delay: 500,
-          action: item.content
+          action: {
+            ...touchButton,
+            ...item.content
+          }
         })
       case 'button':
         return sayButton(item.content)

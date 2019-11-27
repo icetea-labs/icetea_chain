@@ -36,6 +36,7 @@ byId('form').addEventListener('submit', function (e) {
   tweb3.contract('contract.spacerenter').methods.exportState().sendCommit().then(r => {
     const users = r.returnValue && r.returnValue.shared && r.returnValue.shared.users
     const rows = byId('userRows')
+    rows.innerHTML = ''
     if (users) {
       Object.entries(users).forEach(([addr, info], i) => {
         if (info._) {

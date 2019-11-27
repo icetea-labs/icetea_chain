@@ -70,18 +70,16 @@ class LuckyBot extends SurveyBot {
   @state @view matchId = 'vie_lao'
 
   @state @view name = 'DỰ ĐOÁN SEAGAMES CÙNG SKYGARDEN BOT'
-  @state @view description = `Tặng: 1 lon
-  <a href='https://www.facebook.com/SkyGarden/photos/a.1389606451261750/2261853797370340/?type=3&theater' target='_blank'>beer Người Yêu Cũ</a>
-  cho TẤT CẢ người đoán đúng.
-  Nhận tại các nhà hàng thuộc ${linkSky} ở TP HCM.<br>
-  Trận: Việt Nam - Lào (16:00 ngày 28/11)
-  `
+  @state @view description = `Giải thưởng:<br>
+  - 10 voucher 500k cho 10 bạn đoán đúng may mắn nhất<br>
+  - 1 lon <a href='https://www.facebook.com/SkyGarden/photos/a.1389606451261750/2261853797370340/?type=3&theater' target='_blank'>beer Người Yêu Cũ</a>
+  cho TẤT CẢ người đoán đúng.<br>
+  Nhận tại các nhà hàng thuộc ${linkSky} ở TP HCM.`
+
   @state @view startButtonText = "Bắt đầu"
 
-  @state @view how = `- Giải của SkyGarden: bạn đến 1 trong các nhà hàng và trình kết quả bot hiển thị.
-  Thắc mắc xin liên lạc ${linkSky}<br>
-  - Giải của Icetea (nếu có): chúng tôi sẽ liên lạc theo số điện thoại đăng kí.
-  Có vấn đề xin liên lạc Telegram ${linkTelegram} hoặc website ${linkIcetea}.
+  @state @view how = `Đến 1 nhà hàng bất kỳ thuộc hệ thống SkyGarden và trình số điện thoại <em>hoặc</em> kết quả hiển thị trên bot.<br><br>
+  Có vấn đề xin liên lạc ${linkSky} hoặc chat Telegram tại ${linkTelegram}.
   `
 
   @state @view publicKey = 'cStHMto8vNjeoySikZkS2dUAWjpqZkGQezvVh2mys7t5'
@@ -92,10 +90,12 @@ class LuckyBot extends SurveyBot {
 
   @view botInfo() {
     const oldPredict = this.getPlayer(msg.sender).predict != null
+    const info = this.getMatchInfo()
+    const desc = this.description + `<br><br><b>Trận ${info.host} - ${info.visitor}</b> (${formatTime(info.deadline)})`
 
     return {
       name: this.name,
-      description: this.description,
+      description: desc,
       stateAccess: 'read',
       startButtonText: !oldPredict ? this.startButtonText : "Chơi lại",
       showMenuButton: oldPredict,
@@ -104,7 +104,7 @@ class LuckyBot extends SurveyBot {
         { text: "Kết quả", value: "result", stateAccess: "read" },
         { text: "Cách nhận giải", value: "how", stateAccess: "read" },
         { text: "Tài khoản", value: "account", stateAccess: "read" },
-        { text: "About this bot", value: "about", stateAccess: "read" }
+        { text: "Nhà phát triển", value: "about", stateAccess: "read" }
       ]
     }
   }
@@ -122,9 +122,15 @@ class LuckyBot extends SurveyBot {
 
   @transaction setBotInfo(name: ?string, desc: ?string, startText: ?string) {
     this.expectAdmin()
-    (name != null) && (this.name = name)
-    (desc != null) && (this.description = desc)
-    (startText != null) && (this.startButtonText = startText)
+    if (name != null) {
+      this.name = name
+    }
+    if (desc != null) {
+      this.description = desc
+    }
+    if (startText != null) {
+      this.startButtonText = startText
+    }
   }
 
   @transaction setPubKey(pubkey: address) {
@@ -221,9 +227,9 @@ class LuckyBot extends SurveyBot {
   }
 
   isTopWinning(info, players) {
-    let top = Number(info.top)
+    const top = Number(info.top)
     const rand = info.rand
-    if (!top && !info.icetea) return [true, false]
+    if (!top && !info.icetea) return [false, false]
 
     players = Object.entries(players)
       .filter(([, p]) => (+p.predict === +info.result))
@@ -237,13 +243,14 @@ class LuckyBot extends SurveyBot {
       delta: Math.abs(winningNumber - index)
     }));
 
-    let winners = orderBy(players, ["delta", "timestamp"])
-    if (top && top > winners.length) {
+    players = orderBy(players, ["delta", "timestamp"])
+    let winners = players
+    if (top && top < count) {
       winners = winners.slice(0, top)
     }
     
-    const isTop = !top || (top <= count) || winners.find(w => w.address = msg.sender) != null
-    const isIcetea = info.icetea && winners[winningNumber].address === msg.sender
+    const isTop = top && (top >= count || winners.find(w => w.address === msg.sender) != null)
+    const isIcetea = info.icetea && players[winningNumber].address === msg.sender
 
     return [isTop, isIcetea]
   }
@@ -263,14 +270,16 @@ class LuckyBot extends SurveyBot {
         if (info.result == null) {
           reply += 'Kết quả: chưa có'
         } else {
-          let win = false
           if (+me.predict === +info.result) {
             reply += 'Bạn đoán đúng.'
             const [isTop, isIcetea] = this.isTopWinning(info, players)
-            if (isTop || isIcetea) {
+            if (info.award || isTop || isIcetea) {
               reply += '<br>Phần thưởng:'
+              if (info.award) {
+                reply += `<br>- Từ ${linkSky}: ${info.award}`
+              }
               if (isTop) {
-                reply += `<br>- Từ ${link}: ${info.award || 'có'}`
+                reply += `<br>- Từ ${linkSky}: ${info.topAward || 'voucher'}`
               }
               if (isIcetea) {
                 reply += `<br>- Từ ${linkIcetea}: ${info.iceteaAward || 'có'}`
@@ -299,7 +308,7 @@ class LuckyBot extends SurveyBot {
 
   sayAbout(m) {
     m = m || Message.create()
-    return m.html(`Bot này chạy trên <b>Icetea Platform</b>. Liên lạc ${linkIcetea} hoặc đặt câu hỏi Telegram ${linkTelegram}.`)
+    return m.html(`Bot game chạy trên <b>Icetea Platform</b>. Truy cập ${linkIcetea} hoặc tham gia Telegram group ${linkTelegram} để tìm hiểu thêm.`)
       .html('<a href="https://icetea.io" target="_blank"><img src="https://icetea.io/wp-content/uploads/2019/07/Logo-Blue-185x50.png"></a>')
   }
 
