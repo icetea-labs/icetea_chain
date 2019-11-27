@@ -1,73 +1,87 @@
 <html>
+
 <head>
-    <title>icetea - scan</title>
+    <title>Dự đoán Seagames cùng SkyGarden</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://skygarden.vn/favicon.png?ver=88" rel="shortcut icon">
+    <link rel="stylesheet" href="botui.min.css" />
+    <link rel="stylesheet" href="botui-theme-default.css" />
     <link rel="stylesheet" type="text/css" href="style.css">
+    <link rel="stylesheet" type="text/css" href="bot.css">
+    <meta property="og:title" content="Dự đoán Seagames cùng SkyGarden">
+    <meta property="og:type" content="website">
+    <meta name="description" content="Dự đoán kết quả của đội tuyển bóng đá Việt Nam tại Seagames để nhận phần thưởng.">
+    <meta property="og:image" content="https://upload.zamba.vn/thumb_in/800_800/foodshop/upload/config/sky-garden-bbq-seafood-craft-beer-1571661191.jpg">
+    <meta property="og:description" content="Dự đoán kết quả của đội tuyển bóng đá Việt Nam tại Seagames để nhận phần thưởng.">
+    <style>
+        body {
+            background-color: #f5f5f5!important;
+        }
+        .botui-container {
+            background-color: transparent;
+            height: auto;
+        }
+        .banner {
+            padding: 16px 20px;
+            max-width: 800px;
+            margin: 0 auto;
+            box-sizing: border-box;
+        }
+        .banner img {
+            height: 48px;
+        }
+        #bot-option {
+            top: -56px;
+            background-color: #d80000;
+        }
+        #bot-option a {
+            color: #f8f8f8;
+        }
+        #bot-option a:hover {
+            color: #fff;
+        }
+        #bot-menu {
+            top: -60px;
+            right: 22px;
+            border-radius: 5px;
+            height: 280px;
+        }
+        #bot-menu a {
+            font-size: 18px;
+        }
+        .botui-message-content {
+            background-color: #ebebeb;
+        }
+        .bot-intro .botui-message-content {
+            background-color: transparent;
+            border: 1px solid #d80000;
+        }
+    </style>
 </head>
+
 <body>
-    <div id="content">
-        <section id="info"></section>
-        <section class="notice">Icetea Developer Tools</section>
-        <nav id="menu">
-            <a href="/">Scan</a>
-            <a href="/transfer.html">Transfer</a>
-            <a href="/deploy.html">Deploy Contract</a>
-            <a href="/contract.html">Call Contract</a>
-            <a href="/wallet.html">Wallet</a>
-            <a href="/botstore.html">Bot Store</a>
-            <a href="/profile.html">Profile</a>
-            <a href="/election.html">Election</a>
-        </nav>
-        <h1>Transactions</h1>
-        <section id="transactions">No transactions.</section>
-        <script id="txTemplate" type="text/x-handlebars-template">
-            <table>
-                <tr>
-                    <th>Type</th>
-                    <th>Block</th>
-                    <th>Status</th>
-                    <th>From</th>
-                    <th>To</th>
-                    <th>Value</th>
-                </tr>
-                {{#each this}}
-                <tr>
-                    <td><a href="/tx.html?hash={{hash}}">{{txType}}</a></td>
-                    <td><a href="/block.html?height={{blockHeight}}">{{blockHeight}}</a></td>
-                    <td class={{status}}>{{status}}</td>
-                    <td><a href="/address.html?address={{from}}">{{fromText}}</a></td>
-                    <td><a href="/address.html?address={{to}}">{{toText}}</td>
-                    <td>{{value}}</td>
-                </tr>
-                {{/each}}
-            </table>
-        </script>
-
-        <h2>State inspect (for debug)</h2>
-        <section id="debug">Nothing.</section>
-
-        <h2>Blocks</h2>
-        <section id="blocks">No blocks.</section>
-        <script id="blockTemplate" type="text/x-handlebars-template">
-            <table>
-                <tr>
-                    <th>Hash</th>
-                    <th>Height</th>
-                    <th>Time</th>
-                    <th>#TX</th>
-                </tr>
-                {{#each this}}
-                <tr>
-                    <td><a href="/block.html?height={{height}}">{{shash}}</a></td>
-                    <td>{{height}}</td>
-                    <td>{{timestamp}}</td>
-                    <td>{{txCount}}</td>
-                </tr>
-                {{/each}}
-            </table>
-        </script>
+    <div class='banner'>
+        <a href='https://skygarden.vn'><img src="https://skygarden.vn/html-websky/assets/images/logo-2.png"></a>
+        <div id="user-address" style="display: none;">
+                <span>You: </span>
+                <span id="address"></span>
+        </div>
+        <div id='bot-option'>
+            <a href='#' id='show-bot-option'>MENU</a>
+        </div>
     </div>
-    <script src="index.js"></script>
+    <div id="content">
+         <div id="my-botui-app">
+            <bot-ui></bot-ui>
+        </div>
+
+        <div id='bot-menu'>
+            <a href="#" class="closebtn" id='hide-bot-option'>&times;</a>
+            <div id='bot-menu-items'></div>
+        </div>
+    </div>
+    <script>window.botAddress='contract.skygarden_seagames';</script>
+    <script src="bot.js"></script>
     <!-- Global site tag (gtag.js) - Google Analytics -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=UA-8597504-10"></script>
 <script>
