@@ -52,7 +52,7 @@ const sayButton = (action, opts = {}) => {
   if (!Array.isArray(action)) {
     action = [action]
   }
-  return botui.action.button({ delay: 500, ...opts, action })
+  return botui.action.button(Object.assign({ delay: 500 }, opts, { action }))
 }
 
 const saySelect = (action) => {
@@ -92,16 +92,13 @@ const speak = (items, updateIndex) => {
             loading: false
           }, item))
         } else {
-          return botui.message.add({ delay: 500, ...item })
+          return botui.message.add(Object.assign({ delay: 500 }, item))
         }
       }
       case 'input':
         return botui.action.text({
           delay: 500,
-          action: {
-            ...touchButton,
-            ...item.content
-          }
+          action: Object.assign({}, touchButton, item.content)
         })
       case 'button':
         return sayButton(item.content)
@@ -147,7 +144,7 @@ function confirmLocation () {
   ]).then(result => (!!result && result.value === 'yes'))
 }
 
-function callContract (method, stateAccess, transferValue, ...params) {
+function callContract (method, stateAccess, transferValue, value, options) {
   if (transferValue) {
     stateAccess = 'write'
   }
@@ -156,7 +153,7 @@ function callContract (method, stateAccess, transferValue, ...params) {
     read: 'call',
     write: 'sendCommit'
   }
-  return method(...params)[map[stateAccess]]({ value: transferValue, from: tweb3.wallet.defaultAccount })
+  return method(value, options)[map[stateAccess]]({ value: transferValue, from: tweb3.wallet.defaultAccount })
     .then(r => stateAccess === 'write' ? r.returnValue : r)
 }
 
