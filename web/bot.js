@@ -41,11 +41,11 @@ const say = (text, options) => {
  * generate buttons
  * @param {string} action array of button title
  */
-const sayButton = (action) => {
+const sayButton = (action, opts = {}) => {
   if (!Array.isArray(action)) {
     action = [action]
   }
-  return botui.action.button({ delay: 500, action })
+  return botui.action.button({ delay: 500, ...opts, action })
 }
 
 const saySelect = (action) => {
@@ -389,10 +389,16 @@ async function connectBot (botAddr) {
 
   // display bot info
   await say(`<b>${botInfo.name}</b><br>${botInfo.description}`, { type: 'html', cssClass: 'bot-intro' })
-  sayButton({ text: botInfo.startButtonText || 'Start', value: 'start' })
-    .then(r => {
+  sayButton([
+    { text: botInfo.startButtonText || 'Start', value: 'start' },
+    { text: 'Menu', value: 'menu' }
+  ]).then(r => {
+    if (r.value === 'start') {
       pushToQueue('command', r, botInfo.stateAccess)
-    })
+    } else {
+      openNav()
+    }
+  })
 
   setInterval(function () {
     handleQueue(contract, botInfo.stateAccess)
