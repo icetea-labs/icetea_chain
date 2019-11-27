@@ -19,10 +19,16 @@
 </head>
 <body>
     <div id="content">
-        <form id="form">
-            <input type='password' id='key' size='60' required autofocus autocomplete="off">
-            <input type="submit">
-        </form>
+
+        <div>
+            <input type='password' id='key' size='60' placeholder="who are you?" autofocus autocomplete="off">
+            <button id="getUsers">List Users</button>
+        </div>
+
+        <div>
+            <input type='text' id='match' >
+            <button id="getUsers">Show Winners</button>
+        </div>
 
         <table>
             <thead>
