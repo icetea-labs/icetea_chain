@@ -389,10 +389,11 @@ async function connectBot (botAddr) {
 
   // display bot info
   await say(`<b>${botInfo.name}</b><br>${botInfo.description}`, { type: 'html', cssClass: 'bot-intro' })
-  sayButton([
-    { text: botInfo.startButtonText || 'Start', value: 'start' },
-    { text: 'Menu', value: 'menu' }
-  ]).then(r => {
+  const startButtons = [{ text: botInfo.startButtonText || 'Start', value: 'start' }]
+  if (botInfo.showMenuButton) {
+    startButtons.push({ text: 'Menu', value: 'menu' })
+  }
+  sayButton(startButtons).then(r => {
     if (r.value === 'start') {
       pushToQueue('command', r, botInfo.stateAccess)
     } else {

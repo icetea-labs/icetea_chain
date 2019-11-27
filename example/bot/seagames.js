@@ -91,13 +91,14 @@ class LuckyBot extends SurveyBot {
   }
 
   @view botInfo() {
-    const oldPredict = this.getPlayer(msg.sender).predict
+    const oldPredict = this.getPlayer(msg.sender).predict != null
 
     return {
       name: this.name,
       description: this.description,
       stateAccess: 'read',
-      startButtonText: oldPredict == null ? this.startButtonText : "Chơi lại",
+      startButtonText: !oldPredict ? this.startButtonText : "Chơi lại",
+      showMenuButton: oldPredict,
       commands: [
         { text: "Chơi lại", value: "start" },
         { text: "Kết quả", value: "result", stateAccess: "read" },
