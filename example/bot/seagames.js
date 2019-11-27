@@ -1,17 +1,7 @@
 const { SurveyBot, Message } = require("@iceteachain/utils");
-const { stateUtil } = require(';')
 const { orderBy } = require("lodash");
 const createHash = require("create-hash");
 
-const { path } = stateUtil(this)
-
-const hashToInt = hash => parseInt(hash.substr(-10), 16);
-const randInt = (input = '') => {
-  const hex = createHash("sha256")
-    .update(input + block.hash, "utf8")
-    .digest("hex");
-  return hashToInt(hex);
-};
 
 const formatTime = ms => {
   const asiaTime = new Date(ms).toLocaleString("en-US", {
@@ -25,7 +15,7 @@ const formatTime = ms => {
 const validatePhoneNumber = phone => {
   phone = phone.normalize().trim()
   if (!/^0[35789]\d{8}$/.test(phone)) {
-    throw new Error('Số điện thoại có vẻ không đúng. Bạn nhập đủ 10 số viết liền theo định dạng 03x, 05x, 07x, 08x hoặc 09x mới ok.')
+    throw new Error('Số điện thoại sai sai. Bạn nhập đủ 10 số viết liền theo định dạng 03x, 05x, 07x, 08x hoặc 09x mới ok.')
   }
   return phone
 }
@@ -40,20 +30,35 @@ const hashPhone = phone => {
       .digest("base64"); 
 }
 
-const getTop = ({ result, winningNumber, icetea }, players, topCount = 10) => {
-  players = Object.entries(players)
-    .filter(([, p]) => (p.predict === result))
-    .map(([address, p]) => ({
-    address,
-    ...p,
-    delta: Math.abs(winningNumber - p.number)
-  }));
+const link = domain => `<a href='https://${domain}' target='_blank'>${domain}</a>`
+const linkSky = link('skygarden.vn')
+const linkIcetea = link('icetea.io')
+const linkTelegram = link('t.me/iceteachainvn')
 
-  const winners = orderBy(players, ["delta", "timestamp"]).slice(0, topCount);
-  const iceteaNum = Math.floor(icetea * winners.length)
+const concatPath = (p1, p2) => {
+  if (!Array.isArray(p1)) p1 = [p1]
+  if (!Array.isArray(p2)) p2 = [p2]
+  return p1.concat(p2)
+}
 
-  return [winners, iceteaNum]
-};
+const spaceRenter = loadContract('contract.spacerenter')
+
+const path = (basePath, baseDefVal) => {
+  return {
+    has(path) {
+      return spaceRenter.getGlobalState.invokeView(concatPath(basePath, path)) != null
+    },
+    value() {
+      return spaceRenter.getGlobalState.invokeView(basePath, baseDefVal)
+    },
+    get(path, defVal) {
+      return spaceRenter.getGlobalState.invokeView(concatPath(basePath, path), defVal)
+    },
+    set(path, value) {
+      return spaceRenter.setGlobalState.invokeUpdate(concatPath(basePath, path), value)
+    }
+  }
+}
 
 @contract
 class LuckyBot extends SurveyBot {
@@ -61,18 +66,23 @@ class LuckyBot extends SurveyBot {
   data = path('data', {});
   users = path('users', {})
 
-  @state @view spaceRenter = 'contract.spacerenter'
-
-  @state @view winningNumber;
-  @state @view result
   @state @view admins
   @state @view matchId = 'vie_lao'
 
   @state @view name = 'DỰ ĐOÁN SEAGAMES CÙNG SKYGARDEN BOT'
-  @state @view description = `Tặng: 1 lon beer Người Yêu Cũ cho TẤT CẢ người đoàn đúng<br>
+  @state @view description = `Tặng: 1 lon
+  <a href='https://www.facebook.com/SkyGarden/photos/a.1389606451261750/2261853797370340/?type=3&theater' target='_blank'>beer Người Yêu Cũ</a>
+  cho TẤT CẢ người đoán đúng.
+  Nhận tại các nhà hàng thuộc ${linkSky} ở TP HCM.<br>
   Trận: Việt Nam - Lào (16:00 ngày 28/11)
   `
   @state @view startButtonText = "Bắt đầu"
+
+  @state @view how = `- Giải của SkyGarden: bạn đến 1 trong các nhà hàng và trình kết quả bot hiển thị.
+  Thắc mắc xin liên lạc ${linkSky}<br>
+  - Giải của Icetea (nếu có): chúng tôi sẽ liên lạc theo số điện thoại đăng kí.
+  Có vấn đề xin liên lạc Telegram ${linkTelegram} hoặc website ${linkIcetea}.
+  `
 
   @state @view publicKey = 'cStHMto8vNjeoySikZkS2dUAWjpqZkGQezvVh2mys7t5'
 
@@ -82,6 +92,7 @@ class LuckyBot extends SurveyBot {
 
   @view botInfo() {
     const oldPredict = this.getPlayer(msg.sender).predict
+
     return {
       name: this.name,
       description: this.description,
@@ -90,7 +101,9 @@ class LuckyBot extends SurveyBot {
       commands: [
         { text: "Chơi lại", value: "start" },
         { text: "Kết quả", value: "result", stateAccess: "read" },
-        { text: "Tài khoản", value: "account", stateAccess: "read" }
+        { text: "Cách nhận giải", value: "how", stateAccess: "read" },
+        { text: "Tài khoản", value: "account", stateAccess: "read" },
+        { text: "About this bot", value: "about", stateAccess: "read" }
       ]
     }
   }
@@ -113,16 +126,30 @@ class LuckyBot extends SurveyBot {
     (startText != null) && (this.startButtonText = startText)
   }
 
-  @transaction setSpaceRenter(addr: address) {
+  @transaction setPubKey(pubkey: address) {
     this.expectAdmin()
-    this.spaceRenter = addr
+    this.publicKey = pubkey
+  }
+
+  @transaction setHow(how: address) {
+    this.expectAdmin()
+    this.how = how
+  }
+
+  @view getMatchProp(prop: string, matchId: ?string) {
+    return this.data.get([matchId || this.matchId, 'info', prop])
+  }
+
+  @transaction setMatchProp(prop: string, value, matchId: ?string) {
+    this.expectAdmin()
+    return this.data.set([matchId || this.matchId, 'info', prop], value)
   }
 
   @view hasIceteaPrize(matchId: ?string) {
-    this.data.get([matchId || this.matchId, 'info', 'icetea'], false)
+    return this.data.get([matchId || this.matchId, 'info', 'icetea'], false)
   }
 
-  @transaction setIceteaPrize(value: boolean, award: ?string) {
+  @transaction setIceteaPrize(value: boolean, award: ?string, matchId: ?string) {
     this.expectAdmin()
     this.data.set([matchId || this.matchId, 'info', 'icetea'], value)
     if (award) {
@@ -133,7 +160,7 @@ class LuckyBot extends SurveyBot {
   @transaction setMatchId(matchId: string,) {
     this.expectAdmin()
     // check if match Id exist
-    if (!this.data[matchId]) {
+    if (!this.data.has(matchId)) {
       throw new Error('Match not exist.')
     }
     this.matchId = matchId
@@ -167,22 +194,14 @@ class LuckyBot extends SurveyBot {
   }
 
   getUser(addr) {
-    if (!this.spaceRenter) {
-      throw new Error('No spacerenter.')
-    }
-    const d = loadContract(this.spaceRenter)
-    return d.getGlobalState.invokeView(['users', addr], {})
+    return this.users.get(addr, {})
   }
 
   setUser(info) {
-    if (!this.spaceRenter) {
-      throw new Error('No spacerenter.')
-    }
-    const d = loadContract(this.spaceRenter)
-    return d.setGlobalState.invokeUpdate(['users', msg.sender], info)
+    return this.users.set(msg.sender, info)
   }
 
-  @transaction setResult(result: number) {
+  @transaction setResult(result: number, matchId: ?string) {
     this.expectAdmin()
     const info = this.getMatchInfo()
 
@@ -197,7 +216,7 @@ class LuckyBot extends SurveyBot {
       info.rand = Math.random()
     }
 
-    this.setMatchInfo(this.matchId, info)
+    this.setMatchInfo(matchId || this.matchId, info)
   }
 
   isTopWinning(info, players) {
@@ -250,33 +269,47 @@ class LuckyBot extends SurveyBot {
             if (isTop || isIcetea) {
               reply += '<br>Phần thưởng:'
               if (isTop) {
-                reply += `<br>- Từ skygarden.vn: ${info.award || 'có'}`
+                reply += `<br>- Từ ${link}: ${info.award || 'có'}`
               }
               if (isIcetea) {
-                reply += `<br>- Từ icetea.io: ${info.iceteaAward || 'có'}`
+                reply += `<br>- Từ ${linkIcetea}: ${info.iceteaAward || 'có'}`
               }
             } else {
               reply += '<br>- không có (bạn chưa may mắn)'
             }
             
           } else {
-            reply += 'Bạn đoán sai.'
+            reply += `Đáp án đúng: ${this.getPrediction(info.result)}. Bạn đoán sai.`
           }
         }
       }
     })
 
-    return reply || 'Chưa có kết quả'
+    return reply || 'Bạn chưa tham gia'
+  }
+
+  @view oncommand_how() {
+    return Message.html(this.how)
   }
 
   @view oncommand_result() {
     return Message.html(this.viewResult(msg.sender))
   }
 
+  sayAbout(m) {
+    m = m || Message.create()
+    return m.html(`Bot này chạy trên <b>Icetea Platform</b>. Liên lạc ${linkIcetea} hoặc đặt câu hỏi Telegram ${linkTelegram}.`)
+      .html('<img src="https://icetea.io/wp-content/uploads/2019/07/Logo-Blue-185x50.png"></img>')
+  }
+
+  @view oncommand_about() {
+    return this.sayAbout()
+  }
+
   @view oncommand_account() {
     const user = this.getUser(msg.sender)
     let reply = `ID: ${msg.sender}<br>`
-    if (!user) {
+    if (!user || !user.name) {
       reply += `Tình trạng: chưa đăng kí`
     } else {
       reply += `Tên: ${user.name}<br>
@@ -301,7 +334,8 @@ class LuckyBot extends SurveyBot {
     const info = this.getMatchInfo()
 
     if (block.timestamp > info.deadline) {
-      return Message.text('Dự đoán cho trận này đã đóng. Chờ trận tiếp theo.');
+      return Message.text('Dự đoán cho trận này đã đóng. Chờ trận tiếp theo.')
+        .button('Xem kết quả', 'command:result')
     }
 
     let m = Message
@@ -333,28 +367,24 @@ class LuckyBot extends SurveyBot {
   }
 
   after_predict() {
-    return Message.html('Số di động (để liên lạc khi trúng giải)')
-      .input('0xx')
+    return Message.html('Nhập số di động (để liên lạc khi trúng giải)')
+      .input('0xx', {sub_type: 'tel'})
   }
 
   validate_phone({ text, chatData }) {
     const phone = validatePhoneNumber(text)
     const hash = hashPhone(phone)
 
-    const [oldAddress, oldPlayer] =
-      Object.entries(this.getPlayers()).find(
-        ([, p]) => p.hashPhone === hash
-      ) || [];
+    const phoneInUseByOther =
+      Object.entries(this.users.value()).find(
+        ([a, u]) => (a !== msg.sender && u.hashPhone === hash)
+      )
 
-    if (oldAddress) {
-      if (oldAddress !== msg.sender) {
-        throw new Error(
-          `Đã có người dùng khác điền số điện thoại này. Bạn hãy điền số điện thoại khác. Nếu chính là bạn và muốn dự đoán lại, hãy vào lại bằng trình duyệt khi trước.`
-        );
-      } else {
-        // backup
-        chatData.oldGuess = { host: oldPlayer.host, visitor: oldPlayer.visitor, number: oldPlayer.number }
-      }
+    if (phoneInUseByOther) {
+      const name = phoneInUseByOther[1].name
+      throw new Error(
+        `Đã có người dùng khác (${name}) đăng kí số điện thoại này. Bạn hãy dùng số khác. Nếu chính là bạn và muốn dự đoán lại, hãy vào bằng trình duyệt lần trước.`
+      );
     }
 
     chatData.phone = phone
@@ -366,7 +396,7 @@ class LuckyBot extends SurveyBot {
 
   retry_phone({ error }) {
     return Message.text(error.message)
-      .input("0xx")
+      .input('0xx', {sub_type: 'tel'})
       .nextStateAccess("read");
   }
 
@@ -398,7 +428,7 @@ class LuckyBot extends SurveyBot {
     const info = this.getMatchInfo()
 
     if (block.timestamp > info.deadline) {
-      return Message.text('Chán quá, đã quá giờ dự đoán. Chờ kết quả');
+      return Message.text('Chán quá, đã quá giờ dự đoán. Chờ trận tiếp.');
     }
 
     if (chatData.predict == null) {
@@ -424,7 +454,9 @@ class LuckyBot extends SurveyBot {
     }
 
     // reply
-    return Message.html(`Xong rồi, cảm ơn bạn. Trận đấu sẽ diễn ra vào ${formatTime(info.deadline)}.`)
+    const m = Message.html(`Xong rồi, cảm ơn bạn. Trận đấu sẽ diễn ra vào ${formatTime(info.deadline)}.`)
       .html('Để xem kết quả, cách thức nhận thưởng, vui lòng vào <b>MENU</b> ở góc trên bên phải màn hình.')
+      
+    return this.sayAbout(m)
   }
 }
