@@ -3,7 +3,7 @@
 const _ = require('lodash')
 const sysContracts = require('../syscon')
 const { ecc, codec } = require('@iceteachain/common')
-const { ondeploy, onreceive } = require('../config')
+const { ondeploy, onreceive } = require('../config').messages
 
 /**
  * get all property name of an object
