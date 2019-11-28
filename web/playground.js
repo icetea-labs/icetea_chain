@@ -97,7 +97,7 @@ byId('getWinners').addEventListener('click', function (e) {
   rows.innerHTML = ''
 
   const getUsers = tweb3.contract('contract.spacerenter').methods.exportState(['shared', 'users']).sendCommit()
-  const getWinners = tweb3.contract('skygarden_seagames').methods.getWinners(matchId).sendCommit()
+  const getWinners = tweb3.contract('contract.skygarden_seagames').methods.getWinners(matchId).sendCommit()
   Promise.all([
     getUsers,
     getWinners
