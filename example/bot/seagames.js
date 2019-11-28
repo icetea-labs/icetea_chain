@@ -30,9 +30,10 @@ const hashPhone = phone => {
       .digest("base64"); 
 }
 
-const link = domain => `<a href='https://${domain}' target='_blank'>${domain}</a>`
+const link = (domain, text) => `<a href='https://${domain}' target='_blank'>${text || domain}</a>`
 const linkSky = link('skygarden.vn')
 const linkIcetea = link('icetea.io')
+const linkPlatform = link('icetea.io', 'Icetea Platform')
 const linkTelegram = link('t.me/iceteachainvn')
 
 const concatPath = (p1, p2) => {
@@ -63,11 +64,11 @@ const path = (basePath, baseDefVal) => {
 @contract
 class LuckyBot extends SurveyBot {
 
+  settings = path('settings', {})
   data = path('data', {});
   users = path('users', {})
 
   @state @view admins
-  @state @view matchId = 'vie_lao'
 
   @state @view name = 'DỰ ĐOÁN SEAGAMES CÙNG SKYGARDEN BOT'
   @state @view description = `Giải thưởng:<br>
@@ -79,8 +80,10 @@ class LuckyBot extends SurveyBot {
   @state @view startButtonText = "Bắt đầu"
 
   @state @view how = `Đến 1 nhà hàng bất kỳ thuộc hệ thống SkyGarden và trình số điện thoại <em>hoặc</em> kết quả hiển thị trên bot.<br><br>
-  Có vấn đề xin liên lạc ${linkSky} hoặc chat Telegram tại ${linkTelegram}.
-  `
+  Các giải thưởng may mắn được lựa chọn ngẫu nhiên bởi hợp đồng thông minh chạy trên ${linkPlatform}<br><br>
+  Có vấn đề xin liên lạc ${linkSky} hoặc chat Telegram tại ${linkTelegram}.`
+
+  @state @view privacy = `Số điện thoại được mã hoá hoàn toàn ở mức bảo mật cao nhất. SkyGarden không chia sẻ số điện thoại cho bên thứ 3. Hệ thống phần mềm tự động sẽ nhắn tin cho những người trúng giải.`
 
   @state @view publicKey = 'cStHMto8vNjeoySikZkS2dUAWjpqZkGQezvVh2mys7t5'
 
@@ -104,6 +107,7 @@ class LuckyBot extends SurveyBot {
         { text: "Kết quả", value: "result", stateAccess: "read" },
         { text: "Cách nhận giải", value: "how", stateAccess: "read" },
         { text: "Tài khoản", value: "account", stateAccess: "read" },
+        { text: "Quyền riêng tư", value: "privacy", stateAccess: "read" },
         { text: "Nhà phát triển", value: "about", stateAccess: "read" }
       ]
     }
@@ -133,35 +137,32 @@ class LuckyBot extends SurveyBot {
     }
   }
 
-  @transaction setPubKey(pubkey: address) {
+  @transaction setPubKey(pubkey: string) {
     this.expectAdmin()
     this.publicKey = pubkey
   }
 
-  @transaction setHow(how: address) {
+  @transaction setHow(how: string) {
     this.expectAdmin()
     this.how = how
   }
 
+  @transaction setPrivacy(privacy: string) {
+    this.expectAdmin()
+    this.privacy = privacy
+  }
+
   @view getMatchProp(prop: string, matchId: ?string) {
-    return this.data.get([matchId || this.matchId, 'info', prop])
+    return this.data.get([matchId || this.getMatchId(), 'info', prop])
   }
 
   @transaction setMatchProp(prop: string, value, matchId: ?string) {
     this.expectAdmin()
-    return this.data.set([matchId || this.matchId, 'info', prop], value)
+    return this.data.set([matchId || this.getMatchId(), 'info', prop], value)
   }
 
-  @view hasIceteaPrize(matchId: ?string) {
-    return this.data.get([matchId || this.matchId, 'info', 'icetea'], false)
-  }
-
-  @transaction setIceteaPrize(value: boolean, award: ?string, matchId: ?string) {
-    this.expectAdmin()
-    this.data.set([matchId || this.matchId, 'info', 'icetea'], value)
-    if (award) {
-      this.data.set([matchId || this.matchId, 'info', 'iceteaAward'], award)
-    }
+  @view getMatchId() {
+    return this.settings.get('matchId', 'vie_lao')
   }
 
   @transaction setMatchId(matchId: string,) {
@@ -170,16 +171,17 @@ class LuckyBot extends SurveyBot {
     if (!this.data.has(matchId)) {
       throw new Error('Match not exist.')
     }
-    this.matchId = matchId
+
+    this.settings.set('matchId', matchId)
   }
 
-  @transaction setMatchInfo(matchId: string, info) {
+  @transaction setMatchInfo(matchId: ?string, info) {
     this.expectAdmin()
-    this.data.set([matchId || this.matchId, 'info'], info)
+    this.data.set([matchId || this.getMatchId(), 'info'], info)
   }
 
   @view getMatchInfo(matchId: ?string) {
-    return this.data.get([matchId || this.matchId, 'info'], {})
+    return this.data.get([matchId || this.getMatchId(), 'info'], {})
   }
 
   getPrediction(p) {
@@ -189,15 +191,15 @@ class LuckyBot extends SurveyBot {
   }
 
   @view getPlayers(matchId: ?string) {
-    return this.data.get([matchId || this.matchId, 'players'], {})
+    return this.data.get([matchId || this.getMatchId(), 'players'], {})
   }
 
   @view getPlayer(addr: address, matchId: ?string) {
-    return this.data.get([matchId || this.matchId, 'players', addr], {})
+    return this.data.get([matchId || this.getMatchId(), 'players', addr], {})
   }
 
   setPlayer(value) {
-    return this.data.set([this.matchId, 'players', msg.sender], value)
+    return this.data.set([this.getMatchId(), 'players', msg.sender], value)
   }
 
   getUser(addr) {
@@ -223,7 +225,7 @@ class LuckyBot extends SurveyBot {
       info.rand = Math.random()
     }
 
-    this.setMatchInfo(matchId || this.matchId, info)
+    this.setMatchInfo(matchId || this.getMatchId(), info)
   }
 
   filterPlayers(info, players) {
@@ -246,7 +248,7 @@ class LuckyBot extends SurveyBot {
 
   isTopWinning(info, players) {
     const top = Number(info.top)
-    if (!top && !info.icetea) return [false, false]
+    if (!top && !info.iceteaAward) return [false, false]
 
     const [orderedPlayers, winningNumber] = this.filterPlayers(info, players)
     const count = orderedPlayers.length
@@ -257,7 +259,7 @@ class LuckyBot extends SurveyBot {
     }
     
     const isTop = top && (top >= count || winners.find(w => w.address === msg.sender) != null)
-    const isIcetea = info.icetea && orderedPlayers[winningNumber].address === msg.sender
+    const isIcetea = info.iceteaAward && orderedPlayers[winningNumber].address === msg.sender
 
     return [isTop, isIcetea]
   }
@@ -326,6 +328,10 @@ class LuckyBot extends SurveyBot {
 
   @view oncommand_how() {
     return Message.html(this.how)
+  }
+
+  @view oncommand_privacy() {
+    return Message.html(this.privacy)
   }
 
   @view oncommand_result() {
