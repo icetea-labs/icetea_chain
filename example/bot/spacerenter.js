@@ -3,7 +3,7 @@
     @state @view admins = []
 
     constructor() {
-        this.admins.push(this.deployedBy)
+        this.admins.push(this.deployedBy, 'teat0cwf3pzzjuwdtryq2f45srezwfh90uswd4939nq')
     }
 
     expectAdmin() {
@@ -20,6 +20,24 @@
             p[k] = this.getState(k)
             return p
         }, {})
+    }
+
+    @transaction migrateState(addr: address) {
+        this.exportState()
+
+        const contract = loadContract(addr)
+        // you must first add address of this contract to be admin of that contract
+        const state = contract.exportState.invokeUpdate()
+
+        Object.entries(state).forEach(([key, value]) => {
+            this.setState(key, value)
+        })
+
+    }
+
+    @transaction query(path, options) {
+        this.expectAdmin()
+        return this.queryState(path, options)
     }
 
     @transaction addAdmin(addr: address) {

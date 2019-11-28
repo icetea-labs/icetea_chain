@@ -20,25 +20,38 @@ function makeRow (i, u, addr) {
   return `<td>${i + 1}</td><td>${u.name}</td><td>${u.phone}</td><td>${addr}</td>`
 }
 
-byId('form').addEventListener('submit', function (e) {
+function checkKey (e) {
   e.preventDefault()
 
-  const key = byId('key').value.trim()
+  const idField = byId('key')
+  const key = idField.value.trim()
 
   if (!key) {
-    window.alert('input key')
+    idField.focus()
+    throw new Error('Input key')
+  }
+
+  return tweb3.wallet.importAccount(key)
+}
+
+byId('getUsers').addEventListener('click', function (e) {
+  let account
+  try {
+    account = checkKey(e)
+  } catch (e) {
+    window.alert(e.message)
     return
   }
 
-  const account = tweb3.wallet.importAccount(key)
-  // console.log(account)
+  const rows = byId('userRows')
+  rows.innerHTML = ''
 
-  tweb3.contract('contract.spacerenter').methods.exportState().sendCommit().then(r => {
-    const users = r.returnValue && r.returnValue.shared && r.returnValue.shared.users
-    const rows = byId('userRows')
-    rows.innerHTML = ''
+  tweb3.contract('contract.spacerenter').methods.exportState(['shared', 'users']).sendCommit().then(r => {
+    const users = r.returnValue
     if (users) {
-      Object.entries(users).forEach(([addr, info], i) => {
+      const entries = Object.entries(users)
+      byId('count').textContent = entries.length
+      entries.forEach(([addr, info], i) => {
         if (info._) {
           const plainData = doDecrypt(account.privateKey, info._)
           if (plainData !== null && typeof plainData === 'object') {
@@ -54,4 +67,8 @@ byId('form').addEventListener('submit', function (e) {
       })
     }
   }).catch(console.error)
+})
+
+byId('getWinners').addEventListener('click', function (e) {
+
 })
