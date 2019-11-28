@@ -20,21 +20,24 @@ function makeRow (i, u, addr) {
   return `<td>${i + 1}</td><td>${u.name}</td><td>${u.phone}</td><td>${addr}</td>`
 }
 
-function checkKey (e) {
-  e.preventDefault()
-
-  const idField = byId('key')
-  const key = idField.value.trim()
-
-  if (!key) {
-    idField.focus()
-    throw new Error('Input key')
+function getField (id) {
+  const f = byId(id)
+  const v = f.value.trim()
+  if (!v) {
+    f.focus()
+    throw new Error('Please input ' + id)
   }
 
-  return tweb3.wallet.importAccount(key)
+  return v
+}
+
+function checkKey () {
+  return tweb3.wallet.importAccount(getField('key'))
 }
 
 byId('getUsers').addEventListener('click', function (e) {
+  e.preventDefault()
+
   let account
   try {
     account = checkKey(e)
@@ -66,9 +69,33 @@ byId('getUsers').addEventListener('click', function (e) {
         rows.append(row)
       })
     }
-  }).catch(console.error)
+  }).catch(e => {
+    console.error(e)
+    window.alert(e.message)
+  })
 })
 
 byId('getWinners').addEventListener('click', function (e) {
+  e.preventDefault()
 
+  let account, matchId
+  try {
+    account = checkKey()
+    matchId = getField('match')
+  } catch (e) {
+    window.alert(e.message)
+    return
+  }
+
+  console.log(account.address)
+
+  const rows = byId('userRows')
+  rows.innerHTML = ''
+
+  tweb3.contract('contract.spacerenter').methods.exportState(['shared', matchId]).sendCommit().then(r => {
+    console.log(r.returnValue)
+  }).catch(e => {
+    console.error(e)
+    window.alert(e.message)
+  })
 })
