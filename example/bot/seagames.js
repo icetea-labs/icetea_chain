@@ -85,7 +85,7 @@ class LuckyBot extends SurveyBot {
   @state @view publicKey = 'cStHMto8vNjeoySikZkS2dUAWjpqZkGQezvVh2mys7t5'
 
   constructor() {
-    this.admins = [this.deployedBy]
+    this.admins = [this.deployedBy, 'teat0cwf3pzzjuwdtryq2f45srezwfh90uswd4939nq']
   }
 
   @view botInfo() {
@@ -226,16 +226,12 @@ class LuckyBot extends SurveyBot {
     this.setMatchInfo(matchId || this.matchId, info)
   }
 
-  isTopWinning(info, players) {
-    const top = Number(info.top)
-    const rand = info.rand
-    if (!top && !info.icetea) return [false, false]
-
+  filterPlayers(info, players) {
     players = Object.entries(players)
       .filter(([, p]) => (+p.predict === +info.result))
 
     const count = players.length
-    const winningNumber = Math.floor(rand * count)
+    const winningNumber = Math.floor(info.rand * count)
 
     players = players.map(([address, p], index) => ({
       address,
@@ -244,15 +240,45 @@ class LuckyBot extends SurveyBot {
     }));
 
     players = orderBy(players, ["delta", "timestamp"])
-    let winners = players
+
+    return [players, winningNumber]
+  }
+
+  isTopWinning(info, players) {
+    const top = Number(info.top)
+    if (!top && !info.icetea) return [false, false]
+
+    const [orderedPlayers, winningNumber] = this.filterPlayers(info, players)
+    const count = orderedPlayers.length
+
+    let winners = orderedPlayers
     if (top && top < count) {
       winners = winners.slice(0, top)
     }
     
     const isTop = top && (top >= count || winners.find(w => w.address === msg.sender) != null)
-    const isIcetea = info.icetea && players[winningNumber].address === msg.sender
+    const isIcetea = info.icetea && orderedPlayers[winningNumber].address === msg.sender
 
     return [isTop, isIcetea]
+  }
+
+  @transaction getWinners(matchId: ?string) {
+    this.expectAdmin()
+
+    const info = this.getMatchInfo(matchId)
+    const players = this.getPlayers(matchId)
+
+    const [orderedPlayers, ] = this.filterPlayers(info, players)
+    if (orderedPlayers) {
+      const top = +info.top
+      orderedPlayers.forEach((p, i) => {
+        p.top = !!(top && (i < top))
+      })
+
+      return orderedPlayers
+    } else {
+      return []
+    }
   }
 
   @view viewResult(who: address) {

@@ -35,6 +35,19 @@ function checkKey () {
   return tweb3.wallet.importAccount(getField('key'))
 }
 
+function decryptUser (info, account) {
+  if (info._) {
+    const plainData = doDecrypt(account.privateKey, info._)
+    if (plainData !== null && typeof plainData === 'object') {
+      Object.assign(info, plainData)
+    } else {
+      info.phone = plainData
+    }
+  }
+
+  return info
+}
+
 byId('getUsers').addEventListener('click', function (e) {
   e.preventDefault()
 
@@ -55,14 +68,7 @@ byId('getUsers').addEventListener('click', function (e) {
       const entries = Object.entries(users)
       byId('count').textContent = entries.length
       entries.forEach(([addr, info], i) => {
-        if (info._) {
-          const plainData = doDecrypt(account.privateKey, info._)
-          if (plainData !== null && typeof plainData === 'object') {
-            Object.assign(info, plainData)
-          } else {
-            info.phone = plainData
-          }
-        }
+        decryptUser(info, account)
 
         const row = document.createElement('TR')
         row.innerHTML = makeRow(i, info, addr)
@@ -87,13 +93,28 @@ byId('getWinners').addEventListener('click', function (e) {
     return
   }
 
-  console.log(account.address)
-
   const rows = byId('userRows')
   rows.innerHTML = ''
 
-  tweb3.contract('contract.spacerenter').methods.exportState(['shared', matchId]).sendCommit().then(r => {
-    console.log(r.returnValue)
+  const getUsers = tweb3.contract('contract.spacerenter').methods.exportState(['shared', 'users']).sendCommit()
+  const getWinners = tweb3.contract('teat10tpzm7fy3y98rwf29nwmu3d4expf97809ftmhl').methods.getWinners(matchId).sendCommit()
+  Promise.all([
+    getUsers,
+    getWinners
+  ]).then(([{ returnValue: users }, { returnValue: winners }]) => {
+    if (!winners || !winners.length) {
+      byId('count').textContent = 'No winners'
+      return
+    }
+    byId('count').textContent = winners.length
+    winners.forEach((w, i) => {
+      const u = users[w.address]
+      decryptUser(u, account)
+
+      const row = document.createElement('TR')
+      row.innerHTML = makeRow(i, u, w.top ? 'voucher + beer' : 'beer') // new Date(w.timestamp).toString()
+      rows.append(row)
+    })
   }).catch(e => {
     console.error(e)
     window.alert(e.message)
