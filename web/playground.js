@@ -17,7 +17,7 @@ function doDecrypt (privateKey, cipherText) {
 }
 
 function makeRow (i, u, addr) {
-  return `<td>${i + 1}</td><td>${u.name}</td><td>${u.phone}</td><td>${addr}</td>`
+  return `<td>${i + 1}</td><td>${u.name}</td><td class='phone'>${u.phone}</td><td>${addr}</td>`
 }
 
 function getField (id) {
@@ -98,6 +98,7 @@ byId('getWinners').addEventListener('click', function (e) {
 
   const getUsers = tweb3.contract('contract.spacerenter').methods.exportState(['shared', 'users']).sendCommit()
   const getWinners = tweb3.contract('contract.skygarden_seagames').methods.getWinners(matchId).sendCommit()
+  // const getWinners = tweb3.contract('teat14feryghwal6krgpaq49ka6ykh742zshk4px9wx').methods.getWinners(matchId).sendCommit()
   Promise.all([
     getUsers,
     getWinners
@@ -119,4 +120,36 @@ byId('getWinners').addEventListener('click', function (e) {
     console.error(e)
     window.alert(e.message)
   })
+})
+
+byId('copy').addEventListener('click', function (e) {
+  e.preventDefault()
+
+  const phones = Array.from(document.querySelectorAll('.phone')).map(p => p.textContent)
+  if (!phones || !phones.length) {
+    window.alert('Nothing to copy.')
+    return
+  }
+  navigator.clipboard.writeText(phones.join('\n')).then(r => window.alert('Copied ' + phones.length + ' items to clipboard'))
+})
+
+byId('export').addEventListener('click', function (e) {
+  e.preventDefault()
+
+  const phones = Array.from(document.querySelectorAll('.phone')).map(p => p.textContent)
+  if (!phones || !phones.length) {
+    window.alert('Nothing to download.')
+    return
+  }
+
+  const encodedUri = encodeURI('data:text/plain;charset=utf-8,' + phones.join('\n'))
+  var link = document.createElement('a')
+  link.setAttribute('href', encodedUri)
+  link.setAttribute('download', 'bot_phones.txt')
+  document.body.appendChild(link)
+
+  link.click()
+  window.setTimeout(() => {
+    document.body.removeChild(link)
+  }, 100)
 })
