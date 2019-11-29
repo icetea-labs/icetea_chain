@@ -17,7 +17,7 @@ function doDecrypt (privateKey, cipherText) {
 }
 
 function makeRow (i, u, addr) {
-  return `<td>${i + 1}</td><td>${u.name}</td><td>${u.phone}</td><td>${addr}</td>`
+  return `<td>${i + 1}</td><td>${u.name}</td><td class='phone'>${u.phone}</td><td>${addr}</td>`
 }
 
 function getField (id) {
@@ -33,6 +33,19 @@ function getField (id) {
 
 function checkKey () {
   return tweb3.wallet.importAccount(getField('key'))
+}
+
+function decryptUser (info, account) {
+  if (info._) {
+    const plainData = doDecrypt(account.privateKey, info._)
+    if (plainData !== null && typeof plainData === 'object') {
+      Object.assign(info, plainData)
+    } else {
+      info.phone = plainData
+    }
+  }
+
+  return info
 }
 
 byId('getUsers').addEventListener('click', function (e) {
@@ -55,14 +68,7 @@ byId('getUsers').addEventListener('click', function (e) {
       const entries = Object.entries(users)
       byId('count').textContent = entries.length
       entries.forEach(([addr, info], i) => {
-        if (info._) {
-          const plainData = doDecrypt(account.privateKey, info._)
-          if (plainData !== null && typeof plainData === 'object') {
-            Object.assign(info, plainData)
-          } else {
-            info.phone = plainData
-          }
-        }
+        decryptUser(info, account)
 
         const row = document.createElement('TR')
         row.innerHTML = makeRow(i, info, addr)
@@ -87,15 +93,63 @@ byId('getWinners').addEventListener('click', function (e) {
     return
   }
 
-  console.log(account.address)
-
   const rows = byId('userRows')
   rows.innerHTML = ''
 
-  tweb3.contract('contract.spacerenter').methods.exportState(['shared', matchId]).sendCommit().then(r => {
-    console.log(r.returnValue)
+  const getUsers = tweb3.contract('contract.spacerenter').methods.exportState(['shared', 'users']).sendCommit()
+  const getWinners = tweb3.contract('contract.skygarden_seagames').methods.getWinners(matchId).sendCommit()
+  // const getWinners = tweb3.contract('teat14feryghwal6krgpaq49ka6ykh742zshk4px9wx').methods.getWinners(matchId).sendCommit()
+  Promise.all([
+    getUsers,
+    getWinners
+  ]).then(([{ returnValue: users }, { returnValue: winners }]) => {
+    if (!winners || !winners.length) {
+      byId('count').textContent = 'No winners'
+      return
+    }
+    byId('count').textContent = winners.length
+    winners.forEach((w, i) => {
+      const u = users[w.address]
+      decryptUser(u, account)
+
+      const row = document.createElement('TR')
+      row.innerHTML = makeRow(i, u, w.top ? 'voucher + beer' : 'beer') // new Date(w.timestamp).toString()
+      rows.append(row)
+    })
   }).catch(e => {
     console.error(e)
     window.alert(e.message)
   })
+})
+
+byId('copy').addEventListener('click', function (e) {
+  e.preventDefault()
+
+  const phones = Array.from(document.querySelectorAll('.phone')).map(p => p.textContent)
+  if (!phones || !phones.length) {
+    window.alert('Nothing to copy.')
+    return
+  }
+  navigator.clipboard.writeText(phones.join('\n')).then(r => window.alert('Copied ' + phones.length + ' items to clipboard'))
+})
+
+byId('export').addEventListener('click', function (e) {
+  e.preventDefault()
+
+  const phones = Array.from(document.querySelectorAll('.phone')).map(p => p.textContent)
+  if (!phones || !phones.length) {
+    window.alert('Nothing to download.')
+    return
+  }
+
+  const encodedUri = encodeURI('data:text/plain;charset=utf-8,' + phones.join('\n'))
+  var link = document.createElement('a')
+  link.setAttribute('href', encodedUri)
+  link.setAttribute('download', 'bot_phones.txt')
+  document.body.appendChild(link)
+
+  link.click()
+  window.setTimeout(() => {
+    document.body.removeChild(link)
+  }, 100)
 })
