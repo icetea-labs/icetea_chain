@@ -174,17 +174,18 @@ byId('getPlayers').addEventListener('click', function (e) {
 
   Promise.all([getUsers, getPlayers])
     .then(([{ returnValue: users }, { returnValue: players }]) => {
-      if (!players || !players.length) {
+      const entries = Object.entries(players)
+      if (!players || !entries.length) {
         byId('count').textContent = 'No players'
         return
       }
       byId('count').textContent = players.length
-      players.forEach((p, i) => {
-        const u = users[p.address]
+      entries.forEach(([addr, { predict, timestamp }], i) => {
+        const u = users[addr]
         decryptUser(u, account)
 
         const row = document.createElement('TR')
-        row.innerHTML = makeRow(i, u, 'Chọn button số ' + p.predict) // new Date(w.timestamp).toString()
+        row.innerHTML = makeRow(i, u, 'Chọn button số ' + predict) // new Date(timestamp).toString()
         rows.append(row)
       })
     })
