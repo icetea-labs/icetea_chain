@@ -23,7 +23,7 @@
 <body>
     <div id="content">
 
-        <div>
+        <div id='loginZone'>
             <input type='password' id='key' size='40' placeholder="who are you?" autofocus autocomplete="off">
             <button id="login">Login</button>
         </div>
@@ -36,6 +36,7 @@
             <div>
                 <select id='match'></select>
                 <button id="getWinners">Show Winners</button>
+                <button id="getPlayers">Show Players</button>
             </div>
             <br>
             <div>Total: <span  id='count'></span> <button id='copy'>Copy to Clipboard</button>  <button id='export'>Download Text</button></div>
@@ -46,7 +47,7 @@
                         <th>#</th>
                         <th>Name</th>
                         <th>Phone</th>
-                        <th>Extra</th>
+                        <th>Notes</th>
                     </tr>
                 </thead>
                 <tbody id='userRows'></tbody>

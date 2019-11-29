@@ -103,6 +103,7 @@ byId('login').addEventListener('click', function (e) {
     return
   }
 
+  byId('loginZone').classList.add('hide')
   window.setTimeout(() => {
     byId('workZone').classList.remove('hide')
   }, 500)
@@ -144,6 +145,55 @@ byId('login').addEventListener('click', function (e) {
       }
     }
   })
+})
+
+byId('getPlayers').addEventListener('click', function (e) {
+  e.preventDefault()
+
+  const account = window.account
+  if (!account || !account.privateKey) {
+    window.alert('Not login yet.')
+    return
+  }
+
+  const matchId = getField('match', true)
+  if (matchId === undefined) {
+    window.alert('No match selected.')
+    return
+  }
+
+  const rows = byId('userRows')
+  rows.innerHTML = ''
+
+  const getUsers = tweb3
+    .contract('contract.spacerenter')
+    .methods.exportState(['shared', 'users'])
+    .sendCommit()
+  const getPlayers = tweb3
+    .contract('contract.spacerenter')
+    .methods.exportState(['shared', 'data', 'matchId', 'players'])
+    .sendCommit()
+
+  Promise.all([getUsers, getPlayers])
+    .then(([{ returnValue: users }, { returnValue: players }]) => {
+      if (!players || !players.length) {
+        byId('count').textContent = 'No players'
+        return
+      }
+      byId('count').textContent = players.length
+      players.forEach((p, i) => {
+        const u = users[p.address]
+        decryptUser(u, account)
+
+        const row = document.createElement('TR')
+        row.innerHTML = makeRow(i, u, 'Chọn button số ' + p.predict) // new Date(w.timestamp).toString()
+        rows.append(row)
+      })
+    })
+    .catch(e => {
+      console.error(e)
+      window.alert(e.message)
+    })
 })
 
 byId('getWinners').addEventListener('click', function (e) {
