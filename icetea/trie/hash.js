@@ -76,18 +76,29 @@ const hash = (l, r) => {
   const leftIs0 = isAllZero(l)
   const rightIs0 = isAllZero(r)
 
-  if (leftIs0 && rightIs0) return zeroHash()
+  if (leftIs0 && rightIs0) {
+    return {
+      hash: zeroHash(),
+      shortcut: true
+    }
+  }
 
   if (canShortcut(l, r, leftIs0, rightIs0)) {
     // right is non-zero then last bit is 1
     // left is non-zero then last bit is 0
     const [nonZeroBuf, lastBit] = leftIs0 ? [r, 1] : [l, 0]
-    return leftShiftOne(nonZeroBuf, lastBit)
+    return {
+      hash: leftShiftOne(nonZeroBuf, lastBit),
+      shortcut: true
+    }
   } else {
     const combined = hashPair(l, r)
     // clear the first 15 bit and set 16th bit to 1
     combined.writeUInt16BE(0, 1)
-    return combined
+    return {
+      hash: combined,
+      shortcut: false
+    }
   }
 }
 

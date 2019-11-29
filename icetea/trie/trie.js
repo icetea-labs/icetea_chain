@@ -73,17 +73,41 @@ class Trie {
 
           // going back to update hashes
           for (let j = lastIndex - 1; j >= 0; j--) {
+            // Go back one step
+            // at this point, we should have old pair
+            // and we should know that 'value' is right or left
+            const { goLeft, left, right } = pathHashes[i]
 
+            // then we do a trieHash.hash() of the pair
+            const { hash, shortcut } = this.trieHash.hash(goLeft ? value : left, goLeft ? right : value)
+
+            // then we set the position's hash to the new hash
+            // (that might cause an update to DB only if required)
+            if (goLeft) {
+
+            } else {
+
+            }
+            if (!shortcut) {
+              this.backingDb.put(hash, value)
+            }
+
+            // then we go up one step
+            // at this time, the lash hash become value
+            // so, we'll need
+            // - store left, right, route of every step
+            // - write an putNode function that will put into DB only when needed
+            // that is all (sizzzzzz)
           }
         } else {
-          pathHashes[i] = currentHash
           const buf = this.getNode(currentHash)
           // '0' => go left, '1' => go right
-          if (path[i] === '0') {
-            currentHash = buf.slice(0, HASH_SIZE)
-          } else {
-            currentHash = buf.slice(HASH_SIZE)
-          }
+          const goLeft = path[i] === '0'
+          const left = buf.slice(0, HASH_SIZE)
+          const right = buf.slice(HASH_SIZE)
+          pathHashes[i] = { hash: currentHash, goLeft, left, right }
+
+          currentHash = goLeft ? left : right
         }
       }
     }
