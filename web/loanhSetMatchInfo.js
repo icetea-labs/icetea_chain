@@ -7,10 +7,11 @@ let _matchInfo = {}
 $(document).ready(function () {
   document.getElementById('datePicker').valueAsDate = new Date()
   document.getElementById('timePicker').defaultValue = '20:00'
-  const key = window.localStorage.getItem('bot_token')
-  console.log(key)
+  let key = window.localStorage.getItem('bot_token')
+  key = JSON.parse(key).key
   if (key) {
-    byId('key').value = JSON.parse(key).key
+    console.log(key)
+    byId('key').value = key
     checkKey()
     loadMatch()
   }
@@ -86,11 +87,15 @@ const formatTime = ms => {
 }
 
 byId('savekey').addEventListener('click', function (e) {
-  const key = getField('key')
-  if (key) {
-    window.localStorage.setItem('bot_token', JSON.stringify({ key }))
-    window.alert('save done')
+  try {
+    checkKey()
+  } catch (e) {
+    window.alert(e.message)
+    return
   }
+  const key = getField('key')
+  window.localStorage.setItem('bot_token', JSON.stringify({ key }))
+  window.alert('save done')
 })
 
 byId('clearkey').addEventListener('click', function (e) {
