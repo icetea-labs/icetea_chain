@@ -18,16 +18,22 @@
         .hide {
             display: none;
         }
+        .transparent {
+            opacity: 0;
+        }
+        .transition {
+            transition: opacity 1s;
+        }
     </style>
 </head>
 <body>
     <div id="content">
 
-        <div id='loginZone'>
-            <input type='password' id='key' size='40' placeholder="who are you?" autofocus autocomplete="off">
-            <button id="login">Login</button>
-        </div>
-        <div id='workZone' class='hide'>
+        <form id='loginZone'>
+            <input type='password' id='key' size='40' placeholder="Prove that you are Loanh" autofocus required autocomplete="off">
+            <button type='submit'>I'm Loanh</button>
+        </form>
+        <div id='workZone' class='transition transparent hide'>
             <br>
             <div>
                 <button id="getUsers">List Users</button>

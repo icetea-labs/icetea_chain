@@ -93,7 +93,7 @@ byId('getUsers').addEventListener('click', function (e) {
     })
 })
 
-byId('login').addEventListener('click', function (e) {
+byId('loginZone').addEventListener('submit', function (e) {
   e.preventDefault()
 
   try {
@@ -104,9 +104,7 @@ byId('login').addEventListener('click', function (e) {
   }
 
   byId('loginZone').classList.add('hide')
-  window.setTimeout(() => {
-    byId('workZone').classList.remove('hide')
-  }, 500)
+  byId('workZone').classList.remove('hide', 'transparent')
 
   const getData = tweb3
     .contract('contract.spacerenter')
@@ -171,7 +169,7 @@ byId('getPlayers').addEventListener('click', function (e) {
     .sendCommit()
   const getPlayers = tweb3
     .contract('contract.spacerenter')
-    .methods.exportState(['shared', 'data', 'matchId', 'players'])
+    .methods.exportState(['shared', 'data', matchId, 'players'])
     .sendCommit()
 
   Promise.all([getUsers, getPlayers])
