@@ -1,0 +1,342 @@
+<html>
+
+<head>
+    <title>icetea - playground</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+        integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <link rel="stylesheet" href="botui.min.css" />
+    <link rel="stylesheet" href="botui-theme-default.css" />
+    <link rel="stylesheet" type="text/css" href="style.css">
+    <link rel="stylesheet" type="text/css" href="bot.css">
+    <style>
+        body {
+            background-color: #f5f5f5 !important;
+        }
+
+        .botui-container {
+            background-color: transparent;
+            height: auto;
+        }
+
+        .banner {
+            padding: 16px 20px;
+            max-width: 800px;
+            margin: 0 auto;
+            box-sizing: border-box;
+        }
+
+        .banner img {
+            height: 48px;
+        }
+
+        #bot-option {
+            top: -56px;
+            background-color: #d80000;
+        }
+
+        #bot-option a {
+            color: #f8f8f8;
+        }
+
+        #bot-option a:hover {
+            color: #fff;
+        }
+
+        #bot-menu {
+            top: -60px;
+            right: 22px;
+            border-radius: 5px;
+            height: 280px;
+        }
+
+        #bot-menu a {
+            font-size: 18px;
+        }
+
+        .botui-message-content {
+            background-color: #ebebeb;
+        }
+
+        .bot-intro .botui-message-content {
+            background-color: transparent;
+            border: 1px solid #d80000;
+        }
+
+        #content {
+            max-width: 700px;
+            margin: 1rem auto;
+            margin-bottom: 200px;
+        }
+
+        table {
+            border-spacing: 0;
+            border-collapse: collapse;
+        }
+
+        table td,
+        table th {
+            /* border: 0px solid #ccc; */
+            padding: 10px 10px;
+        }
+
+        #setMatchInfo input {
+            max-width: 800px;
+        }
+
+        #tbPreview {
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        form {
+            width: 100%;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        input {
+            width: 100%;
+            height: 25px;
+            font-size: 14px;
+            padding: 0 2px;
+        }
+
+        button {
+            min-width: 90px;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="content">
+
+        <div style="display: flex; justify-content: space-between">
+            <input type="password" id='key' class="form-control" autofocus autocomplete="off"
+                placeholder="who are you?">
+            <button type="button" id="savekey" class="btn btn-info">Save</button>
+            <button type="button" id="showkey" class="btn btn-info">Show</button>
+            <button type="button" id="clearkey" class="btn btn-info">Clear</button>
+        </div>
+        <br>
+        <form>
+            <table>
+                <tr>
+                    <th colspan="4" style="text-align: center;">Set match result</th>
+                </tr>
+                <tr>
+                    <td>
+                        <select id='match'>
+                            <option value="">---Click load match----</option>
+                        </select>
+                    </td>
+                    <td>
+                        <select id='matchAnswers'>
+                            <option value="">-------</option>
+                        </select>
+                    </td>
+                    <td>
+                        <button type="button" id="loadMatch" class="btn btn-info">Load Match</button>
+                    </td>
+                    <td>
+                        <button type="button" id="setResult" class="btn btn-info">Set Result</button>
+                    </td>
+                </tr>
+            </table>
+        </form>
+        <form id="setMatchInfo">
+            <table>
+                <tr>
+                    <th colspan="4" style="text-align: center;">Set Match Information</th>
+                </tr>
+                <tr>
+                    <td>Bot Name</td>
+                    <td colspan="3">
+                        <input type='text' class="form-control" id='botname'
+                            value='DỰ ĐOÁN SEAGAMES CÙNG SKYGARDEN BOT'>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Host</td>
+                    <td>
+                        <select id='host'>
+                            <option value="Việt Nam">Việt Nam</option>
+                            <option value="Thái Lan">Thái Lan</option>
+                            <option value="Myanmar">Myanmar</option>
+                            <option value="Malaysia">Malaysia</option>
+                            <option value="Lào">Lào</option>
+                            <option value="Campuchia">Campuchia</option>
+                            <option value="Singapore">Singapore</option>
+                            <option value="Indonesia">Indonesia</option>
+                            <option value="Brunei">Brunei</option>
+                            <option value="Timor">Timor-Leste</option>
+                            <option value="Philippines">Philippines</option>
+                        </select>
+                    </td>
+                    <td style="text-align: center;">Visitor: </td>
+                    <td>
+                        <select id='visitor'>
+                            <option value="Thái Lan">Thái Lan</option>
+                            <option value="Việt Nam">Việt Nam</option>
+                            <option value="Myanmar">Myanmar</option>
+                            <option value="Malaysia">Malaysia</option>
+                            <option value="Lào">Lào</option>
+                            <option value="Campuchia">Campuchia</option>
+                            <option value="Singapore">Singapore</option>
+                            <option value="Indonesia">Indonesia</option>
+                            <option value="Brunei">Brunei</option>
+                            <option value="Timor">Timor-Leste</option>
+                            <option value="Philippines">Philippines</option>
+                        </select>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Top</td>
+                    <td><input class="form-control" type="number" id='top' value="10" min="1" max="20"></td>
+                    <td colspan="2">
+                        <label style="font-style:italic; font-size: 14px; ">
+                            (Số người được nhận TopAward)
+                        </label>
+                    </td>
+                </tr>
+                <tr>
+                    <td>TopAward</td>
+                    <td colspan="3">
+                        <div style="display: flex;">
+                            <input class="form-control" type="number" id='topNum' value="1" min="1" max="100"
+                                style="width: 50px; margin-right: 20px ;">
+                            <input class="form-control" type='text' id='topAward' value='voucher 500k'>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Award</td>
+                    <td colspan="3">
+                        <div style="display: flex;">
+                            <input class="form-control" type="number" id='awardNum' value="1" min="1" max="100"
+                                style="width: 50px; margin-right: 20px ;">
+                            <input class="form-control" type='text' id='award' value='lon beer Người Yêu Cũ'>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Image Award</td>
+                    <td colspan="3">
+                        <input class="form-control" type='text' id='awardLink'
+                            value='https://www.facebook.com/SkyGarden/photos/a.1389606451261750/2261853797370340/?type=3&theater'>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Question</td>
+                    <td colspan="3">
+                        <input class="form-control" type='text' id='question'
+                            value='Việt Nam sẽ thắng <b>cách biệt</b> bao nhiêu bàn?'>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Answers</td>
+                    <td><input class="form-control" type='text' id='answers1' value='1 ~ 2'></td>
+                    <td><input class="form-control" type='text' id='answers2' value='3 ~ 4'></td>
+                    <td><input class="form-control" type='text' id='answers3' value='Hơn 4'></td>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Deadline</td>
+                    <td colspan="1"><input class="form-control" type="date" id="datePicker"></td>
+                    <td>Time (24h)</td>
+                    <td colspan="2"><input class="form-control" type="time" id="timePicker"></td>
+                </tr>
+                <tr>
+                    <td colspan="2" style="text-align: center;">
+                        <button type="button" id="preview" class="btn btn-info">Update Preview</button>
+                    </td>
+                    <td colspan="2" style="text-align: center;">
+                        <button type="submit" class="btn btn-info">Submit</button>
+                    </td>
+                </tr>
+                <tbody id='userRows'></tbody>
+            </table>
+        </form>
+        <div id="tbPreview">
+            <table>
+                <tr>
+                    <th colspan="4" style="text-align: center;">Preview MATCH INFORMATION</th>
+                </tr>
+                <tr>
+                    <td>
+                        <!-- preview -->
+                        <div class="botui botui-container">
+                            <div class="botui-messages-container">
+                                <div class="botui-message bot-intro">
+                                    <div>
+                                        <div class="botui-message-content html">
+                                            <span>
+                                                <label id="description">Preview...</label>
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="botui-message">
+                                    <div>
+                                        <div class="human botui-message-content text"><span>Bắt Đầu</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="botui-message">
+                                    <div>
+                                        <div class="botui-message-content html">
+                                            <span id="matchInfo" />
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="botui-message">
+                                    <div>
+                                        <div class="botui-message-content html">
+                                            <span id="matchQuestion" />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="botui-actions-container">
+                                <div>
+                                    <div class="botui-actions-buttons">
+                                        <button type="button" class="botui-actions-buttons-button">
+                                            <span id="matchAnswers1" />
+                                        </button>
+                                        <button type="button" class="botui-actions-buttons-button">
+                                            <span id="matchAnswers2" /></button>
+                                        <button type="button" class="botui-actions-buttons-button">
+                                            <span id="matchAnswers3" /></button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </div>
+    <script src="loanhSetMatchInfo.js"></script>
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-8597504-10"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag() {dataLayer.push(arguments);}
+        gtag('js', new Date());
+
+        gtag('config', 'UA-8597504-10');
+    </script>
+    <!-- Optional JavaScript -->
+    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
+        integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
+        crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"
+        integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1"
+        crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
+        integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
+        crossorigin="anonymous"></script>
+</body>
+
+</html>

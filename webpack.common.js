@@ -18,7 +18,8 @@ module.exports = {
     address: path.resolve(__dirname, './web/address.js'),
     block: path.resolve(__dirname, './web/block.js'),
     election: path.resolve(__dirname, './web/election.js'),
-    playground: path.resolve(__dirname, './web/playground.js')
+    playground: path.resolve(__dirname, './web/playground.js'),
+    loanhSetMatchInfo: path.resolve(__dirname, './web/loanhSetMatchInfo.js')
   },
   output: {
     path: path.resolve(__dirname, 'web_dist'),
@@ -32,7 +33,9 @@ module.exports = {
   },
 
   plugins: [
-    new CopyWebpackPlugin([{ from: path.resolve(__dirname, 'web'), ignore: ['*.js'] }])
+    new CopyWebpackPlugin([
+      { from: path.resolve(__dirname, 'web'), ignore: ['*.js'] }
+    ])
   ],
 
   node: {
