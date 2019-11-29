@@ -119,6 +119,31 @@
             <button type="button" id="clearkey" class="btn btn-info">Clear</button>
         </div>
         <br>
+        <form>
+            <table>
+                <tr>
+                    <th colspan="4" style="text-align: center;">Set match result</th>
+                </tr>
+                <tr>
+                    <td>
+                        <select id='match'>
+                            <option value="">---Click load match----</option>
+                        </select>
+                    </td>
+                    <td>
+                        <select id='matchAnswers'>
+                            <option value="">-------</option>
+                        </select>
+                    </td>
+                    <td>
+                        <button type="button" id="loadMatch" class="btn btn-info">Load Match</button>
+                    </td>
+                    <td>
+                        <button type="button" id="setResult" class="btn btn-info">Set Result</button>
+                    </td>
+                </tr>
+            </table>
+        </form>
         <form id="setMatchInfo">
             <table>
                 <tr>
@@ -170,7 +195,7 @@
                     <td><input class="form-control" type="number" id='top' value="10" min="1" max="20"></td>
                     <td colspan="2">
                         <label style="font-style:italic; font-size: 14px; ">
-                            (Số người nhận được TopAward)
+                            (Số người được nhận TopAward)
                         </label>
                     </td>
                 </tr>
@@ -223,8 +248,7 @@
                 </tr>
                 <tr>
                     <td colspan="2" style="text-align: center;">
-                        <button type="button" id="preview" data-toggle="modal1" data-target="#exampleModalScrollable1"
-                            class="btn btn-info">Update Preview</button>
+                        <button type="button" id="preview" class="btn btn-info">Update Preview</button>
                     </td>
                     <td colspan="2" style="text-align: center;">
                         <button type="submit" class="btn btn-info">Submit</button>
@@ -236,7 +260,7 @@
         <div id="tbPreview">
             <table>
                 <tr>
-                    <th colspan="4" style="text-align: center;">Preview</th>
+                    <th colspan="4" style="text-align: center;">Preview MATCH INFORMATION</th>
                 </tr>
                 <tr>
                     <td>
@@ -290,27 +314,6 @@
                     </td>
                 </tr>
             </table>
-        </div>
-        <!-- Modal -->
-        <div class="modal fade" id="exampleModalScrollable" tabindex="-1" role="dialog"
-            aria-labelledby="exampleModalScrollableTitle" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-scrollable" role="document">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="exampleModalScrollableTitle">Modal title</h5>
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                            <span aria-hidden="true">&times;</span>
-                        </button>
-                    </div>
-                    <div class="modal-body" id="modalPreview">
-                        ...
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                        <button type="submit" class="btn btn-info">Submit</button>
-                    </div>
-                </div>
-            </div>
         </div>
     </div>
     <script src="loanhSetMatchInfo.js"></script>

@@ -7,7 +7,10 @@ function byId (id) {
 }
 
 function doDecrypt (privateKey, cipherText) {
-  const plainText = decrypt(privateKey.toString('hex'), Buffer.from(cipherText, 'base64')).toString()
+  const plainText = decrypt(
+    privateKey.toString('hex'),
+    Buffer.from(cipherText, 'base64')
+  ).toString()
   try {
     return JSON.parse(plainText)
   } catch (e) {
@@ -17,7 +20,9 @@ function doDecrypt (privateKey, cipherText) {
 }
 
 function makeRow (i, u, addr) {
-  return `<td>${i + 1}</td><td>${u.name}</td><td class='phone'>${u.phone}</td><td>${addr}</td>`
+  return `<td>${i + 1}</td><td>${u.name}</td><td class='phone'>${
+    u.phone
+  }</td><td>${addr}</td>`
 }
 
 function getField (id) {
@@ -62,22 +67,68 @@ byId('getUsers').addEventListener('click', function (e) {
   const rows = byId('userRows')
   rows.innerHTML = ''
 
-  tweb3.contract('contract.spacerenter').methods.exportState(['shared', 'users']).sendCommit().then(r => {
-    const users = r.returnValue
-    if (users) {
-      const entries = Object.entries(users)
-      byId('count').textContent = entries.length
-      entries.forEach(([addr, info], i) => {
-        decryptUser(info, account)
+  tweb3
+    .contract('contract.spacerenter')
+    .methods.exportState(['shared', 'users'])
+    .sendCommit()
+    .then(r => {
+      const users = r.returnValue
+      if (users) {
+        const entries = Object.entries(users)
+        byId('count').textContent = entries.length
+        entries.forEach(([addr, info], i) => {
+          decryptUser(info, account)
 
-        const row = document.createElement('TR')
-        row.innerHTML = makeRow(i, info, addr)
-        rows.append(row)
-      })
-    }
-  }).catch(e => {
-    console.error(e)
+          const row = document.createElement('TR')
+          row.innerHTML = makeRow(i, info, addr)
+          rows.append(row)
+        })
+      }
+    })
+    .catch(e => {
+      console.error(e)
+      window.alert(e.message)
+    })
+})
+byId('loadMatch').addEventListener('click', function (e) {
+  try {
+    checkKey()
+  } catch (e) {
     window.alert(e.message)
+    return
+  }
+  const getData = tweb3
+    .contract('contract.spacerenter')
+    .methods.exportState(['shared', 'data'])
+    .sendCommit()
+  Promise.all([getData]).then(([{ returnValue: data }]) => {
+    // console.log(data);
+    var itens = Object.keys(data)
+    // set empty
+    byId('match').options.length = 0
+    for (var i = 0; i < itens.length; i++) {
+      var item = itens[i]
+      var element = document.createElement('option')
+      element.innerText = item
+      byId('match').append(element)
+    }
+
+    // set default selection
+    const today = new Date()
+    for (var j = 0; j < itens.length; j++) {
+      try {
+        var opt = itens[j]
+        var matchDate = opt.slice(-10)
+        matchDate = new Date(matchDate)
+
+        if (today.getDate() === matchDate.getDate()) {
+          byId('match').value = opt
+          break
+        } else if (today.getDate() <= matchDate.getDate() + 1) {
+          byId('match').value = opt
+        }
+      } catch (e) {}
+    }
   })
 })
 
@@ -96,53 +147,66 @@ byId('getWinners').addEventListener('click', function (e) {
   const rows = byId('userRows')
   rows.innerHTML = ''
 
-  const getUsers = tweb3.contract('contract.spacerenter').methods.exportState(['shared', 'users']).sendCommit()
-  const getWinners = tweb3.contract('contract.skygarden_seagames').methods.getWinners(matchId).sendCommit()
+  const getUsers = tweb3
+    .contract('contract.spacerenter')
+    .methods.exportState(['shared', 'users'])
+    .sendCommit()
+  const getWinners = tweb3
+    .contract('contract.skygarden_seagames')
+    .methods.getWinners(matchId)
+    .sendCommit()
   // const getWinners = tweb3.contract('teat14feryghwal6krgpaq49ka6ykh742zshk4px9wx').methods.getWinners(matchId).sendCommit()
-  Promise.all([
-    getUsers,
-    getWinners
-  ]).then(([{ returnValue: users }, { returnValue: winners }]) => {
-    if (!winners || !winners.length) {
-      byId('count').textContent = 'No winners'
-      return
-    }
-    byId('count').textContent = winners.length
-    winners.forEach((w, i) => {
-      const u = users[w.address]
-      decryptUser(u, account)
+  Promise.all([getUsers, getWinners])
+    .then(([{ returnValue: users }, { returnValue: winners }]) => {
+      if (!winners || !winners.length) {
+        byId('count').textContent = 'No winners'
+        return
+      }
+      byId('count').textContent = winners.length
+      winners.forEach((w, i) => {
+        const u = users[w.address]
+        decryptUser(u, account)
 
-      const row = document.createElement('TR')
-      row.innerHTML = makeRow(i, u, w.top ? 'voucher + beer' : 'beer') // new Date(w.timestamp).toString()
-      rows.append(row)
+        const row = document.createElement('TR')
+        row.innerHTML = makeRow(i, u, w.top ? 'voucher + beer' : 'beer') // new Date(w.timestamp).toString()
+        rows.append(row)
+      })
     })
-  }).catch(e => {
-    console.error(e)
-    window.alert(e.message)
-  })
+    .catch(e => {
+      console.error(e)
+      window.alert(e.message)
+    })
 })
 
 byId('copy').addEventListener('click', function (e) {
   e.preventDefault()
 
-  const phones = Array.from(document.querySelectorAll('.phone')).map(p => p.textContent)
+  const phones = Array.from(document.querySelectorAll('.phone')).map(
+    p => p.textContent
+  )
   if (!phones || !phones.length) {
     window.alert('Nothing to copy.')
     return
   }
-  navigator.clipboard.writeText(phones.join('\n')).then(r => window.alert('Copied ' + phones.length + ' items to clipboard'))
+  navigator.clipboard
+    .writeText(phones.join('\n'))
+    .then(r => window.alert('Copied ' + phones.length + ' items to clipboard'))
 })
 
 byId('export').addEventListener('click', function (e) {
   e.preventDefault()
 
-  const phones = Array.from(document.querySelectorAll('.phone')).map(p => p.textContent)
+  const phones = Array.from(document.querySelectorAll('.phone')).map(
+    p => p.textContent
+  )
   if (!phones || !phones.length) {
     window.alert('Nothing to download.')
     return
   }
 
-  const encodedUri = encodeURI('data:text/plain;charset=utf-8,' + phones.join('\n'))
+  const encodedUri = encodeURI(
+    'data:text/plain;charset=utf-8,' + phones.join('\n')
+  )
   var link = document.createElement('a')
   link.setAttribute('href', encodedUri)
   link.setAttribute('download', 'bot_phones.txt')
