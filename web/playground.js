@@ -90,7 +90,10 @@ byId('getUsers').addEventListener('click', function (e) {
       window.alert(e.message)
     })
 })
+
 byId('loadMatch').addEventListener('click', function (e) {
+  e.preventDefault()
+
   try {
     checkKey()
   } catch (e) {
@@ -103,21 +106,23 @@ byId('loadMatch').addEventListener('click', function (e) {
     .sendCommit()
   Promise.all([getData]).then(([{ returnValue: data }]) => {
     // console.log(data);
-    var itens = Object.keys(data)
+    var items = Object.keys(data)
     // set empty
     byId('match').options.length = 0
-    for (var i = 0; i < itens.length; i++) {
-      var item = itens[i]
+    for (var i = 0; i < items.length; i++) {
+      var key = items[i]
       var element = document.createElement('option')
-      element.innerText = item
+      element.value = key
+      const { host, visitor } = data[key]
+      element.textContent = `${host} - ${visitor}`
       byId('match').append(element)
     }
 
     // set default selection
     const today = new Date()
-    for (var j = 0; j < itens.length; j++) {
+    for (var j = 0; j < items.length; j++) {
       try {
-        var opt = itens[j]
+        var opt = items[j]
         var matchDate = opt.slice(-10)
         matchDate = new Date(matchDate)
 
@@ -127,7 +132,9 @@ byId('loadMatch').addEventListener('click', function (e) {
         } else if (today.getDate() <= matchDate.getDate() + 1) {
           byId('match').value = opt
         }
-      } catch (e) {}
+      } catch (e) {
+        console.warn(e)
+      }
     }
   })
 })
