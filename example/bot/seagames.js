@@ -133,7 +133,7 @@ class LuckyBot extends SurveyBot {
     }
   }
 
-  @transaction setPubKey(pubkey: address) {
+  @transaction setPubKey(pubkey: string) {
     this.expectAdmin()
     this.publicKey = pubkey
   }

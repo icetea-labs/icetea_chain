@@ -20,23 +20,29 @@ if (process.argv.length > 2) {
 botFile = './example/bot/' + botFile
 
 const { IceteaWeb3 } = require('@iceteachain/web3')
-const tweb3 = new IceteaWeb3('wss://rpc.icetea.io/websocket')
-
+const tweb3 = new IceteaWeb3('ws://localhost:26657/websocket')
 async function deploy () {
   const key = process.env.BANK_KEY
   tweb3.wallet.importAccount(key)
   const botstore = tweb3.contract('system.botstore')
 
   // deploy the astrobot
-  const src = await transpile(fs.readFileSync(botFile, 'utf8'), { prettier: true })
-  const theBot = await tweb3.deploy(ContractMode.JS_RAW, src, [], { value: 10000e6 })
+  const src = await transpile(fs.readFileSync(botFile, 'utf8'), {
+    prettier: true
+  })
+  const theBot = await tweb3.deploy(ContractMode.JS_RAW, src, [], { value: 0 })
 
   // add astrobot alias
   const alias = tweb3.contract('system.alias', key)
   const oldBot = await alias.methods.resolve('contract.' + botName).call()
   if (oldBot) {
     console.log(`${botName} already registed to point to ${oldBot}`)
-    botName = botName + '_' + Date.now().toString(36).substr(-4)
+    botName =
+      botName +
+      '_' +
+      Date.now()
+        .toString(36)
+        .substr(-4)
     console.log('Use new bot name: ' + botName)
   }
   console.log(botName, theBot)
@@ -45,8 +51,10 @@ async function deploy () {
   // register astrobot with botstore
   const existed = await botstore.methods.resolve('contract.' + botName).call()
   if (!existed) {
-    const avatar = 'http://i.pravatar.cc/150?img=' + (Date.now() % 70 + 1)
-    await botstore.methods.register('contract.' + botName, 0, avatar).sendCommit()
+    const avatar = 'http://i.pravatar.cc/150?img=' + ((Date.now() % 70) + 1)
+    await botstore.methods
+      .register('contract.' + botName, 0, avatar)
+      .sendCommit()
   }
 }
 
