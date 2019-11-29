@@ -162,7 +162,7 @@ class LuckyBot extends SurveyBot {
   }
 
   @view getMatchId() {
-    return this.settings.get('matchId', 'vie_lao')
+    return this.settings.get('matchId', 'vie_ind')
   }
 
   @transaction setMatchId(matchId: string,) {
@@ -225,7 +225,10 @@ class LuckyBot extends SurveyBot {
       info.rand = Math.random()
     }
 
-    this.setMatchInfo(matchId || this.getMatchId(), info)
+    matchID = matchId || this.getMatchId()
+    this.setMatchInfo(matchId, info)
+
+    this.emitEvent('ResultSet', { matchId, result }, ['matchId'])
   }
 
   filterPlayers(info, players) {
