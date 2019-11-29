@@ -15,37 +15,43 @@
             border: 1px solid #ccc;
             padding: 3px 8px;
         }
+        .hide {
+            display: none;
+        }
     </style>
 </head>
 <body>
     <div id="content">
 
         <div>
-            <input type='password' id='key' size='60' placeholder="who are you?" autofocus autocomplete="off">
-            <button id="getUsers">List Users</button>
+            <input type='password' id='key' size='40' placeholder="who are you?" autofocus autocomplete="off">
+            <button id="login">Login</button>
         </div>
-        <br>
-        <div>
-            <select id='match'>
-                    <option value="">---Click load match----</option>
-            </select>
-            <button id="loadMatch">Load Match</button>
-            <button id="getWinners">Show Winners</button>
+        <div id='workZone' class='hide'>
+            <br>
+            <div>
+                <button id="getUsers">List Users</button>
+            </div>
+            <br>
+            <div>
+                <select id='match'></select>
+                <button id="getWinners">Show Winners</button>
+            </div>
+            <br>
+            <div>Total: <span  id='count'></span> <button id='copy'>Copy to Clipboard</button>  <button id='export'>Download Text</button></div>
+            <br>
+            <table>
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Name</th>
+                        <th>Phone</th>
+                        <th>Extra</th>
+                    </tr>
+                </thead>
+                <tbody id='userRows'></tbody>
+            </table>
         </div>
-        <br>
-        <div>Total: <span  id='count'></span> <button id='copy'>Copy to Clipboard</button>  <button id='export'>Download Text</button></div>
-        <br>
-        <table>
-            <thead>
-                <tr>
-                    <th>#</th>
-                    <th>Name</th>
-                    <th>Phone</th>
-                    <th>Extra</th>
-                </tr>
-            </thead>
-            <tbody id='userRows'></tbody>
-        </table>
     </div>
     <script src="playground.js"></script>
     <!-- Global site tag (gtag.js) - Google Analytics -->
