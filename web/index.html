@@ -1,34 +1,34 @@
-<html>
+<html lang="en">
 
 <head>
-    <title>Dự đoán Seagames cùng SkyGarden</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Dự đoán SeaGames cùng SkyGarden</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="https://skygarden.vn/favicon.png?ver=88" rel="shortcut icon">
     <link rel="stylesheet" href="botui.min.css" />
     <link rel="stylesheet" href="botui-theme-default.css" />
-    <link rel="stylesheet" type="text/css" href="style.css">
     <link rel="stylesheet" type="text/css" href="bot.css">
-    <meta property="og:title" content="Dự đoán Seagames cùng SkyGarden">
+    <meta property="og:title" content="Dự đoán SeaGames cùng SkyGarden">
     <meta property="og:type" content="website">
-    <meta name="description" content="Dự đoán kết quả của đội tuyển bóng đá Việt Nam tại Seagames để nhận phần thưởng.">
+    <meta name="description" content="Dự đoán kết quả của đội tuyển bóng đá Việt Nam tại SeaGames để nhận phần thưởng.">
     <meta property="og:image" content="https://bot.skygarden.vn/nyc.png">
-    <meta property="og:description" content="Dự đoán kết quả của đội tuyển bóng đá Việt Nam tại Seagames để nhận phần thưởng.">
+    <meta property="og:description" content="Dự đoán kết quả của đội tuyển bóng đá Việt Nam tại SeaGames để nhận phần thưởng.">
+
+    <link rel="stylesheet" href="css/bootstrap.min.css">
+    <link rel="stylesheet" href="css/style.css">
+
     <style>
         body {
-            background-color: #f5f5f5!important;
+            background-color: #fafafa!important;
         }
         .botui-container {
-            background-color: transparent;
+            background-color: #f5f5f5;
             height: auto;
-        }
-        .banner {
-            padding: 16px 20px;
-            max-width: 800px;
+            min-height: 711px;
+            max-width: 1009px;
             margin: 0 auto;
-            box-sizing: border-box;
-        }
-        .banner img {
-            height: 48px;
         }
         #bot-option {
             top: -56px;
@@ -60,26 +60,87 @@
 </head>
 
 <body>
-    <div class='banner'>
-        <a href='https://skygarden.vn'><img src="https://skygarden.vn/html-websky/assets/images/logo-2.png"></a>
-        <div id="user-address" style="display: none;">
-                <span>You: </span>
-                <span id="address"></span>
-        </div>
-        <div id='bot-option'>
-            <a href='#' id='show-bot-option'>MENU</a>
-        </div>
-    </div>
-    <div id="content">
-         <div id="my-botui-app">
-            <bot-ui></bot-ui>
-        </div>
+    <header class="text-center py-3">
+        <a href=""><img src="images/logo.png" alt=""></a>
+    </header>
+    <div class="wrapper">
+        <div class="container px-0">
+            <main>
+                <div class="banner">
+                    <img class="img-responsive d-md-none mobile" src="images/banner-2.png" alt="">
+                    <img class="img-responsive d-md-block d-none desk" src="images/banner.png" alt="">
+                    <div class="banner_text">
+                        <div class="container">
+                            <div class="row">
+                                <div class="offset-md-8 col-md-4">
+                                    <div class="content">
+                                        <h6>
+                                            <b>
+                                                10 voucher 500k cho
+                                                10 bạn đoán đúng may mắn nhất
+                                            </b>
 
-        <div id='bot-menu'>
-            <a href="#" class="closebtn" id='hide-bot-option'>&times;</a>
-            <div id='bot-menu-items'></div>
+                                            <b>
+                                                Tặng: 1 lon beer*
+                                                Người Yêu Cũ cho tất cả người đoán đúng.
+                                            </b>
+                                        </h6>
+                                        <span>
+                                            *Nhận tại các nhà hàng thuộc hệ thống SkyGarden.
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="container">
+                    <div class="entry-content">
+                        <div class="text-center">
+                            <h2>DỰ ĐOÁN SEAGAMES <br> CÙNG SKYGARDEN BOT</h2>
+                            <p><b>10 voucher 500k</b> cho
+                                    10 bạn đoán đúng may mắn nhất<br><strong>Tặng:</strong> 1 lon beer Người Yêu Cũ cho TẤT CẢ người đoán đúng.<br>
+                                Nhận
+                                tại các nhà
+                                hàng thuộc hệ thống SkyGarden<br><br>
+                            </p>
+                        </div>
+                        <div id="content">
+                            <div id="user-address" style="display: none;">
+                                    <span>You: </span>
+                                    <span id="address"></span>
+                            </div>
+                            <div id='bot-option'>
+                                <a href='#' id='show-bot-option'>MENU</a>
+                            </div>
+
+                            <div id="my-botui-app">
+                                <bot-ui></bot-ui>
+                            </div>
+                    
+                            <div id='bot-menu'>
+                                <a href="#" class="closebtn" id='hide-bot-option'>&times;</a>
+                                <div id='bot-menu-items'></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+            <footer>
+                <div class="container text-center">
+                    <div class="company">Công ty TNHH Royal Pizza <br> Nhà hàng Royal Sky Garden</div>
+                    <div class="info"><span>Trụ sở chính:</span> 504 -506 Đường 3 Tháng 2, Phường 14, Quận 10, Hồ Chí
+                        Minh
+                    </div>
+                    <span class="line">|</span>
+                    <div class="info"><span>Điện Thoại:</span> 0982.941.941</div>
+                    <span class="line">|</span>
+                    <div class="info"><span>Email:</span> <a href="">info@skygarden.vn</a></div>
+                </div>
+            </footer>
         </div>
     </div>
+
     <script>window.botAddress='contract.skygarden_seagames';</script>
     <script src="bot.js"></script>
 
@@ -104,11 +165,11 @@
 <!-- Global site tag (gtag.js) - Google Analytics -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=UA-111432767-2"></script>
 <script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
 
-  gtag('config', 'UA-111432767-2');
+    gtag('config', 'UA-111432767-2');
 </script>
 
 </body>

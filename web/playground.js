@@ -185,7 +185,7 @@ byId('getPlayers').addEventListener('click', function (e) {
         decryptUser(u, account)
 
         const row = document.createElement('TR')
-        row.innerHTML = makeRow(i, u, 'Chọn button số ' + predict) // new Date(timestamp).toString()
+        row.innerHTML = makeRow(i, u, 'Chọn button số ' + (predict + 1)) // new Date(timestamp).toString()
         rows.append(row)
       })
     })

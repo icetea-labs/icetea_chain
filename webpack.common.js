@@ -13,6 +13,7 @@ module.exports = {
     wallet: path.resolve(__dirname, './web/wallet.js'),
     tx: path.resolve(__dirname, './web/tx.js'),
     bot: path.resolve(__dirname, './web/bot.js'),
+    bot_old: path.resolve(__dirname, './web/bot_old.js'),
     botstore: path.resolve(__dirname, './web/botstore.js'),
     profile: path.resolve(__dirname, './web/profile.js'),
     address: path.resolve(__dirname, './web/address.js'),
