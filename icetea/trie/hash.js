@@ -11,9 +11,6 @@ const zeroHash = (size = HASH_SIZE) => Buffer.alloc(size)
 
 const naiveHash = buf => createHash(HASH_ALGO).update(buf).digest()
 
-// concat 2 buffers (l: left, r: right) then hash
-const hashPair = (l, r) => naiveHash(Buffer.concat([l, r], HASH_SIZE * 2))
-
 // left shift for one bit
 const leftShiftOne = (buf, lastBit) => {
   lastBit = lastBit === 1 ? 1 : 0
@@ -92,11 +89,13 @@ const hash = (l, r) => {
       shortcut: true
     }
   } else {
-    const combined = hashPair(l, r)
+    const content = Buffer.concat([l, r], HASH_SIZE * 2)
+    const hash = naiveHash(content)
     // clear the first 15 bit and set 16th bit to 1
-    combined.writeUInt16BE(0, 1)
+    hash.writeUInt16BE(0, 1)
     return {
-      hash: combined,
+      hash,
+      content,
       shortcut: false
     }
   }
@@ -134,7 +133,6 @@ const dehash = hash => {
 // export all for testing
 module.exports = {
   naiveHash,
-  hashPair,
   leftShiftOne,
   isAllZero,
   canShortcut,
