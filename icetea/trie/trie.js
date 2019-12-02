@@ -9,15 +9,21 @@ const keyToPath = key => key.reduce((s, b) => {
 class Trie {
     rootHash
 
-    // the backing DB should support sync put and get
+    // the backing DB, should support sync put and get
     backingDb
 
     // hash should be 256 bit size
     trieHash
 
+    // used to hash the key to ensure randomized distribution
+    keyHash
+
     // rootHash should be a buffer of 32 bytes
-    constructor (rootHash) {
+    constructor (rootHash, trieHash, backingDb, keyHash) {
       this.rootHash = rootHash
+      this.trieHash = trieHash
+      this.backingDb = backingDb
+      this.keyHash = keyHash
     }
 
     // hash should be a buffer of 32 bytes
@@ -34,6 +40,9 @@ class Trie {
     // key is a buffer of 256 bits (tx hash, block hash)
     // if it is not so, it should be hashed first (similar to 'secure' option of Pacitria)
     get (key) {
+      if (this.keyHash) {
+        key = this.keyHash(key)
+      }
       const path = keyToPath(key)
 
       // navigate through the path
@@ -58,6 +67,9 @@ class Trie {
     // key is a buffer of 256 bits (tx hash, block hash)
     // if it is not so, it should be hashed first (similar to 'secure' option of Pacitria)
     put (key, value) {
+      if (this.keyHash) {
+        key = this.keyHash(key)
+      }
       const path = keyToPath(key)
 
       // navigate through the path
