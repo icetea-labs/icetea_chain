@@ -14,9 +14,25 @@ $(document).ready(function () {
     byId('key').value = key
     checkKey()
     loadMatch()
+    loadCurrentMatch()
   }
   setPreview()
 })
+
+function loadCurrentMatch () {
+  tweb3
+    .contract('contract.skygarden_seagames')
+    .methods.getMatchId()
+    .call()
+    .then(r => {
+      console.log(r)
+      byId('currentMatch').innerHTML = `<b>${r}</b>`
+    })
+    .catch(e => {
+      console.error(e)
+      window.alert(e.message)
+    })
+}
 
 function byId (id) {
   return document.getElementById(id)
@@ -34,7 +50,10 @@ function getField (id) {
 }
 
 function checkKey () {
-  return tweb3.wallet.importAccount(getField('key'))
+  window.account = tweb3.wallet.importAccount(getField('key'))
+  console.log('tweb3', tweb3.wallet.accounts)
+  console.log('tweb3', tweb3.wallet.defaultAccount)
+  return window.account
 }
 
 function getAllField () {
@@ -155,6 +174,29 @@ byId('getMatch').addEventListener('click', function (e) {
   window.alert('load match done!')
 })
 
+byId('setCurrentMatch').addEventListener('click', function (e) {
+  try {
+    checkKey()
+  } catch (e) {
+    window.alert(e.message)
+    return
+  }
+  const matchId = byId('match').value
+  tweb3
+    .contract('contract.skygarden_seagames')
+    .methods.setMatchId(matchId)
+    .sendCommit()
+    .then(r => {
+      console.log(r)
+      loadCurrentMatch()
+      window.alert('set current match done!')
+    })
+    .catch(e => {
+      console.error(e)
+      window.alert(e.message)
+    })
+})
+
 byId('setResult').addEventListener('click', function (e) {
   e.preventDefault()
   try {
@@ -208,9 +250,6 @@ function loadMatch () {
       var element = document.createElement('option')
       var status = 'Chưa bắt đầu'
       _matchInfo[item.key].status = 0
-      // console.log("key", item.key);
-      // console.log("item.info.deadline", item.info.deadline);
-      // console.log("currentTimestam", currentTimestam);
       if (!isNaN(item.info.result)) {
         status = 'Kết thúc'
         _matchInfo[item.key].status = 2

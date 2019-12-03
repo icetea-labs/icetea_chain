@@ -59,11 +59,12 @@ function decryptUser (info, account) {
 
 byId('getUsers').addEventListener('click', function (e) {
   e.preventDefault()
-
   const account = window.account
   if (!account || !account.privateKey) {
     window.alert('Not login yet.')
     return
+  } else {
+    tweb3.wallet.importAccount(account)
   }
 
   const rows = byId('userRows')
@@ -120,7 +121,9 @@ byId('loginZone').addEventListener('submit', function (e) {
       var element = document.createElement('option')
       element.value = key
       const { host, visitor, deadline } = data[key].info
-      element.textContent = `${host} - ${visitor} (${new Date(deadline).toDateString()})`
+      element.textContent = `${host} - ${visitor} (${new Date(
+        deadline
+      ).toDateString()})`
       byId('match').append(element)
     }
 
@@ -152,6 +155,8 @@ byId('getPlayers').addEventListener('click', function (e) {
   if (!account || !account.privateKey) {
     window.alert('Not login yet.')
     return
+  } else {
+    tweb3.wallet.importAccount(account)
   }
 
   const matchId = getField('match', true)
@@ -202,6 +207,8 @@ byId('getWinners').addEventListener('click', function (e) {
   if (!account || !account.privateKey) {
     window.alert('Not login yet.')
     return
+  } else {
+    tweb3.wallet.importAccount(account)
   }
 
   const matchId = getField('match', true)

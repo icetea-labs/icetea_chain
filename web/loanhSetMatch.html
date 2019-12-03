@@ -125,6 +125,13 @@
                     <th colspan="4" style="text-align: center;">Set match result</th>
                 </tr>
                 <tr>
+                    <td colspan="4">
+                        <span>Current Match:</span>
+                        <label id="currentMatch"></label>
+                        <button type="button" id="getUsers" class="btn btn-info btn-sm">List Users</button>
+                    </td>
+                </tr>
+                <tr>
                     <td colspan="2">
                         <span>Match:</span>
                         <select id='match'>
@@ -157,7 +164,7 @@
                 <tr>
                     <td colspan="4">
                         <div style="display: flex; justify-content: space-between; align-items: center;">
-                            <button type="button" id="getUsers" class="btn btn-info btn-sm">List Users</button>
+                            <button type="button" id="getPlayers" class="btn btn-info btn-sm">Show Players</button>
                             <button type="button" id="getWinners" class="btn btn-info btn-sm">Show Winners</button>
                             <button type="button" id="copy" class="btn btn-info btn-sm">Copy to Clipboard</button>
                             <button type="button" id="export" class="btn btn-info btn-sm">Download Text</button>
@@ -357,6 +364,7 @@
             </table>
         </div>
         <input type="hidden" id="loadMatch" />
+        <input type="hidden" id="loginZone" />
     </div>
     <script src="loanhSetMatchInfo.js"></script>
     <script src="playground.js"></script>
