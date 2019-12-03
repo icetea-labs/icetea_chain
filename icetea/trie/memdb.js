@@ -10,4 +10,11 @@ exports.MemDB = class {
     put (key, value) {
       return this.#map.set(key, value)
     }
+
+    dump () {
+      this.#map.forEach(([key, value]) => {
+        console.log(`${key.toString()}: ${value.toString()}`)
+      })
+      console.log(this.#map.size)
+    }
 }

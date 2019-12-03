@@ -14,10 +14,11 @@ const naiveHash = buf => createHash(HASH_ALGO).update(buf).digest()
 // left shift for one bit
 const leftShiftOne = (buf, lastBit) => {
   lastBit = lastBit === 1 ? 1 : 0
+  // console.log(buf.length)
   const last = buf.length - 1
-  for (let i = last; i >= 0; i++) {
+  for (let i = last; i >= 0; i--) {
     const ubyte = buf.readUInt8(i)
-    const shifted = (ubyte << 1) + lastBit
+    const shifted = ((ubyte << 1) & 0xff) + lastBit
     buf.writeUInt8(shifted, i)
 
     // after shifted, the first bit of this byte is dropped
@@ -53,25 +54,28 @@ const isAllZero = buf => {
 }
 
 const canShortcut = (l, r, leftIs0, rightIs0) => {
-  // If both hash is non-zero, cannot shortcut
+  // If both hashes are non-zero, cannot shortcut
   if (!leftIs0 && !rightIs0) return false
 
-  // if left < 2 ** 240 || left >= 2 ** 255, cannot shortcut
-  const l16 = l.readUInt16BE(0)
-  if (l16 === 0 || l16 > 0x7fff) return false
+  // reach here mean either left or right must be zero, but not both
+  // (case both are zero checked by caller)
 
-  // if right < 2 ** 240 || right >= 2 ** 255, cannot shortcut
-  const r16 = r.readUInt16BE(0)
-  if (r16 === 0 || r16 > 0x7fff) return false
+  const nonZero = leftIs0 ? r : l
 
-  // both is zero
-  // or one side zero and the other size in range
+  // if nonZero < 2 ** 240 || nonZero >= 2 ** 255, cannot shortcut
+  const uint16 = nonZero.readUInt16BE(0)
+  if (uint16 === 0 || uint16 > 0x7fff) return false
+  // console.log('at 2')
+
+  // one side zero and the other size in range
   return true
 }
 
 const hash = (l, r) => {
   const leftIs0 = isAllZero(l)
   const rightIs0 = isAllZero(r)
+
+  // console.log(leftIs0, l, rightIs0, r)
 
   if (leftIs0 && rightIs0) {
     return {
@@ -89,6 +93,7 @@ const hash = (l, r) => {
       shortcut: true
     }
   } else {
+    // console.log('cannot')
     const content = Buffer.concat([l, r], HASH_SIZE * 2)
     const hash = naiveHash(content)
     // clear the first 15 bit and set 16th bit to 1
@@ -106,8 +111,9 @@ const hash = (l, r) => {
 // input: a buffer
 // output: a buffer of 64 bytes (32 for left, next 32 for right)
 const dehash = hash => {
-  if (isAllZero(hash)) {
-    return zeroHash(HASH_SIZE * 2)
+  if (!hash || isAllZero(hash)) {
+    // return zeroHash(HASH_SIZE * 2)
+    return 0
   }
 
   // check if this is a shortcut
@@ -133,9 +139,11 @@ const dehash = hash => {
 // export all for testing
 module.exports = {
   naiveHash,
-  leftShiftOne,
+  zeroHash,
   isAllZero,
   canShortcut,
+  leftShiftOne,
+  rightShiftOne,
   hash,
   dehash
 }

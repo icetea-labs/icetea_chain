@@ -37,6 +37,10 @@ class Trie {
       return buf
     }
 
+    dump () {
+      this.backingDb.dump()
+    }
+
     // key is a buffer of 256 bits (tx hash, block hash)
     // if it is not so, it should be hashed first (similar to 'secure' option of Pacitria)
     get (key) {
@@ -53,6 +57,9 @@ class Trie {
         if (i === lastIndex) {
           // we are at leaf level, just return the value stored there
           return buf
+        } else if (buf === 0) {
+          // got zero at non-leaf => key not exsit
+          return
         }
 
         // '0' => go left, '1' => go right
@@ -72,29 +79,38 @@ class Trie {
       }
       const path = keyToPath(key)
 
+      // console.log(path)
+
       // navigate through the path
       let currentHash = this.rootHash
       const lastIndex = path.length - 1
+      // console.log('lastIndex ' + lastIndex)
 
       const pathHashes = []
+
+      // we did not mutate zeroHash, so no need to create new for each loop
+      const zeroBuf = this.trieHash.zeroHash()
+      // console.log(zeroBuf)
 
       for (let i = 0; i <= lastIndex; i++) {
         if (i < lastIndex) {
           // We are en-route (not reach leaf yet)
 
           const buf = this.getNode(currentHash)
-          // '0' => go left, '1' => go right
           const goLeft = path[i] === '0'
-          const left = buf.slice(0, HASH_SIZE)
-          const right = buf.slice(HASH_SIZE)
+          const left = buf === 0 ? zeroBuf : buf.slice(0, HASH_SIZE)
+          const right = buf === 0 ? zeroBuf : buf.slice(HASH_SIZE)
           pathHashes[i] = { goLeft, left, right }
+          // console.log(i, pathHashes[i] )
 
           currentHash = goLeft ? left : right
         } else {
           // we reach leaf
 
+          // console.log('at leaf!!', value.toString())
+
           // update the leaf
-          let currentHash = this.trieHash.naiveHash(value)
+          currentHash = this.trieHash.naiveHash(value)
           this.backingDb.put(currentHash, value)
 
           // going back to update hashes
@@ -102,6 +118,7 @@ class Trie {
             // Go back one step
             // at this point
             const { goLeft, left, right } = pathHashes[j]
+            // console.log(j, goLeft, left.length, right.length)
 
             // either left or right must has changed then we need to rehash
             const { hash, content, shortcut } = this.trieHash.hash(goLeft ? currentHash : left, goLeft ? right : currentHash)
@@ -109,6 +126,7 @@ class Trie {
             // if it is not shortcut (i.e. the content can't be derived from the hash itself)
             // we need to store the content in database
             if (!shortcut) {
+              console.log('not shortcut')
               this.backingDb.put(hash, content)
             }
 
