@@ -25,11 +25,14 @@ function makeRow (i, u, addr) {
   }</td><td>${addr}</td>`
 }
 
-function getField (id) {
+function getField (id, noThrow) {
   const f = byId(id)
   const v = f.value.trim()
   if (!v) {
     f.focus()
+    if (noThrow) {
+      return
+    }
     throw new Error('Please input ' + id)
   }
 
@@ -37,7 +40,8 @@ function getField (id) {
 }
 
 function checkKey () {
-  return tweb3.wallet.importAccount(getField('key'))
+  window.account = tweb3.wallet.importAccount(getField('key'))
+  return window.account
 }
 
 function decryptUser (info, account) {
@@ -56,11 +60,9 @@ function decryptUser (info, account) {
 byId('getUsers').addEventListener('click', function (e) {
   e.preventDefault()
 
-  let account
-  try {
-    account = checkKey(e)
-  } catch (e) {
-    window.alert(e.message)
+  const account = window.account
+  if (!account || !account.privateKey) {
+    window.alert('Not login yet.')
     return
   }
 
@@ -90,34 +92,43 @@ byId('getUsers').addEventListener('click', function (e) {
       window.alert(e.message)
     })
 })
-byId('loadMatch').addEventListener('click', function (e) {
+
+byId('loginZone').addEventListener('submit', function (e) {
+  e.preventDefault()
+
   try {
     checkKey()
   } catch (e) {
     window.alert(e.message)
     return
   }
+
+  byId('loginZone').classList.add('hide')
+  byId('workZone').classList.remove('hide', 'transparent')
+
   const getData = tweb3
     .contract('contract.spacerenter')
     .methods.exportState(['shared', 'data'])
     .sendCommit()
   Promise.all([getData]).then(([{ returnValue: data }]) => {
     // console.log(data);
-    var itens = Object.keys(data)
+    var items = Object.keys(data)
     // set empty
     byId('match').options.length = 0
-    for (var i = 0; i < itens.length; i++) {
-      var item = itens[i]
+    for (var i = 0; i < items.length; i++) {
+      var key = items[i]
       var element = document.createElement('option')
-      element.innerText = item
+      element.value = key
+      const { host, visitor, deadline } = data[key].info
+      element.textContent = `${host} - ${visitor} (${new Date(deadline).toDateString()})`
       byId('match').append(element)
     }
 
     // set default selection
     const today = new Date()
-    for (var j = 0; j < itens.length; j++) {
+    for (var j = 0; j < items.length; j++) {
       try {
-        var opt = itens[j]
+        var opt = items[j]
         var matchDate = opt.slice(-10)
         matchDate = new Date(matchDate)
 
@@ -127,20 +138,75 @@ byId('loadMatch').addEventListener('click', function (e) {
         } else if (today.getDate() <= matchDate.getDate() + 1) {
           byId('match').value = opt
         }
-      } catch (e) {}
+      } catch (e) {
+        console.warn(e)
+      }
     }
   })
+})
+
+byId('getPlayers').addEventListener('click', function (e) {
+  e.preventDefault()
+
+  const account = window.account
+  if (!account || !account.privateKey) {
+    window.alert('Not login yet.')
+    return
+  }
+
+  const matchId = getField('match', true)
+  if (matchId === undefined) {
+    window.alert('No match selected.')
+    return
+  }
+
+  const rows = byId('userRows')
+  rows.innerHTML = ''
+
+  const getUsers = tweb3
+    .contract('contract.spacerenter')
+    .methods.exportState(['shared', 'users'])
+    .sendCommit()
+  const getPlayers = tweb3
+    .contract('contract.spacerenter')
+    .methods.exportState(['shared', 'data', matchId, 'players'])
+    .sendCommit()
+
+  Promise.all([getUsers, getPlayers])
+    .then(([{ returnValue: users }, { returnValue: players }]) => {
+      const entries = Object.entries(players)
+      if (!players || !entries.length) {
+        byId('count').textContent = 'No players'
+        return
+      }
+      byId('count').textContent = players.length
+      entries.forEach(([addr, { predict, timestamp }], i) => {
+        const u = users[addr]
+        decryptUser(u, account)
+
+        const row = document.createElement('TR')
+        row.innerHTML = makeRow(i, u, 'Chọn button số ' + (predict + 1)) // new Date(timestamp).toString()
+        rows.append(row)
+      })
+    })
+    .catch(e => {
+      console.error(e)
+      window.alert(e.message)
+    })
 })
 
 byId('getWinners').addEventListener('click', function (e) {
   e.preventDefault()
 
-  let account, matchId
-  try {
-    account = checkKey()
-    matchId = getField('match')
-  } catch (e) {
-    window.alert(e.message)
+  const account = window.account
+  if (!account || !account.privateKey) {
+    window.alert('Not login yet.')
+    return
+  }
+
+  const matchId = getField('match', true)
+  if (matchId === undefined) {
+    window.alert('No match selected.')
     return
   }
 

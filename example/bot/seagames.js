@@ -83,7 +83,7 @@ class LuckyBot extends SurveyBot {
   Các giải thưởng may mắn được lựa chọn ngẫu nhiên bởi hợp đồng thông minh chạy trên ${linkPlatform}<br><br>
   Có vấn đề xin liên lạc ${linkSky} hoặc chat Telegram tại ${linkTelegram}.`
 
-  @state @view privacy = `Số điện thoại được mã hoá hoàn toàn ở mức bảo mật cao nhất. SkyGarden không chia sẻ số điện thoại cho bên thứ 3. Hệ thống phần mềm tự động sẽ nhắn tin cho những người trúng giải.`
+  @state @view privacy = `Số điện thoại được mã hoá hoàn toàn ở mức bảo mật cao nhất. SkyGarden không chia sẻ số điện thoại với bên thứ 3. Hệ thống phần mềm sẽ tự động nhắn tin cho những người trúng giải.`
 
   @state @view publicKey = 'cStHMto8vNjeoySikZkS2dUAWjpqZkGQezvVh2mys7t5'
 
@@ -92,9 +92,11 @@ class LuckyBot extends SurveyBot {
   }
 
   @view botInfo() {
-    const oldPredict = this.getPlayer(msg.sender).predict != null
+    const player = this.getPlayer(msg.sender)
+    const oldPredict = player.predict != null
     const info = this.getMatchInfo()
     const desc = this.description + `<br><br><b>Trận ${info.host} - ${info.visitor}</b> (${formatTime(info.deadline)})`
+    const user = this.getUser(msg.sender)
 
     return {
       name: this.name,
@@ -102,6 +104,9 @@ class LuckyBot extends SurveyBot {
       stateAccess: 'read',
       startButtonText: !oldPredict ? this.startButtonText : "Chơi lại",
       showMenuButton: oldPredict,
+      match: info,
+      player,
+      user: user.name ? { name: user.name } : undefined,
       commands: [
         { text: "Chơi lại", value: "start" },
         { text: "Kết quả", value: "result", stateAccess: "read" },
@@ -162,7 +167,7 @@ class LuckyBot extends SurveyBot {
   }
 
   @view getMatchId() {
-    return this.settings.get('matchId', 'vie_lao')
+    return this.settings.get('matchId', 'vie_ind')
   }
 
   @transaction setMatchId(matchId: string,) {
@@ -184,9 +189,9 @@ class LuckyBot extends SurveyBot {
     return this.data.get([matchId || this.getMatchId(), 'info'], {})
   }
 
-  getPrediction(p) {
+  getPrediction(p, matchId) {
     p = +p
-    const answers = this.getMatchInfo().answers
+    const answers = this.getMatchInfo(matchId).answers
     return answers[p]
   }
 
@@ -212,7 +217,7 @@ class LuckyBot extends SurveyBot {
 
   @transaction setResult(result: number, matchId: ?string) {
     this.expectAdmin()
-    const info = this.getMatchInfo()
+    const info = this.getMatchInfo(matchId)
 
     if (info.answers[result] == null) {
       throw new Error('Invalid result.')
@@ -225,7 +230,10 @@ class LuckyBot extends SurveyBot {
       info.rand = Math.random()
     }
 
-    this.setMatchInfo(matchId || this.getMatchId(), info)
+    matchId = matchId || this.getMatchId()
+    this.setMatchInfo(matchId, info)
+
+    this.emitEvent('ResultSet', { matchId, result }, ['matchId'])
   }
 
   filterPlayers(info, players) {
@@ -287,13 +295,13 @@ class LuckyBot extends SurveyBot {
     let reply = ''
     const data = this.data.value()
     if (!data) return 'Chưa có kết quả'
-    Object.entries(data).forEach(([, {info = {}, players = {}}]) => {
+    Object.entries(data).reverse().forEach(([matchId, {info = {}, players = {}}]) => {
       const me = players[who]
       if (me && (me.predict != null)) {
         if (reply) reply += '<br><br>'
         reply += `<b>Trận ${info.host} - ${info.visitor}</b><br>
         Câu hỏi: ${info.question}<br>
-        Bạn trả lời: ${this.getPrediction(me.predict)}<br>
+        Bạn trả lời: ${this.getPrediction(me.predict, matchId)}<br>
         `
         if (info.result == null) {
           reply += 'Kết quả: chưa có'
@@ -317,7 +325,7 @@ class LuckyBot extends SurveyBot {
             }
             
           } else {
-            reply += `Đáp án đúng: ${this.getPrediction(info.result)}. Bạn đoán sai.`
+            reply += `Đáp án đúng: ${this.getPrediction(info.result, matchId)}. Bạn đoán sai.`
           }
         }
       }

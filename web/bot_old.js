@@ -395,23 +395,18 @@ async function connectBot (botAddr) {
   setCommands(commands, botInfo.stateAccess)
 
   // display bot info
-  // await say(`<b>${botInfo.name}</b><br>${botInfo.description}`, { type: 'html' })
-
-  // const info = botInfo.match
-  // const hello = 'Dự đoán trận ' + info.host + ' - ' + info.visitor
-  // await say('Bạn đã sẵn sàng chưa?')
-
-  // const startButtons = [{ text: botInfo.startButtonText || 'Start', value: 'start' }]
-  //   if (botInfo.showMenuButton) {
-  //     startButtons.push({ text: 'Menu', value: 'menu' })
-  //   }
-  //   sayButton(startButtons).then(r => {
-  //     if (r.value === 'start') {
-  //       pushToQueue('command', r, botInfo.stateAccess)
-  //     } else {
-  //       openNav()
-  //     }
-  //   })
+  await say(`<b>${botInfo.name}</b><br>${botInfo.description}`, { type: 'html', cssClass: 'bot-intro' })
+  const startButtons = [{ text: botInfo.startButtonText || 'Start', value: 'start' }]
+  if (botInfo.showMenuButton) {
+    startButtons.push({ text: 'Menu', value: 'menu' })
+  }
+  sayButton(startButtons).then(r => {
+    if (r.value === 'start') {
+      pushToQueue('command', r, botInfo.stateAccess)
+    } else {
+      openNav()
+    }
+  })
 
   setInterval(function () {
     handleQueue(contract, botInfo.stateAccess)

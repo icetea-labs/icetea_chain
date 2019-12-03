@@ -1,0 +1,116 @@
+<html>
+
+<head>
+    <title>Dự đoán SeaGames cùng SkyGarden</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://skygarden.vn/favicon.png?ver=88" rel="shortcut icon">
+    <link rel="stylesheet" href="botui.min.css" />
+    <link rel="stylesheet" href="botui-theme-default.css" />
+    <link rel="stylesheet" type="text/css" href="style.css">
+    <link rel="stylesheet" type="text/css" href="bot.css">
+    <meta property="og:title" content="Dự đoán SeaGames cùng SkyGarden">
+    <meta property="og:type" content="website">
+    <meta name="description" content="Dự đoán kết quả của đội tuyển bóng đá Việt Nam tại SeaGames để nhận phần thưởng.">
+    <meta property="og:image" content="https://bot.skygarden.vn/nyc.png">
+    <meta property="og:description" content="Dự đoán kết quả của đội tuyển bóng đá Việt Nam tại SeaGames để nhận phần thưởng.">
+    <style>
+        body {
+            background-color: #f5f5f5!important;
+        }
+        .botui-container {
+            background-color: transparent;
+            height: auto;
+        }
+        .banner {
+            padding: 16px 20px;
+            max-width: 800px;
+            margin: 0 auto;
+            box-sizing: border-box;
+        }
+        .banner img {
+            height: 48px;
+        }
+        #bot-option {
+            top: -56px;
+            background-color: #d80000;
+        }
+        #bot-option a {
+            color: #f8f8f8;
+        }
+        #bot-option a:hover {
+            color: #fff;
+        }
+        #bot-menu {
+            top: -60px;
+            right: 22px;
+            border-radius: 5px;
+            height: 320px;
+        }
+        #bot-menu a {
+            font-size: 18px;
+        }
+        .botui-message-content {
+            background-color: #ebebeb;
+        }
+        .bot-intro .botui-message-content {
+            background-color: transparent;
+            border: 1px solid #d80000;
+        }
+    </style>
+</head>
+
+<body>
+    <div class='banner'>
+        <a href='https://skygarden.vn'><img src="https://skygarden.vn/html-websky/assets/images/logo-2.png"></a>
+        <div id="user-address" style="display: none;">
+                <span>You: </span>
+                <span id="address"></span>
+        </div>
+        <div id='bot-option'>
+            <a href='#' id='show-bot-option'>MENU</a>
+        </div>
+    </div>
+    <div id="content">
+         <div id="my-botui-app">
+            <bot-ui></bot-ui>
+        </div>
+
+        <div id='bot-menu'>
+            <a href="#" class="closebtn" id='hide-bot-option'>&times;</a>
+            <div id='bot-menu-items'></div>
+        </div>
+    </div>
+    <script>window.botAddress='contract.skygarden_seagames';</script>
+    <script src="bot_old.js"></script>
+
+<!-- Facebook Pixel Code -->
+<script>
+    !function(f,b,e,v,n,t,s)
+    {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+    n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+    if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+    n.queue=[];t=b.createElement(e);t.async=!0;
+    t.src=v;s=b.getElementsByTagName(e)[0];
+    s.parentNode.insertBefore(t,s)}(window, document,'script',
+    'https://connect.facebook.net/en_US/fbevents.js');
+    fbq('init', '451460432172886');
+    fbq('track', 'PageView');
+</script>
+<noscript><img height="1" width="1" style="display:none"
+    src="https://www.facebook.com/tr?id=451460432172886&ev=PageView&noscript=1"
+    />
+</noscript>
+<!-- End Facebook Pixel Code -->
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-111432767-2"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'UA-111432767-2');
+</script>
+
+</body>
+
+</html>
