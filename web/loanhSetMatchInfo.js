@@ -110,7 +110,24 @@ byId('showkey').addEventListener('click', function (e) {
 
 byId('match').addEventListener('change', function () {
   loadAnswers()
+  hideBtResult()
 })
+
+function hideBtResult () {
+  const matchId = byId('match').value
+  const status = _matchInfo[matchId].status
+  if (status !== 2) {
+    byId('setResult').disabled = true
+  } else {
+    byId('setResult').disabled = false
+  }
+
+  if (status !== 0) {
+    byId('setCurrentMatch').disabled = true
+  } else {
+    byId('setCurrentMatch').disabled = false
+  }
+}
 
 function loadAnswers () {
   const matchId = byId('match').value
@@ -124,9 +141,10 @@ function loadAnswers () {
     element.value = i
     byId('matchAnswers').append(element)
   }
+  byId('getMatch').style.visibility = 'hidden'
 }
 
-byId('loadMatch').addEventListener('click', function (e) {
+byId('getMatch').addEventListener('click', function (e) {
   try {
     checkKey()
   } catch (e) {
@@ -148,9 +166,9 @@ byId('setResult').addEventListener('click', function (e) {
   const matchId = byId('match').value
   let matchAnswers = byId('matchAnswers').value
   matchAnswers = parseInt(matchAnswers)
-  // console.log("matchAnswers", matchAnswers);
+  console.log('matchAnswers', matchAnswers, matchId)
   tweb3
-    .contract('contract.seagames')
+    .contract('contract.skygarden_seagames')
     .methods.setResult(matchAnswers, matchId)
     .sendCommit()
     .then(r => {
@@ -168,17 +186,47 @@ function loadMatch () {
     .contract('contract.spacerenter')
     .methods.exportState(['shared', 'data'])
     .sendCommit()
+
   Promise.all([getData]).then(([{ returnValue: data }]) => {
     console.log(data)
     _matchInfo = data
     var itens = Object.keys(data)
+    if (itens.length < 1) return
+    var newMatch = Object.keys(data).map(function (key) {
+      return { key, ...data[key] }
+    })
+    newMatch = newMatch.sort(function (a, b) {
+      return b.info.deadline - a.info.deadline
+    })
+    console.log('new match', newMatch)
     // set empty
     byId('match').options.length = 0
-    for (var i = 0; i < itens.length; i++) {
-      var item = itens[i]
+    var currentTimestam = Date.now()
+
+    for (var i = 0; i < newMatch.length; i++) {
+      var item = newMatch[i]
       var element = document.createElement('option')
-      element.innerText = item
-      element.value = item
+      var status = 'Chưa bắt đầu'
+      _matchInfo[item.key].status = 0
+      // console.log("key", item.key);
+      // console.log("item.info.deadline", item.info.deadline);
+      // console.log("currentTimestam", currentTimestam);
+      if (!isNaN(item.info.result)) {
+        status = 'Kết thúc'
+        _matchInfo[item.key].status = 2
+      } else if (
+        item.info.deadline < currentTimestam &&
+        currentTimestam < item.info.deadline + 95 * 60 * 1000
+      ) {
+        status = 'Đang đá'
+        _matchInfo[item.key].status = 1
+      } else if (item.info.deadline < currentTimestam) {
+        status = 'Vừa kết thúc'
+        _matchInfo[item.key].status = 2
+      }
+
+      element.innerText = item.key + ` (${status})`
+      element.value = item.key
       byId('match').append(element)
     }
 
@@ -199,6 +247,7 @@ function loadMatch () {
       } catch (e) {}
     }
     loadAnswers()
+    hideBtResult()
   })
 }
 
@@ -212,17 +261,18 @@ byId('setMatchInfo').addEventListener('submit', function (e) {
   }
 
   const info = getAllField()
+  console.log('info', info)
   const date = getField('datePicker')
   const matchId =
     nameToId(info.host) + '-' + nameToId(info.visitor) + '-' + date
 
   tweb3
-    .contract('contract.seagames')
+    .contract('contract.skygarden_seagames')
     .methods.setMatchInfo(matchId, info)
     .sendCommit()
     .then(r => {
       console.log(r)
-      // window.alert(e.message);
+      window.alert('set set match info done!')
     })
     .catch(e => {
       console.error(e)
@@ -233,12 +283,12 @@ byId('setMatchInfo').addEventListener('submit', function (e) {
   const botname = getField('botname')
 
   tweb3
-    .contract('contract.seagames')
+    .contract('contract.skygarden_seagames')
     .methods.setBotInfo(botname, desc, 'Chơi lại')
     .sendCommit()
     .then(r => {
       console.log(r)
-      // window.alert(e.message);
+      window.alert('set set bot info done!')
     })
     .catch(e => {
       console.error(e)

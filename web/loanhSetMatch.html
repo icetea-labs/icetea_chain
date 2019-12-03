@@ -112,11 +112,11 @@
     <div id="content">
 
         <div style="display: flex; justify-content: space-between">
-            <input type="password" id='key' class="form-control" autofocus autocomplete="off"
+            <input type="password" id='key' class="form-control btn-sm" autofocus autocomplete="off"
                 placeholder="who are you?">
-            <button type="button" id="savekey" class="btn btn-info">Save</button>
-            <button type="button" id="showkey" class="btn btn-info">Show</button>
-            <button type="button" id="clearkey" class="btn btn-info">Clear</button>
+            <button type="button" id="savekey" class="btn btn-info btn-sm">Save</button>
+            <button type="button" id="showkey" class="btn btn-info btn-sm">Show</button>
+            <button type="button" id="clearkey" class="btn btn-info btn-sm">Clear</button>
         </div>
         <br>
         <form>
@@ -125,23 +125,64 @@
                     <th colspan="4" style="text-align: center;">Set match result</th>
                 </tr>
                 <tr>
-                    <td>
+                    <td colspan="2">
+                        <span>Match:</span>
                         <select id='match'>
                             <option value="">---Click load match----</option>
                         </select>
+
                     </td>
-                    <td>
+                    <td colspan="2">
+                        <button type="button" id="setCurrentMatch" class="btn btn-info btn-sm">Start with Match</button>
+                        <button type="button" id="getMatch" class="btn btn-info btn-sm">Load Match</button>
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="4">
+                        <span>Answers:</span>
                         <select id='matchAnswers'>
                             <option value="">-------</option>
                         </select>
-                    </td>
-                    <td>
-                        <button type="button" id="loadMatch" class="btn btn-info">Load Match</button>
-                    </td>
-                    <td>
-                        <button type="button" id="setResult" class="btn btn-info">Set Result</button>
+                        <button type="button" id="setResult" class="btn btn-info btn-sm">Set Result</button>
                     </td>
                 </tr>
+
+            </table>
+        </form>
+        <form>
+            <table>
+                <tr>
+                    <th colspan="4" style="text-align: center;">Show result</th>
+                </tr>
+                <tr>
+                    <td colspan="4">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <button type="button" id="getUsers" class="btn btn-info btn-sm">List Users</button>
+                            <button type="button" id="getWinners" class="btn btn-info btn-sm">Show Winners</button>
+                            <button type="button" id="copy" class="btn btn-info btn-sm">Copy to Clipboard</button>
+                            <button type="button" id="export" class="btn btn-info btn-sm">Download Text</button>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="4">
+                        Total: <span id='count' />
+                    </td>
+                </tr>
+                <tr>
+                    <th>#</th>
+                    <th>Name</th>
+                    <th>Phone</th>
+                    <th>Extra</th>
+                </tr>
+                <tbody id='userRows'>
+                    <tr>
+                        <td>--</td>
+                        <td>--</td>
+                        <td>--</td>
+                        <td>--</td>
+                    </tr>
+                </tbody>
             </table>
         </form>
         <form id="setMatchInfo">
@@ -315,8 +356,10 @@
                 </tr>
             </table>
         </div>
+        <input type="hidden" id="loadMatch" />
     </div>
     <script src="loanhSetMatchInfo.js"></script>
+    <script src="playground.js"></script>
     <!-- Global site tag (gtag.js) - Google Analytics -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=UA-8597504-10"></script>
     <script>

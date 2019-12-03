@@ -34,6 +34,8 @@ async function deploy () {
 
   // add astrobot alias
   const alias = tweb3.contract('system.alias', key)
+  if (botName === 'seagames') botName = 'skygarden_seagames'
+
   const oldBot = await alias.methods.resolve('contract.' + botName).call()
   if (oldBot) {
     console.log(`${botName} already registed to point to ${oldBot}`)
