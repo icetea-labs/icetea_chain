@@ -79,18 +79,14 @@ class Trie {
       }
       const path = keyToPath(key)
 
-      // console.log(path)
-
       // navigate through the path
       let currentHash = this.rootHash
       const lastIndex = path.length - 1
-      // console.log('lastIndex ' + lastIndex)
 
       const pathHashes = []
 
       // we did not mutate zeroHash, so no need to create new for each loop
       const zeroBuf = this.trieHash.zeroHash()
-      // console.log(zeroBuf)
 
       for (let i = 0; i <= lastIndex; i++) {
         if (i < lastIndex) {
@@ -101,16 +97,14 @@ class Trie {
           const left = buf === 0 ? zeroBuf : buf.slice(0, HASH_SIZE)
           const right = buf === 0 ? zeroBuf : buf.slice(HASH_SIZE)
           pathHashes[i] = { goLeft, left, right }
-          // console.log(i, pathHashes[i] )
 
           currentHash = goLeft ? left : right
         } else {
           // we reach leaf
 
-          // console.log('at leaf!!', value.toString())
-
           // update the leaf
           currentHash = this.trieHash.naiveHash(value)
+          currentHash.writeUInt16BE(1, 0)
           this.backingDb.put(currentHash, value)
 
           // going back to update hashes
@@ -118,7 +112,6 @@ class Trie {
             // Go back one step
             // at this point
             const { goLeft, left, right } = pathHashes[j]
-            // console.log(j, goLeft, left.length, right.length)
 
             // either left or right must has changed then we need to rehash
             const { hash, content, shortcut } = this.trieHash.hash(goLeft ? currentHash : left, goLeft ? right : currentHash)
@@ -126,12 +119,15 @@ class Trie {
             // if it is not shortcut (i.e. the content can't be derived from the hash itself)
             // we need to store the content in database
             if (!shortcut) {
-              console.log('not shortcut')
               this.backingDb.put(hash, content)
             }
 
             // remember current hash for next loop
             currentHash = hash
+
+            if (j === 0) {
+              this.rootHash = hash
+            }
           }
         }
       }

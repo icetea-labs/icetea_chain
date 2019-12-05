@@ -1,20 +1,24 @@
 // A simple in-memory key-value store
 
 exports.MemDB = class {
-    #map = new Map()
+    #map = {}
 
     get (key) {
-      return this.#map.get(key)
+      return this.#map[key.toString('base64')]
     }
 
     put (key, value) {
-      return this.#map.set(key, value)
+      const newValue = Buffer.allocUnsafe(value.length)
+      value.copy(newValue)
+      this.#map[key.toString('base64')] = newValue
     }
 
     dump () {
-      this.#map.forEach(([key, value]) => {
-        console.log(`${key.toString()}: ${value.toString()}`)
+      console.log('dump')
+      const entries = Object.entries(this.#map)
+      entries.forEach(([key, value]) => {
+        console.log(Buffer.from(key, 'base64'), value)
       })
-      console.log(this.#map.size)
+      console.log(entries.length)
     }
 }

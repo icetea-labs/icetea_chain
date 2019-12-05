@@ -14,7 +14,6 @@ const naiveHash = buf => createHash(HASH_ALGO).update(buf).digest()
 // left shift for one bit
 const leftShiftOne = (buf, lastBit) => {
   lastBit = lastBit === 1 ? 1 : 0
-  // console.log(buf.length)
   const last = buf.length - 1
   for (let i = last; i >= 0; i--) {
     const ubyte = buf.readUInt8(i)
@@ -30,16 +29,16 @@ const leftShiftOne = (buf, lastBit) => {
 }
 
 // right shift for one bit
-const rightShiftOne = buf => {
-  let mask = 0x7f // first bit 0, remaining 1
+const rightShiftOne = (buf, destBuf, destOffset) => {
+  let mask = 0
   const n = buf.length
   for (let i = 0; i < n; i++) {
     const ubyte = buf.readUInt8(i)
     const shifted = (ubyte >> 1) | mask
-    buf.writeUInt8(shifted, i)
+    destBuf.writeUInt8(shifted, i + destOffset)
 
-    // keep first bit only, set remaining bits to 1
-    mask = ubyte | 0x7f
+    // save the last bit to set to first bit of next byte
+    mask = (ubyte & 1) * 0x80
   }
 
   return buf
@@ -65,7 +64,6 @@ const canShortcut = (l, r, leftIs0, rightIs0) => {
   // if nonZero < 2 ** 240 || nonZero >= 2 ** 255, cannot shortcut
   const uint16 = nonZero.readUInt16BE(0)
   if (uint16 === 0 || uint16 > 0x7fff) return false
-  // console.log('at 2')
 
   // one side zero and the other size in range
   return true
@@ -74,8 +72,6 @@ const canShortcut = (l, r, leftIs0, rightIs0) => {
 const hash = (l, r) => {
   const leftIs0 = isAllZero(l)
   const rightIs0 = isAllZero(r)
-
-  // console.log(leftIs0, l, rightIs0, r)
 
   if (leftIs0 && rightIs0) {
     return {
@@ -93,11 +89,10 @@ const hash = (l, r) => {
       shortcut: true
     }
   } else {
-    // console.log('cannot')
     const content = Buffer.concat([l, r], HASH_SIZE * 2)
     const hash = naiveHash(content)
     // clear the first 15 bit and set 16th bit to 1
-    hash.writeUInt16BE(0, 1)
+    hash.writeUInt16BE(1, 0)
     return {
       hash,
       content,
@@ -125,10 +120,9 @@ const dehash = hash => {
     const lastBit = hash.readUInt8(HASH_SIZE - 1) & 1
 
     // shift right one bit
-    rightShiftOne(hash)
 
     const buf = zeroHash(HASH_SIZE * 2)
-    hash.copy(buf, lastBit * HASH_SIZE)
+    rightShiftOne(hash, buf, lastBit * HASH_SIZE)
 
     return buf
   }
