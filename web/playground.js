@@ -112,7 +112,7 @@ byId('loginZone').addEventListener('submit', function (e) {
     .sendCommit()
   Promise.all([getData]).then(([{ returnValue: data }]) => {
     // console.log(data);
-    var items = Object.keys(data)
+    var items = Object.keys(data).reverse()
     // set empty
     byId('match').options.length = 0
     for (var i = 0; i < items.length; i++) {
@@ -122,25 +122,6 @@ byId('loginZone').addEventListener('submit', function (e) {
       const { host, visitor, deadline } = data[key].info
       element.textContent = `${host} - ${visitor} (${new Date(deadline).toDateString()})`
       byId('match').append(element)
-    }
-
-    // set default selection
-    const today = new Date()
-    for (var j = 0; j < items.length; j++) {
-      try {
-        var opt = items[j]
-        var matchDate = opt.slice(-10)
-        matchDate = new Date(matchDate)
-
-        if (today.getDate() === matchDate.getDate()) {
-          byId('match').value = opt
-          break
-        } else if (today.getDate() <= matchDate.getDate() + 1) {
-          byId('match').value = opt
-        }
-      } catch (e) {
-        console.warn(e)
-      }
     }
   })
 })
@@ -185,7 +166,7 @@ byId('getPlayers').addEventListener('click', function (e) {
         decryptUser(u, account)
 
         const row = document.createElement('TR')
-        row.innerHTML = makeRow(i, u, 'Chọn button số ' + predict) // new Date(timestamp).toString()
+        row.innerHTML = makeRow(i, u, 'Chọn button số ' + (predict + 1)) // new Date(timestamp).toString()
         rows.append(row)
       })
     })
