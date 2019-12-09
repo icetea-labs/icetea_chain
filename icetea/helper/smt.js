@@ -1,6 +1,7 @@
 // // A replacement for patricial with same interface and same backing DB
 
 // const createTrie = require('../trie')
+// const serializer = require('../state/serializer').getSerializer()
 // const async = require('async')
 // const newDB = require('./db')
 // const config = require('../config')
