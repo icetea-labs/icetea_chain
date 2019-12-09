@@ -160,7 +160,7 @@ byId('getPlayers').addEventListener('click', function (e) {
         byId('count').textContent = 'No players'
         return
       }
-      byId('count').textContent = players.length
+      byId('count').textContent = entries.length
       entries.forEach(([addr, { predict, timestamp }], i) => {
         const u = users[addr]
         decryptUser(u, account)
