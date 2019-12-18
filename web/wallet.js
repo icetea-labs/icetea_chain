@@ -1,13 +1,13 @@
 import $ from 'jquery'
-import { ecc, AccountType } from '@iceteachain/common'
+import { codec, ecc, AccountType } from '@iceteachain/common'
 import tweb3 from './tweb3'
 import { loadFromStorage } from './helper'
 // import { functionTypeAnnotation } from '@babel/types'
-// import bip39 from 'bip39'
-// import HDKey from 'hdkey'
+import { validateMnemonic, mnemonicToSeedSync } from 'bip39'
+import { fromMasterSeed } from 'hdkey'
 
 const newKeyPairWithAddress = ecc.newKeys
-// const toPubKeyAndAddress = ecc.toPubKeyAndAddress
+const toPubKeyAndAddress = ecc.toPubKeyAndAddress
 
 const handleError = function (error) {
   console.error(error)
@@ -41,10 +41,12 @@ async function generateKeys (type) {
   }
 }
 
-// document.getElementById('seePublicKey').addEventListener('click', function () {
-//   var privateKey = document.getElementById('your_private_key').value.trim()
-//   document.getElementById('your_public_key').value = toPubKeyAndAddress(privateKey).address
-// })
+document.getElementById('seePublicKey').addEventListener('click', function () {
+  var privateKey = document.getElementById('your_private_key').value.trim()
+  const data = toPubKeyAndAddress(privateKey)
+  $('#your_public_key').text(data.publicKey)
+  $('#your_address').text(data.address)
+})
 
 document.getElementById('clear').addEventListener('click', function () {
   window.localStorage.removeItem('_icetea_accounts')
@@ -76,6 +78,29 @@ function showMessage (text, time = 4000) {
   }, time)
 }
 
+function toPkey (mnemonic, type) {
+  console.log(mnemonic, type)
+  if (!validateMnemonic(mnemonic)) {
+    throw new Error('Wrong seed format. Seed must be 12 words.')
+  }
+
+  const seed = mnemonicToSeedSync(mnemonic)
+  const hdkey = fromMasterSeed(seed).derive('m’/44’/349’/0’/0')
+
+  let pkey, found
+  for (let i = 0; !found; i++) {
+    if (i > 100) {
+      // there must be something wrong, because the ratio of regular account is 50%
+      throw new Error('Too many tries deriving regular account from seed.')
+    }
+    pkey = hdkey.deriveChild(i).privateKey
+    const { address } = ecc.toPubKeyAndAddress(pkey)
+    found = codec.isAddressType(address, type)
+  }
+
+  return pkey
+}
+
 $(document).ready(async function () {
   await loadFromStorage()
   fillWallet()
@@ -86,6 +111,16 @@ $(document).ready(async function () {
       $('#currentDefaultAcc').text(tweb3.wallet.defaultAccount)
       await tweb3.wallet.saveToStorage('123')
       showMessage('Success')
+    } catch (error) {
+      handleError(error)
+    }
+  })
+
+  $('#showDetailsAcc').on('click', () => {
+    try {
+      var contract = document.getElementById('wallet').value
+      var account = tweb3.wallet.getAccountByAddress(contract)
+      window.alert(codec.toKeyString(account.privateKey))
     } catch (error) {
       handleError(error)
     }
@@ -103,27 +138,25 @@ $(document).ready(async function () {
       var account = tweb3.wallet.importAccount(privateKey)
       tweb3.wallet.defaultAccount = account.address
       await tweb3.wallet.saveToStorage('123')
-      showMessage('Success! Import account set as default.')
+      showMessage('Success! Imported account set as default.')
       fillWallet()
     } catch (error) {
       handleError(error)
     }
   })
 
-  // $('#generateMnemonic').on('click', async () => {
-  //   try {
-  //     var mnemonic = bip39.generateMnemonic()
-  //     $('#generated_seed_word').val(mnemonic)
-  //     // var seed = bip39.mnemonicToSeedHex(mnemonic)
-  //     var seed = bip39.mnemonicToSeed(mnemonic)
-  //     var hdkey = HDKey.fromMasterSeed(seed)
-  //     // console.log(hdkey.privateKey)
-  //     var account = tweb3.wallet.importAccount(hdkey.privateKey)
-  //     $('#generated_private_key_seed').val(codec.toString(account.privateKey, 'base58'))
-  //     $('#generated_public_key_seed').val(account.address)
-  //     fillWallet()
-  //   } catch (error) {
-  //     handleError(error)
-  //   }
-  // })
+  $('[data-import-seed-type]').on('click', async (event) => {
+    try {
+      var mnemonic = $('#seed_phrases').val()
+      var privateKey = toPkey(mnemonic, $(event.target).attr('data-import-seed-type'))
+      var account = tweb3.wallet.importAccount(privateKey)
+      tweb3.wallet.defaultAccount = account.address
+      await tweb3.wallet.saveToStorage('123')
+      showMessage('Success! Imported account set as default.')
+
+      fillWallet()
+    } catch (error) {
+      handleError(error)
+    }
+  })
 })
