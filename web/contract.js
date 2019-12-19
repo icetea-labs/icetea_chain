@@ -158,6 +158,12 @@ async function fillFuncs () {
         signatures[item] = signature
       }
     })
+
+    const fn = (new URL(document.location)).searchParams.get('fn')
+    if (fn) {
+      document.getElementById('name').value = fn
+      document.getElementById('params').focus()
+    }
   } catch (error) {
     console.log(error)
     window.alert(String(error))
