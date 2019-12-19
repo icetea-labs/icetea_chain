@@ -162,6 +162,7 @@ async function fillFuncs () {
     const fn = (new URL(document.location)).searchParams.get('fn')
     if (fn) {
       document.getElementById('name').value = fn
+      fillSignature()
       document.getElementById('params').focus()
     }
   } catch (error) {
