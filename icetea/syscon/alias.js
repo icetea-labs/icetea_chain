@@ -199,6 +199,12 @@ exports.resolve = function (alias) {
   return (aliases[alias] || {}).address
 }
 
+exports.byAddress = function (address) {
+  const storage = this.unsafeStateManager().getAccountState(ALIAS_ADDR).storage || {}
+  const map = storage[ADDR_KEY] || {}
+  return map[address]
+}
+
 exports.ensureAddress = function (aliasOrAddress) {
   return exports.resolve(aliasOrAddress) || aliasOrAddress
 }

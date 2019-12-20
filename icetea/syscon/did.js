@@ -112,7 +112,7 @@ const METADATA = Object.freeze({
     decorators: ['transaction'],
     params: [
       { name: 'ownerAddr', type: 'address' },
-      { name: 'contractAddr', type: ['Array', 'address'] },
+      { name: 'contractAddr', type: ['Array', 'string'] },
       { name: 'tokenAddr', type: 'address' },
       { name: 'ms', type: 'number' }
     ],
@@ -237,9 +237,22 @@ function _checkAccessToken (props, { signers, to }, now) {
     return false
   }
 
-  const tokens = props.tokens[to]
-  if (!tokens) return false
-  return signers.some(s => _checkTokenValid(tokens[s], now))
+  const addrTokens = props.tokens[to]
+  if (addrTokens) {
+    const r = signers.some(s => _checkTokenValid(addrTokens[s], now))
+    if (r) return true
+  }
+
+  // convert 'to' to alias
+  const aliasContract = exports.systemContracts().Alias
+  const alias = aliasContract.byAddress(to)
+  if (!alias) return false
+
+  // get token by alias
+  const aliasTokens = props.tokens[alias]
+  if (!aliasTokens) return false
+
+  return signers.some(s => _checkTokenValid(aliasTokens[s], now))
 }
 
 function _checkClaim (data, now) {
