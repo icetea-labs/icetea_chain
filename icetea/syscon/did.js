@@ -22,6 +22,21 @@ const METADATA = Object.freeze({
     ],
     returnType: ['object', 'undefined']
   },
+  queryArray: {
+    decorators: ['view'],
+    params: [
+      { name: 'addressArray', type: 'Array' }
+    ],
+    returnType: 'Array'
+  },
+  queryByTags: {
+    decorators: ['view'],
+    params: [
+      { name: 'searchTerms', type: 'object' },
+      { name: 'options', type: ['object', 'undefined'] }
+    ],
+    returnType: 'Array'
+  },
   // Change register to private, since it is complicated to expose
   // (we must validate structure carefully if exposed)
   /*
@@ -289,6 +304,48 @@ exports.run = (context) => {
     query (address) {
       const props = context.getState(address)
       return props ? _.cloneDeep(props) : undefined
+    },
+
+    queryArray (addressArray) {
+      return addressArray.reduce((result, addr) => {
+        result.push(contract.query(addr))
+        return result
+      }, [])
+    },
+
+    // searchTerms is a plan object, such as { key: 'textToSearch' }
+    queryByTags (searchTerms, { includeAlias = true, maxItems = 10 } = {}) {
+      const keys = context.getStateKeys()
+      const resultKeys = []
+      const result = []
+      keys.some(k => {
+        const v = context.getState(k)
+        if (v && v.tags) {
+          const ok = Object.entries(searchTerms).some(([sk, sv]) => {
+            const tagValue = v.tags[sk]
+            const tagString = String(tagValue).toLowerCase()
+            return (sv === tagValue || tagString.includes(String(sv).toLowerCase()))
+          })
+          if (ok) {
+            includeAlias && resultKeys.push(k)
+            result.push({ address: k, tags: _.cloneDeep(v.tags) })
+            return result.length >= maxItems
+          }
+        }
+      })
+
+      if (includeAlias) {
+        const aliases = exports.systemContracts().Alias.byAddressArray(resultKeys)
+        if (aliases.aliasCount) {
+          result.forEach((v, i) => {
+            if (aliases[i]) {
+              v.alias = aliases[i]
+            }
+          })
+        }
+      }
+
+      return result
     },
 
     // NOTE: this method is private (not exposed via metadata, so we won't validate parameter structure)
@@ -678,4 +735,19 @@ exports.checkPermissionFromContract = function (address, contract) {
   }
 
   exports.checkPermission(address, tx, block)
+}
+
+exports.query = function (address) {
+  const storage = this.unsafeStateManager().getAccountState(DID_ADDR).storage || {}
+  const props = storage[address]
+  return props ? _.cloneDeep(props) : undefined
+}
+
+exports.queryArray = function (addressArray) {
+  const storage = this.unsafeStateManager().getAccountState(DID_ADDR).storage || {}
+  return addressArray.reduce((result, address) => {
+    const props = storage[address]
+    result.push(props ? _.cloneDeep(props) : undefined)
+    return result
+  }, [])
 }

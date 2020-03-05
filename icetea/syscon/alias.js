@@ -11,7 +11,8 @@ const METADATA = Object.freeze({
   query: {
     decorators: ['view'],
     params: [
-      { name: 'partOfAlias', type: ['string', 'RegExp'] }
+      { name: 'partOfAlias', type: ['string', 'RegExp'] },
+      { name: 'includeTags', type: ['boolean', 'undefined'] }
     ],
     returnType: ['object', 'Array']
   },
@@ -28,6 +29,13 @@ const METADATA = Object.freeze({
       { name: 'address', type: 'pureaddress' }
     ],
     returnType: ['string', 'undefined']
+  },
+  byAddressArray: {
+    decorators: ['view'],
+    params: [
+      { name: 'addressArray', type: 'Array' }
+    ],
+    returnType: 'Array'
   },
   register: {
     decorators: ['transaction'],
@@ -84,12 +92,17 @@ exports.run = (context, options) => {
   const msgParams = checkMsg(msg, METADATA, { sysContracts: this.systemContracts() })
 
   const contract = {
-    query (textOrRegEx) {
+    query (textOrRegEx, includeTags) {
       const aliases = loadAliases(context)
-
+      const did = includeTags ? exports.systemContracts().Did : undefined
       return Object.keys(aliases).reduce((prev, alias) => {
         if (isSatisfied(alias, textOrRegEx)) {
-          prev[alias] = aliases[alias]
+          const item = aliases[alias]
+          if (includeTags) {
+            const info = did.query(aliases[alias].address)
+            info && info.tags && (item.tags = info.tags)
+          }
+          prev[alias] = item
         }
         return prev
       }, {})
@@ -103,6 +116,14 @@ exports.run = (context, options) => {
     byAddress (address) {
       const map = loadAddrMap(context)
       return map[address]
+    },
+
+    byAddressArray (addressArray) {
+      const map = loadAddrMap(context)
+      return addressArray.reduce((r, addr) => {
+        r.push(map[addr])
+        return r
+      }, [])
     },
 
     register (alias, address, overwrite = false) {
@@ -203,6 +224,19 @@ exports.byAddress = function (address) {
   const storage = this.unsafeStateManager().getAccountState(ALIAS_ADDR).storage || {}
   const map = storage[ADDR_KEY] || {}
   return map[address]
+}
+
+exports.byAddressArray = function (addressArray) {
+  const storage = this.unsafeStateManager().getAccountState(ALIAS_ADDR).storage || {}
+  const map = storage[ADDR_KEY] || {}
+  const initialR = []
+  initialR.aliasCount = 0
+  return addressArray.reduce((r, addr) => {
+    const alias = map[addr]
+    r.push(alias)
+    if (alias) r.aliasCount++
+    return r
+  }, initialR)
 }
 
 exports.ensureAddress = function (aliasOrAddress) {
