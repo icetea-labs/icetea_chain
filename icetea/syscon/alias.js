@@ -12,9 +12,9 @@ const METADATA = Object.freeze({
     decorators: ['view'],
     params: [
       { name: 'partOfAlias', type: ['string', 'RegExp'] },
-      { name: 'includeTags', type: ['boolean', 'undefined'] }
+      { name: 'options', type: ['object', 'undefined'] }
     ],
-    returnType: ['object', 'Array']
+    returnType: ['object']
   },
   resolve: {
     decorators: ['view'],
@@ -92,16 +92,18 @@ exports.run = (context, options) => {
   const msgParams = checkMsg(msg, METADATA, { sysContracts: this.systemContracts() })
 
   const contract = {
-    query (textOrRegEx, includeTags) {
+    query (textOrRegEx, { includeTags = false, maxItems = 10 } = {}) {
       const aliases = loadAliases(context)
       const did = includeTags ? exports.systemContracts().Did : undefined
+      let count = 0
       return Object.keys(aliases).reduce((prev, alias) => {
-        if (isSatisfied(alias, textOrRegEx)) {
+        if (count < maxItems && isSatisfied(alias, textOrRegEx)) {
           const item = aliases[alias]
           if (includeTags) {
             const info = did.query(aliases[alias].address)
             info && info.tags && (item.tags = info.tags)
           }
+          count++
           prev[alias] = item
         }
         return prev

@@ -314,7 +314,7 @@ exports.run = (context) => {
     },
 
     // searchTerms is a plan object, such as { key: 'textToSearch' }
-    queryByTags (searchTerms, { includeAlias = true, maxItems = 10 } = {}) {
+    queryByTags (searchTerms, { includeAlias = false, maxItems = 10 } = {}) {
       const keys = context.getStateKeys()
       const resultKeys = []
       const result = []
