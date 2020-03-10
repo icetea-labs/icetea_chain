@@ -64,7 +64,7 @@
     "@hapi/joi": "17.1.0",
     "@iceteachain/sunseed": "github:tradatech/sunseed",
     "@iceteachain/utils": "github:TradaTech/icetea-utils",
-    "@iceteachain/web3": "^0.1.21",
+    "@iceteachain/web3": "^0.1.22",
     "@webassemblyjs/ast": "1.9.0",
     "@webassemblyjs/wasm-parser": "1.9.0",
     "abci": "5.0.1",
