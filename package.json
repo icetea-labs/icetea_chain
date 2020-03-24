@@ -67,7 +67,7 @@
     "@iceteachain/web3": "^0.1.22",
     "@webassemblyjs/ast": "1.9.0",
     "@webassemblyjs/wasm-parser": "1.9.0",
-    "abci": "5.0.1",
+    "abci": "git+https://github.com/tendermint/js-abci.git",
     "ansi_up": "4.0.4",
     "async": "3.2.0",
     "babel-eslint": "10.1.0",
