@@ -47,13 +47,13 @@ exports.stringifyWithBigInt = function (obj) {
  * @param {Array.<string>} [indexes=[]] - index key in event data
  * @returns {Array.<string>} tags
  */
-exports.emitEvent = function (emitter, tags, eventName, eventData, indexes = []) {
-  const EVENTNAMES_SEP = '|'
-  const EMITTER_EVENTNAME_SEP = '%'
-  const EVENTNAME_INDEX_SEP = '~'
+exports.emitEvent = function (emitter, events, eventName, eventData, indexes = []) {
+  const EVENTNAMES_SEP = 'icetea'
+  const EMITTER_EVENTNAME_SEP = '/'
+  const attributes = []
 
   emitter = emitter || 'system'
-  tags = tags || {}
+  events = events || []
 
   if (typeof eventData !== 'object') {
     throw new Error('eventData must be an object.')
@@ -61,18 +61,18 @@ exports.emitEvent = function (emitter, tags, eventName, eventData, indexes = [])
   if (eventName === 'EventNames' || eventName === 'tx') {
     throw new Error("Event name cannot be 'EventNames' or 'tx'")
   }
-  if (eventName.includes(EVENTNAMES_SEP) || eventName.includes(EMITTER_EVENTNAME_SEP) || eventName.includes(EVENTNAME_INDEX_SEP)) {
-    throw new Error(`Event name cannot contain ${EVENTNAMES_SEP}, ${EMITTER_EVENTNAME_SEP}, or ${EVENTNAME_INDEX_SEP} characters.`)
+  if (eventName.includes(EVENTNAMES_SEP) || eventName.includes(EMITTER_EVENTNAME_SEP)) {
+    throw new Error(`Event name cannot contain ${EVENTNAMES_SEP}, or ${EMITTER_EVENTNAME_SEP} characters.`)
   }
 
   // copy so that we can safely delete indexed fields before serialization
   eventData = Object.assign({}, eventData)
+  const eventNames = emitter + EMITTER_EVENTNAME_SEP + eventName
 
-  if (!tags.EventNames) tags.EventNames = EVENTNAMES_SEP
-  if (tags.EventNames.includes(EVENTNAMES_SEP + eventName + EVENTNAMES_SEP)) {
+  if (events.find(o => o.type === eventNames)) {
     throw new Error('Event ' + eventName + ' was already emit')
   }
-  tags.EventNames += emitter + EMITTER_EVENTNAME_SEP + eventName + EVENTNAMES_SEP
+  // validate indexes
   indexes.forEach(indexedKey => {
     if (typeof indexedKey !== 'string') {
       throw new Error("Event's indexed key must be string")
@@ -80,14 +80,26 @@ exports.emitEvent = function (emitter, tags, eventName, eventData, indexes = [])
     if (typeof eventData[indexedKey] === 'object') {
       throw new Error("Event's indexed value cannot be an object.")
     }
-    tags[eventName + EVENTNAME_INDEX_SEP + indexedKey] = eventData[indexedKey] == null ? '' : String(eventData[indexedKey])
-
-    // it is a copy, safely to delete
-    delete eventData[indexedKey]
   })
 
   try {
-    tags[eventName] = exports.stringifyWithBigInt(eventData)
+    // attributes
+    Object.keys(eventData).forEach((key) => {
+      let value = eventData[key]
+      if (Buffer.isBuffer(value)) {
+        // juse keep
+      } else if (typeof value === 'string') {
+        value = Buffer.from(value)
+      } else if (typeof value === 'bigint') { // eslint-disable-line
+        value = Buffer.from(value.toString())
+      } else {
+        throw new Error(`Event value for key ${key} is has wrong type, expect: Buffer or string, got: ${typeof eventData[key]}`)
+      }
+      const index = indexes.includes(key).toString()
+      attributes.push({ key: Buffer.from(key), value, index: Buffer.from(index) })
+    })
+
+    events.push({ type: eventNames, attributes })
   } catch (e) {
     console.log(e)
     const newE = new Error('Cannot serialize event data to string. Make sure it is compatible with JSON.stringify.')
@@ -95,8 +107,59 @@ exports.emitEvent = function (emitter, tags, eventName, eventData, indexes = [])
     throw newE
   }
 
-  return tags
+  return events
 }
+
+// exports.emitEvent = function (emitter, tags, eventName, eventData, indexes = []) {
+//   const EVENTNAMES_SEP = '|'
+//   const EMITTER_EVENTNAME_SEP = '%'
+//   const EVENTNAME_INDEX_SEP = '~'
+
+//   emitter = emitter || 'system'
+//   tags = tags || {}
+
+//   if (typeof eventData !== 'object') {
+//     throw new Error('eventData must be an object.')
+//   }
+//   if (eventName === 'EventNames' || eventName === 'tx') {
+//     throw new Error("Event name cannot be 'EventNames' or 'tx'")
+//   }
+//   if (eventName.includes(EVENTNAMES_SEP) || eventName.includes(EMITTER_EVENTNAME_SEP) || eventName.includes(EVENTNAME_INDEX_SEP)) {
+//     throw new Error(`Event name cannot contain ${EVENTNAMES_SEP}, ${EMITTER_EVENTNAME_SEP}, or ${EVENTNAME_INDEX_SEP} characters.`)
+//   }
+
+//   // copy so that we can safely delete indexed fields before serialization
+//   eventData = Object.assign({}, eventData)
+
+//   if (!tags.EventNames) tags.EventNames = EVENTNAMES_SEP
+//   if (tags.EventNames.includes(EVENTNAMES_SEP + eventName + EVENTNAMES_SEP)) {
+//     throw new Error('Event ' + eventName + ' was already emit')
+//   }
+//   tags.EventNames += emitter + EMITTER_EVENTNAME_SEP + eventName + EVENTNAMES_SEP
+//   indexes.forEach(indexedKey => {
+//     if (typeof indexedKey !== 'string') {
+//       throw new Error("Event's indexed key must be string")
+//     }
+//     if (typeof eventData[indexedKey] === 'object') {
+//       throw new Error("Event's indexed value cannot be an object.")
+//     }
+//     tags[eventName + EVENTNAME_INDEX_SEP + indexedKey] = eventData[indexedKey] == null ? '' : String(eventData[indexedKey])
+
+//     // it is a copy, safely to delete
+//     delete eventData[indexedKey]
+//   })
+
+//   try {
+//     tags[eventName] = exports.stringifyWithBigInt(eventData)
+//   } catch (e) {
+//     console.log(e)
+//     const newE = new Error('Cannot serialize event data to string. Make sure it is compatible with JSON.stringify.')
+//     newE.error = e
+//     throw newE
+//   }
+
+//   return tags
+// }
 
 /**
  * emit transfered events

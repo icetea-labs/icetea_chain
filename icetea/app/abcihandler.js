@@ -82,31 +82,33 @@ const handler = {
     try {
       tx = getTx(req)
 
-      const tags = []
-      const data = app.execTx(tx, tags)
+      const events = []
+      const data = app.execTx(tx, events)
 
       const result = {}
       if (typeof data !== 'undefined') {
         result.data = utils.serialize(data)
       }
+      console.log('events', events)
 
-      result.tags = []
-      if (typeof tags !== 'undefined' && Object.keys(tags).length) {
-        Object.keys(tags).forEach((key) => {
-          let value = tags[key]
-          if (Buffer.isBuffer(value)) {
-            // juse keep
-          } else if (typeof value === 'string') {
-            value = Buffer.from(value)
-          } else {
-            throw new Error(`Tag value for key ${key} is has wrong type, expect: Buffer or string, got: ${typeof tags[key]}`)
-          }
-          result.tags.push({ key: Buffer.from(key), value })
-        })
-      }
+      result.events = events
+      // if (typeof events !== 'undefined' && Object.keys(events).length) {
+      //   Object.keys(events).forEach((key) => {
+      //     let value = events[key]
+      //     if (Buffer.isBuffer(value)) {
+      //       // juse keep
+      //     } else if (typeof value === 'string') {
+      //       value = Buffer.from(value)
+      //     } else {
+      //       throw new Error(`Event value for key ${key} is has wrong type, expect: Buffer or string, got: ${typeof tags[key]}`)
+      //     }
+      //     // result.tags.push({ key: Buffer.from(key), value })
+      //     result.events.push({ type: 'icetea', attributes: [{ key: Buffer.from(key), value }] })
+      //   })
+      // }
 
-      // add system tags
-      _addSystemTags(result.tags, tx, data)
+      // add system events
+      _addSystemEvents(result.events, tx, data)
 
       return result
     } catch (err) {
@@ -114,7 +116,7 @@ const handler = {
       debug(err)
 
       const tags = []
-      _addSystemTags(tags, tx)
+      _addSystemEvents(tags, tx)
       return { code: 2, tags, log: String(err) }
     }
   },
@@ -178,11 +180,13 @@ const handler = {
   }
 }
 
-const _addSystemTags = (tags, tx, data) => {
-  tags.push({ key: Buffer.from('tx.from'), value: Buffer.from(tx.from) })
+const _addSystemEvents = (events, tx, data) => {
+  const attributes = []
+  attributes.push({ key: Buffer.from('tx.from'), value: Buffer.from(tx.from) })
   const txTo = tx.isContractCreation() ? data : tx.to
   if (txTo) {
-    tags.push({ key: Buffer.from('tx.to'), value: Buffer.from(txTo) })
+    attributes.push({ key: Buffer.from('tx.to'), value: Buffer.from(txTo) })
   }
-  tags.push({ key: Buffer.from('tx.payer'), value: Buffer.from(tx.payer) })
+  attributes.push({ key: Buffer.from('tx.payer'), value: Buffer.from(tx.payer) })
+  events.push({ type: 'icetea', attributes })
 }
