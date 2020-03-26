@@ -89,7 +89,6 @@ const handler = {
       if (typeof data !== 'undefined') {
         result.data = utils.serialize(data)
       }
-      console.log('events', events)
 
       result.events = events
       // if (typeof events !== 'undefined' && Object.keys(events).length) {
@@ -115,9 +114,9 @@ const handler = {
       debug('TX execution error. Transaction data: ', tx || req)
       debug(err)
 
-      const tags = []
-      _addSystemEvents(tags, tx)
-      return { code: 2, tags, log: String(err) }
+      const events = []
+      _addSystemEvents(events, tx)
+      return { code: 2, events, log: String(err) }
     }
   },
 
@@ -188,5 +187,5 @@ const _addSystemEvents = (events, tx, data) => {
     attributes.push({ key: Buffer.from('tx.to'), value: Buffer.from(txTo) })
   }
   attributes.push({ key: Buffer.from('tx.payer'), value: Buffer.from(tx.payer) })
-  events.push({ type: 'icetea', attributes })
+  events.push({ type: 'system/icetea', attributes })
 }
