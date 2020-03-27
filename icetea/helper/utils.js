@@ -83,20 +83,21 @@ exports.emitEvent = function (emitter, events, eventName, eventData, indexes = [
   })
 
   try {
-    // attributes
+    // add attributes
     Object.keys(eventData).forEach((key) => {
       let value = eventData[key]
       if (Buffer.isBuffer(value)) {
         // juse keep
       } else if (typeof value === 'string') {
         value = Buffer.from(value)
-      } else if (typeof value === 'bigint') { // eslint-disable-line
-        value = Buffer.from(value.toString())
       } else {
-        throw new Error(`Event value for key ${key} is has wrong type, expect: Buffer or string, got: ${typeof eventData[key]}`)
+        value = Buffer.from(value.toString())
       }
-      const index = indexes.includes(key).toString()
-      attributes.push({ key: Buffer.from(key), value, index: Buffer.from(index) })
+      // else {
+      //   throw new Error(`Event value for key ${key} is has wrong type, expect: Buffer or string, got: ${typeof eventData[key]}`)
+      // }
+      const index = indexes.includes(key)
+      attributes.push(index ? { key: Buffer.from(key), value, index } : { key: Buffer.from(key), value })
     })
 
     events.push({ type: eventNames, attributes })
