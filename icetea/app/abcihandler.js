@@ -181,11 +181,11 @@ const handler = {
 
 const _addSystemEvents = (events, tx, data) => {
   const attributes = []
-  attributes.push({ key: Buffer.from('tx.from'), value: Buffer.from(tx.from) })
+  attributes.push({ key: Buffer.from('from'), value: Buffer.from(tx.from) })
   const txTo = tx.isContractCreation() ? data : tx.to
   if (txTo) {
-    attributes.push({ key: Buffer.from('tx.to'), value: Buffer.from(txTo) })
+    attributes.push({ key: Buffer.from('to'), value: Buffer.from(txTo) })
   }
-  attributes.push({ key: Buffer.from('tx.payer'), value: Buffer.from(tx.payer) })
-  events.push({ type: 'system/icetea', attributes })
+  attributes.push({ key: Buffer.from('payer'), value: Buffer.from(tx.payer) })
+  events.push({ type: 'system/tx', attributes })
 }

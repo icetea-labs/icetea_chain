@@ -90,6 +90,9 @@ exports.emitEvent = function (emitter, events, eventName, eventData, indexes = [
         // juse keep
       } else if (typeof value === 'string') {
         value = Buffer.from(value)
+      } else if (typeof value === 'object') {
+        value = exports.stringifyWithBigInt(value)
+        value = Buffer.from(value)
       } else {
         value = Buffer.from(value.toString())
       }
