@@ -58,8 +58,8 @@ exports.emitEvent = function (emitter, events, eventName, eventData, indexes = [
   if (typeof eventData !== 'object') {
     throw new Error('eventData must be an object.')
   }
-  if (eventName === 'EventNames' || eventName === 'tx') {
-    throw new Error("Event name cannot be 'EventNames' or 'tx'")
+  if (eventName === 'eventName' || eventName === 'tx') {
+    throw new Error("Event name cannot be 'eventName' or 'tx'")
   }
   if (eventName.includes(EVENTNAMES_SEP) || eventName.includes(EMITTER_EVENTNAME_SEP)) {
     throw new Error(`Event name cannot contain ${EVENTNAMES_SEP}, or ${EMITTER_EVENTNAME_SEP} characters.`)
@@ -83,6 +83,7 @@ exports.emitEvent = function (emitter, events, eventName, eventData, indexes = [
   })
 
   try {
+    attributes.push({ key: Buffer.from('eventName'), value: Buffer.from(eventName) })
     // add attributes
     Object.keys(eventData).forEach((key) => {
       let value = eventData[key]
