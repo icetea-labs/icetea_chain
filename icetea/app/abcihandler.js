@@ -180,12 +180,15 @@ const handler = {
 }
 
 const _addSystemEvents = (events, tx, data) => {
+  const EVENTNAMES = '_ev'
   const attributes = []
+
+  attributes.push({ key: Buffer.from(EVENTNAMES), value: Buffer.from('tx') })
   attributes.push({ key: Buffer.from('from'), value: Buffer.from(tx.from) })
   const txTo = tx.isContractCreation() ? data : tx.to
   if (txTo) {
     attributes.push({ key: Buffer.from('to'), value: Buffer.from(txTo) })
   }
   attributes.push({ key: Buffer.from('payer'), value: Buffer.from(tx.payer) })
-  events.push({ type: 'system/tx', attributes })
+  events.push({ type: 'system', attributes })
 }

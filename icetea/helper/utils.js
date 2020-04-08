@@ -48,28 +48,24 @@ exports.stringifyWithBigInt = function (obj) {
  * @returns {Array.<string>} tags
  */
 exports.emitEvent = function (emitter, events, eventName, eventData, indexes = []) {
-  const EVENTNAMES_SEP = 'icetea'
-  const EMITTER_EVENTNAME_SEP = '/'
-  const attributes = []
-
+  const EVENTNAMES = '_ev'
+  // const EMITTER_EVENTNAME_SEP = '/'
   emitter = emitter || 'system'
   events = events || []
 
   if (typeof eventData !== 'object') {
     throw new Error('eventData must be an object.')
   }
-  if (eventName === 'eventName' || eventName === 'tx') {
-    throw new Error("Event name cannot be 'eventName' or 'tx'")
+  if (eventName === EVENTNAMES || eventName === 'tx') {
+    throw new Error(`Event name cannot be ${EVENTNAMES} or 'tx'`)
   }
-  if (eventName.includes(EVENTNAMES_SEP) || eventName.includes(EMITTER_EVENTNAME_SEP)) {
-    throw new Error(`Event name cannot contain ${EVENTNAMES_SEP}, or ${EMITTER_EVENTNAME_SEP} characters.`)
-  }
+  // if (eventName.includes(EVENTNAMES_SEP) || eventName.includes(EMITTER_EVENTNAME_SEP)) {
+  //   throw new Error(`Event name cannot contain ${EVENTNAMES_SEP}, or ${EMITTER_EVENTNAME_SEP} characters.`)
+  // }
 
   // copy so that we can safely delete indexed fields before serialization
   eventData = Object.assign({}, eventData)
-  const eventNames = emitter + EMITTER_EVENTNAME_SEP + eventName
-
-  if (events.find(o => o.type === eventNames)) {
+  if (events.find(e => !!e.attributes.find(o => o.key === eventName))) {
     throw new Error('Event ' + eventName + ' was already emit')
   }
   // validate indexes
@@ -82,29 +78,30 @@ exports.emitEvent = function (emitter, events, eventName, eventData, indexes = [
     }
   })
 
+  const attributes = []
   try {
-    attributes.push({ key: Buffer.from('eventName'), value: Buffer.from(eventName) })
+    // add eventname into attributes
+    attributes.push({ key: Buffer.from(EVENTNAMES), value: Buffer.from(eventName), index: true })
     // add attributes
     Object.keys(eventData).forEach((key) => {
+      const index = indexes.includes(key)
       let value = eventData[key]
       if (Buffer.isBuffer(value)) {
-        // juse keep
+        // just keep
       } else if (typeof value === 'string') {
         value = Buffer.from(value)
-      } else if (typeof value === 'object') {
+      } else if (value == null || typeof value !== 'object') {
+        value = Buffer.from(String(value))
+      } else if (typeof value === 'object' && !index) {
         value = exports.stringifyWithBigInt(value)
         value = Buffer.from(value)
       } else {
-        value = Buffer.from(value.toString())
+        throw new Error(`Event value for key ${key} is has wrong type, expect: Buffer or string, got: ${typeof eventData[key]}`)
       }
-      // else {
-      //   throw new Error(`Event value for key ${key} is has wrong type, expect: Buffer or string, got: ${typeof eventData[key]}`)
-      // }
-      const index = indexes.includes(key)
       attributes.push(index ? { key: Buffer.from(key), value, index } : { key: Buffer.from(key), value })
     })
 
-    events.push({ type: eventNames, attributes })
+    events.push({ type: emitter, attributes })
   } catch (e) {
     console.log(e)
     const newE = new Error('Cannot serialize event data to string. Make sure it is compatible with JSON.stringify.')
