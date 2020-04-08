@@ -45,24 +45,28 @@ describe('transfer', () => {
     const result = await tweb3.sendTransactionCommit({ from: account10k.address, to, value, fee })
     expect(result.deliver_tx.code).toBeFalsy()
     expect(typeof result.hash).toBe('string')
-
+    await sleep(2000)
     const tx = await tweb3.getTransaction(result.hash)
 
     // tags must be correct
-    const tags = tweb3.utils.decodeTxTags(tx)
-    expect(tags['tx.from']).toBe(from)
-    expect(tags['tx.to']).toBe(to)
+    const evData = tweb3.utils.decodeTxTags(tx)
+    expect(evData.length).toBeGreaterThanOrEqual(1)
+    const evTx = evData.filter(e => e.attributes._ev === 'tx')
+    expect(evTx.length).toBe(1)
+    expect(evTx[0].attributes.from).toBe(from)
+    expect(evTx[0].attributes.to).toBe(to)
 
-    const tags2 = tweb3.utils.decodeTxTags(result)
-    expect(tags).toEqual(tags2)
+    const evData2 = tweb3.utils.decodeTxTags(result)
+    expect(evData).toEqual(evData2)
 
     // since value > 0, a system 'Transferred' event must be emitted
     const events = tweb3.utils.decodeTxEvents(result)
-    expect(events.length).toBe(1)
+    const ev2 = events.filter(e => e.eventName === 'Transferred')
+    expect(ev2.length).toBe(1)
     expect(events[0]).toEqual({
       emitter: 'system',
       eventName: 'Transferred',
-      eventData: { from, to, payer: from, value: value.toString() }
+      eventData: { from, to, payer: from, value }
     })
 
     // Verify balance changes after TX

@@ -52,21 +52,25 @@ async function testSimpleStore (mode, src) {
   const result = await tweb3.sendTransactionCommit({ from: account10k.address, value, fee, data })
   expect(result.deliver_tx.code).toBeFalsy()
 
-  // tags must be correct
-  const tags = tweb3.utils.decodeTxTags(result)
-  expect(tags['tx.from']).toBe(from)
-  expect(typeof tags['tx.to']).toBe('string')
-  const to = tags['tx.to']
+  // decode event must be correct
+  const evData = tweb3.utils.decodeTxTags(result)
+  expect(evData.length).toBeGreaterThanOrEqual(1)
+  const evTx = evData.filter(e => e.attributes._ev === 'tx')
+  expect(evTx.length).toBe(1)
+  expect(evTx[0].attributes.from).toBe(from)
+  expect(typeof evTx[0].attributes.to).toBe('string')
+  const to = evTx[0].attributes.to
 
   expect(to).toBe(result.returnValue)
 
   // since value > 0, a system 'Transferred' event must be emitted
   const events = tweb3.utils.decodeTxEvents(result)
-  expect(events.length).toBe(1)
-  expect(events[0]).toEqual({
+  const ev = events.filter(e => e.eventName === 'Transferred')
+  expect(ev.length).toBe(1)
+  expect(ev[0]).toEqual({
     emitter: 'system',
     eventName: 'Transferred',
-    eventData: { from, to, payer: from, value: value.toString() }
+    eventData: { from, to, payer: from, value }
   })
 
   // Verify balance changes after TX
@@ -105,7 +109,8 @@ async function testSimpleStore (mode, src) {
 
   // Check ValueChanged event was emit
   const events2 = tweb3.utils.decodeTxEvents(result2)
-  expect(events2.length).toBe(1)
+  const ev2 = events2.filter(e => e.eventName === 'ValueChanged')
+  expect(ev2.length).toBe(1)
   expect(events2[0]).toEqual({
     emitter: to,
     eventName: 'ValueChanged',

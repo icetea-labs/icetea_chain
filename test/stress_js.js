@@ -16,8 +16,9 @@ async function testSimpleStore (mode, src, times = 10) {
 
   tweb3.wallet.importAccount(key)
   const result = await tweb3.sendTransactionCommit({ data })
-  const tags = tweb3.utils.decodeTxTags(result)
-  const to = tags['tx.to']
+  const evData = tweb3.utils.decodeTxTags(result)
+  const evTx = evData.filter(e => e.attributes._ev === 'tx')
+  const to = evTx[0].attributes.to
 
   // Set value
   const data2 = {
