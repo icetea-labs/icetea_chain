@@ -97,7 +97,7 @@
     "prismjs": "^1.19.0",
     "rimraf": "3.0.2",
     "semver": "7.1.3",
-    "tendermint-node": "github:TradaTech/tendermint-node",
+    "tendermint-node": "^5.2.0",
     "validator": "12.2.0",
     "vue": "2.6.11",
     "wasm-metering": "0.2.1",
