@@ -10,6 +10,7 @@
 const { Did: DID_ADDR } = require('./sysconnames')
 const { checkMsg } = require('../helper/types')
 const _ = require('lodash')
+const { setContextMigration, importState, exportState } = require('./migration.js')(this)
 
 const STATE_CLAIMING = 1
 const STATE_REJECTED = 2
@@ -183,6 +184,19 @@ const METADATA = Object.freeze({
       { name: 'tx', type: ['object', 'undefined'] }
     ],
     returnType: 'undefined'
+  },
+  exportState: {
+    decorators: ['transaction'],
+    params: [],
+    returnType: 'string'
+  },
+  importState: {
+    decorators: ['transaction'],
+    params: [
+      { name: 'data', type: ['object'] },
+      { name: 'overwrite', type: ['boolean', 'undefined'] }
+    ],
+    returnType: 'string'
   }
 })
 
@@ -297,6 +311,9 @@ function _checkTokenValid (data, now) {
 
 // standard contract interface
 exports.run = (context) => {
+  // set context for migration
+  setContextMigration(context)
+
   const { msg, block } = context.runtime
   const msgParams = checkMsg(msg, METADATA, { sysContracts: this.systemContracts() })
 
@@ -710,7 +727,16 @@ exports.run = (context) => {
       } else {
         context.setState(address, old)
       }
+    },
+
+    exportState () {
+      return exportState()
+    },
+
+    importState (data, overwrite = true) {
+      return importState(data, overwrite)
     }
+
   }
 
   if (!Object.prototype.hasOwnProperty.call(contract, msg.name)) {
