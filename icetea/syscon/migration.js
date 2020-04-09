@@ -14,7 +14,7 @@ const merge = (o, n) => {
 }
 
 const expectOwner = context => {
-  if (context.runtime.msg.sender !== 'teat1al54h8fy75h078syz54z6hke6l9x232zq3j9st') {
+  if (context.runtime.msg.sender !== process.env.MIGRATE_ADDRESS) {
     throw new Error('Permission denied.')
   }
 }
