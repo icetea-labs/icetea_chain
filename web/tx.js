@@ -67,8 +67,8 @@ async function fetchTxDetails (template, hash) {
     tx.data = formatContractData(data.data, tx.to)
     tx.events = tryStringifyJson(tx.events, null, 2) // tweb3.utils.decodeTxEvents(tx), null, 2)
     // const tags = tweb3.utils.decodeTags(tx)
-    tx.from = tx.tags['tx.from']
-    tx.tags = tryStringifyJson(tx.tags, null, 2)
+    // tx.from = tx.tags['tx.from']
+    // tx.tags = tryStringifyJson(tx.tags, null, 2)
 
     // Do some formating
 
