@@ -36,6 +36,9 @@ module.exports = () => {
 
   function importState (data, overwrite) {
     expectOwner(this.context)
+    const maxBlockNumber = process.env.MAX_BLOCK_MIGRATE
+    if (this.context.runtime.block.number > maxBlockNumber) throw new Error(`Can't importState when blocknumber > ${maxBlockNumber}`)
+
     let count = 0
     Object.entries(data).forEach(([key, value]) => {
       count++
@@ -46,6 +49,7 @@ module.exports = () => {
         this.context.setState(key, merge(old, value))
       }
     })
+
     return count
   }
 
