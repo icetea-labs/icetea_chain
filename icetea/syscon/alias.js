@@ -23,6 +23,13 @@ const METADATA = Object.freeze({
     ],
     returnType: 'string'
   },
+  resolveMany: {
+    decorators: ['view'],
+    params: [
+      { name: 'aliasArray', type: 'Array' }
+    ],
+    returnType: 'Array'
+  },
   byAddress: {
     decorators: ['view'],
     params: [
@@ -113,6 +120,15 @@ exports.run = (context, options) => {
     resolve (alias) {
       const aliases = loadAliases(context)
       return (aliases[alias] || {}).address
+    },
+
+    resolveMany (aliasArray) {
+      const aliases = loadAliases(context)
+      return aliasArray.reduce((list, alias) => {
+        const addr = (aliases[alias] || {}).address
+        list.push(addr) // undefined will be push as is to match array length
+        return list
+      }, [])
     },
 
     byAddress (address) {
