@@ -20,7 +20,7 @@ if (process.argv.length > 2) {
 botFile = './example/bot/' + botFile
 
 const { IceteaWeb3 } = require('@iceteachain/web3')
-const tweb3 = new IceteaWeb3('wss://rpc.icetea.io/websocket')
+const tweb3 = new IceteaWeb3(process.env.ICETEA_ENDPOINT)
 
 async function deploy () {
   const key = process.env.BANK_KEY
@@ -29,7 +29,7 @@ async function deploy () {
 
   // deploy the astrobot
   const src = await transpile(fs.readFileSync(botFile, 'utf8'), { prettier: true })
-  const theBot = await tweb3.deploy(ContractMode.JS_RAW, src, [], { value: 10000e6 })
+  const theBot = await tweb3.deploy(ContractMode.JS_RAW, src, [], { value: 0 })
 
   // add astrobot alias
   const alias = tweb3.contract('system.alias', key)
