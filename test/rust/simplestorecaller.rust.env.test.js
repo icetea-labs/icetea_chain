@@ -44,7 +44,7 @@ async function testSimpleStore () {
   const result = await tweb3.deployWasm(simpleStoreSrc, [], { value, fee, from })
   expect(result.address).toBeDefined()
 
-  // tags must be correct
+  // events must be correct
   await sleep(2000)
   const { events } = await tweb3.getTransaction(result.hash)
   expect(events.length).toBeGreaterThanOrEqual(1)
@@ -83,7 +83,9 @@ async function testSimpleStore () {
   })
 
   const callerValue = 200
+  console.log('hahaha')
   tx = await callerContract.methods.set_value(callerValue).sendCommit()
+  console.log('kkkk')
 
   expect(tx.events.length).toBeGreaterThanOrEqual(1)
   const evTx3 = tx.events.filter(e => e.eventName === 'ValueChanged')

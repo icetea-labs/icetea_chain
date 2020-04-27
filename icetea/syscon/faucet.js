@@ -65,7 +65,7 @@ exports.run = (context) => {
       this.setState(msg.sender, String(amount))
       this.transfer(msg.sender, amount + paid)
 
-      this.emitEvent('FaucetTransferred', {
+      this.emitEvent('faucetTransfer', {
         requester: msg.sender,
         amount: String(amount)
       }, ['requester'])
@@ -116,7 +116,7 @@ exports.run = (context) => {
       }
 
       this.setState(tx.from, String(amount))
-      this.emitEvent('FaucetTransferred', {
+      this.emitEvent('faucetTransfer', {
         requester: tx.from,
         amount: String(requested)
       }, ['requester'])

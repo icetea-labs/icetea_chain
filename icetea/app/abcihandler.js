@@ -89,34 +89,15 @@ const handler = {
       if (typeof data !== 'undefined') {
         result.data = utils.serialize(data)
       }
-
       result.events = events
-      // if (typeof events !== 'undefined' && Object.keys(events).length) {
-      //   Object.keys(events).forEach((key) => {
-      //     let value = events[key]
-      //     if (Buffer.isBuffer(value)) {
-      //       // juse keep
-      //     } else if (typeof value === 'string') {
-      //       value = Buffer.from(value)
-      //     } else {
-      //       throw new Error(`Event value for key ${key} is has wrong type, expect: Buffer or string, got: ${typeof tags[key]}`)
-      //     }
-      //     // result.tags.push({ key: Buffer.from(key), value })
-      //     result.events.push({ type: 'icetea', attributes: [{ key: Buffer.from(key), value }] })
-      //   })
-      // }
-
-      // add system events
-      _addSystemEvents(result.events, tx, data)
 
       return result
     } catch (err) {
       debug('TX execution error. Transaction data: ', tx || req)
       debug(err)
 
-      const events = []
-      _addSystemEvents(events, tx)
-      return { code: 2, events, log: String(err) }
+      const events = utils.emitTx(null, tx.from, tx.to, tx.payer, 0)
+      return { code: 2, events, info: err.code, log: String(err) }
     }
   },
 
@@ -177,18 +158,4 @@ const handler = {
       return { code: 3, info: String(error), log: error.stack }
     }
   }
-}
-
-const _addSystemEvents = (events, tx, data) => {
-  const EVENTNAMES = '_ev'
-  const attributes = []
-
-  attributes.push({ key: Buffer.from(EVENTNAMES), value: Buffer.from('tx') })
-  attributes.push({ key: Buffer.from('from'), value: Buffer.from(tx.from) })
-  const txTo = tx.isContractCreation() ? data : tx.to
-  if (txTo) {
-    attributes.push({ key: Buffer.from('to'), value: Buffer.from(txTo) })
-  }
-  attributes.push({ key: Buffer.from('payer'), value: Buffer.from(tx.payer) })
-  events.push({ type: 'system', attributes })
 }

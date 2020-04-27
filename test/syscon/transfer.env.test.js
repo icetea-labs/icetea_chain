@@ -48,7 +48,7 @@ describe('transfer', () => {
     await sleep(2000)
     const tx = await tweb3.getTransaction(result.hash)
 
-    // tags must be correct
+    // events must be correct
     const evData = tweb3.utils.decodeTxTags(tx)
     expect(evData.length).toBeGreaterThanOrEqual(1)
     const evTx = evData.filter(e => e.attributes._ev === 'tx')
@@ -59,13 +59,14 @@ describe('transfer', () => {
     const evData2 = tweb3.utils.decodeTxTags(result)
     expect(evData).toEqual(evData2)
 
-    // since value > 0, a system 'Transferred' event must be emitted
+    // since value > 0, a system 'transfer' event must be emitted
     const events = tweb3.utils.decodeTxEvents(result)
-    const ev2 = events.filter(e => e.eventName === 'Transferred')
+    console.log(events)
+    const ev2 = events.filter(e => e.eventName === 'transfer')
     expect(ev2.length).toBe(1)
-    expect(events[0]).toEqual({
+    expect(ev2[0]).toEqual({
       emitter: 'system',
-      eventName: 'Transferred',
+      eventName: 'transfer',
       eventData: { from, to, payer: from, value }
     })
 

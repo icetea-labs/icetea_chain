@@ -41,47 +41,43 @@ exports.stringifyWithBigInt = function (obj) {
  * emit events
  * @function
  * @param {object} emitter - emmitter
- * @param {Array.<string>} tags - event tag
+ * @param {Array.<string>} events - events
  * @param {string} eventName - event name
  * @param {object} eventData - event data
  * @param {Array.<string>} [indexes=[]] - index key in event data
- * @returns {Array.<string>} tags
+ * @returns {Array.<string>} events
  */
 exports.emitEvent = function (emitter, events, eventName, eventData, indexes = []) {
-  const EVENTNAMES = '_ev'
-  // const EMITTER_EVENTNAME_SEP = '/'
+  const EVENTNAME = '_ev'
   emitter = emitter || 'system'
   events = events || []
 
   if (typeof eventData !== 'object') {
     throw new Error('eventData must be an object.')
   }
-  if (eventName === EVENTNAMES || eventName === 'tx') {
-    throw new Error(`Event name cannot be ${EVENTNAMES} or 'tx'`)
+  if (eventName === EVENTNAME ||
+    (['tx', 'transfer'].includes(eventName) && emitter !== 'system')) {
+    throw new Error(`Event name cannot be '${EVENTNAME}', 'tx' or 'transfer'`)
   }
-  // if (eventName.includes(EVENTNAMES_SEP) || eventName.includes(EMITTER_EVENTNAME_SEP)) {
-  //   throw new Error(`Event name cannot contain ${EVENTNAMES_SEP}, or ${EMITTER_EVENTNAME_SEP} characters.`)
-  // }
 
   // copy so that we can safely delete indexed fields before serialization
   eventData = Object.assign({}, eventData)
-  if (events.find(e => !!e.attributes.find(o => o.key === eventName))) {
-    throw new Error('Event ' + eventName + ' was already emit')
-  }
+
   // validate indexes
   indexes.forEach(indexedKey => {
     if (typeof indexedKey !== 'string') {
       throw new Error("Event's indexed key must be string")
     }
-    if (typeof eventData[indexedKey] === 'object') {
+    if (eventData[indexedKey] != null && typeof eventData[indexedKey] === 'object') {
       throw new Error("Event's indexed value cannot be an object.")
     }
   })
 
   const attributes = []
   try {
-    // add eventname into attributes
-    attributes.push({ key: Buffer.from(EVENTNAMES), value: Buffer.from(eventName), index: true })
+    // add event name into attributes
+    attributes.push({ key: Buffer.from(EVENTNAME), value: Buffer.from(eventName), index: true })
+
     // add attributes
     Object.keys(eventData).forEach((key) => {
       const index = indexes.includes(key)
@@ -112,84 +108,31 @@ exports.emitEvent = function (emitter, events, eventName, eventData, indexes = [
   return events
 }
 
-// exports.emitEvent = function (emitter, tags, eventName, eventData, indexes = []) {
-//   const EVENTNAMES_SEP = '|'
-//   const EMITTER_EVENTNAME_SEP = '%'
-//   const EVENTNAME_INDEX_SEP = '~'
-
-//   emitter = emitter || 'system'
-//   tags = tags || {}
-
-//   if (typeof eventData !== 'object') {
-//     throw new Error('eventData must be an object.')
-//   }
-//   if (eventName === 'EventNames' || eventName === 'tx') {
-//     throw new Error("Event name cannot be 'EventNames' or 'tx'")
-//   }
-//   if (eventName.includes(EVENTNAMES_SEP) || eventName.includes(EMITTER_EVENTNAME_SEP) || eventName.includes(EVENTNAME_INDEX_SEP)) {
-//     throw new Error(`Event name cannot contain ${EVENTNAMES_SEP}, ${EMITTER_EVENTNAME_SEP}, or ${EVENTNAME_INDEX_SEP} characters.`)
-//   }
-
-//   // copy so that we can safely delete indexed fields before serialization
-//   eventData = Object.assign({}, eventData)
-
-//   if (!tags.EventNames) tags.EventNames = EVENTNAMES_SEP
-//   if (tags.EventNames.includes(EVENTNAMES_SEP + eventName + EVENTNAMES_SEP)) {
-//     throw new Error('Event ' + eventName + ' was already emit')
-//   }
-//   tags.EventNames += emitter + EMITTER_EVENTNAME_SEP + eventName + EVENTNAMES_SEP
-//   indexes.forEach(indexedKey => {
-//     if (typeof indexedKey !== 'string') {
-//       throw new Error("Event's indexed key must be string")
-//     }
-//     if (typeof eventData[indexedKey] === 'object') {
-//       throw new Error("Event's indexed value cannot be an object.")
-//     }
-//     tags[eventName + EVENTNAME_INDEX_SEP + indexedKey] = eventData[indexedKey] == null ? '' : String(eventData[indexedKey])
-
-//     // it is a copy, safely to delete
-//     delete eventData[indexedKey]
-//   })
-
-//   try {
-//     tags[eventName] = exports.stringifyWithBigInt(eventData)
-//   } catch (e) {
-//     console.log(e)
-//     const newE = new Error('Cannot serialize event data to string. Make sure it is compatible with JSON.stringify.')
-//     newE.error = e
-//     throw newE
-//   }
-
-//   return tags
-// }
-
 /**
- * emit transfered events
+ * Emit 'transfer' event, can only called by system so no need emitter argument.
  * @function
- * @param {object} emitter - emmitter
- * @param {Array.<string>} tags - event tag
+ * @param {Array.<string>} events - events
  * @param {string} from - from address
  * @param {string} to - to address
  * @param {string} payer - the one who pays the transaction
  * @param {number} value - transfer value
- * @returns {Array.<string>} tags
+ * @returns {Array.<string>} events
  */
-exports.emitTransferred = (emitter, tags, from, to, payer, value) => {
-  return exports.emitEvent(emitter, tags, 'Transferred', { from, to, payer, value }, ['from', 'to', 'payer'])
+exports.emitTransfer = (events, from, to, payer, value) => {
+  return exports.emitEvent(null, events, 'transfer', { from, to, payer, value }, ['from', 'to', 'payer'])
 }
 
 /**
- * emit gas used events
+ * emit tx events
  * @function
- * @param {object} emitter - emmitter
- * @param {Array.<string>} tags - event tag
+ * @param {Array.<string>} events - events
  * @param {string} address - contract address
  * @param {string} method - contract address method
  * @param {number} value - transfer value
- * @returns {Array.<string>} tags
+ * @returns {Array.<string>} events
  */
-exports.emitGasUsed = (emitter, tags, address, method, value) => {
-  return exports.emitEvent(emitter, tags, 'GasUsed', { address, method, value }, ['address', 'method', 'value'])
+exports.emitTx = (events, from, to, payer, gasused) => {
+  return exports.emitEvent(null, events, 'tx', { from, to, payer, gasused }, ['from', 'to', 'payer'])
 }
 
 /**

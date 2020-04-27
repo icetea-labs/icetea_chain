@@ -58,7 +58,7 @@
     "@hapi/joi": "17.1.0",
     "@iceteachain/sunseed": "github:tradatech/sunseed",
     "@iceteachain/utils": "github:TradaTech/icetea-utils",
-    "@iceteachain/web3": "^0.1.22",
+    "@iceteachain/web3": "github:TradaTech/icetea-web3#feature/support_latest_tendermint",
     "@webassemblyjs/ast": "1.9.0",
     "@webassemblyjs/wasm-parser": "1.9.0",
     "abci": "git+https://github.com/tendermint/js-abci.git",

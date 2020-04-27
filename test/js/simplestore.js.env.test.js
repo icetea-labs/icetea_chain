@@ -63,13 +63,13 @@ async function testSimpleStore (mode, src) {
 
   expect(to).toBe(result.returnValue)
 
-  // since value > 0, a system 'Transferred' event must be emitted
+  // since value > 0, a system 'transfer' event must be emitted
   const events = tweb3.utils.decodeTxEvents(result)
-  const ev = events.filter(e => e.eventName === 'Transferred')
+  const ev = events.filter(e => e.eventName === 'transfer')
   expect(ev.length).toBe(1)
   expect(ev[0]).toEqual({
     emitter: 'system',
-    eventName: 'Transferred',
+    eventName: 'transfer',
     eventData: { from, to, payer: from, value }
   })
 

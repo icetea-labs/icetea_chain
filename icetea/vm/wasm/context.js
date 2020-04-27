@@ -33,7 +33,7 @@ exports.for = (invokeType, contractAddress, methodName, methodParams, options) =
  * @returns {object} context
  */
 exports.forTransaction = (address, fname, fparams = [], options) => {
-  const { tx, block, stateAccess, tools, tags } = options
+  const { tx, block, stateAccess, tools, events } = options
   const { balanceOf, getCode } = tools
   const {
     hasState,
@@ -48,7 +48,7 @@ exports.forTransaction = (address, fname, fparams = [], options) => {
   const ctx = {
     get_address: () => address,
     get_balance: () => balanceOf(address),
-    runtime: { tags },
+    runtime: { },
     importTableName,
     log: console.log,
     get_msg_name: () => fname,
@@ -63,9 +63,7 @@ exports.forTransaction = (address, fname, fparams = [], options) => {
       return invoker.invokeView(to, method, params, { ...options, from: address })
     },
     write_contract: (to, method, params) => {
-      const r = invoker.invokeUpdate(to, method, params, options)
-      Object.assign(tags, r[1])
-      return r[0]
+      return invoker.invokeUpdate(to, method, params, options)
     },
     has_state: hasState,
     load: key => getState(key, ''),
@@ -73,7 +71,7 @@ exports.forTransaction = (address, fname, fparams = [], options) => {
     delete_state: deleteState,
     transfer,
     emit_event: (eventName, eventData, indexes = []) => {
-      emitEvent(address, tags, eventName, eventData, indexes)
+      emitEvent(address, events, eventName, eventData, indexes)
     }
   }
 
