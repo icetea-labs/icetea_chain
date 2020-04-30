@@ -86,7 +86,7 @@
     "graceful-fs": "4.2.3",
     "handlebars": "^4.7.3",
     "hdkey": "^1.1.1",
-    "jquery": ">=3.4.0",
+    "jquery": ">=3.5.0",
     "json-formatter-js": "2.3.4",
     "level": "6.0.1",
     "lodash": "4.17.15",
