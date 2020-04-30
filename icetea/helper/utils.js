@@ -52,16 +52,14 @@ exports.emitEvent = function (emitter, events, eventName, eventData, indexes = [
   emitter = emitter || 'system'
   events = events || []
 
-  if (typeof eventData !== 'object') {
+  if (eventData != null && typeof eventData !== 'object') {
     throw new Error('eventData must be an object.')
   }
+
   if (eventName === EVENTNAME ||
     (['tx', 'transfer'].includes(eventName) && emitter !== 'system')) {
     throw new Error(`Event name cannot be '${EVENTNAME}', 'tx' or 'transfer'`)
   }
-
-  // copy so that we can safely delete indexed fields before serialization
-  eventData = Object.assign({}, eventData)
 
   // validate indexes
   indexes.forEach(indexedKey => {
@@ -79,7 +77,7 @@ exports.emitEvent = function (emitter, events, eventName, eventData, indexes = [
     attributes.push({ key: Buffer.from(EVENTNAME), value: Buffer.from(eventName), index: true })
 
     // add attributes
-    Object.keys(eventData).forEach((key) => {
+    eventData && Object.keys(eventData).forEach((key) => {
       const index = indexes.includes(key)
       let value = eventData[key]
       if (Buffer.isBuffer(value)) {
@@ -94,7 +92,9 @@ exports.emitEvent = function (emitter, events, eventName, eventData, indexes = [
       } else {
         throw new Error(`Event value for key ${key} is has wrong type, expect: Buffer or string, got: ${typeof eventData[key]}`)
       }
-      attributes.push(index ? { key: Buffer.from(key), value, index } : { key: Buffer.from(key), value })
+      const attr = { key: Buffer.from(key), value }
+      if (index) attr.index = true
+      attributes.push(attr)
     })
 
     events.push({ type: emitter, attributes })
