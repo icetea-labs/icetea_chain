@@ -264,7 +264,7 @@ class App {
     return src
   }
 
-  execTx (tx, tags) {
+  execTx (tx, events) {
     this.checkTx(tx)
 
     // No need, already done inside checkTx above
@@ -280,7 +280,7 @@ class App {
       block: stateManager.getBlock(),
       stateAccess,
       tools,
-      tags
+      events
     })
 
     // commit change made to state
@@ -415,15 +415,11 @@ function doExecTx (options) {
     refundFunc(refundTx)
   }
 
-  // emit Transferred event
-  if (tx.value > BigInt(0)) {
-    utils.emitTransferred(null, options.tags, tx.from, tx.to, tx.payer, tx.value)
-  }
+  utils.emitTx(options.events, tx.from, tx.isContractCreation() ? result : tx.to, tx.payer, actualFee)
 
-  // add gasused tag
-  if (actualFee > 0) {
-    // utils.emitGasUsed(null, options.tags, tx.to, tx.data.name, actualFee)
-    options.tags['tx.gasused'] = String(actualFee)
+  // emit transferred event
+  if (tx.value > BigInt(0)) {
+    utils.emitTransfer(options.events, tx.from, tx.to, tx.payer, tx.value)
   }
 
   return result

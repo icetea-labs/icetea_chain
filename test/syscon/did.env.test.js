@@ -311,7 +311,7 @@ describe('did', () => {
     tweb3.wallet.importAccount(token.privateKey)
 
     const src = "return 'ok';"
-    let r = await tweb3.deployJs(src, [], { from })
+    let r = await tweb3.deploy(src, { from })
     const contract = tweb3.contract(r)
 
     // register alias for the new contract

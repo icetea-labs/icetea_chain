@@ -15,20 +15,15 @@ Tendermint-based blockchain which is developer-friendly and support Javascript a
 
 ## Presequisite
 1. NodeJS v12 LTS
-2. [Tendermint v0.31.5](https://github.com/tendermint/tendermint/releases/tag/v0.31.5)
+2. [Tendermint latest release](https://github.com/tendermint/tendermint/releases/tag/v0.33.4)
 3. `tendermint init`
 
 Open `~/.tendermint/config/config.toml`.
 
-Search for `index_tags` and comment that line out (i.e. add # to the beginning of that line).
+Search for `index_tags` and set like this:
 
 ```
-# index_tags = ...
-```
-
-Then search for and set `index_all_tags` to `true`.
-```
-index_all_tags = true
+index_keys = "tx.hash,tx.height"
 ```
 
 It is better to set `create_empty_blocks` to `false`, or you'll get ton of blocks.

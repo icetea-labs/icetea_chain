@@ -217,7 +217,7 @@ exports.for = (invokeType, contractAddress, methodName, methodParams, options) =
  * @returns {object} context
  */
 exports.forTransaction = (contractAddress, methodName, methodParams, options) => {
-  const { tx, block, stateAccess, tools, tags } = options
+  const { tx, block, stateAccess, tools, events } = options
 
   const msg = {}
   msg.name = methodName
@@ -230,8 +230,6 @@ exports.forTransaction = (contractAddress, methodName, methodParams, options) =>
 
   const contractHelpers = stateAccess.forUpdate(contractAddress)
   const { deployedBy } = tools.getCode(contractAddress)
-
-  const isStringOrBuf = v => (typeof v === 'string' || Buffer.isBuffer(v))
 
   const ctx = {
     ...contractHelpers,
@@ -254,22 +252,10 @@ exports.forTransaction = (contractAddress, methodName, methodParams, options) =>
       isValidAddress,
       getContractInfo: (addr, errorMessage) => _getContractInfo(tools, addr, errorMessage),
       require: _require,
-      addTag: (name, value) => {
-        if (typeof name !== 'string' || !isStringOrBuf(value)) {
-          throw new Error('Tag name must be string and tag value must be string or Buffer.')
-        }
-        if (['tx.from', 'tx.to', 'tx.payer', 'tx.gasused'].includes(name)) {
-          throw new Error(`Tag name ${name} is reserved for system use only.`)
-        }
-        if (name in tags) {
-          throw new Error(`Tag ${name} already exists for this transaction.`)
-        }
-        tags[name] = value
-      },
       deployContract: _makeDeployContract(tools, contractHelpers, contractAddress, options)
     },
     emitEvent: (eventName, eventData, indexes = []) => {
-      utils.emitEvent(contractAddress, tags, eventName, eventData, indexes)
+      utils.emitEvent(contractAddress, events, eventName, eventData, indexes)
     }
   }
 

@@ -6,6 +6,7 @@
 
 const { Alias: ALIAS_ADDR } = require('./sysconnames')
 const { checkMsg } = require('../helper/types')
+const { setContextMigration, importState, exportState } = require('./migration.js')(this)
 
 const METADATA = Object.freeze({
   query: {
@@ -52,6 +53,19 @@ const METADATA = Object.freeze({
       { name: 'overwrite', type: ['boolean', 'undefined'] }
     ],
     returnType: 'string'
+  },
+  exportState: {
+    decorators: ['transaction'],
+    params: [],
+    returnType: 'string'
+  },
+  importState: {
+    decorators: ['transaction'],
+    params: [
+      { name: 'data', type: ['object'] },
+      { name: 'overwrite', type: ['boolean', 'undefined'] }
+    ],
+    returnType: 'string'
   }
 })
 
@@ -95,6 +109,8 @@ const sanitizeAlias = (alias) => {
 
 // standard contract interface
 exports.run = (context, options) => {
+  // set context for migration
+  setContextMigration(context)
   const { msg, block } = context.runtime
   const msgParams = checkMsg(msg, METADATA, { sysContracts: this.systemContracts() })
 
@@ -222,7 +238,16 @@ exports.run = (context, options) => {
       saveAddrMap(context, map)
 
       return fullAlias
+    },
+
+    exportState () {
+      return exportState()
+    },
+
+    importState (data, overwrite = true) {
+      return importState(data, overwrite)
     }
+
   }
 
   if (!Object.prototype.hasOwnProperty.call(contract, msg.name)) {

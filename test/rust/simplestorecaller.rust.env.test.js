@@ -41,16 +41,20 @@ async function testSimpleStore () {
   const simpleStoreSrc = fs.readFileSync(simpleStorePath, 'base64')
   const simpleStoreCallerSrc = fs.readFileSync(simpleStoreCallerPath, 'base64')
 
-  const result = await tweb3.deployWasm(simpleStoreSrc, [], { value, fee, from })
+  const result = await tweb3.deploy({ mode: 'wasm', data: simpleStoreSrc }, { value, fee, from })
   expect(result.address).toBeDefined()
 
-  // tags must be correct
-  const { tags } = await tweb3.getTransaction(result.hash)
-  expect(tags['tx.from']).toBe(from)
-  expect(typeof tags['tx.to']).toBe('string')
-  const to = tags['tx.to']
+  // events must be correct
+  await sleep(2000)
+  const { events } = await tweb3.getTransaction(result.hash)
+  expect(events.length).toBeGreaterThanOrEqual(1)
+  const evTx = events.filter(e => e.eventName === 'tx')
+  expect(evTx.length).toBe(1)
+  expect(evTx[0].eventData.from).toBe(from)
+  expect(typeof evTx[0].eventData.to).toBe('string')
+  const to = evTx[0].eventData.to
 
-  const callerResult = await tweb3.deployWasm(simpleStoreCallerSrc, [to], { value, fee, from })
+  const callerResult = await tweb3.deploy({ mode: 'wasm', data: simpleStoreCallerSrc, arguments: [to] }, { value, fee, from })
   expect(callerResult.address).toBeDefined()
   const callerAddress = callerResult.address
 
@@ -68,22 +72,28 @@ async function testSimpleStore () {
 
   const value2Set = 100
   let tx = await simpleContract.methods.set_value(value2Set).sendCommit({ from })
-
   // Check ValueChanged event was emit
-  expect(tx.events.length).toBe(1)
-  expect(tx.events[0]).toEqual({
+  expect(tx.events.length).toBeGreaterThanOrEqual(1)
+  const evTx2 = tx.events.filter(e => e.eventName === 'ValueChanged')
+  expect(evTx2.length).toBe(1)
+  expect(evTx2[0]).toEqual({
     emitter: to,
     eventName: 'ValueChanged',
-    eventData: { value: value2Set.toString() } // for u128
+    eventData: { value: value2Set } // for u128
   })
 
   const callerValue = 200
+  console.log('hahaha')
   tx = await callerContract.methods.set_value(callerValue).sendCommit()
-  expect(tx.events.length).toBe(1)
-  expect(tx.events[0]).toEqual({
+  console.log('kkkk')
+
+  expect(tx.events.length).toBeGreaterThanOrEqual(1)
+  const evTx3 = tx.events.filter(e => e.eventName === 'ValueChanged')
+  expect(evTx2.length).toBe(1)
+  expect(evTx3[0]).toEqual({
     emitter: to,
     eventName: 'ValueChanged',
-    eventData: { value: callerValue.toString() } // for u128
+    eventData: { value: callerValue } // for u128
   })
 
   // Get the value after check
