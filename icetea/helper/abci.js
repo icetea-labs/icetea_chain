@@ -46,8 +46,8 @@ function getTx (req) {
  * @param {object} data - abci data
  * @returns {object} response object
  */
-function replyQuery (data) {
-  return { code: 0, value: serialize(data) }
+function replyQuery (data, noSerialize) {
+  return { code: 0, value: noSerialize ? data : serialize(data) }
 }
 
 module.exports = { getBlock, getTx, replyQuery }

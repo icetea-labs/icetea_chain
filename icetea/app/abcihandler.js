@@ -122,7 +122,10 @@ const handler = {
         return { code: 2, info: 'Height is not supported for this path.' }
       }
 
-      data = (req.data && req.data.length) ? codec.decode(req.data) : req.data
+      const json = path.startsWith('json_')
+      if (json) path = path.slice(5)
+
+      data = (req.data && req.data.length) ? (json ? JSON.parse(req.data.toString()) : codec.decode(req.data)) : req.data
 
       switch (path) {
         case 'balance':
@@ -147,7 +150,7 @@ const handler = {
         case 'invokeView':
         case 'invokePure': {
           const result = app[path](data.address, data.name, data.params, data.options)
-          return replyQuery(result)
+          return replyQuery(result, json)
         }
       }
 

@@ -31,7 +31,7 @@ describe('rust wasm context', () => {
     const { privateKey, address: from } = account10k
     tweb3.wallet.importAccount(privateKey)
 
-    const result = await tweb3.deployWasm(fs.readFileSync('./test/rust/assets/context-test.wasm', 'base64'), [], { from })
+    const result = await tweb3.deploy({ mode: 'wasm', data: fs.readFileSync('./test/rust/assets/context-test.wasm', 'base64') }, { from })
     expect(result.address).toBeDefined()
     contract = tweb3.contract(result.address)
 
@@ -81,7 +81,7 @@ describe('rust wasm context', () => {
     expect(deleteState.returnValue).toBe(true)
 
     const oldContract = contract
-    const result = await tweb3.deployWasm(fs.readFileSync('./test/rust/assets/context-test.wasm', 'base64'), [oldContract.address], { from })
+    const result = await tweb3.deploy({ mode: 'wasm', data: fs.readFileSync('./test/rust/assets/context-test.wasm', 'base64'), arguments: [oldContract.address] }, { from })
     contract = tweb3.contract(result.address)
 
     const otherHasState = await contract.methods.other_has_state('owner').call({ from })

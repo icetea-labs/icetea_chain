@@ -48,19 +48,17 @@ describe('transfer', () => {
     await sleep(2000)
     const tx = await tweb3.getTransaction(result.hash)
 
-    // events must be correct
-    const evData = tweb3.utils.decodeTxTags(tx)
-    expect(evData.length).toBeGreaterThanOrEqual(1)
-    const evTx = evData.filter(e => e.attributes._ev === 'tx')
+    const events = tweb3.utils.decodeTxEvents(tx)
+    expect(events.length).toBe(2)
+    const evTx = events.filter(e => e.eventName === 'tx')
     expect(evTx.length).toBe(1)
-    expect(evTx[0].attributes.from).toBe(from)
-    expect(evTx[0].attributes.to).toBe(to)
+    expect(evTx[0].eventData.from).toBe(from)
+    expect(evTx[0].eventData.to).toBe(to)
 
-    const evData2 = tweb3.utils.decodeTxTags(result)
-    expect(evData).toEqual(evData2)
+    const evData2 = tweb3.utils.decodeTxEvents(result)
+    expect(events).toEqual(evData2)
 
     // since value > 0, a system 'transfer' event must be emitted
-    const events = tweb3.utils.decodeTxEvents(result)
     const ev2 = events.filter(e => e.eventName === 'transfer')
     expect(ev2.length).toBe(1)
     expect(ev2[0]).toEqual({

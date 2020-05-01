@@ -2,7 +2,6 @@
 
 const { randomAccountWithBalance, sleep } = require('../helper')
 const { startupWith } = require('../../icetea/app/abcihandler')
-const { ContractMode } = require('@iceteachain/common')
 const { IceteaWeb3 } = require('@iceteachain/web3')
 const server = require('abci')
 const createTempDir = require('tempy').directory
@@ -53,7 +52,7 @@ describe('require contract', () => {
     const value = 2
     const fee = 1
 
-    const result = await tweb3.deploy(ContractMode.JS_RAW, await transpile(requireSrc), [], { value, fee, from })
+    const result = await tweb3.deploy(await transpile(requireSrc), { value, fee, from })
     expect(result.address).toBeDefined()
 
     const requireContract = tweb3.contract(result.address)
@@ -73,6 +72,6 @@ describe('require contract', () => {
     const value = 2
     const fee = 1
 
-    await expect(tweb3.deploy(ContractMode.JS_RAW, wrongSrc, [], { value, fee, from })).rejects.toThrow(Error)
+    await expect(tweb3.deploy(wrongSrc, { value, fee, from })).rejects.toThrow(Error)
   })
 })

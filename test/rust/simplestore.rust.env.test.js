@@ -49,17 +49,15 @@ async function testSimpleStore (mode, contractPath) {
   const result = await tweb3.sendTransactionCommit({ from: account10k.address, value, fee, data })
   expect(result.deliver_tx.code).toBeFalsy()
 
-  // events must be correct
-  const evData = tweb3.utils.decodeTxTags(result)
-  expect(evData.length).toBeGreaterThanOrEqual(1)
-  const evTx = evData.filter(e => e.attributes._ev === 'tx')
+  const events = tweb3.utils.decodeTxEvents(result)
+  expect(events.length).toBe(2)
+  const evTx = events.filter(e => e.eventName === 'tx')
   expect(evTx.length).toBe(1)
-  expect(evTx[0].attributes.from).toBe(from)
-  expect(typeof evTx[0].attributes.to).toBe('string')
-  const to = evTx[0].attributes.to
+  expect(evTx[0].eventData.from).toBe(from)
+  expect(typeof evTx[0].eventData.to).toBe('string')
+  const to = evTx[0].eventData.to
 
   // since value > 0, a system 'transfer' event must be emitted
-  const events = tweb3.utils.decodeTxEvents(result)
   const ev = events.filter(e => e.eventName === 'transfer')
   expect(ev.length).toBe(1)
   expect(ev[0]).toEqual({

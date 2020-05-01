@@ -42,7 +42,7 @@ describe('Strip Undefined in State', () => {
     const { privateKey, address: from } = account10k
     tweb3.wallet.importAccount(privateKey)
 
-    const contract = await tweb3.deployJs(src, [], { from })
+    const contract = await tweb3.deploy(src, { from })
     expect(contract.address).toBeTruthy()
 
     let r = await contract.methods.getValue().call()
@@ -94,7 +94,7 @@ describe('Strip Undefined in State', () => {
     const { privateKey, address: from } = account10k
     tweb3.wallet.importAccount(privateKey)
 
-    const contract = await tweb3.deployJs(src, [], { from })
+    const contract = await tweb3.deploy(src, { from })
     expect(contract.address).toBeTruthy()
 
     let r = await contract.methods.getValue().call()

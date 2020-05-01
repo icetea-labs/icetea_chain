@@ -41,7 +41,7 @@ async function testSimpleStore () {
   const simpleStoreSrc = fs.readFileSync(simpleStorePath, 'base64')
   const simpleStoreCallerSrc = fs.readFileSync(simpleStoreCallerPath, 'base64')
 
-  const result = await tweb3.deployWasm(simpleStoreSrc, [], { value, fee, from })
+  const result = await tweb3.deploy({ mode: 'wasm', data: simpleStoreSrc }, { value, fee, from })
   expect(result.address).toBeDefined()
 
   // events must be correct
@@ -54,7 +54,7 @@ async function testSimpleStore () {
   expect(typeof evTx[0].eventData.to).toBe('string')
   const to = evTx[0].eventData.to
 
-  const callerResult = await tweb3.deployWasm(simpleStoreCallerSrc, [to], { value, fee, from })
+  const callerResult = await tweb3.deploy({ mode: 'wasm', data: simpleStoreCallerSrc, arguments: [to] }, { value, fee, from })
   expect(callerResult.address).toBeDefined()
   const callerAddress = callerResult.address
 

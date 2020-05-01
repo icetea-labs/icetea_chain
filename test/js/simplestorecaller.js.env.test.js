@@ -31,10 +31,10 @@ async function testSimpleStoreCaller (mode, calleeSrc, callerSrc) {
   const { privateKey, address: from } = account10k
   tweb3.wallet.importAccount(privateKey)
 
-  const callee = await tweb3.deploy(mode, calleeSrc, [], { from })
+  const callee = await tweb3.deploy({ mode, data: calleeSrc }, { from })
   expect(callee.address).toBeTruthy()
 
-  const caller = await tweb3.deploy(mode, callerSrc, [], { from })
+  const caller = await tweb3.deploy({ mode, data: callerSrc }, { from })
   expect(caller.address).toBeTruthy()
 
   let r = await caller.methods.getValue(callee.address).call()
