@@ -113,24 +113,6 @@ program
     debug(`Directories ${initDir} and ${contractSrcDir} removed.`)
   })
 
-// program
-//   .command('app')
-//   .description('start a blockchain ui for development')
-//   .option('-h, --host <host>', 'icetea node http or ws', 'ws://localhost:26657/websocket')
-//   .action(async ({ host }, options) => {
-//     const daemon = path.resolve(__dirname, '../node_modules/webpack-dev-server/bin/webpack-dev-server.js')
-//     const child = spawn(daemon, ['--open', '--config', 'webpack.dev.js'], {
-//       env: { ...process.env, ICETEA_ENDPOINT: host },
-//       cwd: path.resolve(__dirname, '..')
-//     })
-//     child.stdout.pipe(process.stdout)
-//     child.stderr.pipe(process.stderr)
-
-//     child.on('exit', code => {
-//       debug(`Web server exit code: ${code}`)
-//     })
-//   })
-
 program.parse(process.argv)
 
 process.on('SIGINT', () => {
