@@ -1,5 +1,4 @@
 require('dotenv').config()
-const { ContractMode } = require('@iceteachain/common')
 const fs = require('fs')
 const { whitelistModules } = require('../icetea/config')
 const { transpile, setWhiteListModules } = require('@iceteachain/sunseed')
@@ -20,7 +19,7 @@ async function deploy () {
 
   // deploy the astrobot
   const src = await transpile(fs.readFileSync('./example/bot/astrobot/astrobot.js', 'utf8'), { prettier: true })
-  const astrobot = await tweb3.deploy(ContractMode.JS_RAW, src)
+  const astrobot = await tweb3.deploy(src)
 
   // add astrobot alias
   const alias = tweb3.contract('system.alias', key)

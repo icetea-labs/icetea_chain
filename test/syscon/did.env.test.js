@@ -301,4 +301,64 @@ describe('did', () => {
     did = await ms.query(account1.address).call()
     expect(Object.keys(did.tokens['system.alias']).length).toBe(1)
   })
+
+  test('did access token with alias', async () => {
+    const { privateKey, address: from } = account10k
+    tweb3.wallet.importAccount(privateKey)
+
+    // token account
+    const token = ecc.newBankKeys()
+    tweb3.wallet.importAccount(token.privateKey)
+
+    const src = "return 'ok';"
+    let r = await tweb3.deploy(src, { from })
+    const contract = tweb3.contract(r)
+
+    // register alias for the new contract
+    const alias = 'contract.xxx'
+    await tweb3.contract('system.alias').methods.register(alias.split('.')[1], contract.address).sendCommit({ from })
+
+    const getOk = c => {
+      return (c || contract).methods.xxx().sendCommit({
+        from: from,
+        signers: token.address
+      })
+    }
+
+    const did = tweb3.contract('system.did').methods
+    const duration = 5 * 60 * 1000
+
+    // first, grant to the contract by address
+    await did.grantAccessToken(from, contract.address, token.address, duration).sendCommit({ from })
+
+    // call the method with the access token
+    r = await getOk()
+    expect(r.returnValue).toBe('ok')
+
+    // then, revoke the access token
+    await did.revokeAccessToken(from, contract.address, token.address).sendCommit({ from })
+
+    // call the method again, this time should fail
+    await expect(getOk()).rejects.toThrowError('Permission denied')
+
+    // now, grant by the alias
+    await did.grantAccessToken(from, alias, token.address, duration).sendCommit({ from })
+
+    // call the method with the access token
+    r = await getOk()
+    expect(r.returnValue).toBe('ok')
+
+    // call by the alias, should also ok
+    r = await getOk(tweb3.contract(alias))
+    expect(r.returnValue).toBe('ok')
+
+    // then, revoke the access token
+    await did.revokeAccessToken(from, alias, token.address).sendCommit({ from })
+
+    // call the method again, this time should fail
+    await expect(getOk()).rejects.toThrowError('Permission denied')
+
+    // call with alias, should also fail
+    await expect(getOk(tweb3.contract(alias))).rejects.toThrowError('Permission denied')
+  })
 })

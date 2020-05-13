@@ -1,6 +1,5 @@
 const { randomAccountWithBalance, sleep } = require('../helper')
 const { startupWith } = require('../../icetea/app/abcihandler')
-const { ContractMode } = require('@iceteachain/common')
 const { IceteaWeb3 } = require('@iceteachain/web3')
 const server = require('abci')
 const createTempDir = require('tempy').directory
@@ -65,7 +64,7 @@ describe('restart app', () => {
     const { privateKey, address: from } = account10k
     tweb3.wallet.importAccount(privateKey)
 
-    const result = await tweb3.deploy(ContractMode.JS_RAW, (await transpile(hackerSrc)), [], { from })
+    const result = await tweb3.deploy(await transpile(hackerSrc), { from })
     expect(result.address).toBeDefined()
     const hackerContract = tweb3.contract(result.address)
 
@@ -93,38 +92,38 @@ describe('restart app', () => {
     const { privateKey, address: from } = account10k
     tweb3.wallet.importAccount(privateKey)
 
-    await expect(tweb3.deploy(ContractMode.JS_RAW, await transpile(`
+    await expect(tweb3.deploy(await transpile(`
       @contract class Hack1 {
         constructor() {
           new Function("return process")().exit()
         }
       }
-    `), [], { from })).rejects.toThrow(Error)
+    `), { from })).rejects.toThrow(Error)
 
-    await expect(tweb3.deploy(ContractMode.JS_RAW, await transpile(`
+    await expect(tweb3.deploy(await transpile(`
       @contract class Hack2 {
         constructor() {
           this.constructor.constructor("return process")().exit()
         }
       }
-    `), [], { from })).rejects.toThrow(Error)
+    `), { from })).rejects.toThrow(Error)
 
-    await expect(tweb3.deploy(ContractMode.JS_RAW, await transpile(`
+    await expect(tweb3.deploy(await transpile(`
       @contract class Hack3 {
         constructor() {
           const require = new Function("return process.mainModule.require")();
           console.log(require);
         }
       }
-    `), [], { from })).rejects.toThrow(Error)
+    `), { from })).rejects.toThrow(Error)
 
-    await expect(tweb3.deploy(ContractMode.JS_RAW, await transpile(`
+    await expect(tweb3.deploy(await transpile(`
       @contract class Hack4 {
         constructor() {
           const global = new Function("return global")();
           console.log(global);
         }
       }
-    `), [], { from })).rejects.toThrow(Error)
+    `), { from })).rejects.toThrow(Error)
   })
 })

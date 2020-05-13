@@ -6,14 +6,16 @@
 
 const { Alias: ALIAS_ADDR } = require('./sysconnames')
 const { checkMsg } = require('../helper/types')
+const { setContextMigration, importState, exportState } = require('./migration.js')(this)
 
 const METADATA = Object.freeze({
   query: {
     decorators: ['view'],
     params: [
-      { name: 'partOfAlias', type: ['string', 'RegExp'] }
+      { name: 'partOfAlias', type: ['string', 'RegExp'] },
+      { name: 'options', type: ['object', 'undefined'] }
     ],
-    returnType: ['object', 'Array']
+    returnType: ['object']
   },
   resolve: {
     decorators: ['view'],
@@ -22,6 +24,13 @@ const METADATA = Object.freeze({
     ],
     returnType: 'string'
   },
+  resolveMany: {
+    decorators: ['view'],
+    params: [
+      { name: 'aliasArray', type: 'Array' }
+    ],
+    returnType: 'Array'
+  },
   byAddress: {
     decorators: ['view'],
     params: [
@@ -29,11 +38,31 @@ const METADATA = Object.freeze({
     ],
     returnType: ['string', 'undefined']
   },
+  byAddressArray: {
+    decorators: ['view'],
+    params: [
+      { name: 'addressArray', type: 'Array' }
+    ],
+    returnType: 'Array'
+  },
   register: {
     decorators: ['transaction'],
     params: [
       { name: 'alias', type: 'string' },
       { name: 'address', type: ['pureaddress', 'undefined'] },
+      { name: 'overwrite', type: ['boolean', 'undefined'] }
+    ],
+    returnType: 'string'
+  },
+  exportState: {
+    decorators: ['transaction'],
+    params: [],
+    returnType: 'string'
+  },
+  importState: {
+    decorators: ['transaction'],
+    params: [
+      { name: 'data', type: ['object'] },
       { name: 'overwrite', type: ['boolean', 'undefined'] }
     ],
     returnType: 'string'
@@ -80,16 +109,25 @@ const sanitizeAlias = (alias) => {
 
 // standard contract interface
 exports.run = (context, options) => {
+  // set context for migration
+  setContextMigration(context)
   const { msg, block } = context.runtime
   const msgParams = checkMsg(msg, METADATA, { sysContracts: this.systemContracts() })
 
   const contract = {
-    query (textOrRegEx) {
+    query (textOrRegEx, { includeTags = false, maxItems = 10 } = {}) {
       const aliases = loadAliases(context)
-
+      const did = includeTags ? exports.systemContracts().Did : undefined
+      let count = 0
       return Object.keys(aliases).reduce((prev, alias) => {
-        if (isSatisfied(alias, textOrRegEx)) {
-          prev[alias] = aliases[alias]
+        if (count < maxItems && isSatisfied(alias, textOrRegEx)) {
+          const item = aliases[alias]
+          if (includeTags) {
+            const info = did.query(aliases[alias].address)
+            info && info.tags && (item.tags = info.tags)
+          }
+          count++
+          prev[alias] = item
         }
         return prev
       }, {})
@@ -100,9 +138,26 @@ exports.run = (context, options) => {
       return (aliases[alias] || {}).address
     },
 
+    resolveMany (aliasArray) {
+      const aliases = loadAliases(context)
+      return aliasArray.reduce((list, alias) => {
+        const addr = (aliases[alias] || {}).address
+        list.push(addr) // undefined will be push as is to match array length
+        return list
+      }, [])
+    },
+
     byAddress (address) {
       const map = loadAddrMap(context)
       return map[address]
+    },
+
+    byAddressArray (addressArray) {
+      const map = loadAddrMap(context)
+      return addressArray.reduce((r, addr) => {
+        r.push(map[addr])
+        return r
+      }, [])
     },
 
     register (alias, address, overwrite = false) {
@@ -183,7 +238,16 @@ exports.run = (context, options) => {
       saveAddrMap(context, map)
 
       return fullAlias
+    },
+
+    exportState () {
+      return exportState()
+    },
+
+    importState (data, overwrite = true) {
+      return importState(data, overwrite)
     }
+
   }
 
   if (!Object.prototype.hasOwnProperty.call(contract, msg.name)) {
@@ -197,6 +261,25 @@ exports.resolve = function (alias) {
   const storage = this.unsafeStateManager().getAccountState(ALIAS_ADDR).storage || {}
   const aliases = storage[ALIAS_KEY] || {}
   return (aliases[alias] || {}).address
+}
+
+exports.byAddress = function (address) {
+  const storage = this.unsafeStateManager().getAccountState(ALIAS_ADDR).storage || {}
+  const map = storage[ADDR_KEY] || {}
+  return map[address]
+}
+
+exports.byAddressArray = function (addressArray) {
+  const storage = this.unsafeStateManager().getAccountState(ALIAS_ADDR).storage || {}
+  const map = storage[ADDR_KEY] || {}
+  const initialR = []
+  initialR.aliasCount = 0
+  return addressArray.reduce((r, addr) => {
+    const alias = map[addr]
+    r.push(alias)
+    if (alias) r.aliasCount++
+    return r
+  }, initialR)
 }
 
 exports.ensureAddress = function (aliasOrAddress) {

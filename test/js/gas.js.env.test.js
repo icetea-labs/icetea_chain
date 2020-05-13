@@ -2,7 +2,6 @@
 
 const { randomAccountWithBalance, sleep } = require('../helper')
 const { startupWith } = require('../../icetea/app/abcihandler')
-const { ContractMode } = require('@iceteachain/common')
 const { IceteaWeb3 } = require('@iceteachain/web3')
 const server = require('abci')
 const createTempDir = require('tempy').directory
@@ -49,12 +48,14 @@ describe('simple store contract', () => {
     tweb3.wallet.importAccount(privateKey)
     const originBalance = Number((await tweb3.getBalance(from)).balance)
 
+    const transpiledSrc = await transpile(src)
+
     // deploy without fee
-    await expect(tweb3.deploy(ContractMode.JS_RAW, await transpile(src), [], { from })).rejects.toThrow(Error)
+    await expect(tweb3.deploy(transpiledSrc, { from })).rejects.toThrow(Error)
 
     // deploy with fee
     const fee = 30000
-    const result = await tweb3.deploy(ContractMode.JS_RAW, await transpile(src), [], { from, fee })
+    const result = await tweb3.deploy(transpiledSrc, { from, fee })
     expect(result.address).toBeDefined()
     const simplestoreContract = tweb3.contract(result.address)
 
@@ -87,7 +88,7 @@ describe('simple store contract', () => {
     tweb3.wallet.importAccount(privateKey)
     const fee = 20000
 
-    const result = await tweb3.deploy(ContractMode.JS_RAW, await transpile(loopSrc), [], { from, fee })
+    const result = await tweb3.deploy(await transpile(loopSrc), { from, fee })
     expect(result.address).toBeDefined()
     const loopContract = tweb3.contract(result.address)
 
@@ -107,7 +108,7 @@ describe('simple store contract', () => {
     tweb3.wallet.importAccount(privateKey)
     const fee = 20000
 
-    const result = await tweb3.deploy(ContractMode.JS_RAW, await transpile(endlessSrc), [], { from, fee })
+    const result = await tweb3.deploy(await transpile(endlessSrc), { from, fee })
     expect(result.address).toBeDefined()
     const endlessContract = tweb3.contract(result.address)
 

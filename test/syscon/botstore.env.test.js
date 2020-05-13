@@ -33,7 +33,7 @@ const deployBot = from => {
             name: 'Test bot'
         }
     `
-  return tweb3.deployJs(src, [], { from }).then(r => r.address)
+  return tweb3.deploy(src, { from }).then(r => r.address)
 }
 
 describe('botstore', () => {
