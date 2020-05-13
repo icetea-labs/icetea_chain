@@ -90,7 +90,8 @@ const _stateforAddress = (contractAddress, readonly, {
       // which make state objects less "suger" but more controllable without Proxy
       // in the end, should consider write-on-copy somehow
       // storage = contractStorage.system ? contractStorage : _.cloneDeep(contractStorage)
-      storage = contractStorage
+      // storage = contractStorage
+      storage = _.cloneDeep(contractStorage)
       storages[contractAddress] = storage
     }
     // if (readonly && storage && !storage.system) {

@@ -41,53 +41,63 @@ exports.stringifyWithBigInt = function (obj) {
  * emit events
  * @function
  * @param {object} emitter - emmitter
- * @param {Array.<string>} tags - event tag
+ * @param {Array.<string>} events - events
  * @param {string} eventName - event name
  * @param {object} eventData - event data
  * @param {Array.<string>} [indexes=[]] - index key in event data
- * @returns {Array.<string>} tags
+ * @returns {Array.<string>} events
  */
-exports.emitEvent = function (emitter, tags, eventName, eventData, indexes = []) {
-  const EVENTNAMES_SEP = '|'
-  const EMITTER_EVENTNAME_SEP = '%'
-  const EVENTNAME_INDEX_SEP = '~'
-
+exports.emitEvent = function (emitter, events, eventName, eventData, indexes = []) {
+  const EVENTNAME = '_ev'
   emitter = emitter || 'system'
-  tags = tags || {}
+  events = events || []
 
-  if (typeof eventData !== 'object') {
+  if (eventData != null && typeof eventData !== 'object') {
     throw new Error('eventData must be an object.')
   }
-  if (eventName === 'EventNames' || eventName === 'tx') {
-    throw new Error("Event name cannot be 'EventNames' or 'tx'")
-  }
-  if (eventName.includes(EVENTNAMES_SEP) || eventName.includes(EMITTER_EVENTNAME_SEP) || eventName.includes(EVENTNAME_INDEX_SEP)) {
-    throw new Error(`Event name cannot contain ${EVENTNAMES_SEP}, ${EMITTER_EVENTNAME_SEP}, or ${EVENTNAME_INDEX_SEP} characters.`)
+
+  if (eventName === EVENTNAME ||
+    (['tx', 'transfer'].includes(eventName) && emitter !== 'system')) {
+    throw new Error(`Event name cannot be '${EVENTNAME}', 'tx' or 'transfer'`)
   }
 
-  // copy so that we can safely delete indexed fields before serialization
-  eventData = Object.assign({}, eventData)
-
-  if (!tags.EventNames) tags.EventNames = EVENTNAMES_SEP
-  if (tags.EventNames.includes(EVENTNAMES_SEP + eventName + EVENTNAMES_SEP)) {
-    throw new Error('Event ' + eventName + ' was already emit')
-  }
-  tags.EventNames += emitter + EMITTER_EVENTNAME_SEP + eventName + EVENTNAMES_SEP
+  // validate indexes
   indexes.forEach(indexedKey => {
     if (typeof indexedKey !== 'string') {
       throw new Error("Event's indexed key must be string")
     }
-    if (typeof eventData[indexedKey] === 'object') {
+    if (eventData[indexedKey] != null && typeof eventData[indexedKey] === 'object') {
       throw new Error("Event's indexed value cannot be an object.")
     }
-    tags[eventName + EVENTNAME_INDEX_SEP + indexedKey] = eventData[indexedKey] == null ? '' : String(eventData[indexedKey])
-
-    // it is a copy, safely to delete
-    delete eventData[indexedKey]
   })
 
+  const attributes = []
   try {
-    tags[eventName] = exports.stringifyWithBigInt(eventData)
+    // add event name into attributes
+    attributes.push({ key: Buffer.from(EVENTNAME), value: Buffer.from(eventName), index: true })
+
+    // add attributes
+    eventData && Object.keys(eventData).forEach((key) => {
+      const index = indexes.includes(key)
+      let value = eventData[key]
+      if (Buffer.isBuffer(value)) {
+        // just keep
+      } else if (typeof value === 'string') {
+        value = Buffer.from(value)
+      } else if (value == null || typeof value !== 'object') {
+        value = Buffer.from(String(value))
+      } else if (typeof value === 'object' && !index) {
+        value = exports.stringifyWithBigInt(value)
+        value = Buffer.from(value)
+      } else {
+        throw new Error(`Event value for key ${key} is has wrong type, expect: Buffer or string, got: ${typeof eventData[key]}`)
+      }
+      const attr = { key: Buffer.from(key), value }
+      if (index) attr.index = true
+      attributes.push(attr)
+    })
+
+    events.push({ type: emitter, attributes })
   } catch (e) {
     console.log(e)
     const newE = new Error('Cannot serialize event data to string. Make sure it is compatible with JSON.stringify.')
@@ -95,36 +105,34 @@ exports.emitEvent = function (emitter, tags, eventName, eventData, indexes = [])
     throw newE
   }
 
-  return tags
+  return events
 }
 
 /**
- * emit transfered events
+ * Emit 'transfer' event, can only called by system so no need emitter argument.
  * @function
- * @param {object} emitter - emmitter
- * @param {Array.<string>} tags - event tag
+ * @param {Array.<string>} events - events
  * @param {string} from - from address
  * @param {string} to - to address
  * @param {string} payer - the one who pays the transaction
  * @param {number} value - transfer value
- * @returns {Array.<string>} tags
+ * @returns {Array.<string>} events
  */
-exports.emitTransferred = (emitter, tags, from, to, payer, value) => {
-  return exports.emitEvent(emitter, tags, 'Transferred', { from, to, payer, value }, ['from', 'to', 'payer'])
+exports.emitTransfer = (events, from, to, payer, value) => {
+  return exports.emitEvent(null, events, 'transfer', { from, to, payer, value }, ['from', 'to', 'payer'])
 }
 
 /**
- * emit gas used events
+ * emit tx events
  * @function
- * @param {object} emitter - emmitter
- * @param {Array.<string>} tags - event tag
+ * @param {Array.<string>} events - events
  * @param {string} address - contract address
  * @param {string} method - contract address method
  * @param {number} value - transfer value
- * @returns {Array.<string>} tags
+ * @returns {Array.<string>} events
  */
-exports.emitGasUsed = (emitter, tags, address, method, value) => {
-  return exports.emitEvent(emitter, tags, 'GasUsed', { address, method, value }, ['address', 'method', 'value'])
+exports.emitTx = (events, from, to, payer, gasused) => {
+  return exports.emitEvent(null, events, 'tx', { from, to, payer, gasused }, ['from', 'to', 'payer'])
 }
 
 /**

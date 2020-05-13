@@ -198,7 +198,7 @@ class StateManager extends EventEmitter {
   }
 
   async debugState (height) {
-    if (utils.isDevMode()) {
+    if (utils.envDevEnabled('DEBUG_STATE')) {
       if (height) {
         const block = await patricia.getBlockByHeight(height)
         if (block.stateRoot) {
@@ -209,7 +209,7 @@ class StateManager extends EventEmitter {
     }
 
     return {
-      info: 'Enable debug by setting NODE_ENV=development'
+      info: 'Enable debug by setting NODE_ENV=development and DEBUG_STATE=1'
     }
   }
 }

@@ -1,6 +1,5 @@
 const { randomAccountWithBalance, sleep } = require('../helper')
 const { startupWith } = require('../../icetea/app/abcihandler')
-const { ContractMode } = require('@iceteachain/common')
 const { IceteaWeb3 } = require('@iceteachain/web3')
 const server = require('abci')
 const createTempDir = require('tempy').directory
@@ -37,7 +36,7 @@ describe('restart app', () => {
     tweb3.wallet.importAccount(privateKey)
     const numOfContracts = 5
     const result = await Promise.all(_.range(numOfContracts).map(async x => {
-      return tweb3.deploy(ContractMode.JS_RAW, await transpile(src), [], { from })
+      return tweb3.deploy(await transpile(src), { from })
     }))
     expect(result.length).toBe(numOfContracts)
 
@@ -46,7 +45,7 @@ describe('restart app', () => {
     await sleep(4000)
 
     const result2 = await Promise.all(_.range(numOfContracts).map(async x => {
-      return tweb3.deploy(ContractMode.JS_RAW, await transpile(src), [], { from })
+      return tweb3.deploy(await transpile(src), { from })
     }))
     expect(result2.length).toBe(numOfContracts)
   })

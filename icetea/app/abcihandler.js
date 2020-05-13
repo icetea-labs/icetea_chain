@@ -82,40 +82,22 @@ const handler = {
     try {
       tx = getTx(req)
 
-      const tags = []
-      const data = app.execTx(tx, tags)
+      const events = []
+      const data = app.execTx(tx, events)
 
       const result = {}
       if (typeof data !== 'undefined') {
         result.data = utils.serialize(data)
       }
-
-      result.tags = []
-      if (typeof tags !== 'undefined' && Object.keys(tags).length) {
-        Object.keys(tags).forEach((key) => {
-          let value = tags[key]
-          if (Buffer.isBuffer(value)) {
-            // juse keep
-          } else if (typeof value === 'string') {
-            value = Buffer.from(value)
-          } else {
-            throw new Error(`Tag value for key ${key} is has wrong type, expect: Buffer or string, got: ${typeof tags[key]}`)
-          }
-          result.tags.push({ key: Buffer.from(key), value })
-        })
-      }
-
-      // add system tags
-      _addSystemTags(result.tags, tx, data)
+      result.events = events
 
       return result
     } catch (err) {
       debug('TX execution error. Transaction data: ', tx || req)
       debug(err)
 
-      const tags = []
-      _addSystemTags(tags, tx)
-      return { code: 2, tags, log: String(err) }
+      const events = utils.emitTx(null, tx.from, tx.to, tx.payer, 0)
+      return { code: 2, events, info: err.code, log: String(err) }
     }
   },
 
@@ -140,7 +122,10 @@ const handler = {
         return { code: 2, info: 'Height is not supported for this path.' }
       }
 
-      data = (req.data && req.data.length) ? codec.decode(req.data) : req.data
+      const json = path.startsWith('json_')
+      if (json) path = path.slice(5)
+
+      data = (req.data && req.data.length) ? (json ? JSON.parse(req.data.toString()) : codec.decode(req.data)) : req.data
 
       switch (path) {
         case 'balance':
@@ -165,7 +150,7 @@ const handler = {
         case 'invokeView':
         case 'invokePure': {
           const result = app[path](data.address, data.name, data.params, data.options)
-          return replyQuery(result)
+          return replyQuery(result, json)
         }
       }
 
@@ -176,13 +161,4 @@ const handler = {
       return { code: 3, info: String(error), log: error.stack }
     }
   }
-}
-
-const _addSystemTags = (tags, tx, data) => {
-  tags.push({ key: Buffer.from('tx.from'), value: Buffer.from(tx.from) })
-  const txTo = tx.isContractCreation() ? data : tx.to
-  if (txTo) {
-    tags.push({ key: Buffer.from('tx.to'), value: Buffer.from(txTo) })
-  }
-  tags.push({ key: Buffer.from('tx.payer'), value: Buffer.from(tx.payer) })
 }

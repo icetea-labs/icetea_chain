@@ -31,9 +31,9 @@ describe('rust wasm misuse', () => {
     tweb3.wallet.importAccount(privateKey)
 
     // import name conflict
-    await expect(tweb3.deployWasm(fs.readFileSync('./test/rust/assets/two-import-name.wasm', 'base64'), [], { from })).rejects.toThrow(Error)
+    await expect(tweb3.deploy({ mode: 'wasm', data: fs.readFileSync('./test/rust/assets/two-import-name.wasm', 'base64') }, { from })).rejects.toThrow(Error)
 
     // no main function found
-    await expect(tweb3.deployWasm(fs.readFileSync('./test/rust/assets/no-main.wasm', 'base64'), [], { from })).rejects.toThrow(Error)
+    await expect(tweb3.deploy({ maode: 'wasm', data: fs.readFileSync('./test/rust/assets/no-main.wasm', 'base64') }, { from })).rejects.toThrow(Error)
   })
 })

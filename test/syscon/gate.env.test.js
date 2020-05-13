@@ -49,11 +49,11 @@ describe('gate', () => {
     const opt = { from }
     const gate = tweb3.contract('system.gate')
     await gate.methods.registerProvider().sendCommit({ from, value: 10e6 })
-    gate.events.OffchainDataQuery({}, async (error, { id }) => {
+    gate.events.OffchainDataQuery({}, async (error, event) => {
       if (error) {
         throw error
       }
-      gate.methods.setResult(id, { test: 'hello' }).sendAsync(opt)
+      gate.methods.setResult(event.eventData.id, { test: 'hello' }).sendAsync(opt)
     })
 
     const src = await transpile(`
@@ -73,8 +73,8 @@ describe('gate', () => {
       }
     }
     `)
-    const c = await tweb3.deployJs(src, [], opt)
-    await sleep(3000)
+    const c = await tweb3.deploy(src, opt)
+    await sleep(5000)
     const r = await c.methods.result().call()
     expect(r).toEqual({ test: 'hello' })
   })

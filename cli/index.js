@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+const { version } = require('../package.json')
 const tm = require('tendermint-node')
 const fs = require('fs')
 const path = require('path')
@@ -11,7 +12,7 @@ debugFactory.enable('icetea*')
 const debug = debugFactory('icetea:cli')
 
 const program = require('commander')
-program.version('0.0.1')
+program.version(version)
 
 const networks = ['private', 'test', 'main']
 
@@ -110,24 +111,6 @@ program
     fs.closeSync(fs.openSync(`${contractSrcDir}/.gitkeep`, 'w'))
     initTendemint(initDir)
     debug(`Directories ${initDir} and ${contractSrcDir} removed.`)
-  })
-
-program
-  .command('app')
-  .description('start a blockchain ui for development')
-  .option('-h, --host <host>', 'icetea node http or ws', 'ws://localhost:26657/websocket')
-  .action(async ({ host }, options) => {
-    const daemon = path.resolve(__dirname, '../node_modules/webpack-dev-server/bin/webpack-dev-server.js')
-    const child = spawn(daemon, ['--open', '--config', 'webpack.dev.js'], {
-      env: { ...process.env, ICETEA_ENDPOINT: host },
-      cwd: path.resolve(__dirname, '..')
-    })
-    child.stdout.pipe(process.stdout)
-    child.stderr.pipe(process.stderr)
-
-    child.on('exit', code => {
-      debug(`Web server exit code: ${code}`)
-    })
   })
 
 program.parse(process.argv)
