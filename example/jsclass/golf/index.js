@@ -32,6 +32,7 @@ const state = {
     }
 
     // Add a provider, return the package ID
+    // {"name": "FLC"}
     @transaction addProvider(value): number {
         value = validate(
             value,
@@ -41,7 +42,7 @@ const state = {
             }).required()
           )
 
-        // add, which generated a new ID
+        // add and return the new provider ID
         return state.provider.add(value)
     }
 
@@ -58,6 +59,7 @@ const state = {
     }
 
     // Add a package, return the package ID
+    // {"name": "FLC P1", "providerId": 0, "shareable": true, "shareTax": 0.2, "active": true, "price": 1, "initialTicket": 1000}
     @transaction addPackage(value): number {
         value = validate(
             value,
@@ -84,7 +86,7 @@ const state = {
         expect(!value.sellEnd || value.sellEnd > block.timestamp, 'sellEnd must be in the future.')
         expect((!value.sellStart && !value.sellEnd) || value.sellEnd > value.sellStart, 'sellEnd must be greater than sellStart')
 
-        // add, which generated a new ID
+        // add and return the new package ID
         return state.pkg.add(value)
     }
 
@@ -161,7 +163,7 @@ const state = {
         expect(shareable, 'Card is not shareable.')
 
         let givingAmount = sharedTicket
-        if (p.shareTax) {
+        if (shareTax) {
             givingAmount += givingAmount * shareTax
         }
 
@@ -179,6 +181,11 @@ const state = {
 
     @payable @onreceive deposit() {
         return state.bank.set(msg.sender, (v = 0n) => v + msg.value)
+    }
+
+    @view getDepositedAmount(addr: ?address) {
+        addr = addr || msg.sender
+        return state.bank.get(addr, 0n)
     }
 
     @transaction withdraw(amount: bigint | number | string) {
