@@ -4,14 +4,17 @@ const Joi = require('@hapi/joi')
 const { path } = stateUtil(this)
 
 const state = {
-    // list of provider
+    // list of providers
     provider: path('pr', {}),
 
     // list of packages
     pkg: path('pk', {}),
 
-    // address - pkgId - number of ticket
-    card: path('ca', {})
+    // address - pkg - number of ticket
+    card: path('ca', {}),
+
+    // keep people deposits
+    bank: path('ba', {})
 }
 
 @contract class iTee  {
@@ -20,22 +23,21 @@ const state = {
         return state.provider.get(pid)
     }
 
-    @view countProviders(options) {
-        return state.provider.count(options)
-    }
-
-    // example
     @view getProviders(options) {
         return state.provider.query(options)
     }
 
+    @view countProviders(options): number {
+        return this.getProviders(options).length
+    }
+
     // Add a provider, return the package ID
-    @transaction addProvider(value) {
+    @transaction addProvider(value): number {
         value = validate(
             value,
             Joi.object({
               name: Joi.string().required(),
-              value: Joi.string(),
+              img: Joi.string()
             }).required()
           )
 
@@ -47,20 +49,23 @@ const state = {
         return state.pkg.get(pkgId)
     }
 
-    // example
     @view getPackages(options) {
         return state.pkg.query(options)
     }
 
+    @view countPackages(options): number {
+        return this.getPackages(options).length
+    }
+
     // Add a package, return the package ID
-    @transaction addPackage(value) {
+    @transaction addPackage(value): number {
         value = validate(
             value,
             Joi.object({
               providerId: Joi.number().integer().min(0).required(),
               name: Joi.string().required(),
               img: Joi.string(),
-              sharable: Joi.boolean(),
+              shareable: Joi.boolean(),
               shareTax: Joi.number().positive(),
               expire: Joi.date().timestamp().raw(),
               validDuration: Joi.number().integer().positive(),
@@ -84,14 +89,29 @@ const state = {
     }
 
     // update price/active/sellStart/sellEnd
-    @transaction updatePackage (pkgId: number, data) {
-        // TODO: validate
+    @transaction updatePackage (pkgId: number, value) {
+        value = validate(
+            value,
+            Joi.object({
+              name: Joi.string(),
+              img: Joi.string(),
+              shareable: Joi.boolean(),
+              shareTax: Joi.number().positive(),
+              expire: Joi.date().timestamp().raw(),
+              validDuration: Joi.number().integer().positive(),
+              initialTicket: Joi.number().positive(),
+              sellStart:  Joi.date().timestamp().raw(),
+              sellEnd:  Joi.date().timestamp().raw(),
+              price: Joi.number().positive(),
+              active: Joi.boolean()
+            }).required()
+        )
 
         // merge package data
-        return state.pkg.mergeAt(pkgId, data)
+        return state.pkg.mergeAt(pkgId, value)
     }
 
-    @payable buy (pkgId: number) {
+    @payable buy (pkgId: number): number {
         const p = state.pkg.get(pkgId)
         expect(p, 'Invalid pkgId.')
         expect(p.active, 'Package is inactive.')
@@ -100,7 +120,7 @@ const state = {
         expect(!p.price || p.price < msg.value, 'Not enough msg.value.')
 
         const card = { 
-            pkgId,
+            pkg: pkgId,
             owner: msg.sender,
             ticket: p.initialTicket
         }
@@ -110,7 +130,17 @@ const state = {
         }
         if (expire) card.expire = expire
 
-        return state.card.add(card)
+        const cardId = state.card.add(card)
+
+        // move redundant value to bank
+        const price = (!p.price || p.price < 0) ? 0 : p.price
+        const redundant = msg.value - BigInt(price)
+
+        if (redundant > 0) {
+            state.bank.set(msg.sender, (v = 0n) => v + redundant)
+        }
+
+        return cardId
     }
 
     @view getCardByAddress(addr: ?address, options = {}) {
@@ -119,30 +149,44 @@ const state = {
         return state.card.query(options)
     }
 
-    @payable share (cardId: number, receiver: address, sharedTicket: number) {
+    @payable share (cardId: number, receiver: address, sharedTicket: number): number {
         expect(sharedTicket > 0, 'Invalid sharedTicket')
-        const p = state.pkg.get(pkgId)
-        expect(p, 'Invalid pkgId.')
+        expect(msg.sender !== receiver, 'Cannot share to yourself.')
 
         const card = state.card.get(cardId)
         expect(card, 'Card not found.')
         expect(!card.expire || card.expire <= block.timestamp, 'Cannot share expired card.')
-        expect(card.sharable, 'Card is not sharable.')
 
-        let sharedAmount = sharedTicket
-        if (card.shareTax) {
-            sharedAmount += sharedAmount * card.shareTax
+        const { shareable, shareTax } = state.pkg.get(card.pkg)
+        expect(shareable, 'Card is not shareable.')
+
+        let givingAmount = sharedTicket
+        if (p.shareTax) {
+            givingAmount += givingAmount * shareTax
         }
 
-        expect(card.ticket >= sharedAmount, 'Not enough ticket.')
+        expect(card.ticket >= givingAmount, 'Not enough ticket.')
         
-        state.card.set([cardId, 'ticket'], card.ticket - sharedAmount)
+        state.card.set([cardId, 'ticket'], card.ticket - givingAmount)
         const newCard = {
-            pkgId: card.pkgId,
+            pkg: card.pkg,
             owner: receiver,
-            ticket: sharedAmount,
+            ticket: sharedTicket,
             sharedBy: msg.sender
         }
         return state.card.add(newCard)
+    }
+
+    @payable @onreceive deposit() {
+        return state.bank.set(msg.sender, (v = 0n) => v + msg.value)
+    }
+
+    @transaction withdraw(amount: bigint | number | string) {
+        amount = BigInt(amount)
+        const deposit = state.bank.get(msg.sender, 0n)
+        expect(deposit >= amount, 'Not enough balance.')
+
+        state.bank.set(msg.sender, deposit - amount)
+        this.transfer(msg.sender, amount)
     }
 }
