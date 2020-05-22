@@ -200,7 +200,7 @@ const _stateforAddress = (contractAddress, readonly, {
       results = results.map(map)
     }
     if (filter != null) {
-      results = results.filter(filter)
+      results = _.filter(results, filter)
     }
     if (orderBy != null) {
       results = _.orderBy(results, orderBy)
@@ -247,7 +247,7 @@ const _stateforAddress = (contractAddress, readonly, {
         path,
         oldValue => {
           const value2Merge = typeof value !== 'function' ? value : value(oldValue)
-          const sanitizedValue = stateSerializer.sanitize(value(value2Merge))
+          const sanitizedValue = stateSerializer.sanitize(value2Merge)
           return { ...oldValue, sanitizedValue }
         },
         _checkCustomizer(customizer)
