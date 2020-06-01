@@ -157,6 +157,7 @@ const state = {
 
         const card = state.card.get(cardId)
         expect(card, 'Card not found.')
+        expect(card.owner === msg.sender, 'Not your card.')
         expect(!card.expire || card.expire <= block.timestamp, 'Cannot share expired card.')
 
         const { shareable, shareTax } = state.pkg.get(card.pkg)
