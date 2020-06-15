@@ -248,7 +248,7 @@ const _stateforAddress = (contractAddress, readonly, {
         oldValue => {
           const value2Merge = typeof value !== 'function' ? value : value(oldValue)
           const sanitizedValue = stateSerializer.sanitize(value2Merge)
-          return { ...oldValue, sanitizedValue }
+          return { ...oldValue, ...sanitizedValue }
         },
         _checkCustomizer(customizer)
       )
