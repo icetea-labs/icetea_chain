@@ -167,6 +167,7 @@ const _stateforAddress = (contractAddress, readonly, {
       map,
       filter,
       orderBy,
+      orderByOrders,
       begin,
       end,
       noTransform,
@@ -203,7 +204,7 @@ const _stateforAddress = (contractAddress, readonly, {
       results = _.filter(results, filter)
     }
     if (orderBy != null) {
-      results = _.orderBy(results, orderBy)
+      results = _.orderBy(results, orderBy, orderByOrders)
     }
     if (begin != null || end != null) {
       results = results.slice(begin, end)
