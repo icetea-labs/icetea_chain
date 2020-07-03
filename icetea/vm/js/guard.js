@@ -2,7 +2,7 @@
 const { codeFrameColumns } = require('@babel/code-frame')
 
 const MAX_LOOP_ENTRIES = 100000
-const MAX_FUNC_ENTRIES = 1000
+const MAX_FUNC_ENTRIES = 100000
 
 function makeCodeFrame (src, line, ch) {
   return codeFrameColumns(src, { start: { line: line, column: ch } }, {
