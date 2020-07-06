@@ -11,7 +11,7 @@ function makeCodeFrame (src, line, ch) {
 }
 
 /**
- * guard - define two many loop or functions
+ * guard - reentries too many loops or functions
  * @function
  * @returns {object} guard
  */
