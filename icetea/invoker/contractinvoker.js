@@ -18,6 +18,10 @@ class ContractInvoker extends Invoker {
       throw new Error(`Invalid invoke type ${invokeType}. Must be 'pure', 'view', or 'transaction'.`)
     }
 
+    const { tx } = options
+    const _notransfer = Boolean(tx && tx._notransfer)
+    if (_notransfer) delete tx._notransfer
+
     if (methodName === 'address') {
       return contractAddress
     } else if (methodName === 'balance') {
@@ -38,8 +42,7 @@ class ContractInvoker extends Invoker {
       const vm = getRunner(mode)
       const guard = getGuard(mode)(src)
       result = vm.run(src, { context, guard, info: options.info })
-      const { tx } = options
-      if (tx && tx.from && isContract(tx.from) && tx.to && tx.value) { // tx from contract
+      if (!_notransfer && tx && tx.from && isContract(tx.from) && tx.to && tx.value) { // tx from contract
         const txContext = getContext(mode).for(invokeType, tx.payer, methodName, methodParams, options)
         txContext.transfer(tx.to, tx.value)
       }

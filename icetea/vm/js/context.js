@@ -81,7 +81,6 @@ function _makeLoadLibrary (invokerTypes, srcContract, options) {
 function _makeTransfer (transferMethod, srcContract, options) {
   return (to, value) => {
     transferMethod(to, value)
-
     if (!isContract(to)) {
       return
     }
@@ -90,7 +89,7 @@ function _makeTransfer (transferMethod, srcContract, options) {
     if (options.tx && options.tx.invoked) {
       invoked = options.tx.invoked
     }
-    const tx = { from: srcContract, to, value, payer: srcContract, invoked: { ...invoked, [to]: true } }
+    const tx = { from: srcContract, to, value, payer: srcContract, _notransfer: true, invoked: { ...invoked, [to]: true } }
     const newOpts = { ...options, tx }
     if (!invoked[to]) { // prevent cycle onreceive
       return invoker.invokeUpdate(to, config.messages.onreceive, [], newOpts)
