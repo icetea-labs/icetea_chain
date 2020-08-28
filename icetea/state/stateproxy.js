@@ -1,4 +1,5 @@
 const _ = require('lodash')
+const { query } = require('query')
 const config = require('../config')
 // const { deepFreeze, validateAddress } = require('../helper/utils')
 const { validateAddress } = require('../helper/utils')
@@ -150,7 +151,7 @@ const _stateforAddress = (contractAddress, readonly, {
 
   // a powerful version of getState, used to query list (object, array, Map, Set)
   // this func always return array
-  const queryState = (path, options) => {
+  const queryState = (path, actionGroups, options = {}) => {
     let results = getState(path)
 
     if (results == null) {
@@ -158,31 +159,27 @@ const _stateforAddress = (contractAddress, readonly, {
       return []
     }
 
-    if (options == null) {
-      return results
+    if (actionGroups == null) {
+      actionGroups = []
+    } else if (!Array.isArray(actionGroups)) {
+      actionGroups = [actionGroups]
     }
 
-    const {
-      fields,
-      map,
-      filter,
-      orderBy,
-      orderByOrders,
-      begin,
-      end,
-      noTransform,
-      keyName = 'id',
-      valueName = 'value'
-    } = options
-
     const actLikeArray = typeof results.filter === 'function' &&
-      typeof results.map === 'function' &&
-      typeof results.slice === 'function'
+    typeof results.map === 'function' &&
+    typeof results.slice === 'function'
 
     if (!actLikeArray) {
       // convert it to array
 
-      // Note: if 'results' cannot be converted, caller should not specify 'options' anyway
+      const {
+        noTransform,
+        keyName = 'id',
+        keyType,
+        valueName = 'value'
+      } = options
+
+      // Note: if 'results' cannot be converted, caller should not specify 'optionArray' anyway
       // Note: string will be convert to array of chars
 
       results = Array.from(
@@ -191,28 +188,71 @@ const _stateforAddress = (contractAddress, readonly, {
           if (v && v.length === 2) {
             const [key, value] = v
             const valueObj = typeof value === 'object' ? value : { [valueName]: value }
-            return { ...valueObj, [keyName]: key }
+            return { ...valueObj, [keyName]: keyType === 'number' ? Number(key) : key }
           }
           return v
         })
     }
 
-    if (map != null) {
-      results = results.map(map)
+    if (!actionGroups.length) return results
+
+    const call = (group, name, useLodash, ...args) => {
+      const action = group[name]
+      if (!action) return
+      results = useLodash ? _[name](results, action, ...args) : results[name](action, ...args)
     }
-    if (filter != null) {
-      results = _.filter(results, filter)
-    }
-    if (orderBy != null) {
-      results = _.orderBy(results, orderBy, orderByOrders)
-    }
-    if (begin != null || end != null) {
-      results = results.slice(begin, end)
-    }
-    if (fields != null) {
-      const fn = typeof fields !== 'function' ? _.pick : _.pickBy
-      results = results.map(o => fn(o, fields))
-    }
+
+    actionGroups.forEach(group => {
+      const {
+        search,
+        fields,
+        count,
+        reduceInitialValue,
+        orderByOrders,
+        begin,
+        end
+      } = group
+
+      call(group, 'map')
+
+      if (search != null) {
+        results = query(results, search)
+      }
+
+      call(group, 'find', true)
+      call(group, 'filter', true)
+      call(group, 'some', true)
+      call(group, 'every', true)
+      call(group, 'reduce', false, reduceInitialValue)
+      call(group, 'orderBy', true, orderByOrders)
+      ;['countBy',
+        'sumBy',
+        'meanBy',
+        'minBy',
+        'maxBy'].forEach(name => call(group, name, true))
+
+      if (Array.isArray(results)) {
+        const sliceFrom = begin || 0
+        let sliceEnd = end == null ? sliceFrom + 30 : end
+        if (sliceEnd - sliceFrom > 100) {
+          sliceEnd = sliceFrom + 100
+        }
+        results = results.slice(sliceFrom, sliceEnd)
+      }
+
+      if (fields != null) {
+        const fn = typeof fields !== 'function' ? _.pick : _.pickBy
+        results = results.map(o => fn(o, fields))
+      }
+
+      if (count === true) {
+        if (typeof results === 'object' && results !== null) {
+          results = Array.isArray(results) ? results.length : Object.keys(results).length
+        } else {
+          results = 1
+        }
+      }
+    })
 
     return results
   }
@@ -280,14 +320,19 @@ const _stateforAddress = (contractAddress, readonly, {
     deleteState = (path, subKeys) => {
       if (!storage) return false
 
+      path = _checkPath(path)
+
       if (subKeys == null) {
-        return _.unset(storage, _checkPath(path))
+        return _.unset(storage, path)
       }
 
-      const o = getState(path)
+      const o = _.get(storage, path)
+      if (o == null) return false
+
       let deleted = false
       subKeys.forEach(key => {
-        deleted = deleted || (delete o[key])
+        const d = delete o[key]
+        d && (deleted = true)
       })
 
       return deleted

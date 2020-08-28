@@ -149,14 +149,14 @@ module.exports = class extends Runner {
 
       context.setState(key, value)
     }
-    runCtx.deleteState = key => {
+    runCtx.deleteState = (key, subKeys) => {
       gasUsed += minStateGas
 
       if (gasUsed > gasLimit) {
         throw new Error(`deleteState ${key} failed: out of gas.`)
       }
 
-      context.deleteState(key)
+      context.deleteState(key, subKeys)
     }
 
     const runGuard = { ...guard }
