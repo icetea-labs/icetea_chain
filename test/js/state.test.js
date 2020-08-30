@@ -133,6 +133,10 @@ async function testList (snip) {
   expect(r.length).toBe(8)
   expect(r[0].id).toBe(1)
   expect(r[7].id).toBe(8)
+
+  r = await ct.prepareMethod('query', { count: true }).call()
+  // console.log(r.length, r)
+  expect(r).toBe(8)
 }
 
 describe('test state util', () => {
