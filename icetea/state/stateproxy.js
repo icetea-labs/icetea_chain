@@ -194,7 +194,11 @@ const _stateforAddress = (contractAddress, readonly, {
         })
     }
 
-    if (!actionGroups.length) return results
+    // should move to config
+    const DEF_ROW_COUNT = 30
+    const MAX_ROW_COUNT = 100
+
+    if (!actionGroups.length) return results.slice(0, DEF_ROW_COUNT)
 
     const call = (group, name, useLodash, ...args) => {
       const action = group[name]
@@ -207,6 +211,7 @@ const _stateforAddress = (contractAddress, readonly, {
         search,
         fields,
         count,
+        addCount,
         reduceInitialValue,
         orderByOrders,
         begin,
@@ -231,12 +236,16 @@ const _stateforAddress = (contractAddress, readonly, {
         'minBy',
         'maxBy'].forEach(name => call(group, name, true))
 
+      call(group, 'reverse', false)
+
+      let rawLength = 0
       if (Array.isArray(results)) {
         const sliceFrom = begin || 0
-        let sliceEnd = end == null ? sliceFrom + 30 : end
-        if (sliceEnd - sliceFrom > 100) {
-          sliceEnd = sliceFrom + 100
+        let sliceEnd = end == null ? sliceFrom + DEF_ROW_COUNT : end
+        if (sliceEnd - sliceFrom > MAX_ROW_COUNT) {
+          sliceEnd = sliceFrom + MAX_ROW_COUNT
         }
+        rawLength = results.length
         results = results.slice(sliceFrom, sliceEnd)
       }
 
@@ -251,6 +260,10 @@ const _stateforAddress = (contractAddress, readonly, {
         } else {
           results = 1
         }
+      }
+
+      if (addCount) {
+        results.push(rawLength)
       }
     })
 

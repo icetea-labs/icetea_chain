@@ -85,11 +85,13 @@ async function testList (snip) {
   expect(r[9].id).toBe(9)
 
   r = await ct.prepareMethod('query', {
-    filter: { id: 1 }
+    filter: { id: 1 },
+    addCount: true
   }).call()
   // console.log(r)
-  expect(r.length).toBe(1)
+  expect(r.length).toBe(2)
   expect(r[0].id).toBe(1)
+  expect(r[1]).toBe(1)
 
   r = await ct.prepareMethod('query', {
     find: { id: 1 }
