@@ -38,7 +38,7 @@ async function testList (snip) {
   const SRC = `
     const { stateUtil } = require(';')
     const { define${snip}List } = stateUtil(this)
-    const animals = define${snip}List('animal', 'number')
+    const animals = define${snip}List('animal', { keyType: 'number' })
     @contract class State  {
         @transaction addAnimals() {
             for (let i = 0; i < 10; i++) {
