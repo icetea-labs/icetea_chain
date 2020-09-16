@@ -156,7 +156,10 @@ const _stateforAddress = (contractAddress, readonly, {
 
     if (results == null) {
       // since this fn is for list query, always return array
-      return []
+      // return []
+
+      // should not return [] because some function like some, every would return boolean
+      results = []
     }
 
     if (actionGroups == null) {
