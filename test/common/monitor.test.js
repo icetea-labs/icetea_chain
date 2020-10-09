@@ -14,6 +14,7 @@ const mock = new MockAdapter(axios)
 beforeEach(() => {
   process.env.BOT_TOKEN = 123
 })
+
 describe('Send signal to kill tendermint process', () => {
   test('Return response if not timeout', async () => {
     const mockResponse = { jsonrpc: '2.0', id: -1, result: {} }
@@ -33,7 +34,7 @@ describe('Send signal to kill tendermint process', () => {
     const mockSendSignal = jest.fn()
     pm2.sendSignalToProcessName = mockSendSignal
     mock.onGet('http://localhost:26657/health').timeout()
-    mock.onPost('https//api.telegram.org/bot123/sendMessage').reply(200)
+    mock.onPost('https://api.telegram.org/bot123/sendMessage').reply(200)
     const resp = healthCheck()
     await expect(resp).rejects.toThrow('timeout of 5000ms exceeded')
     expect(mockSendSignal).toBeCalledTimes(1)
