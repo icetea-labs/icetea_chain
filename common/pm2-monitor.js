@@ -1,11 +1,11 @@
 const pm2 = require('pm2')
+require('dotenv').config()
 const iceteaName = process.env.ICETEA_NAME || 'icetea'
 const tendermintName = process.env.TENDERMINT_NAME || 'tendermint'
 const debug = require('debug')('icetea:monitor')
 const schedule = require('node-schedule')
 const { healthCheck } = require('./healthCheckTendermint')
 const { sendDirect } = require('./send')
-require('dotenv').config()
 
 pm2.launchBus(function (err, bus) {
   if (err) {
