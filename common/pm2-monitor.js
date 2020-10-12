@@ -1,4 +1,5 @@
 const pm2 = require('pm2')
+require('dotenv').config()
 const iceteaName = process.env.ICETEA_NAME || 'icetea'
 const tendermintName = process.env.TENDERMINT_NAME || 'tendermint'
 const debug = require('debug')('icetea:monitor')

@@ -1,4 +1,4 @@
-const axios = require('./axios')
+const axios = require('axios')
 const querystring = require('querystring')
 
 exports.sendDirect = async options => {
