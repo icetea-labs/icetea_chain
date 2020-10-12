@@ -8,7 +8,7 @@
     {
       "name": "tendermint",
       "script": "tendermint",
-      "args": "node --proxy_app=kvstore",
+      "args": "node",
       "exec_interpreter": "none",
       "exec_mode"  : "fork_mode",
       "watch": false
