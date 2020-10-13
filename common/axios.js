@@ -14,12 +14,12 @@ httpClient.interceptors.response.use(response => response, async error => {
       return httpClient.request(error.config)
     }
     timeOut = 0
-    pm2.sendSignalToProcessName('SIGTERM', tendermintName, async (err) => {
+    pm2.restart(tendermintName, async (err) => {
       if (err) {
         debug(err)
         return
       }
-      await sendDirect('Tendermint node being timeout, sending SIGTERM to tendermint node')
+      await sendDirect('Tendermint node being timeout, restart tendermint node')
     })
   }
   return Promise.reject(error)
