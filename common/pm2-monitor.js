@@ -2,6 +2,7 @@ const pm2 = require('pm2')
 require('dotenv').config()
 const iceteaName = process.env.ICETEA_NAME || 'icetea'
 const tendermintName = process.env.TENDERMINT_NAME || 'tendermint'
+const scheduleTime = process.env.SCHEDULE_TIME || '*/5 * * * *'
 const debug = require('debug')('icetea:monitor')
 const schedule = require('node-schedule')
 const { healthCheck } = require('./healthCheckTendermint')
@@ -12,7 +13,7 @@ pm2.launchBus(function (err, bus) {
     debug(err)
     return
   }
-  schedule.scheduleJob('*/5 * * * *', healthCheck)
+  schedule.scheduleJob(scheduleTime, healthCheck)
 
   bus.on('process:event', function (data) {
     if (data.event === 'exit') {
