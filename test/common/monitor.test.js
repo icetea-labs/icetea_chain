@@ -4,8 +4,6 @@ const { healthCheck } = require('../../common/healthCheckTendermint')
 const MockAdapter = require('axios-mock-adapter')
 const schedule = require('node-schedule')
 
-const tendermintName = process.env.TENDERMINT_NAME || 'tendermint'
-
 jest.useFakeTimers('modern')
 jest.mock('pm2')
 
@@ -24,21 +22,18 @@ describe('Send signal to kill tendermint process', () => {
   })
 
   test('Return response if timeout one time', async () => {
-    const mockSendSignal = jest.fn()
-    pm2.sendSignalToProcessName = mockSendSignal
+    const mockRestart = jest.spyOn(pm2, 'restart')
     mock.onGet('http://localhost:26657/health').timeoutOnce()
-    expect(mockSendSignal).not.toBeCalled()
+    expect(mockRestart).not.toBeCalled()
   })
 
-  test('Send signal to tendermint process when timeout', async () => {
-    const mockSendSignal = jest.fn()
-    pm2.sendSignalToProcessName = mockSendSignal
+  test('Restart tendermint process when timeout', async () => {
+    const mockRestart = jest.spyOn(pm2, 'restart')
     mock.onGet('http://localhost:26657/health').timeout()
     mock.onPost('https://api.telegram.org/bot123/sendMessage').reply(200)
     const resp = healthCheck()
     await expect(resp).rejects.toThrow('timeout of 5000ms exceeded')
-    expect(mockSendSignal).toBeCalledTimes(1)
-    expect(mockSendSignal).toBeCalledWith('SIGTERM', tendermintName)
+    expect(mockRestart).toBeCalledTimes(1)
   })
 
   test('Return error when not timeout error', async () => {
