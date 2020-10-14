@@ -27,6 +27,14 @@ describe('Send signal to kill tendermint process', () => {
     expect(mockRestart).not.toBeCalled()
   })
 
+  test('Return error when not timeout error', async () => {
+    const mockRestart = jest.spyOn(pm2, 'restart')
+    mock.onGet('http://localhost:26657/health').networkError()
+    const resp = healthCheck()
+    await expect(resp).rejects.toThrow('Network Error')
+    expect(mockRestart).not.toBeCalled()
+  })
+
   test('Restart tendermint process when timeout', async () => {
     const mockRestart = jest.spyOn(pm2, 'restart')
     mock.onGet('http://localhost:26657/health').timeout()
@@ -34,15 +42,6 @@ describe('Send signal to kill tendermint process', () => {
     const resp = healthCheck()
     await expect(resp).rejects.toThrow('timeout of 5000ms exceeded')
     expect(mockRestart).toBeCalledTimes(1)
-  })
-
-  test('Return error when not timeout error', async () => {
-    const mockSendSignal = jest.fn()
-    pm2.sendSignalToProcessName = mockSendSignal
-    mock.onGet('http://localhost:26657/health').networkError()
-    const resp = healthCheck()
-    await expect(resp).rejects.toThrow('Network Error')
-    expect(mockSendSignal).not.toBeCalled()
   })
 })
 
