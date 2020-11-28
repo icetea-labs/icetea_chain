@@ -17,7 +17,6 @@ beforeAll(async () => {
   instance = server(handler)
   instance.listen(global.ports.abci)
   await sleep(4000)
-
   tweb3 = new IceteaWeb3(`http://127.0.0.1:${global.ports.rpc}`)
   account10k = await randomAccountWithBalance(tweb3, 10000)
 })
@@ -36,8 +35,6 @@ async function testList (snip) {
   tweb3.wallet.importAccount(privateKey)
 
   const SRC = `
-    const { stateUtil } = require(';')
-    const { define${snip}List } = stateUtil(this)
     const animals = define${snip}List('animal', { keyType: 'number' })
     @contract class State  {
         @transaction addAnimals() {
