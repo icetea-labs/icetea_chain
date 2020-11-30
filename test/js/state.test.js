@@ -17,6 +17,7 @@ beforeAll(async () => {
   instance = server(handler)
   instance.listen(global.ports.abci)
   await sleep(4000)
+
   tweb3 = new IceteaWeb3(`http://127.0.0.1:${global.ports.rpc}`)
   account10k = await randomAccountWithBalance(tweb3, 10000)
 })
