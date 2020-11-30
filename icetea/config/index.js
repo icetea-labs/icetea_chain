@@ -2,7 +2,7 @@
 
 const config = {
   versions: {
-    node: '>=12.9.1 <13.0.0'
+    node: '>=14.15.1 <15.0.0'
   },
   messages: {
     ondeploy: '__on_deployed',
@@ -10,8 +10,8 @@ const config = {
   },
   rawJs: {
     transpile: [
-      '@babel/plugin-proposal-nullish-coalescing-operator',
-      '@babel/plugin-proposal-optional-chaining'
+      // '@babel/plugin-proposal-nullish-coalescing-operator',
+      // '@babel/plugin-proposal-optional-chaining'
     ]
   },
   election: {
