@@ -157,11 +157,11 @@ describe('SimpleStore', () => {
   })
 
   test('decorated JS valid-syntax simple store', async () => {
-    const CONTRACT_SRC = `const { expect } = require(';')
+    const CONTRACT_SRC = `const { expect, stateUtil } = require(';')
 
         @contract class SimpleStore  {
-            #owner = define('#owner')
-            #value = define('#value')
+            #owner = path('#owner')
+            #value = path('#value')
             constructor() {
               this.#owner.value(msg.sender)
             }

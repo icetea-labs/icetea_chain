@@ -31,13 +31,13 @@ const src = `const { expect } = require(';')
   @contract class SimpleStore  {
     @state owner = msg.sender
     @state value
-    getOwner() { return this.owner.value() }
-    getValue() { return this.value.value() }
+    getOwner() { return this.owner }
+    getValue() { return this.value }
     @transaction setValue(value) {
-      expect(this.owner.value() == msg.sender, 'Only contract owner can set value')
+      expect(this.owner == msg.sender, 'Only contract owner can set value')
       expect(value, 'Invalid value')
-      this.value.value(value)
-      this.emitEvent("ValueChanged", {value: this.value.value()})
+      this.value = value
+      this.emitEvent("ValueChanged", {value: this.value})
     }
   }
 `

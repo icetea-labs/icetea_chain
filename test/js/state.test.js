@@ -35,6 +35,8 @@ async function testList (snip) {
   tweb3.wallet.importAccount(privateKey)
 
   const SRC = `
+    const { stateUtil } = require(';')
+    const { define${snip}List } = stateUtil(this)
     const animals = define${snip}List('animal', { keyType: 'number' })
     @contract class State  {
         @transaction addAnimals() {
