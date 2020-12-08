@@ -75,11 +75,11 @@ class StateManager extends EventEmitter {
     return result
   }
 
-  async persist () {
+  persist () {
     if (!lastBlock || lastBlock.number <= 1) {
       return Buffer.alloc(0)
     }
-    const appHash = await patricia.save({
+    const appHash = patricia.save({
       block: lastBlock,
       state: stateTable,
       validators,

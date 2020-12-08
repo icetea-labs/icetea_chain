@@ -66,8 +66,8 @@ exports.save = ({ block, state, validators, commitKeys }) => {
       value: serializer.serialize(state[key])
     })
   })
-  trie.batch(opts)
   trie.checkpoint()
+  trie.batch(opts)
   trie.commit()
   db.put(rootKey, trie.root)
   persistBlock.stateRoot = trie.root

@@ -5,11 +5,16 @@ exports.MemDB = class {
   #map = {}
 
   constructor (upstreamDB) {
-    this._upstream = upstreamDB
+    this.#_upstream = upstreamDB
   }
 
+  // First search in memory, if not found, search in upstream DB
   get (key) {
-    return this.#map[key.toString('base64')]
+    const value = this.#map[key.toString('base64')]
+    if (!value) {
+      return this.#_upstream.get(key)
+    }
+    return value
   }
 
   put (key, value) {
