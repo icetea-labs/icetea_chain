@@ -234,13 +234,8 @@ class Trie {
         entries.forEach(([key, value]) => {
           ops.push({ type: 'put', key, value })
         })
-        try {
-          if (ops.length) {
-            const b = this.backingDb.batch(ops)
-            console.log('batc', b)
-          }
-        } catch (err) {
-          console.log('err ne', err)
+        if (ops.length) {
+          this.backingDb.batch(ops)
         }
       }
     }
