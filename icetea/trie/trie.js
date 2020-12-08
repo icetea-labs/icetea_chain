@@ -1,3 +1,6 @@
+const serializer = require('../state/serializer').getSerializer()
+const { MemDB } = require('./memdb')
+
 const HASH_SIZE = 32
 
 // convert to bit field (not very optimal way)
@@ -18,12 +21,28 @@ class Trie {
     // used to hash the key to ensure randomized distribution
     keyHash
 
+    checkPoints
+
+    mainDb
+
+    memDb
+
     // rootHash should be a buffer of 32 bytes
     constructor (rootHash, trieHash, backingDb, keyHash) {
       this.rootHash = rootHash
       this.trieHash = trieHash
       this.backingDb = backingDb
+      this.mainDb = backingDb
       this.keyHash = keyHash
+      this.checkPoints = []
+    }
+
+    get duringCheckpoint () {
+      return this.checkPoints.length > 0
+    }
+
+    get root () {
+      return this.rootHash
     }
 
     // hash should be a buffer of 32 bytes
@@ -78,7 +97,6 @@ class Trie {
         key = this.keyHash(key)
       }
       const path = keyToPath(key)
-
       // navigate through the path
       let currentHash = this.rootHash
       const lastIndex = path.length - 1
@@ -106,7 +124,6 @@ class Trie {
           currentHash = this.trieHash.naiveHash(value)
           currentHash.writeUInt16BE(1, 0)
           this.backingDb.put(currentHash, value)
-
           // going back to update hashes
           for (let j = lastIndex - 1; j >= 0; j--) {
             // Go back one step
@@ -129,6 +146,101 @@ class Trie {
               this.rootHash = hash
             }
           }
+        }
+      }
+    }
+
+    walkTrie (root) {
+      const state = {}
+      root = root || this.rootHash
+      if (!root) {
+        return
+      }
+
+      const path = keyToPath(root)
+
+      // navigate through the path
+      let currentHash = root
+      const lastIndex = path.length - 1
+      for (let i = 0; i <= lastIndex; i++) {
+        const buf = this.getNode(currentHash)
+        if (i === lastIndex) {
+          // we are at leaf level, just return the value stored there
+
+          state[buf.key.toString()] = serializer.deserialize(buf.value)
+        } else if (buf === 0) {
+          // got zero at non-leaf => key not exsit
+          return
+        }
+
+        // '0' => go left, '1' => go right
+        if (path[i] === '0') {
+          currentHash = buf.slice(0, HASH_SIZE)
+        } else {
+          currentHash = buf.slice(HASH_SIZE)
+        }
+      }
+      return state
+    }
+
+    batch (ops) {
+      for (const op of ops) {
+        if (op.type === 'put') {
+          if (!op.value) {
+            throw new Error('Invalid batch db operation')
+          }
+          this.put(op.key, op.value)
+        }
+      }
+    }
+
+    // Creates a checkpoint that can later be reverted to or committed.
+    // After this is called, no changes to the trie will be permanently saved until `commit` is called.
+    checkpoint () {
+      const wasCheckpoint = this.duringCheckpoint
+      this.checkPoints.push(this.root)
+
+      // Entering checkpoint mode is not necessary for nested checkpoints
+      if (!wasCheckpoint && this.duringCheckpoint) {
+        this.enterCpMode()
+      }
+    }
+
+    enterCpMode () {
+      this.memDb = new MemDB(this.backingDb)
+      this.backingDb = this.memDb
+    }
+
+    // Creates a checkpoint that can later be reverted to or committed.
+    // After this is called, no changes to the trie will be permanently saved until `commit` is called.
+    commit () {
+      if (!this.duringCheckpoint) {
+        throw new Error('trying to commit when not checkpointed')
+      }
+      this.checkPoints.pop()
+      if (!this.duringCheckpoint) {
+        this.exitCpMode(true)
+      }
+    }
+
+    exitCpMode (commitState) {
+      const memDb = this.memDb
+      this.memDb = null
+      this.backingDb = this.mainDb
+
+      if (commitState) {
+        const entries = memDb.dump()
+        const ops = []
+        entries.forEach(([key, value]) => {
+          ops.push({ type: 'put', key, value })
+        })
+        try {
+          if (ops.length) {
+            const b = this.backingDb.batch(ops)
+            console.log('batc', b)
+          }
+        } catch (err) {
+          console.log('err ne', err)
         }
       }
     }

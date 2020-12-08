@@ -58,6 +58,7 @@
     "@iceteachain/sunseed": "github:tradatech/sunseed",
     "@iceteachain/utils": "github:TradaTech/icetea-utils",
     "@iceteachain/web3": "^0.2.5",
+    "rocksdb": "git+https://github.com/TradaTech/rocksdb.git#sync",
     "@webassemblyjs/ast": "1.9.0",
     "@webassemblyjs/wasm-parser": "1.9.0",
     "abci": "git+https://github.com/tendermint/js-abci.git",
