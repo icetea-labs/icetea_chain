@@ -164,13 +164,8 @@ class Trie {
       const lastIndex = path.length - 1
       for (let i = 0; i <= lastIndex; i++) {
         const buf = this.getNode(currentHash)
-        if (i === lastIndex) {
-          // we are at leaf level, just return the value stored there
-
+        if (buf !== 0) {
           state[buf.key.toString()] = serializer.deserialize(buf.value)
-        } else if (buf === 0) {
-          // got zero at non-leaf => key not exsit
-          return
         }
 
         // '0' => go left, '1' => go right
