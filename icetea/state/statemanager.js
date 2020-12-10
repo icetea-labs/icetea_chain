@@ -85,8 +85,8 @@ class StateManager extends EventEmitter {
       validators,
       commitKeys: needCommitKeys
     })
-    needCommitKeys.clear()
 
+    needCommitKeys.clear()
     // return, no need to wait for save to finish
     return appHash
   }
@@ -211,6 +211,14 @@ class StateManager extends EventEmitter {
     return {
       info: 'Enable debug by setting NODE_ENV=development and DEBUG_STATE=1'
     }
+  }
+
+  async getStateByKey (key) {
+    return await patricia.getStateByKey(key, await patricia.root())
+  }
+
+  handleTxSign (tx) {
+    needCommitKeys.add(tx.sigHash)
   }
 }
 

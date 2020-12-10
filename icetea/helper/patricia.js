@@ -95,7 +95,7 @@ exports.save = async ({ block, state, validators, commitKeys }) => {
     opts.push({
       type: 'put',
       key,
-      value: serializer.serialize(state[key])
+      value: serializer.serialize(state[key] || key)
     })
   })
   return new Promise((resolve, reject) => {
@@ -176,6 +176,7 @@ exports.getStateByKey = (key, stateRoot) => {
         }
         return reject(err)
       }
+      if (!value) return resolve(null)
       return resolve(serializer.deserialize(value))
     })
   })

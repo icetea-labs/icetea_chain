@@ -85,7 +85,7 @@ class App {
     stateManager.on('endCheckpoint', afterTx)
   }
 
-  checkTx (tx) {
+  async checkTx (tx) {
     const { freeGasLimit } = config.gas
     // NOTE:
     // CheckTX should not modify state
@@ -204,6 +204,11 @@ class App {
     if (tx.value + tx.fee > stateManager.balanceOf(tx.payer)) {
       throw new Error('Not enough balance')
     }
+
+    const hadTx = await stateManager.getStateByKey(tx.sigHash)
+    if (hadTx) {
+      throw new Error('This transaction was already included in blockchain, no need to send again.')
+    }
   }
 
   invokeView (contractAddress, methodName, methodParams, options = {}) {
@@ -271,7 +276,7 @@ class App {
     // tx.to = _ensureAddress(tx.to)
 
     stateManager.beginCheckpoint()
-
+    stateManager.handleTxSign(tx)
     const needState = willCallContract(tx)
     const { stateAccess, patch, tools } = needState ? stateManager.produceDraft() : {}
 
