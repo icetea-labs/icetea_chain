@@ -7,6 +7,7 @@ const rootKey = 'rootKey'
 const blockKey = 'blockKey'
 const lastBlockKey = 'lastBlockKey'
 const validatorsKey = 'validatorsKey'
+const txHashesKey = 'txHashesKey'
 
 let db
 
@@ -51,15 +52,29 @@ const lastBlock = () => {
   })
 }
 
+const getTxHashes = () => {
+  return new Promise((resolve, reject) => {
+    db.get(txHashesKey, (err, value) => {
+      if (err) {
+        if (err.notFound) {
+          return resolve(null)
+        }
+        return reject(err)
+      }
+      return resolve(serializer.deserialize(value))
+    })
+  })
+}
+
 exports.load = async (path) => {
   db = newDB(path)
   const trie = await patricia()
-  const [state, block] = await Promise.all([dump(trie), lastBlock()])
+  const [state, block, txHashes] = await Promise.all([dump(trie), lastBlock(), getTxHashes()])
   if (!block) {
     return null
   }
   const validators = await this.getValidatorsByHeight(block ? block.number : 0)
-  return { state, block, validators }
+  return { state, block, validators, txHashes }
 }
 
 exports.root = async () => {
@@ -87,7 +102,7 @@ exports.getHash = (stateTable) => {
   })
 }
 
-exports.save = async ({ block, state, validators, commitKeys }) => {
+exports.save = async ({ block, state, validators, commitKeys, txHashes }) => {
   const trie = await patricia()
   const opts = []
   const persistBlock = { ...block }
@@ -95,7 +110,7 @@ exports.save = async ({ block, state, validators, commitKeys }) => {
     opts.push({
       type: 'put',
       key,
-      value: serializer.serialize(state[key] || key)
+      value: serializer.serialize(state[key])
     })
   })
   return new Promise((resolve, reject) => {
@@ -122,6 +137,9 @@ exports.save = async ({ block, state, validators, commitKeys }) => {
       },
       (next) => {
         db.put(lastBlockKey, serializer.serialize(persistBlock), next)
+      },
+      (next) => {
+        db.put(txHashesKey, serializer.serialize(txHashes), next)
       }
     ], (err, ret) => {
       if (err) {
@@ -176,7 +194,6 @@ exports.getStateByKey = (key, stateRoot) => {
         }
         return reject(err)
       }
-      if (!value) return resolve(null)
       return resolve(serializer.deserialize(value))
     })
   })

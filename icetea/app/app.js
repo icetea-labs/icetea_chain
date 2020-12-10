@@ -85,7 +85,12 @@ class App {
     stateManager.on('endCheckpoint', afterTx)
   }
 
-  async checkTx (tx) {
+  checkTx (tx) {
+    const txHashes = stateManager.getTxHashes()
+    if (txHashes.indexOf(tx.sigHash) > -1) {
+      throw new Error('This transaction was already included in blockchain, no need to send again.')
+    }
+
     const { freeGasLimit } = config.gas
     // NOTE:
     // CheckTX should not modify state
@@ -203,11 +208,6 @@ class App {
     // Check balance
     if (tx.value + tx.fee > stateManager.balanceOf(tx.payer)) {
       throw new Error('Not enough balance')
-    }
-
-    const hadTx = await stateManager.getStateByKey(tx.sigHash)
-    if (hadTx) {
-      throw new Error('This transaction was already included in blockchain, no need to send again.')
     }
   }
 
