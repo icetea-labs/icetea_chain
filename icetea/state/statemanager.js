@@ -10,7 +10,6 @@ let stateTable, lastBlock, validators, txHashes
 
 // address key need to commit on write opts
 const needCommitKeys = new Set()
-const needCommitTxHashes = new Set()
 
 class StateManager extends EventEmitter {
   async load (path) {
@@ -82,12 +81,7 @@ class StateManager extends EventEmitter {
     }
 
     const tempCommitKeys = [...needCommitKeys]
-    const tempCommitTxHashes = [...needCommitTxHashes]
-
     needCommitKeys.clear()
-    needCommitTxHashes.clear()
-
-    tempCommitTxHashes.forEach(txhash => txHashes.push(txhash))
 
     const appHash = await patricia.save({
       block: lastBlock,
@@ -223,7 +217,7 @@ class StateManager extends EventEmitter {
   }
 
   onNewTx (tx) {
-    needCommitTxHashes.add(tx.sigHash)
+    txHashes.push(tx.sigHash)
   }
 
   doesTxExist (txHash) {
