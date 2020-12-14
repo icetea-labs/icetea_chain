@@ -80,17 +80,22 @@ class StateManager extends EventEmitter {
     if (!lastBlock || lastBlock.number <= 1) {
       return Buffer.alloc(0)
     }
-    needCommitTxHashes.forEach(txhash => txHashes.push(txhash))
+
+    const tempCommitKeys = [...needCommitKeys]
+    const tempCommitTxHashes = [...needCommitTxHashes]
+
+    needCommitKeys.clear()
+    needCommitTxHashes.clear()
+
+    tempCommitTxHashes.forEach(txhash => txHashes.push(txhash))
+
     const appHash = await patricia.save({
       block: lastBlock,
       state: stateTable,
       validators,
-      commitKeys: needCommitKeys,
+      commitKeys: tempCommitKeys,
       txHashes
     })
-
-    needCommitKeys.clear()
-    needCommitTxHashes.clear()
     // return, no need to wait for save to finish
     return appHash
   }
@@ -217,12 +222,12 @@ class StateManager extends EventEmitter {
     }
   }
 
-  handleTxSign (tx) {
+  onNewTx (tx) {
     needCommitTxHashes.add(tx.sigHash)
   }
 
-  getTxHashes () {
-    return txHashes
+  doesTxExist (txHash) {
+    return txHashes.includes(txHash)
   }
 }
 

@@ -86,8 +86,7 @@ class App {
   }
 
   checkTx (tx) {
-    const txHashes = stateManager.getTxHashes()
-    if (txHashes.indexOf(tx.sigHash) > -1) {
+    if (stateManager.doesTxExist(tx.sigHash)) {
       throw new Error('This transaction was already included in blockchain, no need to send again.')
     }
 
@@ -275,8 +274,9 @@ class App {
     // No need, already done inside checkTx above
     // tx.to = _ensureAddress(tx.to)
 
+    stateManager.onNewTx(tx)
+
     stateManager.beginCheckpoint()
-    stateManager.handleTxSign(tx)
     const needState = willCallContract(tx)
     const { stateAccess, patch, tools } = needState ? stateManager.produceDraft() : {}
 

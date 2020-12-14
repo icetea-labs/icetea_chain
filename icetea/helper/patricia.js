@@ -8,6 +8,7 @@ const blockKey = 'blockKey'
 const lastBlockKey = 'lastBlockKey'
 const validatorsKey = 'validatorsKey'
 const txHashesKey = 'txHashesKey'
+const DATA_ENCODING = 'base64'
 
 let db
 
@@ -61,7 +62,7 @@ const getTxHashes = () => {
         }
         return reject(err)
       }
-      return resolve(serializer.deserialize(value))
+      return resolve(JSON.parse(value.toString()))
     })
   })
 }
@@ -139,7 +140,7 @@ exports.save = async ({ block, state, validators, commitKeys, txHashes }) => {
         db.put(lastBlockKey, serializer.serialize(persistBlock), next)
       },
       (next) => {
-        db.put(txHashesKey, serializer.serialize(txHashes), next)
+        db.put(txHashesKey, Buffer.from(txHashes, DATA_ENCODING), next)
       }
     ], (err, ret) => {
       if (err) {
