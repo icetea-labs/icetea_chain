@@ -6,7 +6,7 @@ const stateProxy = require('./stateproxy')
 const utils = require('../helper/utils')
 
 // Declare outside class to ensure private
-let stateTable, lastBlock, validators
+let stateTable, lastBlock, validators, txHashes
 
 // address key need to commit on write opts
 const needCommitKeys = new Set()
@@ -20,6 +20,7 @@ class StateManager extends EventEmitter {
     stateTable = storedData.state
     lastBlock = storedData.block
     validators = storedData.validators
+    txHashes = storedData.txHashes || []
   }
 
   async getLastState () {
@@ -79,14 +80,16 @@ class StateManager extends EventEmitter {
       return Buffer.alloc(0)
     }
 
+    const tempCommitKeys = [...needCommitKeys]
+    needCommitKeys.clear()
+
     const appHash = await patricia.save({
       block: lastBlock,
       state: stateTable,
       validators,
-      commitKeys: needCommitKeys
+      commitKeys: tempCommitKeys,
+      txHashes
     })
-    needCommitKeys.clear()
-
     // return, no need to wait for save to finish
     return appHash
   }
@@ -211,6 +214,14 @@ class StateManager extends EventEmitter {
     return {
       info: 'Enable debug by setting NODE_ENV=development and DEBUG_STATE=1'
     }
+  }
+
+  onNewTx (tx) {
+    txHashes.push(tx.sigHash)
+  }
+
+  doesTxExist (txHash) {
+    return txHashes.includes(txHash)
   }
 }
 
