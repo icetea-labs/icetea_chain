@@ -78,7 +78,7 @@ describe('transfer', () => {
 
   test('transfer with zero balance', async () => {
     const privateKey = await ecc.newBankKeys().privateKey
-    var account = tweb3.wallet.importAccount(privateKey)
+    const account = tweb3.wallet.importAccount(privateKey)
     const from = account.address // ecc.toPublicKey(privateKey)
     const fromBalance = Number((await tweb3.getBalance(from)).balance)
     expect(fromBalance).toBe(0)
@@ -103,17 +103,5 @@ describe('transfer', () => {
 
     const result = await tweb3.sendTransactionCommit({ from: from, to, value, fee })
     expect(result.deliver_tx.code).toBeFalsy()
-  })
-
-  test('transfer with same transaction will throw err', async () => {
-    const { privateKey, address: from } = account10k
-    tweb3.wallet.importAccount(privateKey)
-    const keyInfo = await ecc.newBankKeys()
-
-    const tx = { from, to: keyInfo.address, value: 1000 }
-    const txSigned = await tweb3.signTransaction(tx, { from, nonce: 1 })
-
-    await tweb3.sendTransaction(txSigned, { from, nonce: 1 }, 'commit')
-    await expect(tweb3.sendTransaction(txSigned, { from, nonce: 1 }, 'commit')).rejects.toThrowError('This transaction was already included in blockchain, no need to send again.')
   })
 })

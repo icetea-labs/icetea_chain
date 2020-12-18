@@ -9,6 +9,14 @@ const { whitelistModules } = require('../icetea/config')
 
 setWhiteListModules(whitelistModules)
 
+const createNode = (tm, home, ports) => {
+  return tm.node(home, {
+    p2p: { laddr: `tcp://0.0.0.0:${ports.p2p}` },
+    rpc: { laddr: `tcp://0.0.0.0:${ports.rpc}` },
+    proxy_app: `tcp://0.0.0.0:${ports.abci}`
+  })
+}
+
 class IceteaEnvironment extends NodeEnvironment {
   constructor (config, context) {
     super(config, context)
@@ -25,15 +33,16 @@ class IceteaEnvironment extends NodeEnvironment {
       rpc: await getPort(),
       abci: await getPort()
     }
-    const node = tm.node(home, {
-      p2p: { laddr: `tcp://0.0.0.0:${ports.p2p}` },
-      rpc: { laddr: `tcp://0.0.0.0:${ports.rpc}` },
-      proxy_app: `tcp://0.0.0.0:${ports.abci}`
-    })
+    const node = createNode(tm, home, ports)
 
     this.global.node = node
     this.global.ports = ports
     this.global.transpile = transpile
+
+    this.global.restartNode = async () => {
+      await node.kill()
+      this.global.node = createNode(tm, home, ports)
+    }
   }
 
   async teardown () {

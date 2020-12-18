@@ -445,7 +445,8 @@ exports.punish = function (pubkey, blockNum, tags, { slashedRatePerMillion = 0, 
   if (jailedBlockCount > 0) {
     candidate.jailed = true
     const pendingJailedBlock = (candidate.jailedUntilBlock && (candidate.jailedUntilBlock > blockNum))
-      ? (candidate.jailedUntilBlock - blockNum) : 0
+      ? (candidate.jailedUntilBlock - blockNum)
+      : 0
     candidate.jailedUntilBlock = blockNum + pendingJailedBlock + jailedBlockCount
   }
 

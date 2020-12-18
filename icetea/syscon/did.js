@@ -349,6 +349,7 @@ exports.run = (context) => {
             return result.length >= maxItems
           }
         }
+        return false
       })
 
       if (includeAlias) {

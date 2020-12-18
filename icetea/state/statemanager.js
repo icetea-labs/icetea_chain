@@ -51,13 +51,13 @@ class StateManager extends EventEmitter {
 
   getUpdatedValidators (newValidators) {
     const result = []
-    newValidators.map(validator => {
+    newValidators.forEach(validator => {
       result.push({
         pubKey: validator.pubKey,
         power: validator.capacity
       })
     })
-    validators.map(validator => {
+    validators.forEach(validator => {
       const index = result.findIndex(r => (r.pubKey.data === validator.pubKey.data))
       if (index < 0) {
         result.push({

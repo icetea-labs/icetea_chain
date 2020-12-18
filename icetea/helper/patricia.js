@@ -8,7 +8,8 @@ const blockKey = 'blockKey'
 const lastBlockKey = 'lastBlockKey'
 const validatorsKey = 'validatorsKey'
 const txHashesKey = 'txHashesKey'
-const DATA_ENCODING = 'base64'
+
+const { packTxHashes, unpackTxHashes } = require('./hashpack')
 
 let db
 
@@ -62,7 +63,7 @@ const getTxHashes = () => {
         }
         return reject(err)
       }
-      return resolve(JSON.parse(value.toString()))
+      return resolve(unpackTxHashes(value))
     })
   })
 }
@@ -86,7 +87,7 @@ exports.root = async () => {
 exports.getHash = (stateTable) => {
   const trie = new Trie(db)
   const opts = []
-  Object.keys(stateTable).map(key => {
+  Object.keys(stateTable).forEach(key => {
     opts.push({
       type: 'put',
       key,
@@ -140,7 +141,7 @@ exports.save = async ({ block, state, validators, commitKeys, txHashes }) => {
         db.put(lastBlockKey, serializer.serialize(persistBlock), next)
       },
       (next) => {
-        db.put(txHashesKey, Buffer.from(txHashes, DATA_ENCODING), next)
+        db.put(txHashesKey, packTxHashes(txHashes), next)
       }
     ], (err, ret) => {
       if (err) {
