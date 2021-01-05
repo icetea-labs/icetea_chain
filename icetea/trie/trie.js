@@ -1,8 +1,5 @@
-const serializer = require('../state/serializer').getSerializer()
 const { MemDB } = require('./memdb')
-
 const HASH_SIZE = 32
-
 // convert to bit field (not very optimal way)
 const keyToPath = key => key.reduce((s, b) => {
   s += b.toString(2).padStart(8, '0')
@@ -52,7 +49,6 @@ class Trie {
         // if it is not a shortcut, it must in backingDb
         return this.backingDb.get(hash)
       }
-
       return buf
     }
 
@@ -75,7 +71,7 @@ class Trie {
         const buf = this.getNode(currentHash)
         if (i === lastIndex) {
           // we are at leaf level, just return the value stored there
-          return buf
+          return JSON.parse(buf).value
         } else if (buf === 0) {
           // got zero at non-leaf => key not exsit
           return
@@ -93,6 +89,7 @@ class Trie {
     // key is a buffer of 256 bits (tx hash, block hash)
     // if it is not so, it should be hashed first (similar to 'secure' option of Pacitria)
     put (key, value) {
+      const _key = key
       if (this.keyHash) {
         key = this.keyHash(key)
       }
@@ -121,9 +118,10 @@ class Trie {
           // we reach leaf
 
           // update the leaf
-          currentHash = this.trieHash.naiveHash(value)
+          currentHash = this.trieHash.naiveHash(JSON.stringify({ key: _key, value }))
           currentHash.writeUInt16BE(1, 0)
-          this.backingDb.put(currentHash, value)
+
+          this.backingDb.put(currentHash, JSON.stringify({ key: _key, value }))
           // going back to update hashes
           for (let j = lastIndex - 1; j >= 0; j--) {
             // Go back one step
@@ -144,37 +142,39 @@ class Trie {
 
             if (j === 0) {
               this.rootHash = hash
+              this.backingDb.put('rootKey', this.rootHash)
             }
           }
         }
       }
     }
 
-    walkTrie (root) {
-      const state = {}
-      root = root || this.rootHash
-      if (!root) {
-        return
-      }
-
-      const path = keyToPath(root)
-
-      // navigate through the path
-      let currentHash = root
-      const lastIndex = path.length - 1
-      for (let i = 0; i <= lastIndex; i++) {
-        const buf = this.getNode(currentHash)
-        if (buf !== 0) {
-          state[buf.key.toString()] = serializer.deserialize(buf.value)
-        }
-
-        // '0' => go left, '1' => go right
-        if (path[i] === '0') {
-          currentHash = buf.slice(0, HASH_SIZE)
+    sliceHash (hash, state) {
+      const hashNode = this.getNode(hash)
+      if (hashNode) {
+        const { leftHash, rightHash } = { leftHash: hashNode.slice(0, HASH_SIZE), rightHash: hashNode.slice(HASH_SIZE) }
+        if (leftHash && leftHash.length === HASH_SIZE) {
+          this.sliceHash(leftHash, state)
         } else {
-          currentHash = buf.slice(HASH_SIZE)
+          if (leftHash.toString()) {
+            const storedValue = JSON.parse(leftHash)
+            state[storedValue.key] = storedValue.value
+          }
+        }
+        if (rightHash && rightHash.length === HASH_SIZE) {
+          this.sliceHash(rightHash, state)
+        } else {
+          if (rightHash.toString()) {
+            const storedValue = JSON.parse(rightHash)
+            state[storedValue.key] = storedValue.value
+          }
         }
       }
+    }
+
+    walkTrie () {
+      const state = {}
+      this.sliceHash(this.rootHash, state)
       return state
     }
 
