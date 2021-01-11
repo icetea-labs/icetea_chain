@@ -86,6 +86,10 @@ class App {
   }
 
   checkTx (tx) {
+    if (stateManager.doesTxExist(tx.sigHash)) {
+      throw new Error('This transaction was already included in blockchain, no need to send again.')
+    }
+
     const { freeGasLimit } = config.gas
     // NOTE:
     // CheckTX should not modify state
@@ -270,8 +274,9 @@ class App {
     // No need, already done inside checkTx above
     // tx.to = _ensureAddress(tx.to)
 
-    stateManager.beginCheckpoint()
+    stateManager.onNewTx(tx)
 
+    stateManager.beginCheckpoint()
     const needState = willCallContract(tx)
     const { stateAccess, patch, tools } = needState ? stateManager.produceDraft() : {}
 

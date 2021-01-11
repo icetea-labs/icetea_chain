@@ -7,6 +7,9 @@ const rootKey = 'rootKey'
 const blockKey = 'blockKey'
 const lastBlockKey = 'lastBlockKey'
 const validatorsKey = 'validatorsKey'
+const txHashesKey = 'txHashesKey'
+
+const { packTxHashes, unpackTxHashes } = require('./hashpack')
 
 let db
 
@@ -51,15 +54,29 @@ const lastBlock = () => {
   })
 }
 
+const getTxHashes = () => {
+  return new Promise((resolve, reject) => {
+    db.get(txHashesKey, (err, value) => {
+      if (err) {
+        if (err.notFound) {
+          return resolve(null)
+        }
+        return reject(err)
+      }
+      return resolve(unpackTxHashes(value))
+    })
+  })
+}
+
 exports.load = async (path) => {
   db = newDB(path)
   const trie = await patricia()
-  const [state, block] = await Promise.all([dump(trie), lastBlock()])
+  const [state, block, txHashes] = await Promise.all([dump(trie), lastBlock(), getTxHashes()])
   if (!block) {
     return null
   }
   const validators = await this.getValidatorsByHeight(block ? block.number : 0)
-  return { state, block, validators }
+  return { state, block, validators, txHashes }
 }
 
 exports.root = async () => {
@@ -70,7 +87,7 @@ exports.root = async () => {
 exports.getHash = (stateTable) => {
   const trie = new Trie(db)
   const opts = []
-  Object.keys(stateTable).map(key => {
+  Object.keys(stateTable).forEach(key => {
     opts.push({
       type: 'put',
       key,
@@ -87,7 +104,7 @@ exports.getHash = (stateTable) => {
   })
 }
 
-exports.save = async ({ block, state, validators, commitKeys }) => {
+exports.save = async ({ block, state, validators, commitKeys, txHashes }) => {
   const trie = await patricia()
   const opts = []
   const persistBlock = { ...block }
@@ -122,6 +139,9 @@ exports.save = async ({ block, state, validators, commitKeys }) => {
       },
       (next) => {
         db.put(lastBlockKey, serializer.serialize(persistBlock), next)
+      },
+      (next) => {
+        db.put(txHashesKey, packTxHashes(txHashes), next)
       }
     ], (err, ret) => {
       if (err) {

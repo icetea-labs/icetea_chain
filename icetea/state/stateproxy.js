@@ -187,14 +187,16 @@ const _stateforAddress = (contractAddress, readonly, {
 
       results = Array.from(
         typeof results[Symbol.iterator] === 'function' ? results : Object.entries(results),
-        noTransform ? undefined : v => {
-          if (v && v.length === 2) {
-            const [key, value] = v
-            const valueObj = typeof value === 'object' ? value : { [valueName]: value }
-            return { ...valueObj, [keyName]: keyType === 'number' ? Number(key) : key }
-          }
-          return v
-        })
+        noTransform
+          ? undefined
+          : v => {
+            if (v && v.length === 2) {
+              const [key, value] = v
+              const valueObj = typeof value === 'object' ? value : { [valueName]: value }
+              return { ...valueObj, [keyName]: keyType === 'number' ? Number(key) : key }
+            }
+            return v
+          })
     }
 
     // should move to config

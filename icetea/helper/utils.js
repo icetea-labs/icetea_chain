@@ -12,7 +12,7 @@ const { ondeploy, onreceive } = require('../config').messages
  * @returns {Array.<string>} property names
  */
 exports.getAllPropertyNames = function (obj) {
-  var props = []
+  const props = []
   if (!obj) return props
 
   do {
@@ -245,7 +245,8 @@ exports.deepFreeze = (object) => {
     const value = object[name]
 
     object[name] = value && typeof value === 'object'
-      ? exports.deepFreeze(value) : value
+      ? exports.deepFreeze(value)
+      : value
   }
 
   return Object.freeze(object)

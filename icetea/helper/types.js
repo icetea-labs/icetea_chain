@@ -100,6 +100,7 @@ function checkTypes (o, types, opts) {
         return true // one type pass, stop here no need check other types
       } catch (e) {
         errors.push(e)
+        return false
       }
     })
 
