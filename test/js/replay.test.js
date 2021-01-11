@@ -1,11 +1,12 @@
-const { randomAccountWithBalance, sleep } = require('../helper')
+/* global jest describe test expect beforeAll afterAll */
+
+const { ecc } = require('@iceteachain/common')
+const { sleep, randomAccountWithBalance } = require('../helper')
 const { startupWith } = require('../../icetea/app/abcihandler')
 const { IceteaWeb3 } = require('@iceteachain/web3')
 const server = require('abci')
 const createTempDir = require('tempy').directory
-const _ = require('lodash')
 const killable = require('killable')
-const { transpile } = global
 
 jest.setTimeout(30000)
 
@@ -37,28 +38,27 @@ afterAll(() => {
   instance.close()
 })
 
-const src = `
-  @contract class Empty {}
-`
-
-describe('restart app', () => {
-  test('hash ok, app can restart', async () => {
+describe('replay protection', () => {
+  test('transfer with same transaction will throw err', async () => {
     const { privateKey, address: from } = account10k
     tweb3.wallet.importAccount(privateKey)
-    const numOfContracts = 5
-    const result = await Promise.all(_.range(numOfContracts).map(async x => {
-      return tweb3.deploy(await transpile(src), { from })
-    }))
-    expect(result.length).toBe(numOfContracts)
+    const keyInfo = await ecc.newBankKeys()
 
+    const tx = { from, to: keyInfo.address, value: 1000 }
+    const txSigned = await tweb3.signTransaction(tx, { from })
+
+    await tweb3.sendRawTransaction(txSigned, 'commit')
+
+    // thrown by tendermint because it is in cache
+    await expect(tweb3.sendRawTransaction(txSigned, 'commit')).rejects.toThrowError('error on broadcastTxCommit: tx already exists in cache')
+
+    // now we restart Icetea, the TX list should persists
     await closeAll()
     await sleep(1000)
     instance.listen(global.ports.abci)
     await sleep(4000)
 
-    const result2 = await Promise.all(_.range(numOfContracts).map(async x => {
-      return tweb3.deploy(await transpile(src), { from })
-    }))
-    expect(result2.length).toBe(numOfContracts)
+    // thrown by icetea, because tendermint has no cache now since it restarted
+    await expect(tweb3.sendRawTransaction(txSigned, 'commit')).rejects.toThrowError('This transaction was already included in blockchain, no need to send again.')
   })
 })
