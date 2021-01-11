@@ -45,7 +45,7 @@ exports.root = async () => {
 exports.getHash = (stateTable) => {
   const trie = createTrie({ backingDb: db })
   const opts = []
-  Object.keys(stateTable).map(key => {
+  Object.keys(stateTable).forEach(key => {
     opts.push({
       type: 'put',
       key,

@@ -84,7 +84,7 @@ class StateManager extends EventEmitter {
     const tempCommitKeys = [...needCommitKeys]
     needCommitKeys.clear()
 
-    const appHash = await patricia.save({
+    const appHash = patricia.save({
       block: lastBlock,
       state: stateTable,
       validators,
