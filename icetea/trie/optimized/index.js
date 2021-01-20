@@ -1,8 +1,8 @@
 const { Trie } = require('./trie')
 const trieHash = require('./hash')
-const { MemDB } = require('./memdb')
+const { MemDB } = require('../memdb')
 
-exports.createTrie = ({ rootHash, backingDb, count } = {}) => {
+exports.createOptimizedTrie = ({ rootHash, backingDb, count } = {}) => {
   backingDb = backingDb || new MemDB()
   const trie = new Trie(rootHash, trieHash, backingDb, trieHash.naiveHash, count)
   return trie

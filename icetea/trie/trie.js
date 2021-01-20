@@ -18,18 +18,22 @@ class Trie {
     // used to hash the key to ensure randomized distribution
     keyHash
 
+    count
+
     // rootHash should be a buffer of 32 bytes
-    constructor (rootHash, trieHash, backingDb, keyHash) {
+    constructor (rootHash, trieHash, backingDb, keyHash, count) {
       this.rootHash = rootHash
       this.trieHash = trieHash
       this.backingDb = backingDb
       this.keyHash = keyHash
+      this.count = count
     }
 
     // hash should be a buffer of 32 bytes
     getNode (hash) {
       const buf = this.trieHash.dehash(hash)
       if (buf === undefined) {
+        this.count.getDb += 1
         // if it is not a shortcut, it must in backingDb
         return this.backingDb.get(hash)
       }
@@ -91,7 +95,6 @@ class Trie {
       for (let i = 0; i <= lastIndex; i++) {
         if (i < lastIndex) {
           // We are en-route (not reach leaf yet)
-
           const buf = this.getNode(currentHash)
           const goLeft = path[i] === '0'
           const left = buf === 0 ? zeroBuf : buf.slice(0, HASH_SIZE)
@@ -105,6 +108,7 @@ class Trie {
           // update the leaf
           currentHash = this.trieHash.naiveHash(value)
           currentHash.writeUInt16BE(1, 0)
+          this.count.putDb += 1
           this.backingDb.put(currentHash, value)
 
           // going back to update hashes
@@ -119,6 +123,7 @@ class Trie {
             // if it is not shortcut (i.e. the content can't be derived from the hash itself)
             // we need to store the content in database
             if (!shortcut) {
+              this.count.putDb += 1
               this.backingDb.put(hash, content)
             }
 
