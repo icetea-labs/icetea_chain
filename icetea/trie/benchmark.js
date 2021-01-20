@@ -18,7 +18,7 @@ const benchMark = () => {
   const diffPutTrie = (endTrie - startTrie) / 1000 % 60
   console.log('putTrietime', diffPutTrie)
   console.log('countTrie', count)
-
+  console.log('record store', dbtrie.dump())
   const startGetTrie = Date.now()
   for (let i = 0; i < 100; i++) {
     trie.get(`test${i}`)
@@ -41,6 +41,7 @@ const benchMark = () => {
   const diffPutOptimizedTrie = (endPutOptimizedTrie - startPutOptimizedTrie) / 1000 % 60
   console.log('putOptimizedTrieTime', diffPutOptimizedTrie)
   console.log('countOptimized', countOptimized)
+  console.log('record optimized store', dbOptimizedTrie.dump())
 
   const startGetOptimizedTrie = Date.now()
   for (let i = 0; i < 100; i++) {

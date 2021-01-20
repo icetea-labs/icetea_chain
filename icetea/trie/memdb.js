@@ -16,9 +16,9 @@ exports.MemDB = class {
   dump () {
     console.log('dump')
     const entries = Object.entries(this.#map)
-    entries.forEach(([key, value]) => {
-      console.log(Buffer.from(key, 'base64'), value)
-    })
-    console.log(entries.length)
+    // entries.forEach(([key, value]) => {
+    //   console.log(Buffer.from(key, 'base64'), value)
+    // })
+    return entries.length
   }
 }
