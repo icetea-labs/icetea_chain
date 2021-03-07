@@ -74,7 +74,7 @@ const handler = {
 
   endBlock (req) {
     const height = Number(req.height.toString())
-    return utils.envDevEnabled('FIXED_VALIDATORS') ? {} : app.endBlock(height)
+    return utils.envEnabled('FIXED_VALIDATORS') ? {} : app.endBlock(height)
   },
 
   deliverTx (req) {
