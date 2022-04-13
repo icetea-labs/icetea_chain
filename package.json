@@ -58,7 +58,7 @@
     "@webassemblyjs/ast": "1.9.1",
     "@webassemblyjs/wasm-parser": "1.9.1",
     "abci": "git+https://github.com/tendermint/js-abci.git",
-    "async": "^3.2.0",
+    "async": "^3.2.2",
     "axios": "^0.21.0",
     "big.js": "6.0.3",
     "chalk": "^4.1.0",
